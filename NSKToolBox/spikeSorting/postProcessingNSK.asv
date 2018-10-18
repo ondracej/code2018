@@ -1,0 +1,73 @@
+function []=postProcessingNSK(dataRecordingObj,selectedChannels,fileNames,varargin)
+%default variables
+
+%print out default arguments and values if no inputs are given
+if nargin==0
+    defaultArguments=who;
+    for i=1:numel(defaultArguments)
+        eval(['defaultArgumentValue=' defaultArguments{i} ';']);
+        disp([defaultArguments{i} ' = ' num2str(defaultArgumentValue)]);
+    end
+    return;
+end
+
+%Collects all options
+for i=1:2:length(varargin)
+    eval([varargin{i} '=' 'varargin{i+1};'])
+end
+
+nSelectedChannels=numel(selectedChannels);
+
+if isempty(sortingDir)
+    writeDataToFile=false;
+else
+    if nargout>0
+        error('No output variables are allowed in save data to disk option')
+    end
+    writeDataToFile=true;
+end
+
+fprintf('\nPost processing spikes...');
+load(fileNames.mergedAvgWaveformFile,'avgWF','stdWF','ch','mergedNeurons');
+
+nNeurons=numel(mergedNeurons);
+
+
+En=dataRecordingObj.En;
+[nSamples]=size(avgWF{1},1);
+
+allWaveforms=nan(nSamples,nNeurons,nSelectedChannels);
+counter=1;
+for i=1:nSelectedChannels
+    nTmpNeurons=size(avgWF{i},2);
+    [commonCh,pComN1,pComN2]=intersect(ch{i},selectedChannels);
+    allWaveforms(:,counter:(counter+nTmpNeurons-1),pComN2(pComN1))=avgWF{i};
+    counter=counter+nTmpNeurons;
+end
+
+f=figure;
+[h,hParent]=spikeDensityPlotPhysicalSpace([],upSamplingFrequency,selectedChannels,En,...
+                'hParent',f,'avgSpikeWaveforms',allWaveforms,'logDensity',true);
+
+            
+
+
+
+
+
+%Plots for testing
+%{
+load layout_40_Hexa;En=flipud(En);
+p=cellfun(@(x) size(x,2),avgWF);
+pV=find(p>0);
+nPlots=ceil(sqrt(sum(p)));
+c=1;
+for i=1:numel(pV)
+    for j=1:p(pV(i))
+        h=subaxis(nPlots,nPlots,c,'S',0.03,'M',0.03);
+        activityTracePhysicalSpacePlot(h,ch{pV(i)},0.03*squeeze(avgWF{pV(i)}(:,j,:))',En,'scaling','none');
+        title([num2str(pV(i)) '-' num2str(j)]);
+        c=c+1;
+    end
+end
+%}

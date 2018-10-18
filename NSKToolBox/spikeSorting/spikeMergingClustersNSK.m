@@ -1,0 +1,329 @@
+function [avgWF,stdWF,ch,mergedNeurons]=spikeMergingClustersNSK(chPar,fileNames,varargin)
+
+%default variables
+mergingThreshold=0.1;
+recalculateTemplates=true;
+nStdSpikeDetection=4;
+sortingDir=[];
+allignSpikeBeforeAveraging=true;
+allignWaveShapes=true;
+testInitialTemplateMerging=false;
+plotMergingStatistics=true;
+
+nStdNoiseDetection=6;
+preSpike4NoiseDetection=0.2;
+postSpike4NoiseDetection=0.2;
+noiseThreshold=0.2;
+
+maxSpikeShift=1; %ms
+
+%print out default arguments and values if no inputs are given
+if nargin==0
+    defaultArguments=who;
+    for i=1:numel(defaultArguments)
+        eval(['defaultArgumentValue=' defaultArguments{i} ';']);
+        disp([defaultArguments{i} ' = ' num2str(defaultArgumentValue)]);
+    end
+    return;
+end
+
+%Collects all options
+for i=1:2:length(varargin)
+    eval([varargin{i} '=' 'varargin{i+1};'])
+end
+
+nCh=numel(chPar.s2r);
+
+avgWF=cell(1,nCh);
+stdWF=cell(1,nCh);
+ch=cell(1,nCh);
+isNoise=cell(1,nCh);
+if isempty(sortingDir)
+    writeDataToFile=false;
+else
+    if nargout>0
+        error('No output variables are allowed in save data to disk option')
+    end
+    writeDataToFile=true;
+end
+
+%steepness=1.2;
+%nonLin = @(x) x+x./sqrt(1+abs(x).^steepness);
+%x=-100:100;plot(x,nonLin(x));
+
+load(fileNames.spikeDetectionFile{1},'postSpikeSamplesIntrp','preSpikeSamplesIntrp','preSpikeSamplesIntrp','upSamplingFrequency');
+nSamples=postSpikeSamplesIntrp+preSpikeSamplesIntrp;
+preSpikeSamples4NoiseDetection=preSpike4NoiseDetection*preSpikeSamplesIntrp;
+postSpikeSamples4NoiseDetection=postSpike4NoiseDetection*postSpikeSamplesIntrp;
+pSamples4NoiseDetection=round(nSamples/2-preSpikeSamples4NoiseDetection):round(nSamples/2+postSpikeSamples4NoiseDetection);
+
+maxSpikeShiftSamples=maxSpikeShift*upSamplingFrequency/1000;
+
+load(fileNames.avgWaveformFile,'avgClusteredWaveforms','stdClusteredWaveforms','nAvgSpk');
+
+validSamplesInTemplate=cell(1,nCh);
+isNoise=cell(1,nCh);
+for n=1:nCh
+    for c=1:size(avgClusteredWaveforms{n},2)
+        tmpSpikes1=squeeze(avgClusteredWaveforms{n}(:,c,:));
+        tmpSpikesStd1=squeeze(stdClusteredWaveforms{n}(:,c,:));
+        pValid=~(tmpSpikes1>-nStdNoiseDetection*tmpSpikesStd1/sqrt(nAvgSpk{n}(c)-1) & tmpSpikes1<nStdNoiseDetection*tmpSpikesStd1/sqrt(nAvgSpk{n}(c)-1));
+        pValidReduces=pValid(pSamples4NoiseDetection,:);
+        validSamplesInTemplate{n}{c}=sum(pValidReduces(:))/numel(pValidReduces);
+        isNoise{n}{c}=validSamplesInTemplate{n}{c}<noiseThreshold;
+        %{
+        if validSamplesInTemplate{n}(c)<noiseThreshold
+            tVec=(1:numel(tmpSpikes1))/60;
+            plot(tVec(~pValid),tmpSpikes1(~pValid),'o','color',[0.6 0.6 0.9]);hold on;
+            plot(tVec,tmpSpikes1(:),'lineWidth',1);
+            
+            ylabel('Voltage [\muV]');
+            xlabel('Time [ms]');
+            axis tight;
+            title([num2str([n c]) '- noise = ' num2str(validSamplesInTemplate{n}{c}<0.4) ', score = ' num2str(validSamplesInTemplate{n}{c})]);
+            pause;hold off;
+        end
+        %}
+    end
+end
+%hist(cell2mat(cellfun(@(x) x(:),{validSamplesInTemplate{:}},'UniformOutput',0)'),100);
+
+lags=-maxSpikeShiftSamples:maxSpikeShiftSamples;
+merge=cell(nCh,nCh);
+fracValSamples=cell(nCh,nCh);
+
+fprintf('Calculating channels to merge');
+mergingList=[];
+for n1=1:nCh
+    for n2=chPar.surChExtVec{n1}(chPar.pSurChOverlap{n1})
+        for c1=1:size(avgClusteredWaveforms{n1},2)
+            for c2=1:size(avgClusteredWaveforms{n2},2)
+                
+                tmpSpikes1=squeeze(avgClusteredWaveforms{n1}(:,c1,chPar.pSharedCh1{n1}{n2}));
+                tmpSpikes2=squeeze(avgClusteredWaveforms{n2}(:,c2,chPar.pSharedCh2{n1}{n2}));
+                
+                tmpSpikesStd1=squeeze(stdClusteredWaveforms{n1}(:,c1,chPar.pSharedCh1{n1}{n2}));
+                tmpSpikesStd2=squeeze(stdClusteredWaveforms{n2}(:,c2,chPar.pSharedCh2{n1}{n2}));
+                
+                if allignWaveShapes
+                    % Compute cross-correlation
+                    X=nanmean(xcorrmat(tmpSpikes1,tmpSpikes2,maxSpikeShiftSamples),2);
+                    [cc,d]=max(X);
+                    d=lags(d);
+                    if d>0
+                        tmpSpikes1=tmpSpikes1(d+1:end,:);
+                        tmpSpikes2=tmpSpikes2(1:end-d,:);
+                        tmpSpikesStd1=tmpSpikesStd1(d+1:end,:);
+                        tmpSpikesStd2=tmpSpikesStd2(1:end-d,:);
+                    else
+                        tmpSpikes1=tmpSpikes1(1:end+d,:);
+                        tmpSpikes2=tmpSpikes2(-d+1:end,:);
+                        tmpSpikesStd1=tmpSpikesStd1(1:end+d,:);
+                        tmpSpikesStd2=tmpSpikesStd2(-d+1:end,:);
+                    end
+                end
+                
+                %remove from spike shapes all noise points estimated as points below nStdSpikeDetection standard deviation
+                pValid=~(   tmpSpikes1>-nStdSpikeDetection*tmpSpikesStd1/sqrt(nAvgSpk{n1}(c1)-1) & tmpSpikes1<nStdSpikeDetection*tmpSpikesStd1/sqrt(nAvgSpk{n1}(c1)-1) & ...
+                    tmpSpikes2>-nStdSpikeDetection*tmpSpikesStd2/sqrt(nAvgSpk{n2}(c2)-1) & tmpSpikes2<nStdSpikeDetection*tmpSpikesStd2/sqrt(nAvgSpk{n2}(c2)-1)   );
+                
+                %tmpSpikes1(tmpSpikes1>-nStdSpikeDetection*tmpSpikesStd1/sqrt(nAvgSpk{n1}(c1)-1) & tmpSpikes1<nStdSpikeDetection*tmpSpikesStd1/sqrt(nAvgSpk{n1}(c1)-1))=NaN;
+                %tmpSpikes2(tmpSpikes2>-nStdSpikeDetection*tmpSpikesStd2/sqrt(nAvgSpk{n2}(c2)-1) & tmpSpikes2<nStdSpikeDetection*tmpSpikesStd2/sqrt(nAvgSpk{n2}(c2)-1))=NaN;
+                
+                %tmpScore=nanmedian(((tmpSpikes1(:)-tmpSpikes2(:)).^2)./(tmpSpikesStd1(:).^2+tmpSpikesStd2(:).^2));
+                %merge{n1,n2}(c1,c2)=nanmean(((tmpSpikes1(:)-tmpSpikes2(:)).^2))./sqrt(nanvar(tmpSpikes1(:))+nanvar(tmpSpikes2(:)));
+                merge{n1,n2}(c1,c2)=nanmean((tmpSpikes1(pValid)-tmpSpikes2(pValid)).^2)./(nanvar(tmpSpikes1(pValid))+nanvar(tmpSpikes2(pValid)));
+                fracValSamples{n1,n2}(c1,c2)=sum(pValid(:))/numel(pValid);
+                
+                if merge{n1,n2}(c1,c2)<=mergingThreshold
+                    mergingList=[mergingList; [n1 c1 n2 c2 d]];
+                end
+                if testInitialTemplateMerging
+                    %plotting tests
+                    f=figure;
+                    tVec=(1:numel(tmpSpikes1))/60;
+                    plot(tVec(~pValid),tmpSpikes1(~pValid),'o','color',[0.6 0.6 0.9]);hold on;
+                    plot(tVec(~pValid),tmpSpikes2(~pValid),'o','color',[0.9 0.6 0.6]);
+                    plot(tVec,tmpSpikes1(:),'lineWidth',1);hold on;
+                    plot(tVec,tmpSpikes2(:),'r','lineWidth',1);
+                    
+                    ylabel('Voltage [\muV]');
+                    xlabel('Time [ms]');
+                    axis tight;
+                    title(['merge=' num2str(merge{n1,n2}(c1,c2)),', T=' num2str(mergingThreshold)]);
+                    %pause;hold off;
+                end
+            end
+        end
+    end
+end
+if plotMergingStatistics
+    f=figure;
+    %hist(cell2mat(cellfun(@(x) x(:),{fracValSamples{:}},'UniformOutput',0)'),100);
+    hist(cell2mat(cellfun(@(x) x(:),{merge{:}},'UniformOutput',0)'),100);
+    line([mergingThreshold mergingThreshold],ylim,'color','r');
+    ylabel('# pairs');
+    xlabel('merging score');
+    
+    print([sortingDir filesep 'mergingStats'],'-djpeg','-r300');
+    close(f);
+end
+%
+
+%change the format of the average waveform to support different number of channels for different neurons on the same electrode
+for i=1:1:nCh
+    for j=1:size(avgClusteredWaveforms{i},2)
+        avgWF{i}{j}=squeeze(avgClusteredWaveforms{i}(:,j,:));
+        stdWF{i}{j}=squeeze(avgClusteredWaveforms{i}(:,j,:));
+        ch{i}{j}=chPar.surChExtVec{i};
+    end
+end
+%f=figure;h=axes;activityTracePhysicalSpacePlot(h,ch{i}{j},avgWF{i}{j}',chPar.rEn);
+
+    
+%mergingList=sortrows(mergingList); %rearrange mergingList according ascending order of 1st then 2nd,3rd,4th rows
+if ~isempty(mergingList)
+    mergingList = unique(mergingList,'rows'); %finds the unique rows to merge
+    uniqueNeurons=unique([mergingList(:,[1 2]);mergingList(:,[3 4])],'rows');
+    
+    %associate each neuron with a number and recalculate list
+    tmpList=[mergingList(:,[1 2]);mergingList(:,[3 4])];
+    numericMergeList=zeros(size(tmpList,1),1);
+    
+    for i=1:size(uniqueNeurons,1)
+        p=find(tmpList(:,1)==uniqueNeurons(i,1) & tmpList(:,2)==uniqueNeurons(i,2));
+        numericMergeList(p)=i;
+    end
+    numericMergeList=reshape(numericMergeList,[numel(numericMergeList)/2 2]);
+    %numericDelayList = sparse([numericMergeList(:,1);numericMergeList(:,2)],[numericMergeList(:,2);numericMergeList(:,1)],[mergingList(:,5);-mergingList(:,5)]);
+    
+    %group connected neurons (the numeric representation corresponds to the order in uniqueNeurons
+    groups=groupPairs(numericMergeList(:,1),numericMergeList(:,2));
+    
+    %A good alternative to recalculating templates would be to take the neuron with most spikes, this solution will not require any reloading of data,
+    %however, it should be checked how reliable is this relative to the recalculation solution
+    
+    %Recalculate templates
+    neurons2Remove=[]; %initialization
+    if recalculateTemplates
+        nGroups=numel(groups);
+        fprintf('Recalculating templates for merged groups (/%d)',nGroups);
+        
+        neuron=cell(1,nGroups); %initialization
+        for i=1:nGroups
+            fprintf('%d ',i);
+            newSpikeShapes=[]; %initialization
+            minimalChMap=1:nCh;
+            maximalChMap=[];
+            nNeuron=numel(groups{i});
+            neuron{i}=zeros(nNeuron,2);  %initialization
+            channel=zeros(nNeuron,1);  %initialization
+            %tmpDelays=full(numericDelayList(groups{i},groups{i})); %extract the relative delays as previously calculated using the cross correlation function
+            %first get the neuron numbers from groups and calculat the common channels (minimalChMap) that are recorded in all these groups
+            for j=1:nNeuron
+                neuron{i}(j,:)=uniqueNeurons(groups{i}(j),:);
+                channel(j)=neuron{i}(j,1);
+                noiseSpike(j)=isNoise{neuron{i}(j,1)}{neuron{i}(j,2)};
+                [commonCh,pComN1,pComN2]=intersect(minimalChMap,chPar.surChExtVec{channel(j)});
+                minimalChMap=minimalChMap(pComN1);
+                maximalChMap=[maximalChMap chPar.surChExtVec{channel(j)}];
+            end
+            maxChMap=unique(maximalChMap);
+            
+            if isempty(minimalChMap) %some noise signal will be similar across the whole array and will come out as one group -in this case the whole array is used for comparison
+                fprintf('Group %d (%d neurons) not merged due to lack of common channes',i,nNeuron);
+                minimalChMap=maximalChMap;
+            else
+                avgWaveformsSimilarNeurons=nan(nSamples,nNeuron,numel(minimalChMap));
+                for j=1:nNeuron
+                    [commonCh,pComN1,pComN2]=intersect(minimalChMap,chPar.surChExtVec{channel(j)});
+                    avgWaveformsSimilarNeurons(:,j,pComN1)=avgClusteredWaveforms{channel(j)}(:,neuron{i}(j,2),pComN2);
+                end
+                [allignedWaveforms,tmpDelays]=allignSpikeShapes(permute(avgWaveformsSimilarNeurons,[2 3 1]));
+                
+                %load the waveform shift them according to cross correlation delays and add them to one big spike waveform matrix
+                for j=1:nNeuron
+                    [commonCh,pComN1,pComN2]=intersect(minimalChMap,chPar.surChExtVec{channel(j)});
+                    %try to rewrite this part to access only specific indices in spike shapes by defining a matfile object (maybe this can increase speed)
+                    load(fileNames.spikeDetectionFile{channel(j)},'spikeShapes','preSpikeSamplesIntrp','minimumDetectionIntervalSamplesIntrp','int2uV');
+                    load(fileNames.clusteringFile{channel(j)},'idx');
+                    
+                    pRelevantSpikes=find(idx==neuron{i}(j,2));
+                    
+                    %tmpSpikeShapes=int2uV.*double(spikeShapes(: , pRelevantSpikes , pComN2)); %there is a conversion 2 double here - if no shifting is needed
+                    
+                    tmpSpikeShapes=nan(nSamples,numel(pRelevantSpikes),numel(minimalChMap)); %there is a conversion 2 double here
+                    if tmpDelays(j) >= 0
+                        tmpSpikeShapes(1 : (end-tmpDelays(j)) , : , pComN1)=int2uV.*double(spikeShapes( (tmpDelays(j)+1) : end , pRelevantSpikes , pComN2)); %there is a conversion 2 double here
+                    else
+                        tmpSpikeShapes(-tmpDelays(j)+1:end,:,pComN1)=int2uV.*double(spikeShapes(1:end+tmpDelays(j),pRelevantSpikes,pComN2)); %there is a conversion 2 double here
+                    end
+                    %}
+                    newSpikeShapes=cat(2,newSpikeShapes,tmpSpikeShapes);
+                end
+                
+                %newSpikeShapes=permute(allignSpikeShapes(permute(newSpikeShapes,[2 3 1])),[3 1 2]);
+                %newSpikeShapes(newSpikeShapes==0)=NaN; %to not include in the averages the padding due to spike shifting
+                
+                avgSpikeWaveforms=nanmedian(newSpikeShapes,2);
+                stdSpikeWaveforms=1.4826*nanmedian(abs(newSpikeShapes- bsxfun(@times,avgSpikeWaveforms,ones(1,size(newSpikeShapes,2),1)) ),2);
+                avgSpikeWaveforms(isnan(avgSpikeWaveforms))=0;   %average waveform should not contain NaNs
+                stdSpikeWaveforms(isnan(stdSpikeWaveforms))=0;   %average waveform should not contain NaNs
+                
+                [~,pMin]=min(min(avgSpikeWaveforms((preSpikeSamplesIntrp-minimumDetectionIntervalSamplesIntrp):(preSpikeSamplesIntrp+minimumDetectionIntervalSamplesIntrp),:,:),[],1),[],3);
+                maxChannel=commonCh(pMin); %real channel
+                pMergedNeuron=find(channel==maxChannel,1,'first'); %select ch with largest amp. if there are several neurons on the same channel with the same waveform just takes the first
+                if isempty(pMergedNeuron) %for the special case where the peak waveform of the joined neurons sits on a different channel than any of the original neurons
+                    pMergedNeuron=1;
+                    fprintf('Maximum amplitude channel for group %d, channel %d, neuron %d - detected on a different channel than any of the original neurons before merging.\n',i,neuron{i}(:,1),neuron{i}(:,2));
+                end
+                
+                %M=newSpikeShapes;plotShifted(reshape(permute(M,[1 3 2]),[size(M,1)*size(M,3) size(M,2)]),'verticalShift',30);line([(pMin-1)*size(M,1) pMin*size(M,1)],[0 0],'color','g','lineWidth',3);
+                %f=figure;h=axes;activityTracePhysicalSpacePlot(h,commonCh,squeeze(avgSpikeWaveforms(:,1,:))',chPar.rEn);
+                %pause;hold off;
+                
+                [commonCh,pComN1,pComN2]=intersect(minimalChMap,chPar.surChExtVec{neuron{i}(pMergedNeuron,1)});
+                avgWF{neuron{i}(pMergedNeuron,1)}{neuron{i}(pMergedNeuron,2)}=avgSpikeWaveforms;
+                stdWF{neuron{i}(pMergedNeuron,1)}{neuron{i}(pMergedNeuron,2)}=stdSpikeWaveforms;
+                ch{neuron{i}(pMergedNeuron,1)}{neuron{i}(pMergedNeuron,2)}=commonCh;
+                isNoise{neuron{i}(pMergedNeuron,1)}{neuron{i}(pMergedNeuron,2)}=any(noiseSpike);
+                
+                %collect all neurons to remove from waveforms
+                for j=[1:(pMergedNeuron-1) (pMergedNeuron+1):numel(groups{i})]
+                    neurons2Remove=[neurons2Remove ; neuron{i}(j,:)];
+                end
+            end
+        end
+        %remove all merged waveforms
+        for i=unique(neurons2Remove(:,1))'
+            p=neurons2Remove(find(neurons2Remove(:,1)==i),2);
+            for j=1:numel(p)
+                avgWF{i}{p(j)}=[];
+                stdWF{i}{p(j)}=[];
+                ch{i}{p(j)}=[];
+                isNoise{i}{p(j)}=[];
+            end
+            if all(cellfun(@(x) isempty(x),avgWF{i})) %if after removal the channel i has no neurons this channel has to be replaced by an empty value
+                avgWF{i}=[];
+                stdWF{i}=[];
+                ch{i}=[];
+                isNoise{i}=[];
+            end
+        end
+        for i=find(cellfun(@(x) ~isempty(x),avgWF))
+            pEmptyNeurons=cellfun(@(x) isempty(x),avgWF{i});
+            avgWF{i}(pEmptyNeurons)=[];
+            stdWF{i}(pEmptyNeurons)=[];
+            ch{i}(pEmptyNeurons)=[];
+            isNoise{i}(pEmptyNeurons)=[];
+        end
+    else
+        % take the average of the largest group as the average
+    end
+    mergedNeurons=cellfun(@(x) [x(:,1) x(:,2)],neuron,'UniformOutput',0);
+else
+    mergedNeurons=[];
+end
+if writeDataToFile
+    save(fileNames.mergedAvgWaveformFile,'avgWF','stdWF','ch','mergedNeurons','isNoise');
+end
