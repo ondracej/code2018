@@ -21,7 +21,6 @@ fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1
 
 [pathstr,name,ext] = fileparts(fileName);
 
-
 bla = find(fileName == dirD);
 
 dataName = fileName(bla(end-1)+1:bla(end)-1);
