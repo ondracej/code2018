@@ -2,8 +2,9 @@ function [] = loadOpenEphysData()
 dbstop if error
 close all
 
-addpath(genpath('/home/janie/Code/analysis-tools-master/'));
-addpath(genpath('/home/janie/Code/MPI/NSKToolBox/'));    
+addpath(genpath('/home/janie/Code/code2018/OpenEphys/')
+addpath(genpath('/home/janie/Code/code2018/analysis-tools-master/'));
+addpath(genpath('/home/janie/Code/code2018/NSKToolBox/'));    
 dirD = '/';
 
 %fileName = '/home/janie/Data/SleepChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous';
