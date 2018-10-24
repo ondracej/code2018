@@ -1,20 +1,41 @@
 function [] = makeFiguesForSFNPoster()
 
+hostName = gethostname;
 
-addpath(genpath('/home/janie/Code/code2018/'))
-dirD = '/';
+switch hostName
+    case 'deadpool'
+        addpath(genpath('/home/janie/Code/code2018/'))
+        dirD = '/';
+        
+        %% Penetration 4
+        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_15-19-16/100_CH1.continuous'; %DV=1806
+        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-03-12/100_CH1.continuous'; %DV=2207
+        
+        
+        %% Use these
+        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous'; %DV=2526, 30 min
+        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous'; %DV=2998
+        fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
+        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
+        
+        saveDir = ['/home/janie/Dropbox/00_Conferences/SFN_2018/figsForPoster/'];
+        
+    case 'turtle'
+        
+        addpath(genpath('/home/janie/code/code2018/'))
+        dirD = '/';
+        
+        %% Use these
+        %fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous'; %DV=2526, 30 min
+        %fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous'; %DV=2998
+        fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
+        %fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
+        
+        saveDir = ['/home/janie/Dropbox/00_Conferences/SFN_2018/figsForPoster/'];
+        
+end
 
-%% Penetration 4
-%fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_15-19-16/100_CH1.continuous'; %DV=1806
-%fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-03-12/100_CH1.continuous'; %DV=2207 
-
-
-%% Use these
-%fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous'; %DV=2526, 30 min
-%fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous'; %DV=2998
-fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
-%fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
-
+    
 %% Loading Data
 
 [pathstr,name,ext] = fileparts(fileName);
@@ -57,24 +78,25 @@ thisSegData_ms = timestamps(1:end) - timestamps(1);
 %figure
 %plot(thisSegData_ms, squeeze(thisSegData));
 
-%%
-%chick2-16-30-56_30s
+%% ROIS
+%% chick2-16-30-56_30s
 %thisROI = 1540*Fs:1570*Fs;
 %thisROI = 1736*Fs:1766*Fs;
 
-%chick2-17-05-32_30s
+%% chick2-17-05-32_30s
 %thisROI = 580*Fs:610*Fs;
 %thisROI = 590*Fs:620*Fs;
 
-%chick2-17-29-04_30s
+%% chick2-17-29-04_30s
 %thisROI = 715*Fs:745*Fs;
 %thisROI = 605*Fs:635*Fs;
-thisROI = 607*Fs:637*Fs;
+%thisROI = 607*Fs:637*Fs;
+thisROI = 154*Fs:156*Fs; % single ShWR
 
-%17-56-36
+%% Chick2-17-56-36
 %thisROI = 290*Fs:320*Fs;
 
-%
+%%
 SegData = thisSegData(:,:, thisROI);
 SegData_ms = thisSegData_ms(thisROI);
 
@@ -108,6 +130,52 @@ saveName = [saveDir 'chick2-16-30-56_30s'];
 plotpos = [0 0 25 20];
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 print_in_A4(0, saveName, '-depsc', 0, plotpos);
+%% Single ShWRs
+%% chick2-17-29-04_30s
+%thisROI = 154*Fs:156*Fs; % single ShWR
+
+pnt = 154.8897*Fs;
+win = 0.2*Fs;
+thisROI  = pnt-win:pnt+win;
+
+bla2 = 154.8897:-0.1:154.68;
+bla3 = 154.8897:+0.1:155.0897;
+all = [fliplr(bla2)  bla3(2:end) ];
+xlabs = {'-0.2', '-0.1', '0', '0.1', '0.2'};
+%%
+SegData = thisSegData(:,:, thisROI);
+SegData_ms = thisSegData_ms(thisROI);
+
+DataSeg_FN = fobj.filt.FN.getFilteredData(SegData);
+DataSeg_FL = fobj.filt.FL.getFilteredData(SegData);
+DataSeg_FH2 = fobj.filt.FH2.getFilteredData(SegData);
+
+%
+figure(105);clf
+subplot(2, 1, 1)
+plot(SegData_ms, squeeze(DataSeg_FN), 'k');
+axis tight
+ylim([-800 250])
+set(gca, 'xtick', all)
+set(gca, 'xticklabel', xlabs)
+% subplot(3, 1, 2)
+% plot(SegData_ms, squeeze(DataSeg_FL), 'k');
+% axis tight
+% ylim([-800 200])
+subplot(2, 1, 2)
+plot(SegData_ms, squeeze(DataSeg_FH2), 'k');
+axis tight
+ylim([-300 150])
+set(gca, 'xtick', all)
+set(gca, 'xticklabel', xlabs)
+xlabel ('Time [s]')
+%%
+
+saveName = [saveDir 'chick2-17-29-04_30s_single'];
+
+plotpos = [0 0 20 10];
+print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+print_in_A4(0, saveName, '-depsc', 0, plotpos);
 
 
 %% Wavelet
@@ -115,7 +183,10 @@ print_in_A4(0, saveName, '-depsc', 0, plotpos);
 thisROI = 607*Fs:637*Fs;
 thisSegData_V = thisSegData(:,:, thisROI);
 thisSegData_wav = fobj.filt.FN.getFilteredData(thisSegData_V);
+DataSeg_FH2 = fobj.filt.FH2.getFilteredData(thisSegData_V );
+SegData_ms = thisSegData_ms(thisROI);
 
+%%
 dsf = 20;
 Fsd = Fs/dsf;
 hcf = 400;
@@ -140,14 +211,11 @@ wfreqs = scal2frq(scales,wavetype,1/Fsd);
 use_ch = 1;
 cur_V = squeeze(V_ds(:,use_ch,:));
 V_wave = cwt(cur_V(:),scales,wavetype);
-%avg_pspec = mean(abs(V_wave),2);
 
 V_wave = reshape(V_wave,nfreqs,[],n_trials);
-%avg_specgram = squeeze(mean(abs(V_wave),3));
-% avg_specgram = squeeze(mean(abs(V_wave),2));
-%%
 
 
+%% Long Wavelet Plot
 
 f1 = figure(1); clf
 tr = 1;
@@ -186,51 +254,44 @@ print_in_A4(0, saveName, '-depsc', 3, plotpos);
 
 
 
-  %%
+  %% Single Wavelet Plot
 f1 = figure(1); clf
 tr = 1;
 
-subplot(2,1,1)
-plot((1:N)/Fsd,squeeze(V_ds(:,use_ch,tr)), 'k');
+ax1 = subplot(3,1,1);
+plot(SegData_ms,squeeze(thisSegData_V), 'k');
 axis tight
-ylim([-1000 200])
-xlim([22.0 22.54])
+ylim([-1200 200])
+xlim([629.1 629.4])
 %xlim(xr)
 
+ax2 = subplot(3,1,2);
+plot(SegData_ms,squeeze(DataSeg_FH2), 'k');
+axis tight
+ylim([-180 180])
+xlim([629.1 629.4])
+%xlim(xr)
 
 %bla= 22:0.04:22.50;
 %set(gca, 'xtick', bla)
 
-subplot(2,1,2)
+ax3 = subplot(3,1,3);
 pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
 %set(gca,'yscale','log');
 axis tight
 ylim([0 400])
 caxis([0 200]);
-xlim([22.0 22.5])
+xlim([22.1 22.4])
 
+%linkaxes([ax1,ax2],'x')
+
+%xlim([639 630])
 xlabel('Time [s]')
 ylabel('Frequency [Hz]')
-% subplot(3,1,3)
-% pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
-% %set(gca,'yscale','log');
-% axis tight
-% ylim([100 400])
-% caxis([0 100]);
-% xlim([22.0 22.5])
 
-
-%subplot(3,1,3)
-%pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
-%set(gca,'yscale','log');
-%axis tight
-%ylim([0 150])
-%xlim([21.5 22.5])
-%xlim([22.0 22.5])
 
 %%
-saveDir = ['/home/janie/Dropbox/00_Conferences/SFN_2018/figsForPoster/'];
-saveName = [saveDir 'chick2-17-29-04_wavelet'];
+saveName = [saveDir 'chick2-17-29-04_waveletV2'];
 
 plotpos = [0 0 15 20];
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
