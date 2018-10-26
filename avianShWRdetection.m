@@ -3,9 +3,9 @@ dbstop if error
 %close all
 
 hostName = gethostname;
-
+doPlot = 0;
 switch hostName
-    case 'deadpool'
+    case 'DEADPOOL'
         addpath(genpath('/home/janie/Code/code2018/'))
         dirD = '/';
         
@@ -20,7 +20,8 @@ switch hostName
         fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
         
-        saveDir = ['/home/janie/Dropbox/00_Conferences/SFN_2018/figsForPoster/'];
+        saveDir = ['/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/'];
+        saveName = [saveDir 'ShWDetection_Chick2_17-29-04_'];
         
     case 'TURTLE'
         
@@ -43,7 +44,7 @@ end
 [pathstr,name,ext] = fileparts(fileName);
 bla = find(fileName == dirD);
 dataName = fileName(bla(end-1)+1:bla(end)-1);
-saveName = [pathstr dirD dataName '-fullData'];
+%saveName = [pathstr dirD dataName '-fullData'];
 [data, timestamps, info] = load_open_ephys_data(fileName);
 Fs = info.header.sampleRate;
 
@@ -125,39 +126,44 @@ for i=1:nCycles-1
     %%
     
     absPeakTime_s =  SegData_s(peakTime_Fs);
-   % relPeakTime_s  = peakTime_Fs;
-   
+    asPeakTime_fs = peakTime_Fs+thisROI(1)-1;
+    % relPeakTime_s  = peakTime_Fs;
+    
     %%
-    figure(100);clf;
-    
-    subplot(5,1,1)
-    plot(SegData_s, Data_SegData); title( ['Raw Voltage']);
-    axis tight
-    ylim([-1000 1000])
-    
-    subplot(5, 1, 2)
-    plot(SegData_s, DataSeg_FNotch); title( ['Notch Filter']);
-    axis tight
-    ylim([-1000 1000])
-    
-    subplot(5, 1, 3)
-    plot(SegData_s, DataSeg_LF); title( ['LF']);
-    axis tight
-    ylim([-1000 1000])
-    
-    subplot(5, 1, 4)
-    plot(SegData_s, DataSeg_rect_HF); title( ['HF Rectified']);
-    axis tight
-    
-    subplot(5, 1, 5)
-    plot(SegData_s, DataSeg_HF); title( ['HF Rectified']);
-    axis tight
-    ylim([-200 200])
+    if doPlot
+        figure(100);clf;
+        
+        subplot(5,1,1)
+        plot(SegData_s, Data_SegData); title( ['Raw Voltage']);
+        axis tight
+        ylim([-1000 1000])
+        
+        subplot(5, 1, 2)
+        plot(SegData_s, DataSeg_FNotch); title( ['Notch Filter']);
+        axis tight
+        ylim([-1000 1000])
+        
+        subplot(5, 1, 3)
+        plot(SegData_s, DataSeg_LF); title( ['LF']);
+        axis tight
+        ylim([-1000 1000])
+        
+        subplot(5, 1, 4)
+        plot(SegData_s, DataSeg_rect_HF); title( ['HF Rectified']);
+        axis tight
+        ylim([0 1200])
+        
+        subplot(5, 1, 5)
+        plot(SegData_s, DataSeg_HF); title( ['HF Rectified']);
+        axis tight
+        ylim([-200 200])
+    end
     
     disp('')
     
     for q =1:numel(peakTime_Fs)
         
+        if doPlot 
         figure(100);
         
         subplot(5,1, 5)
@@ -175,6 +181,7 @@ for i=1:nCycles-1
         subplot(5, 1, 2)
         hold on
         plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
+        end
         
         %% Now we check a window around the peak to see if there is really a sharp wave
         
@@ -183,18 +190,18 @@ for i=1:nCycles-1
         
         winROI = peakTime_Fs(q)-WinSizeL:peakTime_Fs(q)+WinSizeR;
         
-        if winROI(end) > size(SegData_s, 1)
-            disp('Win is too big')
+        if winROI(end) > size(SegData_s, 1) || winROI(1) <0 
+            disp('Win is too big/small')
             continue
         else
             
             winROI_s = SegData_s(winROI);
-        
+            
             LFWin = -DataSeg_LF(winROI);
             %LFWin = -DataSeg_FNotch(winROI); % not a good idea
-        
-            figure(104);clf
-            plot(winROI_s, LFWin)
+            
+           % figure(104);clf
+           %plot(winROI_s, LFWin); axis tight
             
             %minPeakWidth_LF = 0.075*Fs;
             minPeakWidth_LF = 0.050*Fs;
@@ -204,29 +211,38 @@ for i=1:nCycles-1
             [peakH_LF,peakTime_Fs_LF, peakW_LF, peakP_LF]=findpeaks(LFWin,'MinPeakHeight',minPeakHeight_LF, 'MinPeakProminence',minPeakProminence, 'MinPeakWidth', minPeakWidth_LF, 'WidthReference','halfprom'); %For HF
             % prominence is realted to window size
             
-            hold on
-            plot(winROI_s(peakTime_Fs_LF), LFWin(peakTime_Fs_LF), '*')
+           % hold on
+           % plot(winROI_s(peakTime_Fs_LF), LFWin(peakTime_Fs_LF), '*')
             
-            
+            %%
             disp('')
             
             if numel(peakTime_Fs_LF) == 1
                 
                 templatePeaks.peakH(cnt) = peakH(q);
-                templatePeaks.peakTime_Fs(cnt) = peakTime_Fs(q);
+                templatePeaks.asPeakTime_fs(cnt) = asPeakTime_fs(q);
                 templatePeaks.absPeakTime_s(cnt) = absPeakTime_s(q);
                 templatePeaks.peakW(cnt) = peakW(q);
                 templatePeaks.peakP(cnt) = peakP(q);
                 
+                absPeakTime_Fs_LF = peakTime_Fs_LF + peakTime_Fs(q)+thisROI(1)-1;
                 templatePeaks.peakH_LF(cnt) = peakH_LF;
-                templatePeaks.peakTime_Fs_LF(cnt) = peakTime_Fs_LF;
+                templatePeaks.absPeakTime_Fs_LF(cnt) = absPeakTime_Fs_LF;
                 templatePeaks.peakW_LF(cnt) = peakW_LF;
                 templatePeaks.peakP_LF(cnt) = peakP_LF;
                 
                 cnt = cnt+1;
-           
-            elseif isempty(peakTime_Fs_LF)
                 
+                
+                %% Test
+                testROI = asPeakTime_fs(q)-0.2*Fs:asPeakTime_fs(q)+0.2*Fs;
+                %testROI = absPeakTime_Fs_LF-0.2*Fs:absPeakTime_Fs_LF+0.2*Fs; % THis is the HF, it will be offset from the peak of the SHW
+                figure; plot(SegData_s(testROI), DataSeg_FNotch(testROI)); axis tight
+                figure; plot(SegData_s(testROI), DataSeg_rect_HF(testROI)); axis tight
+                line([ thisSegData_s(asPeakTime_fs(q)) thisSegData_s(asPeakTime_fs(q))], [-1000 500]);
+                
+            elseif isempty(peakTime_Fs_LF)
+                if doPlot 
                 figure(100);
                 
                 subplot(5,1, 5)
@@ -244,21 +260,49 @@ for i=1:nCycles-1
                 subplot(5, 1, 2)
                 hold on
                 plot(SegData_s(peakTime_Fs(q)), 0, 'b*')
-                
-                
+                end
                 
                 continue
             else
-                keyboard
+                if doPlot 
+                figure(100);
+                
+                subplot(5,1, 5)
+                hold on;
+                plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'bv');
+                
+                subplot(5, 1,4)
+                hold on;
+                plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'b*');
+                
+                subplot(5, 1, 1)
+                hold on
+                plot(SegData_s(peakTime_Fs(q)), 0, 'b*')
+                
+                subplot(5, 1, 2)
+                hold on
+                plot(SegData_s(peakTime_Fs(q)), 0, 'b*')
+                end
+                
+                continue
+                
             end
         end
         
-            
+        
     end
-    %pause    
-     disp('')
-    
+   % pause(0.1)
+   % disp('')
+   % plotpos = [0 0 15 12];
+   % figure(100);
+    %print_in_A4(0, [saveName num2str(i)], '-djpeg', 0, plotpos);
 end
+
+DetectionSaveName = [saveName '-Detections'];
+save(DetectionSaveName, 'templatePeaks');
+
+disp('')
+
 end
 
 %% Single Data Plot
