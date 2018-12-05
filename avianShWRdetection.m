@@ -1,6 +1,6 @@
 function []  = avianShWRdetection()
 dbstop if error
-%close all
+close all
 
 hostName = gethostname;
 doPlot = 0;
@@ -54,8 +54,10 @@ fObj = filterData(Fs);
 
 fobj.filt.FL=filterData(Fs);
 %fobj.filt.FL.lowPassPassCutoff=4.5;
-fobj.filt.FL.lowPassPassCutoff=8;
-fobj.filt.FL.lowPassStopCutoff=10;
+%fobj.filt.FL.lowPassPassCutoff=20;
+%fobj.filt.FL.lowPassStopCutoff=30;
+fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+fobj.filt.FL.lowPassStopCutoff=40;
 fobj.filt.FL.attenuationInLowpass=20;
 fobj.filt.FL=fobj.filt.FL.designLowPass;
 fobj.filt.FL.padding=true;
@@ -86,7 +88,6 @@ overlapWin = 2*Fs;
 
 nCycles = numel(TOn);
 
-figH100 = figure(100);clf;
 cnt = 1;
 
 for i=1:nCycles-1
@@ -116,12 +117,10 @@ for i=1:nCycles-1
     %% Find Peaks
     interPeakDistance = 0.3*Fs;
     minPeakWidth = 0.075*Fs;
-    maxPeakWidth = 0.12*Fs;
     minPeakHeight = 300;
-    %[peakH,peakTime_DS, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakProminence',50,'WidthReference','halfprom'); %For HF
-    %[peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'maxPeakWidth', maxPeakWidth, 'MinPeakProminence',50, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
-    [peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',300, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
-    %[peakH,peakTime_DS, peakW, peakP]=findpeaks(peakDetectionData,'MinPeakProminence',40,'WidthReference','halfprom'); %for LF
+    minPeakProminence = 300;
+    
+    [peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
     
     %%
     
@@ -163,24 +162,24 @@ for i=1:nCycles-1
     
     for q =1:numel(peakTime_Fs)
         
-        if doPlot 
-        figure(100);
-        
-        subplot(5,1, 5)
-        hold on;
-        plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'rv');
-        
-        subplot(5, 1,4)
-        hold on;
-        plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'r*');
-        
-        subplot(5, 1, 1)
-        hold on
-        plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
-        
-        subplot(5, 1, 2)
-        hold on
-        plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
+        if doPlot
+            figure(100);
+            
+            subplot(5,1, 5)
+            hold on;
+            plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'rv');
+            
+            subplot(5, 1,4)
+            hold on;
+            plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'r*');
+            
+            subplot(5, 1, 1)
+            hold on
+            plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
+            
+            subplot(5, 1, 2)
+            hold on
+            plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
         end
         
         %% Now we check a window around the peak to see if there is really a sharp wave
@@ -195,24 +194,21 @@ for i=1:nCycles-1
             continue
         else
             
-            winROI_s = SegData_s(winROI);
-            
             LFWin = -DataSeg_LF(winROI);
-            %LFWin = -DataSeg_FNotch(winROI); % not a good idea
             
-           % figure(104);clf
-           %plot(winROI_s, LFWin); axis tight
-            
-            %minPeakWidth_LF = 0.075*Fs;
-            minPeakWidth_LF = 0.050*Fs;
+            minPeakWidth_LF = 0.030*Fs;
             minPeakHeight_LF = 150;
             minPeakProminence = 195;
-            %minPeakProminence = 490;
+            
             [peakH_LF,peakTime_Fs_LF, peakW_LF, peakP_LF]=findpeaks(LFWin,'MinPeakHeight',minPeakHeight_LF, 'MinPeakProminence',minPeakProminence, 'MinPeakWidth', minPeakWidth_LF, 'WidthReference','halfprom'); %For HF
             % prominence is realted to window size
             
-           % hold on
-           % plot(winROI_s(peakTime_Fs_LF), LFWin(peakTime_Fs_LF), '*')
+            %% Test
+            %figure(104);clf
+            %winROI_s = SegData_s(winROI);
+            %plot(winROI_s, LFWin); axis tight
+            %hold on
+            %plot(winROI_s(peakTime_Fs_LF), LFWin(peakTime_Fs_LF), '*')
             
             %%
             disp('')
@@ -225,7 +221,8 @@ for i=1:nCycles-1
                 templatePeaks.peakW(cnt) = peakW(q);
                 templatePeaks.peakP(cnt) = peakP(q);
                 
-                absPeakTime_Fs_LF = peakTime_Fs_LF + peakTime_Fs(q)+thisROI(1)-1;
+                absPeakTime_Fs_LF = (peakTime_Fs_LF + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
+                
                 templatePeaks.peakH_LF(cnt) = peakH_LF;
                 templatePeaks.absPeakTime_Fs_LF(cnt) = absPeakTime_Fs_LF;
                 templatePeaks.peakW_LF(cnt) = peakW_LF;
@@ -235,14 +232,19 @@ for i=1:nCycles-1
                 
                 
                 %% Test
-                testROI = asPeakTime_fs(q)-0.2*Fs:asPeakTime_fs(q)+0.2*Fs;
-                %testROI = absPeakTime_Fs_LF-0.2*Fs:absPeakTime_Fs_LF+0.2*Fs; % THis is the HF, it will be offset from the peak of the SHW
-                figure; plot(SegData_s(testROI), DataSeg_FNotch(testROI)); axis tight
-                figure; plot(SegData_s(testROI), DataSeg_rect_HF(testROI)); axis tight
-                line([ thisSegData_s(asPeakTime_fs(q)) thisSegData_s(asPeakTime_fs(q))], [-1000 500]);
+               % testROI = asPeakTime_fs(q)-0.2*Fs:asPeakTime_fs(q)+0.2*Fs;% THis is the HF, it will be offset from the peak of the SHW
+               % figure; plot(SegData_s(testROI), DataSeg_rect_HF(testROI)); axis tight
+               % figure; plot(SegData_s(testROI), DataSeg_FNotch(testROI)); axis tight
+                %line([ thisSegData_s(asPeakTime_fs(q)) thisSegData_s(asPeakTime_fs(q))], [-1000 500]);
+                
+                %testROI = absPeakTime_Fs_LF-(0.2*Fs):absPeakTime_Fs_LF+(0.2*Fs); 
+                %figure(200); plot(SegData_s(testROI),  DataSeg_LF(testROI), 'k'); axis tight
+                %hold on; plot(SegData_s(testROI), DataSeg_FNotch(testROI)); axis tight
+                %line([ thisSegData_s(absPeakTime_Fs_LF(q)) thisSegData_s(absPeakTime_Fs_LF(q))], [-1000 500]);
+               
                 
             elseif isempty(peakTime_Fs_LF)
-                if doPlot 
+              if doPlot
                 figure(100);
                 
                 subplot(5,1, 5)
@@ -260,30 +262,30 @@ for i=1:nCycles-1
                 subplot(5, 1, 2)
                 hold on
                 plot(SegData_s(peakTime_Fs(q)), 0, 'b*')
-                end
+              end
                 
                 continue
-            else
-                if doPlot 
-                figure(100);
-                
-                subplot(5,1, 5)
-                hold on;
-                plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'bv');
-                
-                subplot(5, 1,4)
-                hold on;
-                plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'b*');
-                
-                subplot(5, 1, 1)
-                hold on
-                plot(SegData_s(peakTime_Fs(q)), 0, 'b*')
-                
-                subplot(5, 1, 2)
-                hold on
-                plot(SegData_s(peakTime_Fs(q)), 0, 'b*')
+            else % two detections
+               
+                if doPlot
+                    figure(100);
+                    
+                    subplot(5,1, 5)
+                    hold on;
+                    plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'bv');
+                    
+                    subplot(5, 1,4)
+                    hold on;
+                    plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'b*');
+                    
+                    subplot(5, 1, 1)
+                    hold on
+                    plot(SegData_s(peakTime_Fs(q)), 0, 'b*')
+                    
+                    subplot(5, 1, 2)
+                    hold on
+                    plot(SegData_s(peakTime_Fs(q)), 0, 'b*')
                 end
-                
                 continue
                 
             end
@@ -292,7 +294,7 @@ for i=1:nCycles-1
         
     end
    % pause(0.1)
-   % disp('')
+    disp('')
    % plotpos = [0 0 15 12];
    % figure(100);
     %print_in_A4(0, [saveName num2str(i)], '-djpeg', 0, plotpos);
@@ -301,7 +303,7 @@ end
 DetectionSaveName = [saveName '-Detections'];
 save(DetectionSaveName, 'templatePeaks');
 
-disp('')
+disp(['Saved:' DetectionSaveName ])
 
 end
 

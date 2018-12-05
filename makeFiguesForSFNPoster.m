@@ -3,7 +3,7 @@ function [] = makeFiguesForSFNPoster()
 hostName = gethostname;
 
 switch hostName
-    case 'deadpool'
+    case 'DEADPOOL'
         addpath(genpath('/home/janie/Code/code2018/'))
         dirD = '/';
         
@@ -20,7 +20,7 @@ switch hostName
         
         saveDir = ['/home/janie/Dropbox/00_Conferences/SFN_2018/figsForPoster/'];
         
-    case 'turtle'
+    case 'TURTLE'
         
         addpath(genpath('/home/janie/code/code2018/'))
         dirD = '/';
@@ -59,6 +59,8 @@ fobj.filt.FL.padding=true;
 fobj.filt.FH2=filterData(Fs);
 fobj.filt.FH2.highPassCutoff=100;
 fobj.filt.FH2.lowPassCutoff=2000;
+% fobj.filt.FH2.highPassCutoff=80;
+% fobj.filt.FH2.lowPassCutoff=400;
 fobj.filt.FH2.filterDesign='butter';
 fobj.filt.FH2=fobj.filt.FH2.designBandPass;
 fobj.filt.FH2.padding=true;
@@ -183,6 +185,8 @@ print_in_A4(0, saveName, '-depsc', 0, plotpos);
 thisROI = 607*Fs:637*Fs;
 thisSegData_V = thisSegData(:,:, thisROI);
 thisSegData_wav = fobj.filt.FN.getFilteredData(thisSegData_V);
+%thisSegData_wav =  fobj.filt.FH2.getFilteredData(thisSegData_V );
+
 DataSeg_FH2 = fobj.filt.FH2.getFilteredData(thisSegData_V );
 SegData_ms = thisSegData_ms(thisROI);
 
@@ -280,7 +284,7 @@ pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
 %set(gca,'yscale','log');
 axis tight
 ylim([0 400])
-caxis([0 200]);
+caxis([0 100]);
 xlim([22.1 22.4])
 
 %linkaxes([ax1,ax2],'x')
@@ -291,7 +295,7 @@ ylabel('Frequency [Hz]')
 
 
 %%
-saveName = [saveDir 'chick2-17-29-04_waveletV2'];
+saveName = [saveDir 'chick2-17-29-04_waveletV3_100-2000'];
 
 plotpos = [0 0 15 20];
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
