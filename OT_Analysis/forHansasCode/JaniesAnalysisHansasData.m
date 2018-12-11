@@ -1,0 +1,449 @@
+function [] = runJaniesAnalysisHansasData()
+
+close all;
+dbstop if error
+%%
+dataDir = ['/home/janie/Dropbox/00_Conferences/Fens_2018/HansaData/DataToUse/passt/'];
+
+%filToLoad = ['h20_001aG1-1.f32'];
+%filToLoad = ['h20_001bG1-1.f32'];
+%filToLoad = ['h20_001cG1-1.f32'];
+%filToLoad = ['h22_001aG1-1.f32'];
+%filToLoad = ['h22_001bG1-1.f32'];
+filToLoad = ['h22_023G1-1.f32'];
+
+
+saveName = filToLoad(1:end-4);
+
+fiGSavePath = '/home/janie/Dropbox/00_Conferences/Fens_2018/Figs/00_FigsHansasData/';
+
+data=spikedatf([dataDir filToLoad]);
+% data = sweeplength  = 400 ; stim = 16x1 double; sweep = 1x10 struct w field spikes
+%data(1).stim(1) = sample ON?
+%data(1).stim(2) = sample OFF?
+%data(1).stim(3) = trial number
+%data(1).stim(4) = 70 DB right?
+%data(1).stim(5) = 70 DB left?
+%data(1).stim(6) = 0
+%data(1).stim(7) = 1
+%data(1).stim(8) = 1
+%data(1).stim(9) = 0
+%data(1).stim(10) = total duration of record in ms
+%data(1).stim(11) = n repetitions
+%data(1).stim(12) = pre stim silence in ms
+%data(1).stim(13) = azimuth
+%data(1).stim(14) = elevtaion
+%data(1).stim(15) = 35 DB right?
+%data(1).stim(16) = 35 DB left?
+
+%data(199) is silent!
+% Is sweep length in ms?? What are the stim values?? is sweep the repetitions of the stim? 10x each?
+% Stim values must be some experiment parameters - get what these actually are from Hansa
+
+%%
+
+n_stims = size(data,2);  % Number of stims minus the silent stim (199) %gibt die Stimulusanzahl an. Bei (data,2) ist die Anzahl der Stimuli hinterlegt: (9 Elevation* 22 Azimuth) + den Nullstimulus
+n_reps = data(1).stim(11); % 11th positions gives number of repetitions
+sweepLengths_ms = data(1).sweeplength;
+
+%% HardCoded Response Windows for Hansa's data
+
+preSpontWin = 1:50;
+stimWin_1 = 51:100;
+stimWin_2 = 101:150;
+stimWin_3 = 151:200;
+postSpontWin_1 = 201:250;
+postSpontWin_2 = 251:300;
+postSpontWin_3 = 301:350;
+postSpontWin_4 = 351:400;
+
+Twin_s = 0.05;
+cnt = 1;
+for j = 1:n_stims
+    for k = 1:n_reps
+        
+       
+        spks = data(j).sweep(k).spikes;
+        %these_spks_on_chan = spks(spks >= reshapedOnsets(p) & spks <= reshapedOffsets(p))-reshapedOnsets(p);
+        
+        preSpontWin_spks(cnt) = numel(spks(spks >= preSpontWin(1) & spks <= preSpontWin(end)));
+        stimWin_1_spks(cnt) = numel(spks(spks >= stimWin_1(1) & spks <= stimWin_1(end)));
+        stimWin_2_spks(cnt) = numel(spks(spks >= stimWin_2(1) & spks <= stimWin_2(end)));
+        stimWin_3_spks(cnt) = numel(spks(spks >= stimWin_3(1) & spks <= stimWin_3(end)));
+        postSpontWin_1_spks(cnt) = numel(spks(spks >= postSpontWin_1(1) & spks <= postSpontWin_1(end)));
+        postSpontWin_2_spks(cnt) = numel(spks(spks >= postSpontWin_2(1) & spks <= postSpontWin_2(end)));
+        postSpontWin_3_spks(cnt) = numel(spks(spks >= postSpontWin_3(1) & spks <= postSpontWin_3(end)));
+        postSpontWin_4_spks(cnt) = numel(spks(spks >= postSpontWin_4(1) & spks <= postSpontWin_4(end)));
+        
+%         preSpontWin_spks(cnt) = numel(find(preSpontWin(1) <= data(j).sweep(k).spikes & data(j).sweep(k).spikes <= preSpontWin(end)));
+%         stimWin_1_spks(cnt) = numel(find(stimWin_1(1) <= data(j).sweep(k).spikes & data(j).sweep(k).spikes <= stimWin_1(end)));
+%         stimWin_2_spks(cnt) = numel(find(stimWin_2(1) <= data(j).sweep(k).spikes & data(j).sweep(k).spikes <= stimWin_2(end)));
+%         stimWin_3_spks(cnt) = numel(find(stimWin_3(1) <= data(j).sweep(k).spikes & data(j).sweep(k).spikes <= stimWin_3(end)));
+%         postSpontWin_1_spks(cnt) = numel(find(postSpontWin_1(1) <= data(j).sweep(k).spikes & data(j).sweep(k).spikes <= postSpontWin_1(end)));
+%         postSpontWin_2_spks(cnt) = numel(find(postSpontWin_2(1) <= data(j).sweep(k).spikes & data(j).sweep(k).spikes <= postSpontWin_2(end)));
+%         postSpontWin_3_spks(cnt) = numel(find(postSpontWin_3(1) <= data(j).sweep(k).spikes & data(j).sweep(k).spikes <= postSpontWin_3(end)));
+%         postSpontWin_4_spks(cnt) = numel(find(postSpontWin_4(1) <= data(j).sweep(k).spikes & data(j).sweep(k).spikes <= postSpontWin_4(end)));
+        
+        preSpontWin_sumRep(j,k) = preSpontWin_spks(cnt);
+        stimWin_1_sumRep(j,k) =  stimWin_1_spks(cnt);
+        stimWin_2_sumRep(j,k) = stimWin_2_spks(cnt);
+        stimWin_3_sumRep(j,k) = stimWin_3_spks(cnt);
+        postSpontWin_1_sumRep(j,k) =   postSpontWin_1_spks(cnt);
+        postSpontWin_2_sumRep(j,k) =  postSpontWin_2_spks(cnt);
+        postSpontWin_3_sumRep(j,k) =  postSpontWin_3_spks(cnt);
+        postSpontWin_4_sumRep(j,k) =   postSpontWin_4_spks(cnt);
+        
+        preSpontWin_FR(j,k) = preSpontWin_sumRep(j,k)/Twin_s;
+        stimWin_1_FR(j,k) =  stimWin_1_sumRep(j,k)/Twin_s;
+        stimWin_2_FR(j,k) = stimWin_2_sumRep(j,k)/Twin_s;
+        stimWin_3_FR(j,k) = stimWin_3_sumRep(j,k)/Twin_s;
+        postSpontWin_1_FR(j,k) = postSpontWin_1_sumRep(j,k)/Twin_s;
+        postSpontWin_2_FR(j,k) = postSpontWin_2_sumRep(j,k)/Twin_s;
+        postSpontWin_3_FR(j,k) = postSpontWin_3_sumRep(j,k)/Twin_s;
+        postSpontWin_4_FR(j,k) = postSpontWin_4_sumRep(j,k)/Twin_s;
+        
+        cnt = cnt+1;
+        
+    end
+end
+
+preSpontWin_spks_Cnt = sum(preSpontWin_spks);
+stimWin_1_spks_Cnt = sum(stimWin_1_spks);
+stimWin_2_spks_Cnt = sum(stimWin_2_spks);
+stimWin_3_spks_Cnt = sum(stimWin_3_spks);
+postSpontWin_1_spks_Cnt = sum(postSpontWin_1_spks);
+postSpontWin_2_spks_Cnt = sum(postSpontWin_2_spks);
+postSpontWin_3_spks_Cnt = sum(postSpontWin_3_spks);
+postSpontWin_4_spks_Cnt = sum(postSpontWin_4_spks);
+
+preSpontWin_meanFR = nanmean(nanmean(preSpontWin_FR));
+stimWin_1_meanFR = nanmean(nanmean(stimWin_1_FR));
+stimWin_2_meanFR = nanmean(nanmean(stimWin_2_FR));
+stimWin_3_meanFR = nanmean(nanmean(stimWin_3_FR));
+postSpontWin_1_meanFR = nanmean(nanmean(postSpontWin_1_FR));
+postSpontWin_2_meanFR = nanmean(nanmean(postSpontWin_2_FR));
+postSpontWin_3_meanFR = nanmean(nanmean(postSpontWin_3_FR));
+postSpontWin_4_meanFR = nanmean(nanmean(postSpontWin_4_FR));
+
+preSpontWin_std = nanstd(nanstd(preSpontWin_FR));
+stimWin_1_std = nanstd(nanstd(stimWin_1_FR));
+stimWin_2_std = nanstd(nanstd(stimWin_2_FR));
+stimWin_3_std = nanstd(nanstd(stimWin_3_FR));
+postSpontWin_1_std = nanstd(nanstd(postSpontWin_1_FR));
+postSpontWin_2_std = nanstd(nanstd(postSpontWin_2_FR));
+postSpontWin_3_std = nanstd(nanstd(postSpontWin_3_FR));
+postSpontWin_4_std = nanstd(nanstd(postSpontWin_4_FR));
+
+%covar = cov(reshape(FR_Stim, 1, numel(FR_Stim)), reshape(FR_Spont, 1, numel(FR_Spont)));
+%z_score_cov = (meanStim - meanSpont) / sqrt((stdStim^2 + stdSpont^2) - 2*covar(1, 2));
+
+% covar_preSpont = cov(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)));
+% z_score_cov_preSpont = real((preSpontWin_meanFR - preSpontWin_meanFR) / sqrt((preSpontWin_std^2 + preSpontWin_std^2) - 2*covar(1, 2)));
+% 
+% covar_stimWin1 = cov(reshape(stimWin_1_FR, 1, numel(stimWin_1_FR)), reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)));
+% z_score_cov_stimWin1 = real((stimWin_1_meanFR - preSpontWin_meanFR) / sqrt((stimWin_1_std^2 + preSpontWin_std^2) - 2*covar(1, 2)));
+% 
+% covar_stimWin2 = cov(reshape(stimWin_2_FR, 1, numel(stimWin_2_FR)), reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)));
+% z_score_cov_stimWin2 = real((stimWin_2_meanFR - preSpontWin_meanFR) / sqrt((stimWin_2_std^2 + preSpontWin_std^2) - 2*covar(1, 2)));
+% 
+% covar_stimWin3 = cov(reshape(stimWin_3_FR, 1, numel(stimWin_3_FR)), reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)));
+% z_score_cov_stimWin3 = real((stimWin_3_meanFR - preSpontWin_meanFR) / sqrt((stimWin_3_std^2 + preSpontWin_std^2) - 2*covar(1, 2)));
+% 
+% covar_postSpontWin_1 = cov(reshape(postSpontWin_1_FR, 1, numel(postSpontWin_1_FR)), reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)));
+% z_score_cov_postSpontWin_1 = real((postSpontWin_1_meanFR - preSpontWin_meanFR) / sqrt((postSpontWin_1_std^2 + preSpontWin_std^2) - 2*covar(1, 2)));
+% 
+% covar_postSpontWin_2 = cov(reshape(postSpontWin_2_FR, 1, numel(postSpontWin_2_FR)), reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)));
+% z_score_cov_postSpontWin_2 = real((postSpontWin_2_meanFR - preSpontWin_meanFR) / sqrt((postSpontWin_2_std^2 + preSpontWin_std^2) - 2*covar(1, 2)));
+% 
+% covar_postSpontWin_3 = cov(reshape(postSpontWin_3_FR, 1, numel(postSpontWin_3_FR)), reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)));
+% z_score_cov_postSpontWin_3 = real((postSpontWin_3_meanFR - preSpontWin_meanFR) / sqrt((postSpontWin_3_std^2 + preSpontWin_std^2) - 2*covar(1, 2)));
+% 
+% covar_postSpontWin_4 = cov(reshape(postSpontWin_4_FR, 1, numel(postSpontWin_4_FR)), reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)));
+% z_score_cov_postSpontWin_4 = real((postSpontWin_4_meanFR - preSpontWin_meanFR) / sqrt((postSpontWin_4_std^2 + preSpontWin_std^2) - 2*covar(1, 2)));
+
+
+ %z_score_cov = (meanStim - meanSpont) / sqrt((stdStim^2 + stdSpont^2)
+
+z_score_cov_preSpont = (preSpontWin_meanFR - preSpontWin_meanFR) / sqrt(preSpontWin_std^2 + preSpontWin_std^2);
+
+z_score_cov_stimWin1 = (stimWin_1_meanFR - preSpontWin_meanFR) / sqrt(stimWin_1_std^2 + preSpontWin_std^2);
+
+z_score_cov_stimWin2 = (stimWin_2_meanFR - preSpontWin_meanFR) / sqrt(stimWin_2_std^2 + preSpontWin_std^2);
+
+z_score_cov_stimWin3 = (stimWin_3_meanFR - preSpontWin_meanFR) / sqrt(stimWin_3_std^2 + preSpontWin_std^2);
+
+z_score_cov_postSpontWin_1 = (postSpontWin_1_meanFR - preSpontWin_meanFR) / sqrt(postSpontWin_1_std^2 + preSpontWin_std^2);
+
+z_score_cov_postSpontWin_2 = (postSpontWin_2_meanFR - preSpontWin_meanFR) / sqrt(postSpontWin_2_std^2 + preSpontWin_std^2);
+
+z_score_cov_postSpontWin_3 = (postSpontWin_3_meanFR - preSpontWin_meanFR) / sqrt(postSpontWin_3_std^2 + preSpontWin_std^2);
+
+z_score_cov_postSpontWin_4 = (postSpontWin_4_meanFR - preSpontWin_meanFR) / sqrt(postSpontWin_4_std^2 + preSpontWin_std^2);
+
+
+allZScores = [z_score_cov_preSpont z_score_cov_stimWin1 z_score_cov_stimWin2 z_score_cov_stimWin3 z_score_cov_postSpontWin_1 z_score_cov_postSpontWin_2 z_score_cov_postSpontWin_3 z_score_cov_postSpontWin_4];
+allFrs = [preSpontWin_meanFR stimWin_1_meanFR stimWin_2_meanFR stimWin_3_meanFR postSpontWin_1_meanFR postSpontWin_2_meanFR postSpontWin_3_meanFR postSpontWin_4_meanFR];
+
+%% stats
+
+%ttest
+% [h, p_preSpontWin]  = ttest(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)));
+% [h, p_stimWin_1]  = ttest(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(stimWin_1_FR, 1, numel(stimWin_1_FR)));
+% [h, p_stimWin_2]  = ttest(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(stimWin_2_FR, 1, numel(stimWin_2_FR)));
+% [h, p_stimWin_3]  = ttest(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(stimWin_3_FR, 1, numel(stimWin_3_FR)));
+% [h, p_postSpontWin_1]  = ttest(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(postSpontWin_1_FR, 1, numel(postSpontWin_1_FR)));
+% [h, p_postSpontWin_2]  = ttest(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(postSpontWin_2_FR, 1, numel(postSpontWin_2_FR)));
+% [h, p_postSpontWin_3]  = ttest(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(postSpontWin_3_FR, 1, numel(postSpontWin_3_FR)));
+% [h, p_postSpontWin_4]  = ttest(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(postSpontWin_4_FR, 1, numel(postSpontWin_4_FR)));
+
+%signrank
+[p_preSpontWin, h]  = signrank(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)));
+[p_stimWin_1, h]  = signrank(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(stimWin_1_FR, 1, numel(stimWin_1_FR)));
+[p_stimWin_2, h]  = signrank(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(stimWin_2_FR, 1, numel(stimWin_2_FR)));
+[p_stimWin_3, h]  = signrank(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(stimWin_3_FR, 1, numel(stimWin_3_FR)));
+[p_postSpontWin_1, h]  = signrank(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(postSpontWin_1_FR, 1, numel(postSpontWin_1_FR)));
+[p_postSpontWin_2, h]  = signrank(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(postSpontWin_2_FR, 1, numel(postSpontWin_2_FR)));
+[p_postSpontWin_3, h]  = signrank(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(postSpontWin_3_FR, 1, numel(postSpontWin_3_FR)));
+[p_postSpontWin_4, h]  = signrank(reshape(preSpontWin_FR, 1, numel(preSpontWin_FR)), reshape(postSpontWin_4_FR, 1, numel(postSpontWin_4_FR)));
+
+
+allPs = [p_preSpontWin p_stimWin_1 p_stimWin_2 p_stimWin_3 p_postSpontWin_1 p_postSpontWin_2 p_postSpontWin_3 p_postSpontWin_4];
+
+
+
+%% Figure
+
+%% Sort Data
+dataSort = [];
+dataInfo = [];
+
+n_elev = 9;
+n_azim = 22;
+
+ea_cnt = 1;
+for elev = 1:n_elev
+    for azim = 1:n_azim
+        dataSort{azim, elev} = data(ea_cnt).sweep;
+        dataInfo{azim, elev} = data(ea_cnt).stim;
+        ea_cnt = ea_cnt+1;
+    end
+end
+
+%% Raster
+figH = figure (201); clf
+blueCol = [0.2 0.7 0.8];
+subplot(7, 1, [1 2 3 4])
+
+hold on
+qcnt = 0;
+for q = 1:100
+    
+    xes = [0 400 400 0];
+    yes = [qcnt qcnt  qcnt+10 qcnt+10];
+    a = patch(xes,  yes, gray);
+    set(a,'EdgeColor','none')
+    a.FaceAlpha = 0.2;
+    
+    qcnt  = qcnt + 20;
+    
+end
+
+cnt = 1;
+for azim = 1:n_azim
+    for elev = 1:n_elev
+        
+        for k = 1:n_reps
+            
+            %must subtract start_stim to arrange spikes relative to onset
+            theseSpks = dataSort{azim, elev}(k).spikes;
+            ypoints = ones(numel(theseSpks))*cnt;
+            hold on
+            plot(theseSpks, ypoints, 'ko', 'linestyle', 'none', 'MarkerFaceColor','k','MarkerEdgeColor','k')
+            
+            
+            if elev == n_elev
+                line([0 400], [cnt cnt], 'color', blueCol)
+                text(5, cnt-30, num2str(dataInfo{azim, elev}(13)))
+            end
+            cnt = cnt +1;
+            
+        end
+    end
+end
+set(gca,'ytick',[])
+title (filToLoad)
+%xlabel('Time [ms]')
+ylabel('Reps | Azimuth')
+%% PSTH
+binwidth_s=0.001;%[s]
+max_time=(data(1).sweeplength)/1000;%[ms]
+spike_times=[]; psthall = [];
+htime=0:binwidth_s:max_time;
+for yy=1:n_reps
+    for xy = 1:n_stims
+        %if 1-isempty(data(xy).sweep);%eingef�gt 6.12.04
+        spike_times=[spike_times data(xy).sweep(yy).spikes]; % concat all spikes in ms
+        %end
+    end
+end
+% convert to seconds
+spike_times=spike_times/1e3; % convert back to s
+
+psth=histc(spike_times,htime);
+psthall(xy,:)=psth; % what does this do
+summenpsth=sum(psthall); % this is the same as psth
+
+spontlevel=(std(summenpsth(1:50))*2)+mean(summenpsth(1:50)); %2x std
+spontmean = mean(summenpsth(1:50));
+spontstd = std(summenpsth(1:50))*3;
+
+maxspikecount=max(summenpsth);
+
+preStimArea = 1:51;
+stimArea = 51:200;
+postStimArea = 200:401;
+
+%% figure
+
+blueCol = [0.2 0.7 0.8];
+greencol = [0.2 0.8 0.7];
+redCol = [0.8 0.3 0.3];
+gray = [0.5 0.5 0.5];
+
+
+smoothWin_ms = 5;
+%smooth_psth = smooth(summenpsth, smoothWin_ms);
+%smooth_psth = smooth(summenpsth, smoothWin_ms, 'loess');
+smooth_psth = smooth(summenpsth, smoothWin_ms, 'lowess');
+
+maxPsth = max(summenpsth);
+maxSmoothPsth = max(smooth_psth);
+
+subplot(7, 1, [ 5 6])
+
+a = area([preStimArea(1)  preStimArea(end)], [maxPsth maxPsth], 'FaceColor', gray);
+set(a,'EdgeColor','none')
+a.FaceAlpha = 0.2;
+hold on
+
+a = area([stimArea(1)  stimArea(end)], [maxPsth maxPsth], 'FaceColor', greencol);
+set(a,'EdgeColor','none')
+a.FaceAlpha = 0.4;
+hold on
+
+a = area([postStimArea(1)  postStimArea(end)], [maxPsth maxPsth], 'FaceColor', gray);
+set(a,'EdgeColor','none')
+a.FaceAlpha = 0.2;
+hold on
+
+plot(summenpsth, 'color', gray)
+
+plot(smooth_psth, 'k', 'linewidth' ,2);
+axis tight
+
+xlabel('Time [ms]')
+ylabel('PSTH [spks]')
+%%
+subplot(7, 1, [7])
+imagesc(allZScores);
+%colormap('hot')
+colormap('bone')
+colormap('pink')
+hold on
+for o = 1:8
+    text(o-.2, 1, ['Z = ' num2str(round(allZScores(o), 2))])
+    text(o-.2, 1.2, ['p = ' num2str(round(allPs(o), 4))])
+    
+end
+
+disp('')
+%%
+disp('Printing Plot')
+set(0, 'CurrentFigure', figH)
+
+
+dropBoxSavePath = [fiGSavePath saveName '-RasterPsthZscore'];
+
+plotpos = [0 0 35 40];
+print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+print_in_A4(0, dropBoxSavePath, '-depsc', 0, plotpos);
+
+%% Now makin SRFs
+
+%%Sort Spike COunts
+
+preSpontWin_spks_Cnt = sum(preSpontWin_spks);
+stimWin_1_spks_Cnt = sum(stimWin_1_spks);
+stimWin_2_spks_Cnt = sum(stimWin_2_spks);
+stimWin_3_spks_Cnt = sum(stimWin_3_spks);
+postSpontWin_1_spks_Cnt = sum(postSpontWin_1_spks);
+postSpontWin_2_spks_Cnt = sum(postSpontWin_2_spks);
+postSpontWin_3_spks_Cnt = sum(postSpontWin_3_spks);
+postSpontWin_4_spks_Cnt = sum(postSpontWin_4_spks);
+
+
+%%
+preSpontWin_spkCntSort = [];
+stimWin_1_spkCntSort = [];
+stimWin_2_spkCntSort = [];
+stimWin_3_spkCntSort = [];
+postSpontWin_1_spkCntSort = [];
+postSpontWin_2_spkCntSort = [];
+postSpontWin_3_spkCntSort = [];
+postSpontWin_4_spkCntSort = [];
+
+n_elev = 9;
+n_azim = 22;
+
+ct = 1;
+for elev = 1:n_elev
+    for azim = 1:n_azim
+        preSpontWin_spkCntSort(azim, elev) = preSpontWin_spks(ct);
+        stimWin_1_spkCntSort(azim, elev) = stimWin_1_spks(ct);
+        stimWin_2_spkCntSort(azim, elev) = stimWin_2_spks(ct);
+        stimWin_3_spkCntSort(azim, elev) = stimWin_3_spks(ct);
+        postSpontWin_1_spkCntSort(azim, elev) = postSpontWin_1_spks(ct);
+        postSpontWin_2_spkCntSort(azim, elev) = postSpontWin_2_spks(ct);
+        postSpontWin_3_spkCntSort(azim, elev) = postSpontWin_3_spks(ct);
+        postSpontWin_3_spkCntSort(azim, elev) = postSpontWin_4_spks(ct);
+        
+        ct = ct+1;
+    end
+end
+
+
+%%
+disp('')
+
+allSpkCnts = [];
+
+for elev = 1:n_elev
+    for azim = 1:n_azim
+        
+        
+        for k = 1:n_reps
+            
+            %must subtract start_stim to arrange spikes relative to onset
+            theseSpks(k) = numel(dataSort{azim, elev}(k).spikes);
+            
+        end
+        
+        allSpkCnts(elev, azim) = sum(theseSpks);
+        
+    end
+end
+
+
+
+
+end
+
+
+
+
+
+
+
+
+
+
