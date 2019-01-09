@@ -2,7 +2,7 @@ function [] = loadOpenEphysData()
 dbstop if error
 close all
 
-addpath(genpath('/home/janie/Code/code2018/OpenEphys/')
+addpath(genpath('/home/janie/Code/code2018/OpenEphys/'))
 addpath(genpath('/home/janie/Code/code2018/analysis-tools-master/'));
 addpath(genpath('/home/janie/Code/code2018/NSKToolBox/'));    
 dirD = '/';
@@ -15,8 +15,11 @@ dirD = '/';
 %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous';
 %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous';
 %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous'; %good one
-fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one
+%fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one
 %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous';
+
+
+fileName = '/home/janie/Data/TUM/SleepChicken/Ephys/Chick2/chick2_2018-04-30_17-29-04/100_CH1.continuous';
 
 
 [pathstr,name,ext] = fileparts(fileName);
@@ -49,6 +52,13 @@ fobj.filt.FH2.filterDesign='butter';
 fobj.filt.FH2=fobj.filt.FH2.designBandPass;
 fobj.filt.FH2.padding=true;
 
+fobj.filt.FS=filterData(Fs);
+fobj.filt.FS.highPassCutoff=150;
+fobj.filt.FS.lowPassCutoff=2000;
+fobj.filt.FS.filterDesign='butter';
+fobj.filt.FH=fobj.filt.FS.designBandPass;
+fobj.filt.FH.padding=true;
+
 fobj.filt.FN =filterData(Fs);
 fobj.filt.FN.filterDesign='cheby1';
 fobj.filt.FN.padding=true;
@@ -64,16 +74,18 @@ DataSeg_FN = fobj.filt.FN.getFilteredData(thisSegData);
 DataSeg_FL = fobj.filt.FL.getFilteredData(thisSegData);
 DataSeg_FH2 = fobj.filt.FH2.getFilteredData(thisSegData);
 
+DataSeg_FH = fobj.filt.FH.getFilteredData(thisSegData);
+
 thisSegData_ms = timestamps(1:end) - timestamps(1);
 
-
+%%
 fig2 = figure(105);clf
 
 plot(thisSegData_ms, squeeze(DataSeg_FN), 'k');
 hold on
 plot(thisSegData_ms, squeeze(DataSeg_FL)+2000, 'r');
 
-plot(thisSegData_ms, squeeze(DataSeg_FH2)*10-2000, 'b');
+plot(thisSegData_ms, squeeze(DataSeg_FH)*10-2000, 'b');
 axis tight
 ylim([-4000 5000])
 disp('')
@@ -101,7 +113,7 @@ sizeData_time_s = timestamps(end) - timestamps(1);
   
   %% Chunking data
   
-  seg_s = 20;
+  seg_s = 5;
   seg_samps = seg_s*Fs;
   tOn = 1:seg_samps :sizeData_samps-seg_samps;
   
@@ -114,7 +126,8 @@ sizeData_time_s = timestamps(end) - timestamps(1);
       
       DataSeg_FN = fobj.filt.FN.getFilteredData(thisSegData);
       DataSeg_FL = fobj.filt.FL.getFilteredData(thisSegData);
-      DataSeg_FH2 = fobj.filt.FH2.getFilteredData(thisSegData);
+      %DataSeg_FH2 = fobj.filt.FH2.getFilteredData(thisSegData);
+      DataSeg_FH = fobj.filt.FH.getFilteredData(thisSegData);
       
       bla = squeeze(thisSegData);
       %%
@@ -126,7 +139,8 @@ sizeData_time_s = timestamps(end) - timestamps(1);
       hold on
       plot(thisSegData_ms, squeeze(DataSeg_FL)+2000, 'r');
       
-      plot(thisSegData_ms, squeeze(DataSeg_FH2)-2000, 'b');
+      %plot(thisSegData_ms, squeeze(DataSeg_FH2)-2000, 'b');
+      plot(thisSegData_ms, (squeeze(DataSeg_FH)*10)-2000, 'b');
       axis tight
       ylim([-3000 3000])
       disp('')

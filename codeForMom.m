@@ -2,7 +2,10 @@ function [] = codeForMom()
 dbstop if error
 
 
-thisMovie = '/home/janie/Data/momsVids/MVI_4512.MP4';
+thisMovie = '/home/janie/Data/Movies/MVI_4512.MP4';
+
+%thisMovie = '/home/janie/Data/Movies/MVI_4521.MP4';
+disp('Reading video')
 VideoObj = VideoReader(thisMovie, 'Tag', 'CurrentVideo');
 
 
@@ -16,8 +19,8 @@ vidFormat = VideoObj.VideoFormat;
 
 
 %%
-
-folder =  '/home/janie/Data/momsVids/Imgs2/';    
+disp('Extracting frames')
+folder =  '/home/janie/Data/Movies/Imgs_MVI_4512/';    
     for k= 1:nFrames
         frames = read(VideoObj, k);
         %imwrite(frames, fullfile(folder, sprintf('%06d.tif', k)));
@@ -26,17 +29,18 @@ folder =  '/home/janie/Data/momsVids/Imgs2/';
     end 
 
     %% Stabalize
-    folder =  '/home/janie/Data/momsVids/Imgs2';
-    output_folder = '/home/janie/Data/momsVids/Output';
+    disp('Stabilizing')
+    folder =  '/home/janie/Data/Movies/Imgs_MVI_4512';
+    output_folder = '/home/janie/Data/Movies/Output_MVI_4512';
     file_type = 'tif';
-    video_length = nFrames;
+    %video_length = nFrames;
+    video_length = 300;
     
     dbstop if error
     
     %stabilize(folder, output_folder, file_type, video_length, Gauss_levels)
     stabilize(folder, output_folder, file_type, video_length)
     
-
 %{
 %%
 
