@@ -6,6 +6,11 @@ csc= 112;
 titl = 'TurtleAA19';
 
 %%
+dataDir = '/home/janie/Data/MPI/SleepData/Lizard14/';
+csc= 32;
+titl = 'Lizard14';
+
+%%
 dataRecordingObj = NLRecording(dataDir);
 
 Fs = dataRecordingObj.samplingFrequency;
@@ -37,7 +42,7 @@ fobj.filt.FN=fobj.filt.FN.designNotch;
 
 %%
 
-seg=40000; % 40 s
+seg=20000; % 40 s
 
 TOn=0:seg:(dataRecordingObj.recordingDuration_ms-seg);
 TWin=seg*ones(1,numel(TOn));
@@ -54,7 +59,8 @@ for i=500:nCycles
     figure(100); clf
     subplot(3, 1, 1)
     plot(t_s , squeeze(tmpV))
-    ylim([-800 200])
+    %ylim([-800 200])
+    axis tight
     subplot(3, 1, 2)
     plot(t_s , squeeze(LF))
     ylim([-800 200])
@@ -68,18 +74,24 @@ end
 
 
 %%
+% Turtle AA19
 %ThisPoint_s = 20149.96;
 %ThisPoint_s = 20139.91;
 %ThisPoint_s = 21374.6;
-ThisPoint_s = 21284.5;
+%ThisPoint_s = 21284.5;
 
+
+%Lizard
+%ThisPoint_s = 1013.0;
+%ThisPoint_s = 1008.5;
+ThisPoint_s = 10306.3;
 %%
 ThisPoint_ms = ThisPoint_s*1000;
 
-thisPont = ThisPoint_ms - 1500;
+thisPont = ThisPoint_ms - 2500;
 %win = 400;
-win  = 3000;
-%win  = 4000;
+win  = 5000;
+%win  = 25000;
 
 [tmpV,t_ms]=dataRecordingObj.getData(csc,thisPont, win);
     [LF, ~]=fobj.filt.FL.getFilteredData(tmpV); % Low freq filter
@@ -93,27 +105,41 @@ win  = 3000;
     subplot(3, 1, 1)
     %plot(t_s , squeeze(tmpV), 'k')
     plot(t_s , squeeze(tmpV), 'k')
-    ylim([-700 300])
+    ylim([-1000 400])
     %set(gca, 'xticklabel', xlabs)
     subplot(3, 1, 2)
     plot(t_s , squeeze(LF), 'k')
-    ylim([-700 300])
+    ylim([-900 400])
     %set(gca, 'xticklabel', xlabs)
     subplot(3, 1, 3)
     plot(t_s , squeeze(HF), 'k')
-    ylim([-100 80])
+    ylim([-70 70])
     %set(gca, 'xticklabel', xlabs)
 
     %%
     saveDir  = '/home/janie/Dropbox/02_talks/Jan2018_DaimlerBenz/Figs/';
     
-saveName = [saveDir 'Turtle_05'];
+saveName = [saveDir 'Lizard_02'];
+
 
 plotpos = [0 0 20 10];
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 print_in_A4(0, saveName, '-depsc', 0, plotpos);
 
+%%
 
+ figure(100); clf
+    
+    %plot(t_s , squeeze(tmpV), 'k')
+    plot(t_s , squeeze(tmpV), 'k')
+    ylim([-1000 400])
+    
+plotpos = [0 0 25 20];
+
+saveName = [saveDir 'Lizard_02_top'];
+
+print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+print_in_A4(0, saveName, '-depsc', 0, plotpos);
 
     %%
     
