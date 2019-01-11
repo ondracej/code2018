@@ -42,14 +42,14 @@ classdef chicken_OT_analysis_OBJ < handle
                     OT_Data_Path = '/home/janie/Data/TUM/OT/Data/OT/Results/';
                     
                     
-                case 'deadpool'
+                case 'DEADPOOL'
                     dirD = '/';
                     
                     addpath(genpath('/home/janie/Dropbox/codetocopy/AudioSpike/'));
                     addpath(genpath('/home/janie/Dropbox/codetocopy/janieAnalysis_ChickenOT/'));
                     addpath(genpath('/home/janie/Dropbox/codetocopy/UMS2K-master/'));
                     
-                    OT_Data_Path = '/media/janie/Data64GB/Data/OT/Results/';
+                    OT_Data_Path = '/media/janie/Data64GB/OTData/OT/Results/';
                     
                     
                 case 'pluto'
@@ -765,7 +765,7 @@ classdef chicken_OT_analysis_OBJ < handle
                         theseSpks_ms = (sortedData{elev, azim}{1,k}) /scanrate *1000;
                         ypoints = ones(numel(theseSpks_ms))*cnt;
                         hold on
-                        plot(theseSpks_ms, ypoints, 'ko', 'linestyle', 'none', 'MarkerFaceColor','k','MarkerEdgeColor','k')
+                        plot(theseSpks_ms, ypoints, 'k.', 'linestyle', 'none', 'MarkerFaceColor','k','MarkerEdgeColor','k')
                         
                         cnt = cnt +1;
                         
@@ -878,15 +878,16 @@ classdef chicken_OT_analysis_OBJ < handle
             disp('Printing Plot')
             set(0, 'CurrentFigure', figH)
             
-            dropBoxSavePath = [obj.PATHS.dropboxPath saveName '-RasterPsthZscore_smp1'];
-            FigSaveName = [obj.PATHS.spkSavePath 'HRTF_Raster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
+            %dropBoxSavePath = [obj.PATHS.dropboxPath saveName '-RasterPsthZscore_smp1'];
+            dropBoxSavePath = ['/media/janie/Data64GB/OTData/OT/allHRTFsJanie/' saveName '-RasterPsthZscore_smp1'];
+            %FigSaveName = [obj.PATHS.spkSavePath 'HRTF_Raster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
             
             plotpos = [0 0 35 40];
             
-            print_in_A4(0, FigSaveName, '-depsc', 0, plotpos);
-            print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);
-
-            %print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+            %print_in_A4(0, FigSaveName, '-depsc', 0, plotpos);
+            %print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);
+            
+            print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
             %print_in_A4(0, dropBoxSavePath, '-depsc', 0, plotpos);
             
             %dropBoxSavePath = [obj.PATHS.dropboxPath saveName  '-RasterPsthZscore_smvZ'];
@@ -938,38 +939,41 @@ classdef chicken_OT_analysis_OBJ < handle
             
             %% smooth & rotate
             
-            % preSpontWin_1_smoothSpkArray = rot90(moving_average2(preSpontWin_1_spkCntSort(:,:),1,3));% rows ;collumns
-            % preSpontWin_2_smoothSpkArray = rot90(moving_average2(preSpontWin_2_spkCntSort(:,:),1,3));% rows ;collumns
-            % stimWin_1_smoothSpkArray = rot90(moving_average2(stimWin_1_spkCntSort(:,:),1,3));% rows ;collumns
-            % stimWin_2_smoothSpkArray = rot90(moving_average2(stimWin_2_spkCntSort(:,:),1,3));% rows ;collumns
-            % postSpontWin_1_smoothSpkArray = rot90(moving_average2(postSpontWin_1_spkCntSort(:,:),1,3));% rows ;collumns
-            % postSpontWin_2_smoothSpkArray = rot90(moving_average2(postSpontWin_2_spkCntSort(:,:),1,3));% rows ;collumns
+            allArraysCnt = [preSpontWin_1_spkCntSort ; preSpontWin_2_spkCntSort ; stimWin_1_spkCntSort; stimWin_2_spkCntSort;
+                postSpontWin_1_spkCntSort ; postSpontWin_2_spkCntSort];
             
-            % preSpontWin_1_smoothSpkArray = moving_average2(preSpontWin_1_spkCntSort(:,:),1,1);% rows ;collumns
-            % preSpontWin_2_smoothSpkArray = moving_average2(preSpontWin_2_spkCntSort(:,:),1,1);% rows ;collumns
-            % stimWin_1_smoothSpkArray = moving_average2(stimWin_1_spkCntSort(:,:),1,1);% rows ;collumns
-            % stimWin_2_smoothSpkArray = moving_average2(stimWin_2_spkCntSort(:,:),1,1);% rows ;collumns
-            % postSpontWin_1_smoothSpkArray = moving_average2(postSpontWin_1_spkCntSort(:,:),1,1);% rows ;collumns
-            % postSpontWin_2_smoothSpkArray = moving_average2(postSpontWin_2_spkCntSort(:,:),1,1);% rows ;collumns
+            meanAll = nanmean(nanmean(allArraysCnt));
+            stdAll = nanstd(nanstd(allArraysCnt));
             
-            preSpontWin_1_smoothSpkArray = flipud(moving_average2(preSpontWin_1_spkCntSort(:,:),1,1));% rows ;collumns
-            preSpontWin_2_smoothSpkArray = flipud(moving_average2(preSpontWin_2_spkCntSort(:,:),1,1));% rows ;collumns
-            stimWin_1_smoothSpkArray = flipud(moving_average2(stimWin_1_spkCntSort(:,:),1,1));% rows ;collumns
-            stimWin_2_smoothSpkArray = flipud(moving_average2(stimWin_2_spkCntSort(:,:),1,1));% rows ;collumns
-            postSpontWin_1_smoothSpkArray = flipud(moving_average2(postSpontWin_1_spkCntSort(:,:),1,1));% rows ;collumns
-            postSpontWin_2_smoothSpkArray = flipud(moving_average2(postSpontWin_2_spkCntSort(:,:),1,1));% rows ;collumns
+            %z = (X - μ) / σ where z is the z-score, X is the value of the element, μ is the population mean, and σ is the standard deviation.
             
-            %preSpontWin_1_smoothSpkArray = fliplr(preSpontWin_1_smoothSpkArray);
-            %preSpontWin_2_smoothSpkArray = fliplr(preSpontWin_2_smoothSpkArray);
-            %stimWin_1_smoothSpkArray = fliplr(stimWin_1_smoothSpkArray);
-            %stimWin_2_smoothSpkArray = fliplr(stimWin_2_smoothSpkArray);
-            %postSpontWin_1_smoothSpkArray = fliplr(postSpontWin_1_smoothSpkArray);
-            %postSpontWin_2_smoothSpkArray = fliplr(postSpontWin_2_smoothSpkArray);
+            preSpontWin_1_spkCntSort_Z = (preSpontWin_1_spkCntSort-meanAll)/stdAll;
+            preSpontWin_2_spkCntSort_Z = (preSpontWin_2_spkCntSort-meanAll)/stdAll;
+            stimWin_1_spkCntSort_Z = (stimWin_1_spkCntSort-meanAll)/stdAll;
+            stimWin_2_spkCntSort_Z = (stimWin_2_spkCntSort-meanAll)/stdAll;
+            postSpontWin_1_spkCntSort_Z = (postSpontWin_1_spkCntSort-meanAll)/stdAll;
+            postSpontWin_2_spkCntSort_Z = (postSpontWin_2_spkCntSort-meanAll)/stdAll;
             
+            preSpontWin_1_smoothSpkArray = flipud(moving_average2(preSpontWin_1_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            preSpontWin_2_smoothSpkArray = flipud(moving_average2(preSpontWin_2_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            stimWin_1_smoothSpkArray = flipud(moving_average2(stimWin_1_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            stimWin_2_smoothSpkArray = flipud(moving_average2(stimWin_2_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            postSpontWin_1_smoothSpkArray = flipud(moving_average2(postSpontWin_1_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            postSpontWin_2_smoothSpkArray = flipud(moving_average2(postSpontWin_2_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            
+            %% Original
+%             preSpontWin_1_smoothSpkArray = flipud(moving_average2(preSpontWin_1_spkCntSort(:,:),1,1));% rows ;collumns
+%             preSpontWin_2_smoothSpkArray = flipud(moving_average2(preSpontWin_2_spkCntSort(:,:),1,1));% rows ;collumns
+%             stimWin_1_smoothSpkArray = flipud(moving_average2(stimWin_1_spkCntSort(:,:),1,1));% rows ;collumns
+%             stimWin_2_smoothSpkArray = flipud(moving_average2(stimWin_2_spkCntSort(:,:),1,1));% rows ;collumns
+%             postSpontWin_1_smoothSpkArray = flipud(moving_average2(postSpontWin_1_spkCntSort(:,:),1,1));% rows ;collumns
+%             postSpontWin_2_smoothSpkArray = flipud(moving_average2(postSpontWin_2_spkCntSort(:,:),1,1));% rows ;collumns
+%             
+%           
+%             
             %smoothSpikearray_norm=smoothSpikearray/max(max(smoothSpikearray));
             
-            
-            allArrays = [preSpontWin_1_smoothSpkArray ; preSpontWin_2_smoothSpkArray ; stimWin_1_smoothSpkArray; stimWin_2_smoothSpkArray; 
+            allArrays = [preSpontWin_1_smoothSpkArray ; preSpontWin_2_smoothSpkArray ; stimWin_1_smoothSpkArray; stimWin_2_smoothSpkArray;
                 postSpontWin_1_smoothSpkArray ; postSpontWin_2_smoothSpkArray];
             
             
@@ -977,87 +981,100 @@ classdef chicken_OT_analysis_OBJ < handle
             minArrayVal = min(min(allArrays));
             clims = [minArrayVal maxArrayVal ];
             %% Plot
-           
+            
             figHH  = figure(100);clf
             
-            subplot(1, 8, 1)
-            surf((preSpontWin_1_smoothSpkArray));
-            shading interp
-            view([ 0 90])
-            axis tight
-            title('Pre-Spont')
-            set(gca,'ytick',[])
-            set(gca,'xtick',[])
-            xlabel('Azimuth')
-            ylabel('Elevation')
-            set(gca, 'clim', clims)
+            plotAudSpatRFs(figHH, preSpontWin_1_smoothSpkArray, 1, 0, 'Pre-Spont-1', clims)
             
-            subplot(1, 8, 2)
-            surf((preSpontWin_2_smoothSpkArray));
-            shading interp
-            view([ 0 90])
-            axis tight
-            title('Stim-1')
-            set(gca,'ytick',[])
-            set(gca,'xtick',[])
-            xlabel('Azimuth')
-            set(gca, 'clim', clims)
-            %ylabel('Elevation')
+            %             subplot(1, 8, 1)
+            %             surf((preSpontWin_1_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Pre-Spont')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             ylabel('Elevation')
+            %             set(gca, 'clim', clims)
             
-            subplot(1, 8, 3)
-            surf((stimWin_1_smoothSpkArray));
-            shading interp
-            view([ 0 90])
-            axis tight
-            title('Stim-2')
-            set(gca,'ytick',[])
-            set(gca,'xtick',[])
-            xlabel('Azimuth')
-            set(gca, 'clim', clims)
-            %ylabel('Elevation')
+            plotAudSpatRFs(figHH, preSpontWin_2_smoothSpkArray, 2, 0, 'Pre-Spont-2', clims)
             
-            subplot(1, 8, 4)
-            surf((stimWin_2_smoothSpkArray));
-            shading interp
-            view([ 0 90])
-            axis tight
-            title('Stim-3')
-            set(gca,'ytick',[])
-            set(gca,'xtick',[])
-            xlabel('Azimuth')
-            set(gca, 'clim', clims)
-            %ylabel('Elevation')
+            %             subplot(1, 8, 2)
+            %             surf((preSpontWin_2_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Stim-1')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             set(gca, 'clim', clims)
+            %             %ylabel('Elevation')
             
+            plotAudSpatRFs(figHH, stimWin_1_smoothSpkArray, 3, 0, 'Stim-1', clims)
             
-            subplot(1, 8, 5)
-            surf((postSpontWin_1_smoothSpkArray));
-            shading interp
-            view([ 0 90])
-            axis tight
-            title('Post-Spont-1')
-            set(gca,'ytick',[])
-            set(gca,'xtick',[])
-            xlabel('Azimuth')
-            set(gca, 'clim', clims)
-            %ylabel('Elevation')
+            %             subplot(1, 8, 3)
+            %             surf((stimWin_1_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Stim-2')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             set(gca, 'clim', clims)
+            %             %ylabel('Elevation')
             
+            plotAudSpatRFs(figHH, stimWin_2_smoothSpkArray, 4, 0, 'Stim-2', clims)
             
-            subplot(1, 8, 6)
-            surf((postSpontWin_2_smoothSpkArray));
-            shading interp
-            view([ 0 90])
-            axis tight
-            title('Post-Spont-2')
-            set(gca,'ytick',[])
-            set(gca,'xtick',[])
-            xlabel('Azimuth')
-            set(gca, 'clim', clims)
-            %ylabel('Elevation')
+            %             subplot(1, 8, 4)
+            %             surf((stimWin_2_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Stim-3')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             set(gca, 'clim', clims)
+            %             %ylabel('Elevation')
+            %
+            plotAudSpatRFs(figHH, postSpontWin_1_smoothSpkArray, 5, 0, 'Post-Spont-1', clims)
             
+            %             subplot(1, 8, 5)
+            %             surf((postSpontWin_1_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Post-Spont-1')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             set(gca, 'clim', clims)
+            %             %ylabel('Elevation')
             
-            subplot(1, 8, 7)
-            set(gca, 'clim', clims)
-            colorbar
+            plotAudSpatRFs(figHH, postSpontWin_2_smoothSpkArray, 6, 0, 'Pre-Spont-2', clims)
+            
+            %             subplot(1, 8, 6)
+            %             surf((postSpontWin_2_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Post-Spont-2')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             set(gca, 'clim', clims)
+            %             %ylabel('Elevation')
+            %
+            
+            plotAudSpatRFs(figHH, preSpontWin_1_smoothSpkArray, 7, 1, 'Pre-Spont-1', clims)
+            plotAudSpatRFs(figHH, preSpontWin_2_smoothSpkArray, 8, 1, 'Pre-Spont-2', clims)
+            plotAudSpatRFs(figHH, stimWin_1_smoothSpkArray, 9, 1, 'Stim-1',clims)
+            plotAudSpatRFs(figHH, stimWin_2_smoothSpkArray, 10, 1, 'Stim-2', clims)
+            plotAudSpatRFs(figHH, postSpontWin_1_smoothSpkArray, 11, 1, 'Post-Spont-1', clims)
+            plotAudSpatRFs(figHH, postSpontWin_2_smoothSpkArray, 12, 1, 'Pre-Spont-2', clims)
             
             %%
             
@@ -1065,22 +1082,21 @@ classdef chicken_OT_analysis_OBJ < handle
             disp('Printing Plot')
             set(0, 'CurrentFigure', figHH)
             
-            dropBoxSavePath = [obj.PATHS.dropboxPath  saveName '-SpatialRFs'];
+            %dropBoxSavePath = [obj.PATHS.dropboxPath  saveName '-SpatialRFs'];
+            %FigSaveName = [obj.PATHS.spkSavePath 'HRTF_aSRFs_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
             
-            FigSaveName = [obj.PATHS.spkSavePath 'HRTF_aSRFs_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
+            dropBoxSavePath = ['/media/janie/Data64GB/OTData/OT/allHRTFsJanie/' saveName '_aSRFs_Z_SpkClust' num2str(obj.SPKS.clustOfInterest)];
             
-            plotpos = [0 0 60 5];
+            %plotpos = [0 0 60 5];
+            plotpos = [0 0 40 10];
             %print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
             %print_in_A4(0, dropBoxSavePath, '-depsc', 0, plotpos);
             
-            print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);
-            print_in_A4(0, FigSaveName, '-depsc', 0, plotpos);
+            print_in_A4(0, dropBoxSavePath, '-djpeg', 0, plotpos);
+            %print_in_A4(0, FigSaveName, '-depsc', 0, plotpos);
             
             
         end
-        
-        
-        
         
         
         %% Printing Rasters and Figures
@@ -1403,7 +1419,8 @@ classdef chicken_OT_analysis_OBJ < handle
             set(0, 'CurrentFigure', figH)
             
             FigSaveName = [obj.PATHS.spkSavePath 'WNRaster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
-            dropBoxSavePath = [obj.PATHS.dropboxPath obj.RS_INFO.expTextLabel '__' obj.PATHS.audStimDir '_WNRaster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
+            %dropBoxSavePath = [obj.PATHS.dropboxPath obj.RS_INFO.expTextLabel '__' obj.PATHS.audStimDir '_WNRaster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
+            dropBoxSavePath = ['/media/janie/Data64GB/OTData/OT/allWNsJanie/' FigSaveName];
             
             plotpos = [0 0 12 15];
             print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);
@@ -1413,6 +1430,8 @@ classdef chicken_OT_analysis_OBJ < handle
         
         
         function []  = printRaster_WN_Ver2(obj)
+            
+            saveName = obj.PATHS.audStimDir;
             
             Twin_s = 0.05;
             
@@ -1469,7 +1488,7 @@ classdef chicken_OT_analysis_OBJ < handle
                     %theseSpks_ms = spks /scanrate *1000;
                     ypoints = ones(numel(spks))*cnt;
                     hold on
-                    plot(spks, ypoints, 'ko', 'linestyle', 'none', 'MarkerFaceColor','k','MarkerEdgeColor','k')
+                    plot(spks, ypoints, 'k.', 'linestyle', 'none', 'MarkerFaceColor','k','MarkerEdgeColor','k')
                     
                     cnt = cnt +1;
                     
@@ -1642,12 +1661,14 @@ classdef chicken_OT_analysis_OBJ < handle
             set(0, 'CurrentFigure', figH)
             
             FigSaveName = [obj.PATHS.spkSavePath 'WNRaster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
-            dropBoxSavePath = [obj.PATHS.dropboxPath obj.RS_INFO.expTextLabel '__' obj.PATHS.audStimDir '_WNRaster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
+            %dropBoxSavePath = [obj.PATHS.dropboxPath obj.RS_INFO.expTextLabel '__' obj.PATHS.audStimDir '_WNRaster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
+            dropBoxSavePath = ['/media/janie/Data64GB/OTData/OT/allWNsJanie/' saveName '_Clust-' num2str(obj.SPKS.clustOfInterest)];
+        
             
             plotpos = [0 0 12 15];
             print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);
-            print_in_A4(0, FigSaveName, '-depsc', 0, plotpos);
-            %print_in_A4(0, dropBoxSavePath, '-djpeg', 0, plotpos);
+            %print_in_A4(0, FigSaveName, '-depsc', 0, plotpos);
+            print_in_A4(0, dropBoxSavePath, '-djpeg', 0, plotpos);
             
         end
         
@@ -1736,23 +1757,23 @@ classdef chicken_OT_analysis_OBJ < handle
                 %if isempty(these_spks_on_chan )
                 %    continue
                 %else
-                    y_low =  (s * spk_size_y - spk_size_y);
-                    y_high = (s * spk_size_y - y_offset_between_repetitions);
+                y_low =  (s * spk_size_y - spk_size_y);
+                y_high = (s * spk_size_y - y_offset_between_repetitions);
+                
+                spk_vct = repmat(these_spks_on_chan, 2, 1); % this draws a straight vertical line
+                this_run_spks = size(spk_vct, 2);
+                ln_vct = repmat([y_high; y_low], 1, this_run_spks); % this defines the line height
+                
+                line(spk_vct, ln_vct, 'LineWidth', 0.5, 'Color', repCols{colCnt });
+                
+                if mod(s, 15) == 0
+                    line([0 epochLength_samps], [y_high y_high], 'color', 'k')
                     
-                    spk_vct = repmat(these_spks_on_chan, 2, 1); % this draws a straight vertical line
-                    this_run_spks = size(spk_vct, 2);
-                    ln_vct = repmat([y_high; y_low], 1, this_run_spks); % this defines the line height
+                    colCnt  = colCnt +1;
+                    AllYs(lincnt) = y_high;
+                    lincnt = lincnt +1;
                     
-                    line(spk_vct, ln_vct, 'LineWidth', 0.5, 'Color', repCols{colCnt });
-                    
-                    if mod(s, 15) == 0
-                        line([0 epochLength_samps], [y_high y_high], 'color', 'k')
-                        
-                        colCnt  = colCnt +1;
-                        AllYs(lincnt) = y_high;
-                        lincnt = lincnt +1;
-                        
-                    end
+                end
                 %end
             end
             
