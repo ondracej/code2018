@@ -11,15 +11,15 @@ close all
 
 %% Create Chicken Analysis Object
 
-experiment = 1; %efc
-recSession = 5; %sc
+experiment = 3; %efc
+recSession = 4; %sc
 
 C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 
 %% %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
 
-audSelInd = 1; % This is the index, not the stim number!!!
+audSelInd = 2; % This is the index, not the stim number!!!
 
 selection = C_OBJ.RS_INFO.ResultDirName{audSelInd};
 disp(selection)
@@ -92,7 +92,6 @@ splitmerge_tool(spikes)
 %% Outlier
 outlier_tool(spikes)
 
-
 %% Define Cluster of Interest
 
 clustOfInterest = 1; 
@@ -156,6 +155,8 @@ print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);
 %% Define Analysis Window - This is where we plot rasters and audspat RFs
 
 [C_OBJ] = defineAnalysisWindow(C_OBJ);
+%
+[C_OBJ] = analyzeHRTFs(C_OBJ);
 
 %%
 printRaster_IID_Ver1(C_OBJ, 1) % IID

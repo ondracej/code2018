@@ -1,7 +1,7 @@
-function [] = saveDataForSebastian()
+function [] = loadShWRDetections()
 dbstop if error
 close all
-clear all
+
 %% Add code
 addpath(genpath('/home/janie/code/code2018/'))
 
@@ -34,10 +34,43 @@ titl = 'Lizard14';
 %% Load and Prepare Neuralynx Data
 
 dataRecordingObj = NLRecording(dataDir);
+fs = dataRecordingObj.samplingFrequency;
+
 %obj = sleepAnalysis;
 %obj=obj.getFilters(dataRecordingObj.samplingFrequency);
 
 %% Get the data
+
+dets = load('/home/janie/Downloads/ripple_export.mat');
+detections_samps = dets.data;
+detections_ms = detections_samps/fs;
+
+nDetections = numel(detections_ms);
+
+winLength_ms = 1000;
+winLengthPre_ms = 500;
+
+cnt =1;
+
+%for i = 1:nDetections
+for i = 1:1000
+
+    [tmpV,t_ms]=dataRecordingObj.getData(csc,detections_ms(i)-winLengthPre_ms,winLength_ms);
+    
+    dataSegs_V_raw(:, cnt) = squeeze(tmpV);
+    data_t_ms(:, cnt) = t_ms;
+    disp([num2str(i) '/' num2str(nDetections)])
+    
+    cnt = cnt+1;
+end
+
+
+meanshWR = mean(dataSegs_V_raw);
+
+figure; plot(dataSegs_V_raw(:,500), 'k');
+
+
+
 seg=40000; % 40 s
 
 TOn=0:seg:(dataRecordingObj.recordingDuration_ms-seg);
@@ -92,8 +125,8 @@ for i=1:nCycles
     %dataSegs_LF_ds{1, i} = squeeze(LF_ds);
     %dataSegs_HF_ds{1, i} = squeeze(HF_ds);
     
-    dataSegs_V_raw{1, cnt} = squeeze(tmpV);
-    data_t_ms{1, cnt} = t_ms;
+    dataSegs_V_raw(:, cnt) = squeeze(tmpV);
+    data_t_ms(:, cnt) = t_ms;
     disp([num2str(i) '/' num2str(nCycles)])
     
     cnt = cnt+1;

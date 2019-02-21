@@ -1098,6 +1098,485 @@ classdef chicken_OT_analysis_OBJ < handle
             
         end
         
+        function [obj] = analyzeHRTFs(obj)
+            % from SpacestimAutoOneFile.m
+            
+            nallSpks = numel(obj.SPKS.spikes.spiketimes);
+            
+            nStims = obj.S_SPKS.INFO.nStims;
+            nReps = obj.S_SPKS.INFO.nReps;
+            
+            saveName = obj.PATHS.audStimDir;
+            
+            preSpontWin_1 = 1:50;
+            preSpontWin_2 = 51:100;
+            stimWin_1 = 101:150;
+            stimWin_2 = 151:200;
+            postSpontWin_1 = 201:250;
+            postSpontWin_2 = 251:300;
+            
+            
+            data = obj.S_SPKS.SORT.AllStimResponses_Spk_s;
+            
+            %% Stim (Rest)
+            %here we are going through 10 ms windows, for each repetition of each stimulus
+            cnt = 1;
+            Twin_s = 0.05;
+            for j = 1:nStims
+                for k = 1:nReps
+                    
+                    spks = (data{1, j}{1,k})*1000;
+                    
+                    %these_spks_on_chan = spks(spks >= reshapedOnsets(p) & spks <= reshapedOffsets(p))-reshapedOnsets(p);
+                    
+                    preSpontWin_1_spks_reps(k) = numel(spks(spks >= preSpontWin_1(1) & spks <= preSpontWin_1(end)));
+                    preSpontWin_2_spks_reps(k) = numel(spks(spks >= preSpontWin_2(1) & spks <= preSpontWin_2(end)));
+                    stimWin_1_spks_reps(k) = numel(spks(spks >= stimWin_1(1) & spks <= stimWin_1(end)));
+                    stimWin_2_spks_reps(k) = numel(spks(spks >= stimWin_2(1) & spks <= stimWin_2(end)));
+                    postSpontWin_1_spks_reps(k) = numel(spks(spks >= postSpontWin_1(1) & spks <= postSpontWin_1(end)));
+                    postSpontWin_2_spks_reps(k) = numel(spks(spks >= postSpontWin_2(1) & spks <= postSpontWin_2(end)));
+                    
+                    preSpontWin_1_spks(cnt) = numel(spks(spks >= preSpontWin_1(1) & spks <= preSpontWin_1(end)));
+                    preSpontWin_2_spks(cnt) = numel(spks(spks >= preSpontWin_2(1) & spks <= preSpontWin_2(end)));
+                    stimWin_1_spks(cnt) = numel(spks(spks >= stimWin_1(1) & spks <= stimWin_1(end)));
+                    stimWin_2_spks(cnt) = numel(spks(spks >= stimWin_2(1) & spks <= stimWin_2(end)));
+                    postSpontWin_1_spks(cnt) = numel(spks(spks >= postSpontWin_1(1) & spks <= postSpontWin_1(end)));
+                    postSpontWin_2_spks(cnt) = numel(spks(spks >= postSpontWin_2(1) & spks <= postSpontWin_2(end)));
+                    
+                    cnt = cnt+1;
+                    disp('')
+                end
+                
+                preSpontWin_1_sumRep(j) = sum(preSpontWin_1_spks_reps);
+                preSpontWin_2_sumRep(j) =  sum(preSpontWin_2_spks_reps);
+                stimWin_1_sumRep(j) = sum(stimWin_1_spks_reps);
+                stimWin_2_sumRep(j) = sum(stimWin_2_spks_reps);
+                postSpontWin_1_sumRep(j) =   sum(postSpontWin_1_spks_reps);
+                postSpontWin_2_sumRep(j) =  sum(postSpontWin_2_spks_reps);
+                
+                preSpontWin_1_FR(j,:) = preSpontWin_1_spks_reps/Twin_s;
+                preSpontWin_2_FR(j,:) =  preSpontWin_2_spks_reps/Twin_s;
+                stimWin_1_FR(j,:) = stimWin_1_spks_reps/Twin_s;
+                stimWin_2_FR(j,:) = stimWin_2_spks_reps/Twin_s;
+                postSpontWin_1_FR(j,:) = postSpontWin_1_spks_reps/Twin_s;
+                postSpontWin_2_FR(j,:) = postSpontWin_2_spks_reps/Twin_s;
+                
+            end
+            
+            preSpontWin_1_meanFR = nanmean(nanmean(preSpontWin_1_FR));
+            preSpontWin_2_meanFR = nanmean(nanmean(preSpontWin_2_FR));
+            stimWin_1_meanFR = nanmean(nanmean(stimWin_1_FR));
+            stimWin_2_meanFR = nanmean(nanmean(stimWin_2_FR));
+            postSpontWin_1_meanFR = nanmean(nanmean(postSpontWin_1_FR));
+            postSpontWin_2_meanFR = nanmean(nanmean(postSpontWin_2_FR));
+            
+            preSpontWin_1_std = nanstd(nanstd(preSpontWin_1_FR));
+            preSpontWin_2_stimWin_1_std = nanstd(nanstd(preSpontWin_2_FR));
+            stimWin_1_std = nanstd(nanstd(stimWin_1_FR));
+            stimWin_2_std = nanstd(nanstd(stimWin_2_FR));
+            postSpontWin_1_std = nanstd(nanstd(postSpontWin_1_FR));
+            postSpontWin_2_std = nanstd(nanstd(postSpontWin_2_FR));
+            
+            z_score_cov_preSpontWin_1 = (preSpontWin_1_meanFR - preSpontWin_1_meanFR) / sqrt(preSpontWin_1_std^2 + preSpontWin_1_std^2);
+            z_score_cov_preSpontWin_2 = (preSpontWin_2_meanFR - preSpontWin_1_meanFR) / sqrt(preSpontWin_2_stimWin_1_std^2 + preSpontWin_1_std^2);
+            z_score_cov_stimWin_1 = (stimWin_1_meanFR - preSpontWin_1_meanFR) / sqrt(stimWin_1_std^2 + preSpontWin_1_std^2);
+            z_score_cov_stimWin_2 = (stimWin_2_meanFR - preSpontWin_1_meanFR) / sqrt(stimWin_2_std^2 + preSpontWin_1_std^2);
+            z_score_cov_postSpontWin_1 = (postSpontWin_1_meanFR - preSpontWin_1_meanFR) / sqrt(postSpontWin_1_std^2 + preSpontWin_1_std^2);
+            z_score_cov_postSpontWin_2 = (postSpontWin_2_meanFR - preSpontWin_1_meanFR) / sqrt(postSpontWin_2_std^2 + preSpontWin_1_std^2);
+            
+            allZScores = [z_score_cov_preSpontWin_1 z_score_cov_preSpontWin_2 z_score_cov_stimWin_1 z_score_cov_stimWin_2 z_score_cov_postSpontWin_1 z_score_cov_postSpontWin_2];
+            %allFrs = [];
+            
+            [p_preSpontWin_1, h]  = signrank(reshape(preSpontWin_1_FR, 1, numel(preSpontWin_1_FR)), reshape(preSpontWin_1_FR, 1, numel(preSpontWin_1_FR)));
+            [p_preSpontWin_2, h]  = signrank(reshape(preSpontWin_1_FR, 1, numel(preSpontWin_1_FR)), reshape(preSpontWin_2_FR, 1, numel(preSpontWin_2_FR)));
+            [p_stimWin_1, h]  = signrank(reshape(preSpontWin_1_FR, 1, numel(preSpontWin_1_FR)), reshape(stimWin_1_FR, 1, numel(stimWin_1_FR)));
+            [p_stimWin_2, h]  = signrank(reshape(preSpontWin_1_FR, 1, numel(preSpontWin_1_FR)), reshape(stimWin_2_FR, 1, numel(stimWin_2_FR)));
+            [p_postSpontWin_1, h]  = signrank(reshape(preSpontWin_1_FR, 1, numel(preSpontWin_1_FR)), reshape(postSpontWin_1_FR, 1, numel(postSpontWin_1_FR)));
+            [p_postSpontWin_2, h]  = signrank(reshape(preSpontWin_1_FR, 1, numel(preSpontWin_1_FR)), reshape(postSpontWin_2_FR, 1, numel(postSpontWin_2_FR)));
+            
+            allPs = [p_preSpontWin_1 p_preSpontWin_2 p_stimWin_1 p_stimWin_2 p_postSpontWin_1 p_postSpontWin_2];
+            
+            
+            %%
+            
+            sortedData = obj.S_SPKS.SORT.allSpksMatrix;
+            sortedDataNames = obj.S_SPKS.SORT.allSpksStimNames;
+            
+            n_elev = 13;
+            n_azim = 33;
+            
+            %%
+            if nallSpks > 3000
+                repsToPlot = [3];
+                disp('***** Printing only a selection of spikes...******')
+            else
+                repsToPlot = 1:nReps;
+            end
+            
+            figH = figure (201); clf
+            blueCol = [0.2 0.7 0.8];
+            subplot(7, 1, [1 2 3 4])
+            
+            % gray = [0.5 0.5 0.5];
+            %
+            % hold on
+            % qcnt = 0;
+            % for q = 1:100
+            %
+            %     xes = [0 400 400 0];
+            %     yes = [qcnt qcnt  qcnt+10 qcnt+10];
+            %     a = patch(xes,  yes, gray);
+            %     set(a,'EdgeColor','none')
+            %     a.FaceAlpha = 0.2;
+            %
+            %     qcnt  = qcnt + 12;
+            %
+            % end
+            
+            scanrate = obj.Fs;
+            cnt = 1;
+            for azim = 1:n_azim
+                for elev = 1:n_elev
+                    
+                    for k = repsToPlot
+                        
+                        %must subtract start_stim to arrange spikes relative to onset
+                        theseSpks_ms = (sortedData{elev, azim}{1,k}) /scanrate *1000;
+                        ypoints = ones(numel(theseSpks_ms))*cnt;
+                        hold on
+                        plot(theseSpks_ms, ypoints, 'k.', 'linestyle', 'none', 'MarkerFaceColor','k','MarkerEdgeColor','k')
+                        
+                        cnt = cnt +1;
+                        
+                    end
+                    if elev == n_elev
+                        line([0 300], [cnt cnt], 'color', blueCol)
+                        text(-20, cnt-30, (sortedDataNames{elev, azim}(4:10)))
+                    end
+                end
+            end
+            set(gca,'ytick',[])
+            title (obj.PATHS.audStimDir)
+            %xlabel('Time [ms]')
+            ylabel('Reps | Azimuth')
+            axis tight
+            
+            %% PSTH
+            
+            nStims = obj.S_SPKS.INFO.nStims;
+            nReps = obj.S_SPKS.INFO.nReps;
+            
+            
+            disp('')
+            %%
+            binwidth_s=0.001;%[s]
+            max_time= obj.SETTINGS.EpocheLength;
+            spike_times=[]; psthall = [];
+            htime=0:binwidth_s:max_time;
+            
+            for xy = 1:nStims
+                for yy=1:nReps
+                    
+                    spike_times=[spike_times data{1,xy}{1,yy}]; % concat all spikes in ms
+                    
+                end
+            end
+            % convert to seconds
+            %spike_times=spike_times/1e3; % convert back to s
+            
+            psth=histc(spike_times,htime);
+            psthall(xy,:)=psth; % what does this do
+            summenpsth=sum(psthall); % this is the same as psth
+            
+            %spontlevel=(std(summenpsth(1:50))*2)+mean(summenpsth(1:50)); %2x std
+            %spontmean = mean(summenpsth(1:50));
+            %spontstd = std(summenpsth(1:50))*3;
+            
+            %maxspikecount=max(summenpsth);
+            
+            preStimArea = 1:101;
+            stimArea = 101:201;
+            postStimArea = 201:301;
+            
+            %% figure
+            
+            blueCol = [0.2 0.7 0.8];
+            greencol = [0.2 0.8 0.7];
+            redCol = [0.8 0.3 0.3];
+            gray = [0.5 0.5 0.5];
+            
+            
+            smoothWin_ms = 5;
+            %smooth_psth = smooth(summenpsth, smoothWin_ms);
+            %smooth_psth = smooth(summenpsth, smoothWin_ms, 'loess');
+            smooth_psth = smooth(summenpsth, smoothWin_ms, 'lowess');
+            
+            maxPsth = max(summenpsth);
+            maxSmoothPsth = max(smooth_psth);
+            
+            subplot(7, 1, [ 5 6])
+            
+            a = area([preStimArea(1)  preStimArea(end)], [maxPsth maxPsth], 'FaceColor', gray);
+            set(a,'EdgeColor','none')
+            a.FaceAlpha = 0.2;
+            hold on
+            
+            a = area([stimArea(1)  stimArea(end)], [maxPsth maxPsth], 'FaceColor', greencol);
+            set(a,'EdgeColor','none')
+            a.FaceAlpha = 0.4;
+            hold on
+            
+            a = area([postStimArea(1)  postStimArea(end)], [maxPsth maxPsth], 'FaceColor', gray);
+            set(a,'EdgeColor','none')
+            a.FaceAlpha = 0.2;
+            hold on
+            
+            plot(summenpsth, 'color', gray)
+            
+            plot(smooth_psth, 'k', 'linewidth' ,2);
+            axis tight
+            
+            xlabel('Time [ms]')
+            ylabel('PSTH [spks]')
+            %%
+            subplot(7, 1, [7])
+            imagesc(allZScores);
+            %colormap('hot')
+            %colormap('bone')
+            colormap('pink')
+            %colormap('redblue')
+            hold on
+            for o = 1:6
+                text(o-.2, 1, ['Z = ' num2str(round(allZScores(o), 2))])
+                text(o-.2, 1.2, ['p = ' num2str(round(allPs(o), 4))])
+                
+            end
+            
+            disp('')
+            %%
+            disp('Printing Plot')
+            set(0, 'CurrentFigure', figH)
+            
+            %dropBoxSavePath = [obj.PATHS.dropboxPath saveName '-RasterPsthZscore_smp1'];
+            dropBoxSavePath = ['/media/janie/Data64GB/OTData/OT/allHRTFsJanie/' saveName '-RasterPsthZscore_smp1'];
+            %FigSaveName = [obj.PATHS.spkSavePath 'HRTF_Raster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
+            
+            plotpos = [0 0 35 40];
+            
+            %print_in_A4(0, FigSaveName, '-depsc', 0, plotpos);
+            %print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);
+            
+            print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+            %print_in_A4(0, dropBoxSavePath, '-depsc', 0, plotpos);
+            
+            %dropBoxSavePath = [obj.PATHS.dropboxPath saveName  '-RasterPsthZscore_smvZ'];
+            %print_in_A4(0, dropBoxSavePath, '-depsc', 1, plotpos);
+            
+            %% Now makin SRFs
+            
+            %%Sort Spike COunts
+            
+            preSpontWin_1_sumRep_cntcheck = sum(preSpontWin_1_sumRep);
+            preSpontWin_2_sumRep_cntcheck =  sum(preSpontWin_2_sumRep);
+            stimWin_1_sumRep_cntcheck = sum(stimWin_1_sumRep);
+            stimWin_2_sumRep_cntcheck = sum(stimWin_2_sumRep);
+            postSpontWin_1_sumRep_cntcheck =   sum(postSpontWin_1_sumRep);
+            postSpontWin_2_sumRep_cntcheck =  sum(postSpontWin_2_sumRep);
+            
+            %%
+            preSpontWin_1_spkCntSort = [];
+            preSpontWin_2_spkCntSort = [];
+            stimWin_1_spkCntSort = [];
+            stimWin_2_spkCntSort = [];
+            postSpontWin_1_spkCntSort = [];
+            postSpontWin_2_spkCntSort = [];
+            
+            n_elev = 13;
+            n_azim = 33;
+            
+            %% Needs to be in this order
+            ct = 1;
+            for elev = 1:n_elev
+                for azim = 1:n_azim
+                    
+                    preSpontWin_1_spkCntSort(elev, azim) = preSpontWin_1_sumRep(ct);
+                    preSpontWin_2_spkCntSort(elev, azim) = preSpontWin_2_sumRep(ct);
+                    stimWin_1_spkCntSort(elev, azim) = stimWin_1_sumRep(ct);
+                    stimWin_2_spkCntSort(elev, azim) = stimWin_2_sumRep(ct);
+                    postSpontWin_1_spkCntSort(elev, azim) = postSpontWin_1_sumRep(ct);
+                    postSpontWin_2_spkCntSort(elev, azim) = postSpontWin_2_sumRep(ct);
+                    
+                    ct = ct+1;
+                end
+            end
+            
+            %% We do not normalize
+            
+            %maxispike=max(max(Spikearray));
+            %maxispike=round(maxispike*10)/10;
+            %Spikearray=Spikearray/max(max(Spikearray));
+            
+            %% smooth & rotate
+            
+            allArraysCnt = [preSpontWin_1_spkCntSort ; preSpontWin_2_spkCntSort ; stimWin_1_spkCntSort; stimWin_2_spkCntSort;
+                postSpontWin_1_spkCntSort ; postSpontWin_2_spkCntSort];
+            
+            meanAll = nanmean(nanmean(allArraysCnt));
+            stdAll = nanstd(nanstd(allArraysCnt));
+            
+            %z = (X - μ) / σ where z is the z-score, X is the value of the element, μ is the population mean, and σ is the standard deviation.
+            
+            preSpontWin_1_spkCntSort_Z = (preSpontWin_1_spkCntSort-meanAll)/stdAll;
+            preSpontWin_2_spkCntSort_Z = (preSpontWin_2_spkCntSort-meanAll)/stdAll;
+            stimWin_1_spkCntSort_Z = (stimWin_1_spkCntSort-meanAll)/stdAll;
+            stimWin_2_spkCntSort_Z = (stimWin_2_spkCntSort-meanAll)/stdAll;
+            postSpontWin_1_spkCntSort_Z = (postSpontWin_1_spkCntSort-meanAll)/stdAll;
+            postSpontWin_2_spkCntSort_Z = (postSpontWin_2_spkCntSort-meanAll)/stdAll;
+            
+            preSpontWin_1_smoothSpkArray = flipud(moving_average2(preSpontWin_1_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            preSpontWin_2_smoothSpkArray = flipud(moving_average2(preSpontWin_2_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            stimWin_1_smoothSpkArray = flipud(moving_average2(stimWin_1_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            stimWin_2_smoothSpkArray = flipud(moving_average2(stimWin_2_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            postSpontWin_1_smoothSpkArray = flipud(moving_average2(postSpontWin_1_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            postSpontWin_2_smoothSpkArray = flipud(moving_average2(postSpontWin_2_spkCntSort_Z(:,:),1,1));% rows ;collumns
+            
+            %% Original
+%             preSpontWin_1_smoothSpkArray = flipud(moving_average2(preSpontWin_1_spkCntSort(:,:),1,1));% rows ;collumns
+%             preSpontWin_2_smoothSpkArray = flipud(moving_average2(preSpontWin_2_spkCntSort(:,:),1,1));% rows ;collumns
+%             stimWin_1_smoothSpkArray = flipud(moving_average2(stimWin_1_spkCntSort(:,:),1,1));% rows ;collumns
+%             stimWin_2_smoothSpkArray = flipud(moving_average2(stimWin_2_spkCntSort(:,:),1,1));% rows ;collumns
+%             postSpontWin_1_smoothSpkArray = flipud(moving_average2(postSpontWin_1_spkCntSort(:,:),1,1));% rows ;collumns
+%             postSpontWin_2_smoothSpkArray = flipud(moving_average2(postSpontWin_2_spkCntSort(:,:),1,1));% rows ;collumns
+%             
+%           
+%             
+            %smoothSpikearray_norm=smoothSpikearray/max(max(smoothSpikearray));
+            
+            allArrays = [preSpontWin_1_smoothSpkArray ; preSpontWin_2_smoothSpkArray ; stimWin_1_smoothSpkArray; stimWin_2_smoothSpkArray;
+                postSpontWin_1_smoothSpkArray ; postSpontWin_2_smoothSpkArray];
+            
+            
+            maxArrayVal = max(max(allArrays));
+            minArrayVal = min(min(allArrays));
+            clims = [minArrayVal maxArrayVal ];
+            %% Plot
+            
+            figHH  = figure(100);clf
+            
+            plotAudSpatRFs(figHH, preSpontWin_1_smoothSpkArray, 1, 0, 'Pre-Spont-1', clims)
+            
+            %             subplot(1, 8, 1)
+            %             surf((preSpontWin_1_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Pre-Spont')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             ylabel('Elevation')
+            %             set(gca, 'clim', clims)
+            
+            plotAudSpatRFs(figHH, preSpontWin_2_smoothSpkArray, 2, 0, 'Pre-Spont-2', clims)
+            
+            %             subplot(1, 8, 2)
+            %             surf((preSpontWin_2_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Stim-1')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             set(gca, 'clim', clims)
+            %             %ylabel('Elevation')
+            
+            plotAudSpatRFs(figHH, stimWin_1_smoothSpkArray, 3, 0, 'Stim-1', clims)
+            
+            %             subplot(1, 8, 3)
+            %             surf((stimWin_1_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Stim-2')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             set(gca, 'clim', clims)
+            %             %ylabel('Elevation')
+            
+            plotAudSpatRFs(figHH, stimWin_2_smoothSpkArray, 4, 0, 'Stim-2', clims)
+            
+            %             subplot(1, 8, 4)
+            %             surf((stimWin_2_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Stim-3')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             set(gca, 'clim', clims)
+            %             %ylabel('Elevation')
+            %
+            plotAudSpatRFs(figHH, postSpontWin_1_smoothSpkArray, 5, 0, 'Post-Spont-1', clims)
+            
+            %             subplot(1, 8, 5)
+            %             surf((postSpontWin_1_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Post-Spont-1')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             set(gca, 'clim', clims)
+            %             %ylabel('Elevation')
+            
+            plotAudSpatRFs(figHH, postSpontWin_2_smoothSpkArray, 6, 0, 'Pre-Spont-2', clims)
+            
+            %             subplot(1, 8, 6)
+            %             surf((postSpontWin_2_smoothSpkArray));
+            %             shading interp
+            %             view([ 0 90])
+            %             axis tight
+            %             title('Post-Spont-2')
+            %             set(gca,'ytick',[])
+            %             set(gca,'xtick',[])
+            %             xlabel('Azimuth')
+            %             set(gca, 'clim', clims)
+            %             %ylabel('Elevation')
+            %
+            
+            plotAudSpatRFs(figHH, preSpontWin_1_smoothSpkArray, 7, 1, 'Pre-Spont-1', clims)
+            plotAudSpatRFs(figHH, preSpontWin_2_smoothSpkArray, 8, 1, 'Pre-Spont-2', clims)
+            plotAudSpatRFs(figHH, stimWin_1_smoothSpkArray, 9, 1, 'Stim-1',clims)
+            plotAudSpatRFs(figHH, stimWin_2_smoothSpkArray, 10, 1, 'Stim-2', clims)
+            plotAudSpatRFs(figHH, postSpontWin_1_smoothSpkArray, 11, 1, 'Post-Spont-1', clims)
+            plotAudSpatRFs(figHH, postSpontWin_2_smoothSpkArray, 12, 1, 'Pre-Spont-2', clims)
+            
+            %%
+            
+            %%
+            disp('Printing Plot')
+            set(0, 'CurrentFigure', figHH)
+            
+            %dropBoxSavePath = [obj.PATHS.dropboxPath  saveName '-SpatialRFs'];
+            %FigSaveName = [obj.PATHS.spkSavePath 'HRTF_aSRFs_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
+            
+            dropBoxSavePath = ['/media/janie/Data64GB/OTData/OT/allHRTFsJanie/' saveName '_aSRFs_Z_SpkClust' num2str(obj.SPKS.clustOfInterest)];
+            
+            %plotpos = [0 0 60 5];
+            plotpos = [0 0 40 10];
+            %print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+            %print_in_A4(0, dropBoxSavePath, '-depsc', 0, plotpos);
+            
+            print_in_A4(0, dropBoxSavePath, '-djpeg', 0, plotpos);
+            %print_in_A4(0, FigSaveName, '-depsc', 0, plotpos);
+            
+            
+        end
+        
         
         %% Printing Rasters and Figures
         

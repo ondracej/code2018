@@ -4,7 +4,7 @@ close all;
 dbstop if error
 %%
 
-dataDir = ['/home/janie/Dropbox/00_Conferences/Fens_2018/HansaData/DataToUse/passt/'];
+dataDir = ['/home/janie/Dropbox/00_Conferences/2018_FENS/HansaData/DataToUse/passt/'];
 
 saveDir = '/media/janie/Data64GB/OTData/Dec2018_FigsHansa/';
 
@@ -18,7 +18,7 @@ end
 
 %%
 
-for k = 1:nTrials
+for k = 6:nTrials
     
     filToLoad = trialNames{k};
     saveName = filToLoad(1:end-4);

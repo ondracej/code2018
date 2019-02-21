@@ -5,8 +5,18 @@ dataDir = '/home/janie/Data/MPI/SleepData/AA19/01.23.2017/16-00-36_cheetah/';
 csc= 112;
 titl = 'TurtleAA19';
 
+
 %%
-dataDir = '/home/janie/Data/MPI/SleepData/Lizard14/';
+clear all
+
+dataDir = '/home/janie/Data/MPI/AD20/01.18.2017/19-57-34_cheetah/';
+csc= 110;
+titl = 'TurtleAD20';
+
+
+%%
+%dataDir = '/home/janie/Data/MPI/SleepData/Lizard14/';
+dataDir = '/media/janie/Data64GB/lizard_14/12.06.2015/17-10-54_cheetah/';
 csc= 32;
 titl = 'Lizard14';
 
@@ -59,8 +69,8 @@ for i=500:nCycles
     figure(100); clf
     subplot(3, 1, 1)
     plot(t_s , squeeze(tmpV))
-    %ylim([-800 200])
-    axis tight
+    ylim([-800 200])
+    %axis tight
     subplot(3, 1, 2)
     plot(t_s , squeeze(LF))
     ylim([-800 200])
@@ -84,14 +94,17 @@ end
 %Lizard
 %ThisPoint_s = 1013.0;
 %ThisPoint_s = 1008.5;
-ThisPoint_s = 10306.3;
+%ThisPoint_s = 10306.3; %use this one
+ThisPoint_s = 10304.15;
+%ThisPoint_s = 10088;
+
 %%
 ThisPoint_ms = ThisPoint_s*1000;
 
-thisPont = ThisPoint_ms - 2500;
+thisPont = ThisPoint_ms - 200;
 %win = 400;
-win  = 5000;
-%win  = 25000;
+win  = 400;
+%win  = 10000;
 
 [tmpV,t_ms]=dataRecordingObj.getData(csc,thisPont, win);
     [LF, ~]=fobj.filt.FL.getFilteredData(tmpV); % Low freq filter
@@ -119,7 +132,7 @@ win  = 5000;
     %%
     saveDir  = '/home/janie/Dropbox/02_talks/Jan2018_DaimlerBenz/Figs/';
     
-saveName = [saveDir 'Lizard_02'];
+saveName = [saveDir 'Lizard_02aVeryshort'];
 
 
 plotpos = [0 0 20 10];
@@ -129,14 +142,15 @@ print_in_A4(0, saveName, '-depsc', 0, plotpos);
 %%
 
  figure(100); clf
-    
+    subplot(2, 1, 1)
     %plot(t_s , squeeze(tmpV), 'k')
     plot(t_s , squeeze(tmpV), 'k')
     ylim([-1000 400])
     
 plotpos = [0 0 25 20];
 
-saveName = [saveDir 'Lizard_02_top'];
+
+saveName = [saveDir 'Lizard_02a_top'];
 
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 print_in_A4(0, saveName, '-depsc', 0, plotpos);
