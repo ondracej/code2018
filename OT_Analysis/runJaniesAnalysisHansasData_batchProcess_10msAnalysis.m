@@ -6,7 +6,7 @@ dbstop if error
 
 dataDir = ['/home/janie/Dropbox/00_Conferences/2018_FENS/HansaData/DataToUse/passt/'];
 
-saveDir = '/home/janie/Data/TUM/OTAnalysis/FigsHansaFeb2019/';
+saveDir = '/home/janie/Data/TUM/OT/OTData/Figures-HansasDataJan2019/';
 
 trialSeach = ['*.f32*'];
 
@@ -22,6 +22,8 @@ for s = 1:nTrials
     
     filToLoad = trialNames{s};
     saveName = filToLoad(1:end-4);
+    
+    D.INFO.saveName{s} = saveName;
     
     data=spikedatf([dataDir filToLoad]);
     
@@ -48,10 +50,19 @@ for s = 1:nTrials
     % Stim values must be some experiment parameters - get what these actually are from Hansa
     
     %%
+    n_elev = 9;
+    n_azim = 22;
     
     n_stims = size(data,2);  % Number of stims minus the silent stim (199) %gibt die Stimulusanzahl an. Bei (data,2) ist die Anzahl der Stimuli hinterlegt: (9 Elevation* 22 Azimuth) + den Nullstimulus
     n_reps = data(1).stim(11); % 11th positions gives number of repetitions
     sweepLengths_ms = data(1).sweeplength;
+    
+    D.INFO.saveName{s} = saveName;
+    D.INFO.n_stims(s) = n_stims;
+    D.INFO.n_reps(s) = n_reps;
+    D.INFO.sweepLengths_ms(s) = sweepLengths_ms;
+    D.INFO.n_elev(s) = n_elev;
+    D.INFO.n_azim(s) = n_azim;
     
     %% HardCoded Response Windows for Hansa's data
     
@@ -68,6 +79,9 @@ for s = 1:nTrials
     
     tOn = 1:spkWin_ms:sweepLengths_ms;
     nSkpWins = numel(tOn);
+    
+    D.INFO.spkWin_ms(s) = spkWin_ms;
+    
     
     %%
     spkCnt_stims = [];
@@ -100,6 +114,11 @@ for s = 1:nTrials
         perWin_stims_std{j} = nanstd(spkWinsOverReps);
         
     end
+    
+     D.DATA.spkCnt_stims{s} = spkCnt_stims;
+     D.DATA.perWin_stims_mean{s} = perWin_stims_mean;
+     D.DATA.perWin_stims_sum{s} = perWin_stims_sum;
+     D.DATA.perWin_stims_std{s} = perWin_stims_std;
     
     %% aSRFs
     
@@ -137,6 +156,11 @@ for s = 1:nTrials
         
     end
     
+    
+    D.DATA.allSpkWinSums_raw{s} = allSpkWinSums_raw;
+    D.DATA.allSpkWinSums_rot{s} = allSpkWinSums_rot;
+    D.DATA.allSpkWinSums_rot_Smooth{s} = allSpkWinSums_rot_Smooth;
+    
     %These are the max/mion values over all the time windows
     
     MIN_smooth = min(minVal_smooth);
@@ -144,6 +168,12 @@ for s = 1:nTrials
     
     MIN_raw = min(minVal_raw);
     MAX_raw = max(maxVal_raw);
+    
+    
+    D.DATA.MIN_smooth(s) = MIN_smooth;
+    D.DATA.MAX_smooth(s) = MAX_smooth;
+    D.DATA.MIN_raw(s) = MIN_raw;
+    D.DATA.MAX_raw(s) = MAX_raw;
     
     clims = [0 1];
     
@@ -211,19 +241,18 @@ for s = 1:nTrials
     dropBoxSavePath = [saveDir saveName '-vertASRFs'];
     
     plotpos = [0 0 12 40];
-   % print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+    print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
     
     disp('')
     
-    
-    %%
-    
-    
+   %%
  
-    
     stimInds = [2 3 4];
     spontInds = [1 4 6 7 8];
-    
+ 
+    D.INFO.stimInds{s} = stimInds;
+    D.INFO.spontInds{s} = spontInds;
+        
     figH = figure(200); clf
     ColorSet = varycolor(nSkpWins);
     allSummedAz = [];
@@ -308,6 +337,9 @@ for s = 1:nTrials
         
     end
     
+    D.DATA.allSummedEL{s} = allSummedEL;
+    D.DATA.allSummedAz{s} = allSummedAz;
+    
     
     %% EL
     
@@ -327,7 +359,7 @@ for s = 1:nTrials
     ValsEL = [mean_EL_stimTrials mean_EL_spontTrials]';
     ValsEL_err = [sem_EL_stimTrials' sem_EL_spontTrials']';
     
-    barweb(ValsEL', ValsEL_err', 1, [], [], [], [], bone, [], [])
+    barweb(ValsEL', ValsEL_err', 1, [], [], [], [], bone, [], []);
     %barweb(barplotZ, barplotZsem, .8, [], [], [], [], bone, [], [])
     view([90 90])
     
@@ -349,9 +381,10 @@ for s = 1:nTrials
     ValsAZ = [mean_AZ_stimTrials mean_AZ_spontTrials]';
     ValsAZ_err = [sem_AZ_stimTrials' sem_AZ_spontTrials']';
     
-    barweb(ValsAZ', ValsAZ_err', 1, [], [], [], [], bone, [], [])
+    barweb(ValsAZ', ValsAZ_err', 1, [], [], [], [], bone, [], []);
     %barweb(barplotZ, barplotZsem, .8, [], [], [], [], bone, [], [])
     
+    xTICKS = get(gca, 'xticks')
     
     %%
     disp('Printing Plot')
@@ -360,17 +393,20 @@ for s = 1:nTrials
     dropBoxSavePath = [saveDir saveName '-barplots'];
     
     plotpos = [0 0 40 20];
-   % print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
-    
+    print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
     
     disp('')
-    
     
     %% D Prime calculation
     AzContra = [1:10]; % 22 total, 11 is 0;
     AzIpsi = [12:22]; % 22 total, 11 is 0;
     ELTop = [1:4]; % 9 total, 5 is 0;
     ELDown = [6:9]; % 9 total, 5 is 0;
+    
+    D.INFO.AzContra{s} = AzContra;
+    D.INFO.AzIpsi{s} = AzIpsi;
+    D.INFO.ELTop{s} = ELTop;
+    D.INFO.ELDown{s} = ELDown;
     
      %this_d_prime(p, q) = 2 * (meanA - meanB) / sqrt(stdA^2 + stdB^2);
     %% Azimuth
@@ -424,6 +460,8 @@ for s = 1:nTrials
     
     D_EL_Stim = 2* (EL_Stim_inds_contra_mean - EL_Stim_inds_ispi_mean) / sqrt(EL_Stim_inds_contra_std^2 + EL_Stim_inds_ispi_std^2);
     
+    pooled_D_EL_Stim(s) =  D_EL_Stim;
+    
     % During Spont Trials
     EL_Spont_inds_contra = EL_spontTrials(ELTop,:);
     EL_Spont_inds_ispi = EL_spontTrials(ELDown,:);
@@ -436,6 +474,8 @@ for s = 1:nTrials
     
     D_EL_Spont = 2* (EL_Spont_inds_contra_mean - EL_Spont_inds_ispi_mean) / sqrt(EL_Spont_inds_contra_std^2 + EL_Spont_inds_ispi_std^2);
     
+    pooled_D_EL_Spont(s) =  D_EL_Spont;
+    
     % Pooled Trials
     EL_All_inds_contra = allSummedAz(ELTop,:);
     EL_All_inds_ispi = allSummedAz(ELDown,:);
@@ -447,6 +487,12 @@ for s = 1:nTrials
     EL_All_inds_ispi_std = nanstd(nanstd(EL_All_inds_ispi));
     
     D_EL_All = 2* (EL_All_inds_contra_mean - EL_All_inds_ispi_mean) / sqrt(EL_All_inds_contra_std^2 + EL_All_inds_ispi_std^2);
+    
+    pooled_D_EL_All(s) =  D_EL_All;
+
+    D.DATA.pooled_D_EL_Stim{s} = pooled_D_EL_Stim;
+    D.DATA.pooled_D_EL_Spont{s} = pooled_D_EL_Spont;
+    D.DATA.pooled_D_EL_All{s} = pooled_D_EL_All;
     
     %%
     figure(120);
@@ -466,6 +512,8 @@ for s = 1:nTrials
 
     disp('')
 end
+
+
 disp('')
 
 figure(120);
@@ -473,14 +521,34 @@ figure(120);
 subplot(3, 1, 1)
 ylim([-20 20])
 xlim([-20 20])
+title('Stim D-Prime')
 
 subplot(3, 1, 2)
 ylim([-20 20])
 xlim([-20 20])
+title('Spont D-Prime')
 
 subplot(3, 1, 3)
 ylim([-20 20])
 xlim([-20 20])
+title('Pooled D-Prime')
+
+%%
+disp('Printing Plot')
+set(0, 'CurrentFigure', figH)
+
+dropBoxSavePath = [saveDir saveName '-SummaryDPrime'];
+
+plotpos = [0 0 40 20];
+print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+
+disp('')
+
+
+%% Save D
+
+Data_SaveName = [saveDir '_0_AllData_Hansa.mat'];
+save(Data_SaveName, 'D');
 
 end
 
