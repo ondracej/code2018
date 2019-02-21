@@ -143,7 +143,8 @@ elseif strcmp(filetype, 'continuous')
     
     disp(['Loading ' filename '...']);
     
-    index = 0;
+    index = 1; % This is index to change
+    %index = 1000; % This is index to change
     
     hdr = fread(fid, NUM_HEADER_BYTES, 'char*1');
     eval(char(hdr'));
@@ -166,7 +167,10 @@ elseif strcmp(filetype, 'continuous')
     
     current_sample = 0;
     
+    % Filesize defines the amount of data to load until
+    
     while ftell(fid) + RECORD_SIZE < filesize % at least one record remains
+    %while ftell(fid) + RECORD_SIZE < filesize*.1 % at least one record remains
         
         go_back_to_start_of_loop = 0;
         

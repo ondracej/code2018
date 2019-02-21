@@ -142,7 +142,7 @@ switch filetype
         end
         
         if nargout>1 % do not create timestamp arrays unless they are requested
-            timestamps = nan(size(data));
+            %timestamps = nan(size(data)); % there is aproblem wiht this line
             current_sample = 0;
             for record = 1:length(info.ts)
                 timestamps(current_sample+1:current_sample+info.nsamples(record)) = info.ts(record):info.ts(record)+info.nsamples(record)-1;
