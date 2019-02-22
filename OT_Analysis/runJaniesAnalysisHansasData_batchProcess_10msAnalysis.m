@@ -4,9 +4,21 @@ close all;
 dbstop if error
 %%
 
-dataDir = ['/home/janie/Dropbox/00_Conferences/2018_FENS/HansaData/DataToUse/passt/'];
+doPrint = 0;
 
-saveDir = '/home/janie/Data/TUM/OT/OTData/Figures-HansasDataJan2019/';
+
+%%
+
+switch gethostname
+    case {'DEADPOOL'}
+        
+        dataDir = ['/home/janie/Dropbox/00_Conferences/2018_FENS/HansaData/DataToUse/passt/'];
+        saveDir = '/home/janie/Data/TUM/OTAnalysis/FigsHansaFeb2019/';
+        
+    case {'turtle'}
+        dataDir = ['/home/janie/Dropbox/00_Conferences/2018_FENS/HansaData/DataToUse/passt/'];
+        saveDir = '/home/janie/Data/TUM/OT/OTData/Figures-HansasDataJan2019/';
+end
 
 trialSeach = ['*.f32*'];
 
@@ -115,10 +127,10 @@ for s = 1:nTrials
         
     end
     
-     D.DATA.spkCnt_stims{s} = spkCnt_stims;
-     D.DATA.perWin_stims_mean{s} = perWin_stims_mean;
-     D.DATA.perWin_stims_sum{s} = perWin_stims_sum;
-     D.DATA.perWin_stims_std{s} = perWin_stims_std;
+    D.DATA.spkCnt_stims{s} = spkCnt_stims;
+    D.DATA.perWin_stims_mean{s} = perWin_stims_mean;
+    D.DATA.perWin_stims_sum{s} = perWin_stims_sum;
+    D.DATA.perWin_stims_std{s} = perWin_stims_std;
     
     %% aSRFs
     
@@ -229,30 +241,35 @@ for s = 1:nTrials
         
         colorbar
         if o ==1
-           title(saveName)
+            title(saveName)
         end
         
-            
+        
     end
     
-    disp('Printing Plot')
-    set(0, 'CurrentFigure', figH)
+    %%
+    if doPrint
+        
+        disp('Printing Plot')
+        set(0, 'CurrentFigure', figH)
+        
+        dropBoxSavePath = [saveDir saveName '-vertASRFs'];
+        
+        plotpos = [0 0 12 40];
+        print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+        
+        disp('')
+        
+    end
     
-    dropBoxSavePath = [saveDir saveName '-vertASRFs'];
+    %%
     
-    plotpos = [0 0 12 40];
-    print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
-    
-    disp('')
-    
-   %%
- 
     stimInds = [2 3 4];
     spontInds = [1 4 6 7 8];
- 
+    
     D.INFO.stimInds{s} = stimInds;
     D.INFO.spontInds{s} = spontInds;
-        
+    
     figH = figure(200); clf
     ColorSet = varycolor(nSkpWins);
     allSummedAz = [];
@@ -384,19 +401,20 @@ for s = 1:nTrials
     barweb(ValsAZ', ValsAZ_err', 1, [], [], [], [], bone, [], []);
     %barweb(barplotZ, barplotZsem, .8, [], [], [], [], bone, [], [])
     
-    xTICKS = get(gca, 'xticks')
+    %xTICKS = get(gca, 'xticks');
     
     %%
-    disp('Printing Plot')
-    set(0, 'CurrentFigure', figH)
-    
-    dropBoxSavePath = [saveDir saveName '-barplots'];
-    
-    plotpos = [0 0 40 20];
-    print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
-    
-    disp('')
-    
+    if doPrint
+        disp('Printing Plot')
+        set(0, 'CurrentFigure', figH)
+        
+        dropBoxSavePath = [saveDir saveName '-barplots'];
+        
+        plotpos = [0 0 40 20];
+        print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+        
+        disp('')
+    end
     %% D Prime calculation
     AzContra = [1:10]; % 22 total, 11 is 0;
     AzIpsi = [12:22]; % 22 total, 11 is 0;
@@ -408,7 +426,7 @@ for s = 1:nTrials
     D.INFO.ELTop{s} = ELTop;
     D.INFO.ELDown{s} = ELDown;
     
-     %this_d_prime(p, q) = 2 * (meanA - meanB) / sqrt(stdA^2 + stdB^2);
+    %this_d_prime(p, q) = 2 * (meanA - meanB) / sqrt(stdA^2 + stdB^2);
     %% Azimuth
     % During Stim Trials
     AZ_Stim_inds_contra = AZ_stimTrials(AzContra,:);
@@ -489,7 +507,7 @@ for s = 1:nTrials
     D_EL_All = 2* (EL_All_inds_contra_mean - EL_All_inds_ispi_mean) / sqrt(EL_All_inds_contra_std^2 + EL_All_inds_ispi_std^2);
     
     pooled_D_EL_All(s) =  D_EL_All;
-
+    
     D.DATA.pooled_D_EL_Stim{s} = pooled_D_EL_Stim;
     D.DATA.pooled_D_EL_Spont{s} = pooled_D_EL_Spont;
     D.DATA.pooled_D_EL_All{s} = pooled_D_EL_All;
@@ -509,7 +527,7 @@ for s = 1:nTrials
     subplot(3, 1, 3)
     plot(D_Az_All, D_EL_All, 'ko')
     
-
+    
     disp('')
 end
 
@@ -534,16 +552,17 @@ xlim([-20 20])
 title('Pooled D-Prime')
 
 %%
-disp('Printing Plot')
-set(0, 'CurrentFigure', figH)
-
-dropBoxSavePath = [saveDir saveName '-SummaryDPrime'];
-
-plotpos = [0 0 40 20];
-print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
-
-disp('')
-
+if doPrint
+    disp('Printing Plot')
+    set(0, 'CurrentFigure', figH)
+    
+    dropBoxSavePath = [saveDir saveName '-SummaryDPrime'];
+    
+    plotpos = [0 0 40 20];
+    print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+    
+    disp('')
+end
 
 %% Save D
 
