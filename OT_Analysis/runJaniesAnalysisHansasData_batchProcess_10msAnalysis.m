@@ -4,7 +4,7 @@ close all;
 dbstop if error
 %%
 
-doPrint = 0;
+doPrint = 1;
 
 
 %%
@@ -15,9 +15,9 @@ switch gethostname
         dataDir = ['/home/janie/Dropbox/00_Conferences/2018_FENS/HansaData/DataToUse/passt/'];
         saveDir = '/home/janie/Data/TUM/OTAnalysis/FigsHansaFeb2019/';
         
-    case {'turtle'}
+    case {'TURTLE'}
         dataDir = ['/home/janie/Dropbox/00_Conferences/2018_FENS/HansaData/DataToUse/passt/'];
-        saveDir = '/home/janie/Data/TUM/OT/OTData/Figures-HansasDataJan2019/';
+        saveDir = '/home/janie/Data/TUM/OT/OTData/FigsHansaFeb2019/';
 end
 
 trialSeach = ['*.f32*'];
@@ -354,6 +354,18 @@ for s = 1:nTrials
         
     end
     
+    
+    subplot(2, 2, 1)
+    set(gca, 'yTick',[1:length(Az_mean)]);
+    set(gca,'yTickLabel',{'-67.5';'';'-33.75';'';'0';'';'33.75';'';'67.5';});
+    xlabel('Spike count')
+   
+    subplot(2, 2, 3)
+    set(gca, 'XTick',[1:length(El_mean)]);
+    set(gca,'XTickLabel',{'-180';'';'';'';'';'';'-90';'';'';'';'';'0';'';'';'';'';'90';'';'';'';'';'180';});
+    ylabel('Spike count')
+    
+    
     D.DATA.allSummedEL{s} = allSummedEL;
     D.DATA.allSummedAz{s} = allSummedAz;
     
@@ -371,6 +383,11 @@ for s = 1:nTrials
     std_EL_spontTrials = nanstd(EL_spontTrials');
     sem_EL_spontTrials = std_EL_spontTrials  /(sqrt(numel(std_EL_spontTrials)));
     
+    D.DATA.mean_EL_stimTrials{s} = mean_EL_stimTrials;
+    D.DATA.sem_EL_stimTrials{s} = sem_EL_stimTrials;
+    
+    D.DATA.mean_EL_spontTrials{s} = mean_EL_spontTrials;
+    D.DATA.sem_EL_spontTrials{s} = sem_EL_spontTrials;
     
     subplot(2, 2, 2)
     ValsEL = [mean_EL_stimTrials mean_EL_spontTrials]';
@@ -379,7 +396,8 @@ for s = 1:nTrials
     barweb(ValsEL', ValsEL_err', 1, [], [], [], [], bone, [], []);
     %barweb(barplotZ, barplotZsem, .8, [], [], [], [], bone, [], [])
     view([90 90])
-    
+    title('Elevation | Stim and Spont')
+    xlabel('Mean Spike Count')
     %% AZ
     
     AZ_stimTrials = allSummedAz(:, stimInds);
@@ -393,12 +411,20 @@ for s = 1:nTrials
     std_AZ_spontTrials = nanstd(AZ_spontTrials');
     sem_AZ_spontTrials = std_AZ_spontTrials  /(sqrt(numel(std_AZ_spontTrials)));
     
+    D.DATA.mean_AZ_stimTrials{s} = mean_AZ_stimTrials;
+    D.DATA.sem_AZ_stimTrials{s} = sem_AZ_stimTrials;
+    
+    D.DATA.mean_AZ_spontTrials{s} = mean_AZ_spontTrials;
+    D.DATA.sem_AZ_spontTrials{s} = sem_AZ_spontTrials;
+    
     
     subplot(2, 2, 4)
     ValsAZ = [mean_AZ_stimTrials mean_AZ_spontTrials]';
     ValsAZ_err = [sem_AZ_stimTrials' sem_AZ_spontTrials']';
     
     barweb(ValsAZ', ValsAZ_err', 1, [], [], [], [], bone, [], []);
+    title('Mean spike count | Stim and Spont')
+    ylabel('Mean Spike Count')
     %barweb(barplotZ, barplotZsem, .8, [], [], [], [], bone, [], [])
     
     %xTICKS = get(gca, 'xticks');
@@ -415,6 +441,221 @@ for s = 1:nTrials
         
         disp('')
     end
+    
+    %%
+    
+    figH = figure(591) ;clf
+    hold on
+    
+    smoothWin = 3;
+    timepoints = 1:1:numel(mean_AZ_stimTrials);
+    
+    smoothedMean_stim = smooth(mean_AZ_stimTrials, smoothWin);
+    smoothedMean_spont = smooth(mean_AZ_spontTrials, smoothWin);
+    
+    
+    plot(timepoints, smoothedMean_stim, 'b-', 'linewidth', 2)
+    plot(timepoints, smoothedMean_spont, 'k-', 'linewidth', 2)
+    
+    errorbar(timepoints, smoothedMean_stim, sem_AZ_stimTrials, 'b-', 'linewidth', 1)
+    errorbar(timepoints, smoothedMean_spont, sem_AZ_spontTrials, 'k-', 'linewidth', 1)
+    
+    
+    [pks,locs,w,p] = findpeaks(smoothedMean_stim, 'MinPeakProminence',1);
+    
+    [maxPeak, maxind] = max(pks);
+    maxWidth = w(maxind);
+    maxloc = locs(maxind);
+    
+    if isempty(pks)
+        
+        D.DATA.maxPeakSpont_AZ(s) = nan;
+        D.DATA.maxWidthSpont_AZ(s) = nan;
+        D.DATA.maxLocSpont_AZ(s) = nan;
+    else
+        D.DATA.maxPeakSpont_AZ(s) = maxPeak;
+        D.DATA.maxWidthSpont_AZ(s) = maxWidth;
+        D.DATA.maxLocSpont_AZ(s) = maxloc;
+    end
+    
+    skew = skewness(smoothedMean_stim);
+    kurt = kurtosis(smoothedMean_stim);
+    
+    D.DATA.skewStim_AZ(s) = skew;
+    D.DATA.kurtStim_AZ(s) = kurt;
+    
+    hold on
+    plot(maxloc, maxPeak+1, 'rv')
+    line([maxloc-maxWidth/2 maxloc+maxWidth/2], [maxPeak maxPeak], 'color', 'r')
+    
+    % spont trials
+    [pks,locs,w,p] = findpeaks(smoothedMean_spont, 'MinPeakProminence',1);
+    
+    [maxPeak, maxind] = max(pks);
+    maxWidth = w(maxind);
+    maxloc = locs(maxind);
+    
+    if isempty(pks)
+        
+        D.DATA.maxPeakSpont_AZ(s) = nan;
+        D.DATA.maxWidthSpont_AZ(s) = nan;
+        D.DATA.maxLocSpont_AZ(s) = nan;
+    else
+        D.DATA.maxPeakSpont_AZ(s) = maxPeak;
+        D.DATA.maxWidthSpont_AZ(s) = maxWidth;
+        D.DATA.maxLocSpont_AZ(s) = maxloc;
+    end
+    
+    skew = skewness(smoothedMean_spont);
+    kurt = kurtosis(smoothedMean_spont);
+    
+    D.DATA.skewSpont_AZ(s) = skew;
+    D.DATA.kurtSpont_AZ(s) = kurt;
+    
+    hold on
+    plot(maxloc, maxPeak+1, 'rv')
+    line([maxloc-maxWidth/2 maxloc+maxWidth/2], [maxPeak maxPeak], 'color', 'r')
+    
+    axis tight
+    set(gca, 'XTick',[1:length(mean_AZ_stimTrials)]);
+    set(gca,'XTickLabel',{'-180';'';'';'';'';'';'-90';'';'';'';'';'0';'';'';'';'';'90';'';'';'';'';'180';});
+    
+    xlabel('Azimuth')
+    ylabel('Mean spike count')
+    
+    legTxt = [{'Stim', 'Spont'}];
+    legend(legTxt )
+    legend('boxoff')
+    %ylim([0 30])
+    
+    title([ saveName ' | Peak Azimuth'])
+    
+    if doPrint
+        disp('Printing Plot')
+        set(0, 'CurrentFigure', figH)
+        
+        dropBoxSavePath = [saveDir saveName '-BestAzimuth'];
+        
+        plotpos = [0 0 15 15];
+        print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+        
+        disp('')
+    end
+    
+    
+    %% Elevation
+    
+   
+    figH = figure(592) ;clf
+    hold on
+    
+    smoothWin = 3;
+    timepoints = 1:1:numel(mean_EL_stimTrials);
+    
+    smoothedMean_stim = smooth(mean_EL_stimTrials, smoothWin);
+    smoothedMean_spont = smooth(mean_EL_spontTrials, smoothWin);
+    
+    
+    plot(timepoints, smoothedMean_stim, 'b-', 'linewidth', 2)
+    plot(timepoints, smoothedMean_spont, 'k-', 'linewidth', 2)
+    
+    errorbar(timepoints, smoothedMean_stim, mean_EL_stimTrials, 'b-', 'linewidth', 1)
+    errorbar(timepoints, smoothedMean_spont, mean_EL_spontTrials, 'k-', 'linewidth', 1)
+    
+    
+    [pks,locs,w,p] = findpeaks(smoothedMean_stim, 'MinPeakProminence',1);
+    
+    
+    [maxPeak, maxind] = max(pks);
+    maxWidth = w(maxind);
+    maxloc = locs(maxind);
+    
+    if isempty(pks)
+        
+        D.DATA.maxPeakSpont_EL(s) = nan;
+        D.DATA.maxWidthSpont_EL(s) = nan;
+        D.DATA.maxLocSpont_EL(s) = nan;
+    else
+        D.DATA.maxPeakSpont_EL(s) = maxPeak;
+        D.DATA.maxWidthSpont_EL(s) = maxWidth;
+        D.DATA.maxLocSpont_EL(s) = maxloc;
+    end
+    
+    skew = skewness(smoothedMean_stim);
+    kurt = kurtosis(smoothedMean_stim);
+    
+    D.DATA.skewStim_EL(s) = skew;
+    D.DATA.kurtStim_EL(s) = kurt;
+    
+    hold on
+    plot(maxloc, maxPeak, 'rv')
+    line([maxloc-maxWidth/2 maxloc+maxWidth/2], [maxPeak maxPeak], 'color', 'r')
+    
+    % spont trials
+    [pks,locs,w,p] = findpeaks(smoothedMean_spont, 'MinPeakProminence',1);
+    
+    [maxPeak, maxind] = max(pks);
+    maxWidth = w(maxind);
+    maxloc = locs(maxind);
+    
+    if isempty(pks)
+        
+        D.DATA.maxPeakSpont_EL(s) = nan;
+        D.DATA.maxWidthSpont_EL(s) = nan;
+        D.DATA.maxLocSpont_EL(s) = nan;
+    else
+        D.DATA.maxPeakSpont_EL(s) = maxPeak;
+        D.DATA.maxWidthSpont_EL(s) = maxWidth;
+        D.DATA.maxLocSpont_EL(s) = maxloc;
+    end
+    
+    
+    skew = skewness(smoothedMean_spont);
+    kurt = kurtosis(smoothedMean_spont);
+    
+    D.DATA.skewSpont_EL(s) = skew;
+    D.DATA.kurtSpont_EL(s) = kurt;
+    
+    hold on
+    plot(maxloc, maxPeak, 'rv')
+    line([maxloc-maxWidth/2 maxloc+maxWidth/2], [maxPeak maxPeak], 'color', 'r')
+    
+    axis tight
+    set(gca, 'XTick',[1:length(mean_EL_stimTrials)]);
+    set(gca,'XTickLabel',{'-67.5';'';'-33.75';'';'0';'';'33.75';'';'67.5';});
+    
+    xlabel('Elevation')
+    ylabel('Mean spike count')
+    
+    legTxt = [{'Stim', 'Spont'}];
+    legend(legTxt )
+    legend('boxoff')
+%    ylim([0 30])
+    
+    title([ saveName ' | Peak Elevation'])
+    
+    if doPrint
+        disp('Printing Plot')
+        set(0, 'CurrentFigure', figH)
+        
+        dropBoxSavePath = [saveDir saveName '-BestElevation'];
+        
+        plotpos = [0 0 15 15];
+        print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+        
+        disp('')
+    end
+    
+    
+    
+    %%
+    
+    %set(gca, 'YTick',[1:length(ele)]);%17.01.05
+    %set(gca,'YTickLabel',{ele});
+    
+    
+    
+    
     %% D Prime calculation
     AzContra = [1:10]; % 22 total, 11 is 0;
     AzIpsi = [12:22]; % 22 total, 11 is 0;
