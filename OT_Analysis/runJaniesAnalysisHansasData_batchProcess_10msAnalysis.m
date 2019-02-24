@@ -355,13 +355,13 @@ for s = 1:nTrials
     end
     
     
-    subplot(2, 2, 1)
-    set(gca, 'yTick',[1:length(Az_mean)]);
-    set(gca,'yTickLabel',{'-67.5';'';'-33.75';'';'0';'';'33.75';'';'67.5';});
+    subplot(2, 2, 1);
+    set(gca, 'xTick',[1:numel(El_mean)]) % this is actually the x axes because we do the 90 rotation
+    set(gca,'xTickLabel',{'-67.5';'';'-33.75';'';'0';'';'33.75';'';'67.5';});
     xlabel('Spike count')
    
     subplot(2, 2, 3)
-    set(gca, 'XTick',[1:length(El_mean)]);
+    set(gca, 'XTick',[1:numel(Az_mean)]);
     set(gca,'XTickLabel',{'-180';'';'';'';'';'';'-90';'';'';'';'';'0';'';'';'';'';'90';'';'';'';'';'180';});
     ylabel('Spike count')
     
@@ -417,7 +417,6 @@ for s = 1:nTrials
     D.DATA.mean_AZ_spontTrials{s} = mean_AZ_spontTrials;
     D.DATA.sem_AZ_spontTrials{s} = sem_AZ_spontTrials;
     
-    
     subplot(2, 2, 4)
     ValsAZ = [mean_AZ_stimTrials mean_AZ_spontTrials]';
     ValsAZ_err = [sem_AZ_stimTrials' sem_AZ_spontTrials']';
@@ -469,13 +468,13 @@ for s = 1:nTrials
     
     if isempty(pks)
         
-        D.DATA.maxPeakSpont_AZ(s) = nan;
-        D.DATA.maxWidthSpont_AZ(s) = nan;
-        D.DATA.maxLocSpont_AZ(s) = nan;
+        D.DATA.maxPeakStim_AZ(s) = nan;
+        D.DATA.maxWidthStim_AZ(s) = nan;
+        D.DATA.maxLocStim_AZ(s) = nan;
     else
-        D.DATA.maxPeakSpont_AZ(s) = maxPeak;
-        D.DATA.maxWidthSpont_AZ(s) = maxWidth;
-        D.DATA.maxLocSpont_AZ(s) = maxloc;
+        D.DATA.maxPeakStim_AZ(s) = maxPeak;
+        D.DATA.maxWidthStim_AZ(s) = maxWidth;
+        D.DATA.maxLocStim_AZ(s) = maxloc;
     end
     
     skew = skewness(smoothedMean_stim);
@@ -485,7 +484,7 @@ for s = 1:nTrials
     D.DATA.kurtStim_AZ(s) = kurt;
     
     hold on
-    plot(maxloc, maxPeak+1, 'rv')
+    plot(maxloc, maxPeak, 'rv')
     line([maxloc-maxWidth/2 maxloc+maxWidth/2], [maxPeak maxPeak], 'color', 'r')
     
     % spont trials
@@ -513,7 +512,7 @@ for s = 1:nTrials
     D.DATA.kurtSpont_AZ(s) = kurt;
     
     hold on
-    plot(maxloc, maxPeak+1, 'rv')
+    plot(maxloc, maxPeak, 'rv')
     line([maxloc-maxWidth/2 maxloc+maxWidth/2], [maxPeak maxPeak], 'color', 'r')
     
     axis tight
@@ -541,6 +540,17 @@ for s = 1:nTrials
         
         disp('')
     end
+    
+    %% Summay plot
+    
+    figH = figure(294);
+    subplot(2, 1, 1)
+    hold on
+    
+    plot(D.DATA.maxLocStim_AZ(s), D.DATA.maxWidthStim_AZ(s), 'b*')
+    plot(D.DATA.maxLocSpont_AZ(s), D.DATA.maxWidthSpont_AZ(s), 'ko')
+    title('Azimuth')
+    ylabel('Width')
     
     
     %% Elevation
@@ -572,13 +582,13 @@ for s = 1:nTrials
     
     if isempty(pks)
         
-        D.DATA.maxPeakSpont_EL(s) = nan;
-        D.DATA.maxWidthSpont_EL(s) = nan;
-        D.DATA.maxLocSpont_EL(s) = nan;
+        D.DATA.maxPeakStim_EL(s) = nan;
+        D.DATA.maxWidthStim_EL(s) = nan;
+        D.DATA.maxLocStim_EL(s) = nan;
     else
-        D.DATA.maxPeakSpont_EL(s) = maxPeak;
-        D.DATA.maxWidthSpont_EL(s) = maxWidth;
-        D.DATA.maxLocSpont_EL(s) = maxloc;
+        D.DATA.maxPeakStim_EL(s) = maxPeak;
+        D.DATA.maxWidthStim_EL(s) = maxWidth;
+        D.DATA.maxLocStim_EL(s) = maxloc;
     end
     
     skew = skewness(smoothedMean_stim);
@@ -645,6 +655,18 @@ for s = 1:nTrials
         
         disp('')
     end
+    
+    
+    
+    figH = figure(294);
+    subplot(2, 1, 2)
+    hold on
+    plot(D.DATA.maxLocStim_EL(s), D.DATA.maxWidthStim_EL(s), 'b*')
+    plot(D.DATA.maxLocSpont_EL(s), D.DATA.maxWidthSpont_EL(s), 'ko')
+    title('Elevation')
+    ylabel('Width')
+    
+  
     
     
     
@@ -798,6 +820,31 @@ if doPrint
     set(0, 'CurrentFigure', figH)
     
     dropBoxSavePath = [saveDir saveName '-SummaryDPrime'];
+    
+    plotpos = [0 0 40 20];
+    print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+    
+    disp('')
+end
+
+%%
+figH = figure(294);
+
+subplot(2, 1, 1)
+xlim([1 22])
+set(gca, 'XTick',[1:numel(Az_mean)]);
+set(gca,'XTickLabel',{'-180';'';'';'';'';'';'-90';'';'';'';'';'0';'';'';'';'';'90';'';'';'';'';'180';});
+
+subplot(2, 1, 2)
+xlim([1 9])
+set(gca, 'XTick',[1:length(mean_EL_stimTrials)]);
+set(gca,'XTickLabel',{'-67.5';'';'-33.75';'';'0';'';'33.75';'';'67.5';});
+
+if doPrint
+    disp('Printing Plot')
+    set(0, 'CurrentFigure', figH)
+    
+    dropBoxSavePath = [saveDir saveName '-SummaryMaxAZEL'];
     
     plotpos = [0 0 40 20];
     print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
