@@ -4,15 +4,17 @@ clear all
 dbstop if error
 close all
 
+DataToUseDir = '/home/janie/Data/TUM/OTAnalysis/CombinedDataSets_JanieFeb/';
+
 dbstop if error
 
-experiment = 5; %efc
-recSession = 4; %sc
+experiment = 3; %efc
+recSession = 2; %sc
 
 audSelInd_1 = 2; % This is the index, not the stim number!!!
 audSelInd_2 = 6; % This is the index, not the stim number!!!
 
-expTxt = ['__E' num2str(experiment) '-Rs' num2str(recSession)];
+expTxt = ['--E' num2str(experiment) '-Rs' num2str(recSession)];
 
 %%
 %[OT_DB] = OT_database();
@@ -49,6 +51,76 @@ objFile = 'C_OBJ.mat';
 objPath = [C_OBJ.PATHS.OT_Data_Path C_OBJ.INFO.expDir C_OBJ.PATHS.dirD audStimDir C_OBJ.PATHS.dirD '__Spikes' C_OBJ.PATHS.dirD objFile];
 dataSet2 = load(objPath);
 
+
+%% COmpare spike wabveforms - make sure UMS2K is added to path
+
+figH = figure(592); clf
+
+D1_spikes = dataSet1.C_OBJ.SPKS.spikes;
+D1_clustOfInterest = dataSet1.C_OBJ.SPKS.clustOfInterest;
+
+D1_assigns = D1_spikes.assigns;
+D1_inds = find(D1_assigns == D1_clustOfInterest);
+D1_waveforms = D1_spikes.waveforms;
+D1_waveformsOfInterest = D1_spikes.waveforms(D1_inds,:);
+
+D1_MeanWaveform = nanmean(D1_waveformsOfInterest, 1);
+axis tight
+timepoints = 1:1:size(D1_MeanWaveform, 2);
+timepoints_ms = (timepoints/D1_spikes.params.Fs)*1000;
+subplot(2, 2, 1)
+plot(timepoints_ms, D1_waveformsOfInterest', 'b')
+hold on
+plot(timepoints_ms, D1_MeanWaveform', 'k', 'linewidth', 2)
+axis tight
+ylim([-1 1])
+title('Dataset 1')
+xlabel('Time [ms]')
+
+D2_spikes = dataSet2.C_OBJ.SPKS.spikes;
+D2_clustOfInterest = dataSet2.C_OBJ.SPKS.clustOfInterest ;
+
+D2_assigns = D2_spikes.assigns;
+D2_inds = find(D2_assigns == D2_clustOfInterest);
+D2_waveforms = D2_spikes.waveforms;
+D2_waveformsOfInterest = D2_spikes.waveforms(D2_inds,:);
+
+D2_MeanWaveform = nanmean(D2_waveformsOfInterest, 1);
+subplot(2, 2, 3)
+plot(timepoints_ms, D2_waveformsOfInterest', 'b')
+hold on
+plot(timepoints_ms, D2_MeanWaveform', 'k', 'linewidth', 2)
+axis tight
+ylim([-1 1])
+title('Dataset 1')
+xlabel('Time [ms]')
+subplot(2, 2, [2 4])
+hold on
+
+plot(timepoints_ms, D1_waveformsOfInterest', 'k')
+hold on
+plot(timepoints_ms, D2_waveformsOfInterest', 'k')
+
+plot(timepoints_ms, D1_MeanWaveform', 'b', 'linewidth', 2)
+plot(timepoints_ms, D2_MeanWaveform', 'r', 'linewidth', 2)
+axis tight
+ylim([-1 1])
+xlabel('Time [ms]')
+%plot_waveforms(D2_spikes, D2_clustOfInterest);
+
+annotation(figH,'textbox',...
+    [0.05 0.9 0.50 0.1],...
+    'String',{dataSet1.C_OBJ.PATHS.audStimDir expTxt},...
+    'LineStyle','none',...
+    'FitBoxToText','off');
+
+%%
+disp('Printing Plot')
+set(0, 'CurrentFigure', figH)
+plotpos = [0 0 20 15];
+FigSavePath = [DataToUseDir dataSet1.C_OBJ.PATHS.audStimDir expTxt 'Spikes'];
+print_in_A4(0, FigSavePath, '-djpeg', 0, plotpos);
+disp(['Saved Figure: '  FigSavePath ])
 
 %% Making Rasters
 
@@ -111,7 +183,7 @@ annotation(figH,'textbox',...
 plotRaster(dataSet2, 2)
 
 %% Combining spikes
-DataToUseDir = '/home/janie/Data/TUM/OTAnalysis/CombinedDataJanie/';
+
 
 prompt = 'Combine these data sets? 1=yes; 0=no:      ';
 
@@ -134,7 +206,7 @@ OBJS.dataSet2 = dataSet2;
 
 disp('Data combined')
 
-savePath = [DataToUseDir dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
+savePath = [[DataToUseDir 'Data/'] dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
 
 disp('Saving Objects...')
 tic
@@ -150,7 +222,7 @@ end
 
 disp('Printing Plot')
 set(0, 'CurrentFigure', figH)
-plotpos = [0 0 35 40];
+plotpos = [0 0 20 15];
 FigSavePath = [DataToUseDir dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
 print_in_A4(0, FigSavePath, '-djpeg', 0, plotpos);
 disp(['Saved Figure: '  FigSavePath ])
