@@ -8,8 +8,8 @@ DataToUseDir = '/home/janie/Data/TUM/OTAnalysis/CombinedDataSets_JanieFeb/';
 
 dbstop if error
 
-experiment = 3; %efc
-recSession = 2; %sc
+experiment = 5; %efc
+recSession = 4; %sc
 
 audSelInd_1 = 2; % This is the index, not the stim number!!!
 audSelInd_2 = 6; % This is the index, not the stim number!!!
