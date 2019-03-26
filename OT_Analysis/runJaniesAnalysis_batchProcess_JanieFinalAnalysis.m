@@ -1,10 +1,10 @@
 function [] = runJaniesAnalysis_batchProcess_JanieFinalAnalysis()
 
-%close all;
+close all;
 dbstop if error
 %%
 
-doPrint = 1;
+doPrint = 0;
 
 %%
 
@@ -28,8 +28,8 @@ for j = 1:nTrials
 end
 
 %%
-
-for s =9:nTrials
+Expset = [1:8 34];
+for s = 1:nTrials
     
     filToLoad = trialNames{s};
     saveName = filToLoad(1:23);
@@ -79,6 +79,9 @@ for s =9:nTrials
     perWin_stims_mean = [];
     perWin_stims_sum = [];
     perWin_stims_std = [];
+    
+    spkCnt_reps = [];
+    spkWinsOverReps = [];
     
     for elev = 1:n_elev
         for azim = 1:n_azim

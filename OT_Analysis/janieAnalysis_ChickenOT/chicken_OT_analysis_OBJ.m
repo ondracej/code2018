@@ -69,7 +69,7 @@ classdef chicken_OT_analysis_OBJ < handle
             obj.PATHS.OT_Data_Path = OT_Data_Path;
             
             %% If save to dropbox
-            dropboxDir = '/home/janie/Dropbox/00_Conferences/Fens_2018/Figs/NewFigs/';
+            dropboxDir = '/home/janie/Data/TUM/OTAnalysis/allITDJanie/allObjs/Figs/';
             obj.PATHS.dropboxPath = dropboxDir;
             
         end
@@ -2141,11 +2141,11 @@ classdef chicken_OT_analysis_OBJ < handle
             
             FigSaveName = [obj.PATHS.spkSavePath 'WNRaster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
             %dropBoxSavePath = [obj.PATHS.dropboxPath obj.RS_INFO.expTextLabel '__' obj.PATHS.audStimDir '_WNRaster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
-            dropBoxSavePath = ['/media/janie/Data64GB/OTData/OT/allWNsJanie/' saveName '_Clust-' num2str(obj.SPKS.clustOfInterest)];
-        
+            %dropBoxSavePath = ['/media/janie/Data64GB/OTData/OT/allWNsJanie/' saveName '_Clust-' num2str(obj.SPKS.clustOfInterest)];
+            dropBoxSavePath = ['/home/janie/Data/TUM/OTAnalysis/allWNsJanie/' saveName '_Clust-' num2str(obj.SPKS.clustOfInterest)];
             
             plotpos = [0 0 12 15];
-            print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);
+            %print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);
             %print_in_A4(0, FigSaveName, '-depsc', 0, plotpos);
             print_in_A4(0, dropBoxSavePath, '-djpeg', 0, plotpos);
             
@@ -2176,7 +2176,7 @@ classdef chicken_OT_analysis_OBJ < handle
             y_offset_between_repetitions = 0.001;
             
             jSColors = {[.84  .17 .05], [.36 .27 .53],   [.21 .44 .12],  [.94, .56 .078],  [.039 .3 .99],  [.22 .52 .55], [.72 .15 .25]};
-            repCols = repmat(jSColors, 1, 5);
+            repCols = repmat(jSColors, 1, 1000);
             %% Concat all responses
             
             nStimTypes = numel(allSpksMatrix);
@@ -2320,8 +2320,9 @@ classdef chicken_OT_analysis_OBJ < handle
             set(0, 'CurrentFigure', figH)
             
             FigSaveName = [obj.PATHS.spkSavePath titlePart '_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
-            dropBoxSavePath = [obj.PATHS.dropboxPath obj.RS_INFO.expTextLabel '__' obj.PATHS.audStimDir titlePart '_Raster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
+            %dropBoxSavePath = [obj.PATHS.dropboxPath obj.RS_INFO.expTextLabel '__' obj.PATHS.audStimDir titlePart '_Raster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
             
+            dropBoxSavePath = ['/home/janie/Data/TUM/OTAnalysis/allITDJanie/allObjs/Figs/' obj.RS_INFO.expTextLabel '__' obj.PATHS.audStimDir titlePart '_Raster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
             plotpos = [0 0 20 15];
             print_in_A4(0, dropBoxSavePath, '-djpeg', 0, plotpos);
             print_in_A4(0, dropBoxSavePath, '-depsc', 0, plotpos);
