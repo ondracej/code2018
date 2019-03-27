@@ -21,7 +21,7 @@ OT_DB(efc).bird_sex  = 'F';
 OT_DB(efc).bird_weight  = 423; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N001
 sc = 1; % Increment Session
 rsc  = 1;
 % Recording Session Counter
@@ -34,7 +34,7 @@ OT_DB(efc).RS(sc).StimProtocol_name{rsc} = 'WhiteNoise';
 OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171214_130224_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'WN - Not Auditory';
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N002 
 sc = sc+1;
 rsc = 1;
 
@@ -56,7 +56,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171214_130922_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'same neuron, but slower playback rate';
 rsc = rsc +1;
 
-%% SC = 3; RC = 1
+%% SC = 3; RC = 1 | N003
 sc = sc+1;
 rsc = 1;
 
@@ -102,7 +102,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '02-Tuning_20171214_135110_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 4; RC = 1
+%% SC = 4; RC = 1 | N004
 sc = sc+1;
 rsc = 1;
 
@@ -139,7 +139,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '04-ITD_20171214_144926_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '1 per second';
 rsc = rsc +1;
 
-%% SC = 5; RC = 1
+%% SC = 5; RC = 1 | N005
 sc = sc+1;
 rsc = 1;
 
@@ -154,7 +154,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171214_151442_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'Not auditory';
 rsc = rsc +1;
 
-%% SC = 6; RC = 1
+%% SC = 6; RC = 1 | N006
 sc = sc+1;
 rsc = 1;
 
@@ -176,7 +176,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '01-HRTF_20171214_152034_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'lost neuron, incomplete';
 rsc = rsc +1;
 
-%% SC = 7; RC = 1
+%% SC = 7; RC = 1 | N007 
 sc = sc+1;
 rsc = 1;
 
@@ -191,7 +191,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171214_153301_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'slightly auditory';
 rsc = rsc +1;
 
-%% SC = 8; RC = 1
+%% SC = 8; RC = 1 | N008
 sc = sc+1;
 rsc = 1;
 
@@ -213,7 +213,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '01-HRTF_20171214_155453_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'v noisy, stopped recording';
 rsc = rsc +1;
 
-%% SC = 9; RC = 1
+%% SC = 9; RC = 1 | N009
 sc = sc+1;
 rsc = 1;
 
@@ -228,7 +228,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171214_161427_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'too many neurons';
 rsc = rsc +1;
 
-%% SC = 10; RC = 1
+%% SC = 10; RC = 1 | N010
 sc = sc+1;
 rsc = 1;
 
@@ -281,7 +281,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '01-HRTF_20171214_173033_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'lost neuron, incomplete, multiunit';
 rsc = rsc +1;
 
-%% SC = 11; RC = 1
+%% SC = 11; RC = 1 | N011
 sc = sc+1;
 rsc = 1;
 
@@ -296,7 +296,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171214_175445_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'random noise';
 rsc = rsc +1;
 
-%% SC = 12; RC = 1
+%% SC = 12; RC = 1 | N012
 sc = sc+1;
 rsc = 1;
 
@@ -322,7 +322,7 @@ rsc = rsc +1;
 OT_DB(efc).RS(sc).StimProtocol_ID(rsc) = 3;
 OT_DB(efc).RS(sc).StimProtocol_name{rsc} = 'IID';
 OT_DB(efc).RS(sc).ResultDirName{rsc} = '03-IID_20171214_183536_0001';
-%OT_DB(efc).RS(sc).nReps(rsc) = 20;
+%OT_DB(efc).RS(sc).nReps(rsc) = 20;83
 OT_DB(efc).RS(sc).notes{rsc} = '2 neurons';
 rsc = rsc +1;
 
@@ -364,7 +364,7 @@ OT_DB(efc).bird_sex  = 'M';
 OT_DB(efc).bird_weight  = 502; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N013
 sc = 1; % Increment Session
 rsc  = 1;
 
@@ -386,7 +386,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '01-HRTF_20171213_124753_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'not auditory, lost neuron';
 rsc = rsc +1;
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N014
 sc = sc + 1; % Increment Session
 rsc  = 1;
 
@@ -401,7 +401,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171213_131154_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'Not auditory';
 rsc = rsc +1;
 
-%% SC = 3; RC = 1
+%% SC = 3; RC = 1 | N015
 sc = sc + 1; % Increment Session
 rsc  = 1;
 
@@ -416,7 +416,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171213_132113_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'Not auditory';
 rsc = rsc +1;
 
-%% SC = 4; RC = 1
+%% SC = 4; RC = 1 | N016
 sc = sc+1;
 rsc = 1;
 
@@ -441,7 +441,7 @@ rsc = rsc +1;
 % IID
 OT_DB(efc).RS(sc).StimProtocol_ID(rsc) = 3;
 OT_DB(efc).RS(sc).StimProtocol_name{rsc} = 'IID';
-OT_DB(efc).RS(sc).ResultDirName{rsc} = '03-IID_20171213_135131_0001';
+OT_DB(efc).RS(sc).ResultDirName{rsc} = '03-IID_20171213_1315131_0001';
 %OT_DB(efc).RS(sc).nReps(rsc) = 20;
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
@@ -476,7 +476,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171213_144121_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 5; RC = 1
+%% SC = 5; RC = 1 | N017
 sc = sc+1;
 rsc = 1;
 
@@ -536,7 +536,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171213_163950_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 6; RC = 1
+%% SC = 6; RC = 1 | N018
 sc = sc+1;
 rsc = 1;
 
@@ -551,7 +551,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171213_165959_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'not auditory';
 rsc = rsc +1;
 
-%% SC = 7; RC = 1
+%% SC = 7; RC = 1 | N019
 sc = sc+1;
 rsc = 1;
 
@@ -589,7 +589,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '04-ITD_20171213_173623_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 8; RC = 1
+%% SC = 8; RC = 1 | N020 
 sc = sc+1;
 rsc = 1;
 
@@ -604,7 +604,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171213_174712_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'strange neuron';
 rsc = rsc +1;
 
-%% SC = 9; RC = 1
+%% SC = 9; RC = 1 | N021
 sc = sc+1;
 rsc = 1;
 
@@ -679,7 +679,7 @@ OT_DB(efc).bird_sex  = 'M';
 OT_DB(efc).bird_weight  = 535; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N022
 sc = 1; % Increment Session
 rsc  = 1;
 
@@ -733,7 +733,7 @@ OT_DB(efc).RS(sc).notes{rsc} = 'weird phone noise';
 rsc = rsc +1;
 
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N023
 sc = sc+1;
 rsc = 1;
 
@@ -794,7 +794,7 @@ OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
 
-%% SC = 3; RC = 1
+%% SC = 3; RC = 1 | N024
 sc = sc+1;
 rsc = 1;
 

@@ -11,15 +11,15 @@ close all
 
 %% Create Chicken Analysis Object
 
-experiment = 6; %efc
-recSession = 1; %sFigSaveNamec
+experiment = 15; %efc
+recSession = 2; %sFigSaveNamec
 
 C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 
 % %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
 
-audSelInd = 6; % SpikesThis is the index, spikesnot the stim number!!!
+audSelInd = 3; % SpikesThis is the index, spikesnot the stim number!!!
 
 selection = C_OBJ.RS_INFO.ResultDirName{audSelInd};
 disp(selection)
@@ -29,7 +29,7 @@ disp(selection)
 disp('Loading Saved Object...')
 
 audStimDir = C_OBJ.RS_INFO.ResultDirName{audSelInd};
-objFile = 'C_OBJ.mat';printRaster_IID_Ver1
+objFile = 'C_OBJ.mat';
 objPath = [C_OBJ.PATHS.OT_Data_Path C_OBJ.INFO.expDir C_OBJ.PATHS.dirD audStimDir C_OBJ.PATHS.dirD '__Spikes' C_OBJ.PATHS.dirD objFile];
 load(objPath);
 disp(['Loaded: ' objPath])
@@ -51,7 +51,7 @@ axis tight
 %% Define spike threhsold and save Figure
 
 %SpkThresh = 0.4;
-SpkThresh = 0.11;
+SpkThresh = 0.2;
 %setThreshAndPrintFig(C_OBJ, SpkThresh)
 
 % Print spikes7
@@ -79,7 +79,7 @@ clear('spikes')
 spikes = ss_default_params(C_OBJ.Fs, 'thresh', SpkThresh );
 spikes = ss_detect(C_OBJ.O_STIMS.allEpochData, spikes);
 
-%spikes = ss_align(spikes);3
+%spikes = ss_align(spikes);
 spikes = ss_kmeans(spikes);
 spikes = ss_energy(spikes);
 spikes = ss_aggregate(spikes);
@@ -96,7 +96,7 @@ outlier_tool(spikes)
 
 %% Define Cluster of Interest
 
-clustOfInterest = 11; 
+clustOfInterest = 5; 
 nSpikesInCluster = numel(find(spikes.assigns == clustOfInterest));
 disp(['nSpikes = ' num2str(nSpikesInCluster)]);
 
@@ -132,7 +132,7 @@ save(objSaveName , 'C_OBJ', '-v7.3')
 disp(['Saved: '  objSaveName])
 
 %
-printRaster_IID_Ver1(C_OBJ, 1) % IID
+%printRaster_IID_Ver1(C_OBJ, 1) % IID
 
 
 %%

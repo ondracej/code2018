@@ -4,11 +4,11 @@ clear all
 dbstop if error
 close all
 
-DataToUseDir = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allITDJanie/allObjs/';
-FigSaveDir = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allITDJanie/allObjs/Figs/';
+DataToUseDir = '/home/janie/Data/TUM/OTAnalysis/allIIDJanie/allObjs/';
+FigSaveDir = '/home/janie/Data/TUM/OTAnalysis/allIIDJanie/allObjs/Figs/';
 
 
-allDirs = dir(fullfile([DataToUseDir '*04-ITD*']));
+allDirs = dir(fullfile([DataToUseDir '*03-IID*']));
 ndirs = numel(allDirs);
 objFile = 'C_OBJ.mat';
 dirD = '/';
@@ -191,7 +191,7 @@ for j = 1:ndirs
     
     disp('Data combined')
     
-    savePath = ['/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allITDJanie/allObjs/uncombinedData/' dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
+    savePath = ['/home/janie/Data/TUM/OTAnalysis/allIIDJanie/allObjs/UncombinedData/' dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
     
     disp('Saving Objects...')
     tic
