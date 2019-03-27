@@ -4,15 +4,15 @@ clear all
 dbstop if error
 close all
 
-DataToUseDir = '/home/janie/Data/TUM/OTAnalysis/CombinedDataSets_JanieFeb/';
+DataToUseDir = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allWNsJanie/allObjs/';
 
 dbstop if error
 
-experiment = 5; %efc
+experiment = 2; %efc
 recSession = 4; %sc
 
-audSelInd_1 = 2; % This is the index, not the stim number!!!
-audSelInd_2 = 6; % This is the index, not the stim number!!!
+audSelInd_1 = 1; % This is the index, not the stim number!!!
+audSelInd_2 = 7; % This is the index, not the stim number!!!
 
 expTxt = ['--E' num2str(experiment) '-Rs' num2str(recSession)];
 

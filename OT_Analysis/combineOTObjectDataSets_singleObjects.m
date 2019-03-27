@@ -4,9 +4,11 @@ clear all
 dbstop if error
 close all
 
-DataToUseDir = '/home/janie/Data/TUM/OTAnalysis/CombinedDataSets_JanieFeb/uncombinedData/';
-FigSaveDir = '/home/janie/Data/TUM/OTAnalysis/CombinedDataSets_JanieFeb/';
-allDirs = dir([DataToUseDir '*HRTF*']);
+DataToUseDir = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allITDJanie/allObjs/';
+FigSaveDir = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allITDJanie/allObjs/Figs/';
+
+
+allDirs = dir(fullfile([DataToUseDir '*04-ITD*']));
 ndirs = numel(allDirs);
 objFile = 'C_OBJ.mat';
 dirD = '/';
@@ -20,7 +22,8 @@ end
 
 for j = 1:ndirs
     
-    objPath = [DataToUseDir dirNames{j} dirD objFile];
+    %objPath = [DataToUseDir dirNames{j} dirD objFile];
+    objPath = [DataToUseDir dirNames{j}];
     dataSet1 = load(objPath);
     
     expTxt = ['--E' num2str(dataSet1.C_OBJ.INFO.exp_number) '-Rs' num2str(dataSet1.C_OBJ.RS_INFO.recording_session)];
@@ -167,22 +170,12 @@ for j = 1:ndirs
     allFR = FR_spks;
     
     
-    %[p,h] = ranksum(allFR{1},allFR{2});
-    
-    %sigText = ['p = ' num2str(p) ', h = ' num2str(h)];
-    
-    
     figH = figure (201); clf
     
-    plotRaster(dataSet1, 1)
+   % plotRasterWN(dataSet1, 1)
     
-    %     annotation(figH,'textbox',...
-    %         [0.05 0.9 0.50 0.1],...
-    %         'String',{sigText},...
-    %         'LineStyle','none',...
-    %         'FitBoxToText','off');
+    %plotRaster(dataSet1, 1) %HRTF
     
-    % plotRaster(dataSet2, 2)
     
     %% Combining spikes
     
@@ -198,7 +191,7 @@ for j = 1:ndirs
     
     disp('Data combined')
     
-    savePath = ['/home/janie/Data/TUM/OTAnalysis/CombinedDataSets_JanieFeb/Data/' dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
+    savePath = ['/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allITDJanie/allObjs/uncombinedData/' dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
     
     disp('Saving Objects...')
     tic
@@ -269,3 +262,45 @@ ylabel('Reps | Azimuth')
 axis tight
 
 end
+
+
+function [] = plotRasterWN(dataSet, plotnum)
+
+
+allSpksMatrix = dataSet.C_OBJ.S_SPKS.SORT.allSpksMatrix;
+blueCol = [0.2 0.7 0.8];
+scanrate = dataSet.C_OBJ.Fs;
+subplot(2, 1, plotnum)
+nStimTypes = numel(allSpksMatrix);
+cnt =1;
+
+for j = 1 : nStimTypes
+    nTheseReps = numel(allSpksMatrix{j});
+    for k = 1: nTheseReps
+        
+        %must subtract start_stim to arrange spikes relative to onset
+        spks = allSpksMatrix{1,j}{1,k} /scanrate *1000;
+        %theseSpks_ms = spks /scanrate *1000;
+        ypoints = ones(numel(spks))*cnt;
+        hold on
+        plot(spks, ypoints, 'k.', 'linestyle', 'none', 'MarkerFaceColor','k','MarkerEdgeColor','k')
+        
+        cnt = cnt +1;
+        
+        if k == nTheseReps
+            line([0 300], [cnt cnt], 'color', blueCol)
+            %text(-20, cnt-30, (sortedDataNames{elev, azim}(4:10)))
+        end
+    end
+    
+    
+end
+set(gca,'ytick',[])
+
+title (dataSet.C_OBJ.PATHS.audStimDir)
+%xlabel('Time [ms]')
+ylabel('Reps | WN')
+axis tight
+
+end
+

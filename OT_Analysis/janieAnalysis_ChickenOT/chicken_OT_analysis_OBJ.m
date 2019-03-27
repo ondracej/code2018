@@ -32,14 +32,14 @@ classdef chicken_OT_analysis_OBJ < handle
             
             switch gethostname
                 
-                case 'turtle'
+                case 'TURTLE'
                     dirD = '/';
                     
                     addpath(genpath('/home/janie/Dropbox/codetocopy/AudioSpike/'));
                     addpath(genpath('/home/janie/Dropbox/codetocopy/janieAnalysis_ChickenOT/'));
                     addpath(genpath('/home/janie/Dropbox/codetocopy/UMS2K-master/'));
                     
-                    OT_Data_Path = '/home/janie/Data/TUM/OT/Data/OT/Results/';
+                    OT_Data_Path = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allWNsJanie/allObjs/';
                     
                     
                 case 'DEADPOOL'
