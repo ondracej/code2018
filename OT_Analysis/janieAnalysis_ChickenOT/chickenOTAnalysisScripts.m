@@ -12,7 +12,7 @@ close all
 %% Create Chicken Analysis Object
 
 experiment = 15; %efc
-recSession = 2; %sFigSaveNamec
+recSession = 3; %sFigSaveNamec
 
 C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 
@@ -64,8 +64,8 @@ FigSaveName = [C_OBJ.PATHS.spkSavePath '_spikesResp'];
             
 saveName = C_OBJ.PATHS.audStimDir;
 %mediaSavePath = ['/home/janie/Data/TUM/OTAnalysis/allITDJanie/' saveName '_spikesResp'];
-%mediaSavePath = ['/home/janie/Data/TUM/OTAnalysis/allWNsJanie/' saveName '_spikesResp'];
-mediaSavePath = ['/home/janie/Data/TUM/OTAnalysis/allIIDJanie/' saveName '_spikesResp'];
+mediaSavePath = ['/home/janie/Data/TUM/OTAnalysis/allWNsJanie/' saveName '_spikesResp'];
+%mediaSavePath = ['/home/janie/Data/TUM/OTAnalysis/allIIDJanie/' saveName '_spikesResp'];
 
 plotpos = [0 0 15 10];
 %print_in_A4(0, FigSaveName, export_to, 0, plotpos);
@@ -96,7 +96,7 @@ outlier_tool(spikes)
 
 %% Define Cluster of Interest
 
-clustOfInterest = 5; 
+clustOfInterest = 1; 
 nSpikesInCluster = numel(find(spikes.assigns == clustOfInterest));
 disp(['nSpikes = ' num2str(nSpikesInCluster)]);
 
@@ -125,8 +125,8 @@ save(cobjSaveName , 'C_OBJ', '-v7.3')
 % save to special directory
 
 %objSaveName = ['/home/janie/Data/TUM/OTAnalysis/allITDJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
-%objSaveName = ['/home/janie/Data/TUM/OTAnalysis/allWNsJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
-objSaveName = ['/home/janie/Data/TUM/OTAnalysis/allIIDJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
+objSaveName = ['/home/janie/Data/TUM/OTAnalysis/allWNsJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
+%objSaveName = ['/home/janie/Data/TUM/OTAnalysis/allIIDJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
 
 save(objSaveName , 'C_OBJ', '-v7.3')
 disp(['Saved: '  objSaveName])

@@ -854,7 +854,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171212_165151_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 4; RC = 1
+%% SC = 4; RC = 1 | N025
 sc = sc+1;
 rsc = 1;
 
@@ -913,7 +913,7 @@ OT_DB(efc).RS(sc).StimProtocol_name{rsc} = 'WhiteNoise';
 OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171212_180817_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
-%% SC = 5; RC = 1
+%% SC = 5; RC = 1 | N026 
 sc = sc+1;
 rsc = 1;
 
@@ -980,7 +980,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171212_193508_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 6; RC = 1
+%% SC = 6; RC = 1 | N027
 sc = sc+1;
 rsc = 1;
 
@@ -1055,7 +1055,7 @@ OT_DB(efc).bird_sex  = 'M';
 OT_DB(efc).bird_weight  = 494; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 N028
 sc = 1; % Increment Session
 rsc  = 1;
 
@@ -1115,7 +1115,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171207_161826_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N029
 sc = sc+1;
 rsc = 1;
 
@@ -1175,7 +1175,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171207_173542_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 3; RC = 1
+%% SC = 3; RC = 1 | N030
 sc = sc+1;
 rsc = 1;
 
@@ -1189,7 +1189,7 @@ OT_DB(efc).RS(sc).StimProtocol_name{rsc} = 'WhiteNoise';
 OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171207_174223_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 
-%% SC = 4; RC = 1
+%% SC = 4; RC = 1 | N031
 sc = sc+1;
 rsc = 1;
 
@@ -1250,7 +1250,7 @@ OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
 
-%% SC = 5; RC = 1
+%% SC = 5; RC = 1 | N032
 sc = sc+1;
 rsc = 1;
 
@@ -1325,7 +1325,7 @@ OT_DB(efc).bird_sex  = 'F';
 OT_DB(efc).bird_weight  = 562; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N033
 sc = 1;
 rsc = 1;
 
@@ -1363,7 +1363,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '04-ITD_20171206_131124_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N034
 sc = sc+1;
 rsc = 1;
 
@@ -1409,7 +1409,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '02-Tuning_20171206_135917_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'lost neuron';
 rsc = rsc +1;
 
-%% SC = 3; RC = 1
+%% SC = 3; RC = 1 | N035
 sc = sc+1;
 rsc = 1;
 
@@ -1445,7 +1445,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '01-HRTF_20171206_155044_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'neuron exploding';
 rsc = rsc +1;
 
-%% SC = 4; RC = 1
+%% SC = 4; RC = 1 | N036
 sc = sc+1;
 rsc = 1;
 
@@ -1520,7 +1520,7 @@ OT_DB(efc).bird_sex  = 'M';
 OT_DB(efc).bird_weight  = 470; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N037
 sc = 1;
 rsc = 1;
 
@@ -1588,7 +1588,7 @@ OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N038
 sc = sc+1;
 rsc = 1;
 
@@ -1627,7 +1627,7 @@ OT_DB(efc).RS(sc).notes{rsc} = 'moving electrodes, lost neurons';
 rsc = rsc +1;
 
 
-%% SC = 3; RC = 1
+%% SC = 3; RC = 1 | N039
 sc = sc+1;
 rsc = 1;
 
@@ -1680,7 +1680,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '05-WNSeach_20171205_180758_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 4; RC = 1
+%% SC = 4; RC = 1 | N040
 sc = sc+1;
 rsc = 1;
 
@@ -1755,7 +1755,7 @@ OT_DB(efc).bird_sex  = 'F';
 OT_DB(efc).bird_weight  = 452; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N041
 sc = 1;
 rsc = 1;
 
@@ -1795,7 +1795,7 @@ OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N042
 sc = sc+1;
 rsc = 1;
 
@@ -1850,7 +1850,7 @@ OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
 
-%% SC = 3; RC = 1
+%% SC = 3; RC = 1 | N043
 sc = sc+1;
 rsc = 1;
 
@@ -1897,7 +1897,7 @@ OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
 
-%% SC = 4; RC = 1
+%% SC = 4; RC = 1 | N044
 sc = sc+1;
 rsc = 1;
 
@@ -1958,7 +1958,7 @@ OT_DB(efc).bird_sex  = 'M';
 OT_DB(efc).bird_weight  = 532; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N045
 sc = 1;
 rsc = 1;
 
@@ -1996,7 +1996,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '04-ITD_20171117_141531_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N046
 sc = sc+1;
 rsc = 1;
 
@@ -2043,7 +2043,7 @@ OT_DB(efc).bird_weight  = 603; % g
 OT_DB(efc).exp_number  = efc;
 
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N047
 sc = 1;
 rsc = 1;
 
@@ -2073,7 +2073,7 @@ OT_DB(efc).bird_weight  = 567; % g
 OT_DB(efc).exp_number  = efc;
 
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N048
 sc = 1;
 rsc = 1;
 
@@ -2132,7 +2132,7 @@ OT_DB(efc).bird_sex  = 'M';
 OT_DB(efc).bird_weight  = 567; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N049
 sc = 1;
 rsc = 1;
 
@@ -2147,8 +2147,8 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '01-HRTF_20171108_133247_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 2; RC = 1
-sc = 1+1;
+%% SC = 2; RC = 1 | N050
+sc = 1+1; 
 rsc = 1;
 
 % Recording Session Counter
@@ -2176,7 +2176,7 @@ OT_DB(efc).bird_sex  = 'M';
 OT_DB(efc).bird_weight  = 532; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N051
 sc = 1;
 rsc = 1;
 
@@ -2205,7 +2205,7 @@ OT_DB(efc).bird_sex  = 'F';
 OT_DB(efc).bird_weight  = 554; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N052
 sc = 1;
 rsc = 1;
 
@@ -2244,7 +2244,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '2017112_13810_ITD_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N053
 sc = sc+1;
 rsc = 1;
 
@@ -2267,7 +2267,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '2017112_135542_tuning_0001';
 OT_DB(efc).RS(sc).notes{rsc} = 'incomplete';
 rsc = rsc +1;
 
-%% SC = 3; RC = 1
+%% SC = 3; RC = 1 | N054
 sc = sc+1;
 rsc = 1;
 
@@ -2282,7 +2282,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '2017112_14595_HRTF_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 4; RC = 1
+%% SC = 4; RC = 1 | N055
 sc = sc+1;
 rsc = 1;
 
@@ -2312,7 +2312,7 @@ OT_DB(efc).bird_sex  = 'F';
 OT_DB(efc).bird_weight  = 478; % g
 OT_DB(efc).exp_number  = efc;
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | N056
 sc = 1;
 rsc = 1;
 
@@ -2359,7 +2359,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '2017111_155817_ITD_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N057
 sc = sc+1;
 rsc = 1;
 
@@ -2398,7 +2398,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '2017111_174811_ITD_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 3; RC = 1
+%% SC = 3; RC = 1 N058
 sc = sc+1;
 rsc = 1;
 
@@ -2466,7 +2466,7 @@ OT_DB(efc).bird_weight  = 550; % g
 OT_DB(efc).exp_number  = efc;
 
 
-%% SC = 1; RC = 1
+%% SC = 1; RC = 1 | 59
 sc = 1;
 rsc = 1;
 
@@ -2482,7 +2482,7 @@ OT_DB(efc).RS(sc).ResultDirName{rsc} = '20171029_161250_0001';
 OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
-%% SC = 2; RC = 1
+%% SC = 2; RC = 1 | N060
 sc = sc+1;
 rsc = 1;
 
@@ -2499,7 +2499,7 @@ OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
 
-%% SC = 3; RC = 1
+%% SC = 3; RC = 1 | N061
 sc = sc+1;
 rsc = 1;
 
@@ -2523,7 +2523,7 @@ OT_DB(efc).RS(sc).notes{rsc} = '';
 rsc = rsc +1;
 
 
-%% SC = 4; RC = 1
+%% SC = 4; RC = 1 | N062
 sc = sc+1;
 rsc = 1;
 
