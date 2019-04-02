@@ -11,15 +11,15 @@ close all
 
 %% Create Chicken Analysis Object
 
-experiment = 15; %efc
-recSession = 3; %sFigSaveNamec
+experiment = 3; %efc
+recSession = 4; %sFigSaveNamec
 
 C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 
 % %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
 
-audSelInd = 3; % SpikesThis is the index, spikesnot the stim number!!!
+audSelInd = 7; % SpikesThis is the index, spikesnot the stim number!!!
 
 selection = C_OBJ.RS_INFO.ResultDirName{audSelInd};
 disp(selection)
@@ -38,7 +38,7 @@ disp(['Loaded: ' objPath])
 
 C_OBJ = getAudioSpikeResults(C_OBJ, audSelInd);
 C_OBJ = organizeStimRepetitions(C_OBJ, audSelInd);
-
+%%
 % Plot the results
 nReps = 300;
 C_OBJ = plotEpochs(C_OBJ, nReps);
@@ -51,7 +51,7 @@ axis tight
 %% Define spike threhsold and save Figure
 
 %SpkThresh = 0.4;
-SpkThresh = 0.2;
+SpkThresh = 0.075;
 %setThreshAndPrintFig(C_OBJ, SpkThresh)
 
 % Print spikes7
@@ -64,7 +64,8 @@ FigSaveName = [C_OBJ.PATHS.spkSavePath '_spikesResp'];
             
 saveName = C_OBJ.PATHS.audStimDir;
 %mediaSavePath = ['/home/janie/Data/TUM/OTAnalysis/allITDJanie/' saveName '_spikesResp'];
-mediaSavePath = ['/home/janie/Data/TUM/OTAnalysis/allWNsJanie/' saveName '_spikesResp'];
+mediaSavePath = ['/home/janie/Data/OTAnalysis/allWNsJanie/' saveName '_spikesResp'];
+%mediaSavePath = ['/home/janie/Data/OTAnalysis/TuningJanie/' saveName '_spikesResp'];
 %mediaSavePath = ['/home/janie/Data/TUM/OTAnalysis/allIIDJanie/' saveName '_spikesResp'];
 
 plotpos = [0 0 15 10];
@@ -96,7 +97,7 @@ outlier_tool(spikes)
 
 %% Define Cluster of Interest
 
-clustOfInterest = 1; 
+clustOfInterest = 7; 
 nSpikesInCluster = numel(find(spikes.assigns == clustOfInterest));
 disp(['nSpikes = ' num2str(nSpikesInCluster)]);
 
@@ -125,7 +126,8 @@ save(cobjSaveName , 'C_OBJ', '-v7.3')
 % save to special directory
 
 %objSaveName = ['/home/janie/Data/TUM/OTAnalysis/allITDJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
-objSaveName = ['/home/janie/Data/TUM/OTAnalysis/allWNsJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
+objSaveName = ['/home/janie/Data/OTAnalysis/allWNsJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
+%objSaveName = ['/home/janie/Data/OTAnalysis/TuningJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
 %objSaveName = ['/home/janie/Data/TUM/OTAnalysis/allIIDJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
 
 save(objSaveName , 'C_OBJ', '-v7.3')

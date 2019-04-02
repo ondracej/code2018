@@ -2142,7 +2142,7 @@ classdef chicken_OT_analysis_OBJ < handle
             FigSaveName = [obj.PATHS.spkSavePath 'WNRaster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
             %dropBoxSavePath = [obj.PATHS.dropboxPath obj.RS_INFO.expTextLabel '__' obj.PATHS.audStimDir '_WNRaster_v1_SpkClust' num2str(obj.SPKS.clustOfInterest)];
             %dropBoxSavePath = ['/media/janie/Data64GB/OTData/OT/allWNsJanie/' saveName '_Clust-' num2str(obj.SPKS.clustOfInterest)];
-            dropBoxSavePath = ['/home/janie/Data/TUM/OTAnalysis/allWNsJanie/' saveName '_Clust-' num2str(obj.SPKS.clustOfInterest)];
+            dropBoxSavePath = ['/home/janie/Data/OTAnalysis/allWNsJanie/' saveName '_Clust-' num2str(obj.SPKS.clustOfInterest)];
             
             plotpos = [0 0 12 15];
             %print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);

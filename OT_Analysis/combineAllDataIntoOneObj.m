@@ -1,7 +1,7 @@
 function [] = combineAllDataIntoOneObj()
 
 
-PopulationDir = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/FinalPopulation_Janie';
+PopulationDir = '/home/janie/Data/TUM/OTAnalysis/FinalPopulation_Janie/';
 dirD = '/';
 
 search_file = ['N*'];
@@ -13,7 +13,7 @@ for j = 1:nDirs
     allDirNames{j} = dir_files(j).name;
 end
 
-AllDataDir = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/AllData/';
+AllDataDir = '/home/janie/Data/TUM/OTAnalysis/AllData/';
 
 for k = 1:nDirs
     
@@ -132,10 +132,11 @@ for k = 1:nDirs
         
     end
     
-    saveName = [allDirNames{k} '-AllStims.mat'];
-    disp('')
-    save([AllDataDir saveName], 'OBJ', '-v7.3')
-    
-    
-    
+    if exist('OBJ')
+        saveName = [allDirNames{k} '-AllStims.mat'];
+        disp('')
+        save([AllDataDir saveName], 'OBJ', '-v7.3')
+        
+        clear('OBJ', 'd')
+    end
 end

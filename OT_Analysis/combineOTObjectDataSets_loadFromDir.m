@@ -3,15 +3,15 @@ function [] = combineOTObjectDataSets_loadFromDir()
 dbstop if error
 close all
 
-DataToUseDir = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allWNsJanie/allObjs/';
+DataToUseDir = '/home/janie/Data/OTAnalysis/allWNsJanie/allObjs/';
 
 dbstop if error
 
-experiment = 1; %efc
+experiment = 3; %efc
 recSession = 4; %sc
 
 audSelInd_1 = 1; % This is the index, not the stim number!!!
-audSelInd_2 = 2; % This is the index, not the stim number!!!
+audSelInd_2 = 7; % This is the index, not the stim number!!!
 
 expTxt = ['--E' num2str(experiment) '-Rs' num2str(recSession)];
 
@@ -113,7 +113,7 @@ annotation(figH,'textbox',...
 disp('Printing Plot')
 set(0, 'CurrentFigure', figH)
 plotpos = [0 0 20 15];
-FigSavePath = ['/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allWNsJanie/allObjs/Figs/' dataSet1.C_OBJ.PATHS.audStimDir expTxt 'Spikes'];
+FigSavePath = ['/home/janie/Data/OTAnalysis/allWNsJanie/allObjs/' dataSet1.C_OBJ.PATHS.audStimDir expTxt 'Spikes'];
 print_in_A4(0, FigSavePath, '-djpeg', 0, plotpos);
 disp(['Saved Figure: '  FigSavePath ])
 
@@ -233,7 +233,7 @@ end
 disp('Printing Plot')
 set(0, 'CurrentFigure', figH)
 plotpos = [0 0 20 15];
-FigSavePath = ['/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allWNsJanie/allObjs/Figs/' dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
+FigSavePath = ['/home/janie/Data/OTAnalysis/allWNsJanie/allObjs/' dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
 print_in_A4(0, FigSavePath, '-djpeg', 0, plotpos);
 disp(['Saved Figure: '  FigSavePath ])
     

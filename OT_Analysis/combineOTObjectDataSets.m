@@ -8,7 +8,7 @@ DataToUseDir = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allWNsJanie/al
 
 dbstop if error
 
-experiment = 2; %efc
+experiment = 3; %efc
 recSession = 4; %sc
 
 audSelInd_1 = 1; % This is the index, not the stim number!!!
