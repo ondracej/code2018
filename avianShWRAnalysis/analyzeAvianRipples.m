@@ -17,11 +17,17 @@ switch hostName
         %% Use these
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous'; %DV=2526, 30 min
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous'; %DV=2998
-        fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
+        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
         
-        saveDir = ['/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/'];
-        saveName = [saveDir 'ShWDetection_Chick2_17-29-04_'];
+        
+        %% Chick 9
+        fileName = '/home/janie/BlackBox-Work/Work/TUM/Data/Chicken_ShWRs/ChickeSleepData/Chick9_2019-03-28_18-39-42/100_CH10.continuous'; 
+        
+        
+        
+        saveDir = ['/home/janie/BlackBox-Work/Work/TUM/Data/Chicken_ShWRs/ChickeSleepData/Analysis/'];
+        saveName = [saveDir 'ShWDetection_Chick9_2019-03-28_18-39-42_'];
         
     case 'TURTLE'
         
