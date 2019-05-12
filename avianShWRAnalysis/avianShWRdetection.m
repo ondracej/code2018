@@ -21,14 +21,19 @@ switch hostName
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
         
           %% Chick 9
-        fileName = '/home/janie/BlackBox-Work/Work/TUM/Data/Chicken_ShWRs/ChickeSleepData/Chick9_2019-03-28_18-39-42/100_CH10.continuous'; 
-        
-        
-        
-        saveDir = ['/home/janie/BlackBox-Work/Work/TUM/Data/Chicken_ShWRs/ChickeSleepData/Analysis/'];
-        saveName = [saveDir 'ShWDetection_Chick9_2019-03-28_18-39-42_'];
+        %fileName = '/home/janie/BlackBox-Work/Work/TUM/Data/Chicken_ShWRs/ChickeSleepData/Chick9_2019-03-28_18-39-42/100_CH10.continuous'; 
+        %saveDir = ['/home/janie/BlackBox-Work/Work/TUM/Data/Chicken_ShWRs/ChickeSleepData/Analysis/'];
+        %saveName = [saveDir 'ShWDetection_Chick9_2019-03-28_18-39-42_'];
 %         saveDir = ['/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/'];
 %         saveName = [saveDir 'ShWDetection_Chick2_17-29-04_'];
+        
+%% ZF
+ fileName = '//media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/100_CH3.continuous'; %DV=1806 %DV=4042
+        
+        saveDir = ['/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/ShwDetections/'];
+        
+        saveName = [saveDir 'ShWDetection_ZF-59-15_2019-04-28_18-48-02_Ch7_'];
+       
         
     case 'TURTLE'
         
@@ -122,11 +127,17 @@ for i=1:nCycles-1
     %figure; plot(SegData_s, DataSeg_rect_HF); axis tight
     
     %% Find Peaks
-    interPeakDistance = 0.3*Fs;
-    minPeakWidth = 0.075*Fs;
-    minPeakHeight = 300;
-    minPeakProminence = 300;
+  
+     interPeakDistance = 0.3*Fs;
+    minPeakWidth = 0.05*Fs;
+    minPeakHeight = 20;
+    minPeakProminence = 20;
     
+%     interPeakDistance = 0.3*Fs;
+%     minPeakWidth = 0.075*Fs;
+%     minPeakHeight = 300;
+%     minPeakProminence = 300;
+%     
     [peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
     
     %%
@@ -142,27 +153,27 @@ for i=1:nCycles-1
         subplot(5,1,1)
         plot(SegData_s, Data_SegData); title( ['Raw Voltage']);
         axis tight
-        ylim([-1000 1000])
+        ylim([-400 200])
         
         subplot(5, 1, 2)
         plot(SegData_s, DataSeg_FNotch); title( ['Notch Filter']);
         axis tight
-        ylim([-1000 1000])
+        ylim([-400 200])
         
         subplot(5, 1, 3)
         plot(SegData_s, DataSeg_LF); title( ['LF']);
         axis tight
-        ylim([-1000 1000])
+        ylim([-400 200])
         
         subplot(5, 1, 4)
         plot(SegData_s, DataSeg_rect_HF); title( ['HF Rectified']);
         axis tight
-        ylim([0 1200])
+        ylim([0 200])
         
         subplot(5, 1, 5)
         plot(SegData_s, DataSeg_HF); title( ['HF Rectified']);
         axis tight
-        ylim([-200 200])
+        ylim([-100 100])
     end
     
     disp('')
@@ -204,18 +215,20 @@ for i=1:nCycles-1
             LFWin = -DataSeg_LF(winROI);
             
             minPeakWidth_LF = 0.030*Fs;
-            minPeakHeight_LF = 150;
-            minPeakProminence = 195;
+            %minPeakHeight_LF = 150;
+            %minPeakProminence = 195;
+            minPeakHeight_LF = 20;
+            minPeakProminence = 20;
             
             [peakH_LF,peakTime_Fs_LF, peakW_LF, peakP_LF]=findpeaks(LFWin,'MinPeakHeight',minPeakHeight_LF, 'MinPeakProminence',minPeakProminence, 'MinPeakWidth', minPeakWidth_LF, 'WidthReference','halfprom'); %For HF
             % prominence is realted to window size
             
             %% Test
-            %figure(104);clf
-            %winROI_s = SegData_s(winROI);
-            %plot(winROI_s, LFWin); axis tight
-            %hold on
-            %plot(winROI_s(peakTime_Fs_LF), LFWin(peakTime_Fs_LF), '*')
+%             figure(104);clf
+%             winROI_s = SegData_s(winROI);
+%             plot(winROI_s, LFWin); axis tight
+%             hold on
+%             plot(winROI_s(peakTime_Fs_LF), LFWin(peakTime_Fs_LF), '*')
             
             %%
             disp('')

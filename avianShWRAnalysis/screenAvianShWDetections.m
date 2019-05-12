@@ -17,12 +17,22 @@ switch hostName
         %% Use these
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous'; %DV=2526, 30 min
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous'; %DV=2998
-        fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
+        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
         
-        saveDir = ['/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/'];
-        saveName = [saveDir 'ShWDetection_Chick2_17-29-04_'];
-        DetectionFileToLoad = '/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/ShWDetection_Chick2_17-29-04_-Detections.mat';
+        %saveDir = ['/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/'];
+        %saveName = [saveDir 'ShWDetection_Chick2_17-29-04_'];
+        %DetectionFileToLoad = '/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/ShWDetection_Chick2_17-29-04_-Detections.mat';
+        
+        %% ZF
+       
+        fileName = '/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/100_CH7.continuous'; 
+       
+        saveDir = ['/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/Analysis/'];
+        saveName = [saveDir 'ShWDetection_exp1_2019-04-28_19-34-00_CH7_'];
+       
+        DetectionFileToLoad = '/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/ShwDetections/ShWDetection_ZF-59-15_2019-04-28_18-48-02_Ch7_-RippleDetections.mat';
+        
         
     case 'TURTLE'
         

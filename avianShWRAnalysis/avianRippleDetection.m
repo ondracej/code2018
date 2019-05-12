@@ -15,16 +15,24 @@ switch hostName
         
         
         %% Use these
-        fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous'; %DV=2526, 30 min
+        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous'; %DV=2526, 30 min
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous'; %DV=2998
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
         %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
         
-        saveDir = ['/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/'];
+        %% ZF
+        
+        %fileName = '/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_18-07-21/100_CH7.continuous'; %DV=1806 %DV=4042
+        %fileName = '/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_18-48-02/100_CH8.continuous'; %DV=1806 %DV=4042
+        fileName = '//media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/100_CH3.continuous'; %DV=1806 %DV=4042
+        
+        saveDir = ['/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/ShwDetections/'];
         %saveName = [saveDir 'ShWDetection_Chick2_17-29-04_'];
         %saveName = [saveDir 'ShWDetection_Chick2_17-05-32_'];
         %saveName = [saveDir 'ShWDetection_Chick2_17-56-36_'];
-        saveName = [saveDir 'ShWDetection_Chick2_16-30-56_'];
+        %saveName = [saveDir 'ShWDetection_Chick2_16-30-56_'];
+        
+        saveName = [saveDir 'ShWDetection_ZF-59-15_2019-04-28_18-48-02_Ch7_'];
         
     case 'TURTLE'
         
@@ -120,8 +128,8 @@ for i=1:nCycles-1
     %% Find Peaks
     interPeakDistance = 0.3*Fs;
     minPeakWidth = 0.05*Fs;
-    minPeakHeight = 100;
-    minPeakProminence = 100;
+    minPeakHeight = 20;
+    minPeakProminence = 20;
     
     [peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
     
@@ -138,17 +146,17 @@ for i=1:nCycles-1
         subplot(3,1,1)
         plot(SegData_s, DataSeg_FNotch, 'k'); title( ['Raw']);
         axis tight
-        ylim([-1200 1000])
+        ylim([-300 300])
         
         subplot(3, 1, 2)
         plot(SegData_s, DataSeg_HF, 'k'); title( ['Ripple']);
         axis tight
-        ylim([-150 150])
+        ylim([-80 80])
         
         subplot(3, 1, 3)
         plot(SegData_s, smooth(DataSeg_rect_HF, .05*Fs), 'k'); title( ['Ripple Rectified']);
         axis tight
-        ylim([0 2000])
+        ylim([0 100])
     end
     
     %         subplot(5,1,1)
@@ -190,11 +198,11 @@ for i=1:nCycles-1
             
             subplot(3,1, 2)
             hold on;
-            plot(SegData_s(peakTime_Fs(q)), 100, 'rv');
+            plot(SegData_s(peakTime_Fs(q)), 50, 'rv');
             
             subplot(3, 1, 3)
             hold on;
-            plot(SegData_s(peakTime_Fs(q)), 800, 'rv');
+            plot(SegData_s(peakTime_Fs(q)), 50, 'rv');
         end
         
         %% Now we check a window around the peak to see if there is really a sharp wave
@@ -210,20 +218,13 @@ for i=1:nCycles-1
     
     plotpos = [0 0 25 15];
     figure(100);
-    print_in_A4(0, [saveName '-Ripple-' num2str(i)], '-djpeg', 0, plotpos);
+    print_in_A4(0, [saveName '-Ripple-' sprintf('%03d', i)], '-djpeg', 0, plotpos);
     %print_in_A4(0, [saveName '-Ripple-' num2str(i)], '-depsc', 0, plotpos);
     
     
 end
 
 disp('')
-
-
-
-
-%{
-  
-%}
 
 DetectionSaveName = [saveName '-RippleDetections'];
 save(DetectionSaveName, 'templatePeaks');

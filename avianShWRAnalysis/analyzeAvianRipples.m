@@ -22,12 +22,18 @@ switch hostName
         
         
         %% Chick 9
-        fileName = '/home/janie/BlackBox-Work/Work/TUM/Data/Chicken_ShWRs/ChickeSleepData/Chick9_2019-03-28_18-39-42/100_CH10.continuous'; 
+        %fileName = '/home/janie/BlackBox-Work/Work/TUM/Data/Chicken_ShWRs/ChickeSleepData/Chick9_2019-03-28_18-39-42/100_CH10.continuous'; 
+       
+        %saveDir = ['/home/janie/BlackBox-Work/Work/TUM/Data/Chicken_ShWRs/ChickeSleepData/Analysis/'];
+        %saveName = [saveDir 'ShWDetection_Chick9_2019-03-28_18-39-42_'];
         
+       %% ZF 
         
+       fileName = '/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/100_CH7.continuous'; 
+       
+        saveDir = ['/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/Analysis/'];
+        saveName = [saveDir 'ShWDetection_exp1_2019-04-28_19-34-00_CH7_'];
         
-        saveDir = ['/home/janie/BlackBox-Work/Work/TUM/Data/Chicken_ShWRs/ChickeSleepData/Analysis/'];
-        saveName = [saveDir 'ShWDetection_Chick9_2019-03-28_18-39-42_'];
         
     case 'TURTLE'
         
@@ -50,7 +56,7 @@ Fs = 30000;
 %d = load('/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/ShWDetection_Chick2_16-30-56_-RippleDetections.mat');
 %d = load('/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/ShWDetection_Chick2_17-05-32_-RippleDetections.mat');
 %d = load('/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/ShWDetection_Chick2_17-29-04_-RippleDetections.mat');
-d = load('/media/janie/Data64GB/ShWRChicken/Figs/ShWDetections/ShWDetection_Chick2_17-56-36_-RippleDetections.mat');
+d = load('/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/ShwDetections/ShWDetection_ZF-59-15_2019-04-28_18-48-02_Ch7_-RippleDetections.mat');
 
 
 
