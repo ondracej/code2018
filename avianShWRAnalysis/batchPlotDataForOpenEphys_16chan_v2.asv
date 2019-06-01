@@ -271,7 +271,7 @@ for o =1:nFiles
         %%
         figure(FigHHighRect)
         axis tight
-          ylim([0 120])
+        ylim([0 1700])
         saveName = [saveDir FileNames{o}(1:end-1) '_HFR_' sprintf('%03d', i)];
         
         plotpos = [0 0 30 15];
@@ -281,7 +281,7 @@ for o =1:nFiles
         %%
         figure(FigHHigh)
         axis tight
-        ylim([-30 330])
+        ylim([-10 1600])
         saveName = [saveDir FileNames{o}(1:end-1) '_HF_' sprintf('%03d', i)];
         
         plotpos = [0 0 30 15];
