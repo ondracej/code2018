@@ -54,7 +54,7 @@ saveDir = ['C:\Users\Administrator\Documents\Data\SWR-Project\Analysis\ZF-72-81\
 %nChans =16;
 %chanSet = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 
-for o =1:nFiles
+for o =5:nFiles
     
     fileAppend = '100_CH10.continuous';
     
@@ -221,7 +221,7 @@ for o =1:nFiles
 %             offsetLP  = offsetLP +300;
 %             offsetHP  = offsetHP +100;
             
-            offsetLP  = offsetLP +300;
+            offsetLP  = offsetLP +100;
             offsetHP  = offsetHP +30;
             offsetHP_R  = offsetHP_R +10;
             
@@ -248,7 +248,8 @@ for o =1:nFiles
         figure(FigHRaw)
         
         axis tight
-        ylim([-400 3400])
+        %ylim([-400 3400])
+        ylim([-50 1050])
         saveName = [saveDir FileNames{o}(1:end-1) '_Raw_' sprintf('%03d', i)];
         
         plotpos = [0 0 30 15];
@@ -259,7 +260,8 @@ for o =1:nFiles
         %%
         figure(FigHLD)
         axis tight
-        ylim([-400 3400])
+        %ylim([-400 3400])
+        ylim([-50 1050])
         
         saveName = [saveDir FileNames{o}(1:end-1) '_LF_' sprintf('%03d', i)];
         
@@ -271,7 +273,8 @@ for o =1:nFiles
         %%
         figure(FigHHighRect)
         axis tight
-          ylim([0 120])
+          %ylim([0 120])
+          ylim([0 140])
         saveName = [saveDir FileNames{o}(1:end-1) '_HFR_' sprintf('%03d', i)];
         
         plotpos = [0 0 30 15];
