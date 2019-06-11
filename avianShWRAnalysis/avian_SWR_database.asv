@@ -2713,7 +2713,7 @@ avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
 %avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [8, 1, 12];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -2763,7 +2763,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [2, 3, 12];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -2813,7 +2813,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -2864,7 +2864,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [9, 2, 12, 10];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -2915,7 +2915,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [9, 2, 12, 10];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -2968,7 +2968,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3019,7 +3019,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3070,7 +3070,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3121,7 +3121,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3172,7 +3172,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3225,7 +3225,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3275,7 +3275,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3326,7 +3326,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3376,7 +3376,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3426,7 +3426,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3476,7 +3476,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3526,7 +3526,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3576,7 +3576,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3626,7 +3626,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3676,7 +3676,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3726,7 +3726,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
@@ -3777,7 +3777,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
+avianSWR_DB(rfc).REC.allChs  = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
