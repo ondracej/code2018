@@ -5,34 +5,10 @@ ops.showfigures         = 1; % whether to plot figures during optimization
 		
 ops.datatype            = 'openEphys';  % binary ('dat', 'bin') or 'openEphys'		
 
-% Works
-% ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_16-26-20'; % 'openEphys' only: where raw files are		
-% ops.fbinary             = fullfile(ops.root, '2019-04-29_16-26-20.dat'); % will be created for 'openEphys'		
+%% Works - ZF-72-81 | 21-26-59
+ops.root                = 'F:\TUM\SWR-Project\ZF-72-81\Ephys\2019-05-16_21-26-59'; % 'openEphys' only: where raw files are		
+ops.fbinary             = fullfile(ops.root, '2019-05-16_21-26-59'); % will be created for 'openEphys'		
 
-
-%% Works - ZF-59-15 | 18-07-21
-%ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_18-07-21'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-28_18-07-21'); % will be created for 'openEphys'		
-
-%% Works - ZF-59-15 | 18-48-02
-ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_18-48-02'; % 'openEphys' only: where raw files are		
-ops.fbinary             = fullfile(ops.root, '2019-04-28_18-48-02'); % will be created for 'openEphys'		
-
-%% Works - ZF-59-15 | 19-34-00
-%ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_19-34-00'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-28_19-34-00'); % will be created for 'openEphys'		
-
-%% Works - ZF-59-15 | 20-20-36
-%ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_20-20-36'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-28_20-20-36'); % will be created for 'openEphys'		
-
-%% Works - ZF-59-15 | 21-05-36
-%ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_21-05-36'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-28_21-05-36'); % will be created for 'openEphys'		
-
-%% Works - ZF-59-15 | TEST
-%ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_19-34-00_test'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-28_19-34-00_test'); % will be created for 'openEphys'		
 
 %%
 
@@ -52,7 +28,7 @@ ops.whiteningRange      = Inf; % how many channels to whiten together (Inf for w
 		
 % define the channel map as a filename (string) or simply an array		
 %ops.chanMap             = 'F:\TUM\SWR-Project\KiloSortConfigFiles\chanMap.mat'; % make this file using createChannelMapFile.m		
-ops.chanMap             = 'F:\TUM\SWR-Project\KiloSortConfigFiles\chanMap16ChanSilicon.mat'; % make this file using createChannelMapFile.m		
+ops.chanMap             = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSeq.mat'; % make this file using createChannelMapFile.m		
 ops.criterionNoiseChannels = 0.2; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info). 		
 % ops.chanMap = 1:ops.Nchan; % treated as linear probe if a chanMap file		
 		

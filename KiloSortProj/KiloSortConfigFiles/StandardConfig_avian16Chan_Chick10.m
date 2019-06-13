@@ -5,15 +5,14 @@ ops.showfigures         = 1; % whether to plot figures during optimization
 		
 ops.datatype            = 'openEphys';  % binary ('dat', 'bin') or 'openEphys'		
 
-%ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_21-51-18';
-%ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_20-49-27'; % 'openEphys' only: where raw files are		
-%ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_19-33-33'; % 'openEphys' only: where raw files are		
-ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_21-58-36'; % 'openEphys' only: where raw files are		
+%% Chick 10 - 19-33-33
+ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_19-33-33'; % 'openEphys' only: where raw files are		
+ops.fbinary             = fullfile(ops.root, '2019-04-27_19-33-33'); % will be created for 'openEphys'		
 
-%ops.fbinary             = fullfile(ops.root, '2019-04-27_21-51-18.dat'); % will be created for 'openEphys'		
-%ops.fbinary             = fullfile(ops.root, '2019-04-27_20-49-27.dat'); % will be created for 'openEphys'		
-%ops.fbinary             = fullfile(ops.root, '2019-04-27_19-33-33.dat'); % will be created for 'openEphys'		
-ops.fbinary             = fullfile(ops.root, '2019-04-27_21-58-36.dat'); % will be created for 'openEphys'		
+%%
+
+
+
 
 ops.fproc               = fullfile(ops.root, 'temp_wh.dat'); % residual from RAM of preprocessed data		
 
@@ -30,7 +29,7 @@ ops.nSkipCov            = 1; % compute whitening matrix from every N-th batch (1
 ops.whiteningRange      = 32; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)		
 		
 % define the channel map as a filename (string) or simply an array		
-ops.chanMap             = 'F:\TUM\SWR-Project\KiloSortConfigFiles\chanMap.mat'; % make this file using createChannelMapFile.m		
+ops.chanMap             = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSilicon.mat'; % make this file using createChannelMapFile.m		
 ops.criterionNoiseChannels = 0.2; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info). 		
 % ops.chanMap = 1:ops.Nchan; % treated as linear probe if a chanMap file		
 		

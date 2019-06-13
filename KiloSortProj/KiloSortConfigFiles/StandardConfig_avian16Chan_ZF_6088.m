@@ -41,7 +41,7 @@ ops.nSkipCov            = 1; % compute whitening matrix from every N-th batch (1
 ops.whiteningRange      = 32; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)		
 		
 % define the channel map as a filename (string) or simply an array		
-ops.chanMap             = 'F:\TUM\SWR-Project\KiloSortConfigFiles\chanMap2.mat'; % make this file using createChannelMapFile.m		
+ops.chanMap             = 'F:\TUM\SWR-Project\KiloSortConfigFiles\chanMap16ChanSilicon.mat'; % make this file using createChannelMapFile.m		
 %ops.chanMap             = 'F:\TUM\SWR-Project\KiloSortConfigFiles\works\chanMap.mat'; % make this file using createChannelMapFile.m  -WORKS		
 %ops.chanMap             = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap.mat'; % make this file using createChannelMapFile.m		
 ops.criterionNoiseChannels = 0.2; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info). 		

@@ -250,7 +250,7 @@ classdef avianSWRAnalysis_OBJ < handle
         function [obj] = batchPlotDataForOpenEphys_singleChannel(obj, doPlot, seg)
             dbstop if error
             if nargin <3
-                doPlot = 0;
+                doPlot = 1;
                 seg = 40; % seconds
             end
             
@@ -688,6 +688,7 @@ classdef avianSWRAnalysis_OBJ < handle
             disp('Loading...')
             sD = load([obj.DIR.SWR_Python_Dir SWR_datafile.name]);
             
+            
             Fs = sD.SWR.Fs;
             
             waveletInd = 4;
@@ -893,7 +894,21 @@ classdef avianSWRAnalysis_OBJ < handle
 %             fs = 30000; % sampling frequency
 %             save('F:\TUM\SWR-Project\KiloSortConfigFiles\testMap.mat', 'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
             
-            
+% 
+%             Nchannels = 16;
+%             connected = true(Nchannels, 1);
+%             chanMap   = [1:16];
+%             chanMap0ind = chanMap - 1;
+%             
+%             xcoords   = ones(Nchannels,1);
+%              ycoords   = ones(Nchannels,1);
+%              kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
+% 
+%             fs = 30000; % sampling frequency
+%             save('C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSeq.mat', 'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
+% 
+
+
             %%
             tic; % start timer
             %
@@ -929,9 +944,360 @@ classdef avianSWRAnalysis_OBJ < handle
             
             disp('Finished')
             
-            %%
+            %%s
             
         end
+        
+        
+        function [obj] = importPhyClusterSpikeTimes(obj, clustType)
+            
+            %clustType
+            % - 0 = noise
+            % - 1 = mua
+            % - 2 = good
+            % - 3 = unsorted
+            
+            dataDir = obj.Session.SessionDir;
+          
+            %% load some spikes and compute some basic things
+                
+                % clu is a length nSpikes vector with the cluster identities of every spike
+                clu = readNPY(fullfile(dataDir,  'spike_clusters.npy')); %cluster IDs
+                
+                % ss is a length nSpikes vector with the spike time of every spike (in samples)
+                ss = readNPY(fullfile(dataDir,  'spike_times.npy'));
+                
+                % [cids, cgs] = readClusterGroupsCSV(fullfile(folderNames{f},  'cluster_groups.csv'));
+                [cids, cgs] = readClusterGroupsCSV(fullfile(dataDir,  'cluster_group.tsv'));
+                
+                % cids is length nClusters, the cluster ID numbers
+                % cgs is length nClusters, the "cluster group":
+                % - 0 = noise
+                % - 1 = mua
+                % - 2 = good
+                % - 3 = unsorted
+                
+                ClustersInds = find(cgs==clustType);
+                ClusterIDs = cids(ClustersInds);
+                
+                spikeTimes_samps = [];
+                for j = 1:numel(ClusterIDs)
+                    
+                    spikeTimesInds = find(clu == ClusterIDs(j));
+                    spikeTimes_samps{j} = double(ss(spikeTimesInds));
+                end
+                
+                clust.clustType = clustType;
+                clust.ClusterIDs = ClusterIDs;
+                clust.spikeTimes_samps = spikeTimes_samps;
+                clust.dataDir = dataDir;
+                clust.cids = cids;
+                clust.cgs = cgs;
+                clust.cgs = cgs;
+                clust.ss = ss;
+                clust.clu = clu;
+            
+                %% Saving
+                SWR_Python_Dir = [obj.Session.SessionDir 'SWR-Python' obj.DIR.dirD];
+                obj.DIR.SWR_Python_Dir  = SWR_Python_Dir;
+                
+                saveName = [obj.DIR.SWR_Python_Dir 'ClustType-' num2str(clustType) '.mat'];
+                
+                save(saveName, 'clust', '-v7.3')
+                disp(['Saved: ' saveName])
+                
+                
+        end
+        
+        function [obj]  = loadClustTypesAndMakeSpikePlots(obj, clustType)
+            dbstop if error
+            
+            SWR_Python_Dir = [obj.Session.SessionDir 'SWR-Python' obj.DIR.dirD];
+            PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
+            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            
+            if clustType == 2
+                clustChanPairing = obj.REC.GoodClust_2;
+                clustFile = 'ClustType-2.mat';
+                saveTag = 'GoodChan';
+                Yss = [-300 200];
+            elseif clustType == 1
+                clustChanPairing = obj.REC.MUAClust_1;
+                clustFile = 'ClustType-1.mat';
+                saveTag = 'muaChan';
+                Yss = [-300 200];
+            end
+            
+            ChansToLoad = clustChanPairing(:,2);
+            Clusts = clustChanPairing(:,1);
+            
+            cl = load([SWR_Python_Dir clustFile]);
+            
+            ClusterIDs = cl.clust.ClusterIDs;
+            nClusterIDs = numel(ClusterIDs);
+            spikeTimes_samps = cl.clust.spikeTimes_samps;
+            
+            % Make sure the clusters match
+            if sum(ismember(Clusts, ClusterIDs)) ~= nClusterIDs
+                disp('Cluster mismatch')
+                keyboard
+            end
+            
+            %% Load ephys file and make some plots
+            
+            for j = 1:nClusterIDs
+                
+                thisChan = ChansToLoad(j);
+                thisClustSpikeTimes = spikeTimes_samps{j};
+                
+                eval(['fileAppend = ''100_CH' num2str(thisChan) '.continuous'';'])
+                fileName = [obj.Session.SessionDir fileAppend];
+                
+                [data, timestamps, info] = load_open_ephys_data(fileName);
+                
+                Fs = info.header.sampleRate;
+                win_samp = 0.010*Fs;
+                timepoints_ms = (-win_samp:1:win_samp)/Fs*1000;
+                
+                allSpks = [];
+                for sp = 1:numel(thisClustSpikeTimes)
+                    
+                    if thisClustSpikeTimes(sp) - win_samp > 0 && thisClustSpikeTimes(sp) + win_samp < obj.Session.samples
+                        roi = thisClustSpikeTimes(sp) - win_samp : thisClustSpikeTimes(sp) + win_samp;
+                        
+                        %figure(100); clf;
+                        %hold on
+                        allSpks(:,sp) = data(roi);
+                        %plot(timpoints, data(roi));
+                        %ylim([-300 300])
+                        %pause
+                    end
+                end
+                
+                %% Plotting
+                
+                figH = figure(100+j); clf
+                
+                meanSpk = nanmean(allSpks, 2);
+                medianSpk = nanmedian(allSpks, 2);
+                semSpk = (std(allSpks'))/(sqrt(size(allSpks, 2)));
+                jbfill(timepoints_ms,[meanSpk'+semSpk],[meanSpk'-semSpk],[.5,0.5,.5],[.5,0.5,.5],[],.3);
+                hold on
+                %jbfill(timepoints_ms,[medianSpk'+semSpk],[medianSpk'-semSpk],[.5,0.5,.5],[.5,0.5,.5],[],.3);
+                plot(timepoints_ms, meanSpk, 'k')
+                %plot(timepoints_ms, medianSpk, 'b')
+                axis tight
+                ylim(Yss)
+                title([obj.Plotting.titleTxt ': Channel ' num2str(thisChan) ', n = ' num2str(numel(thisClustSpikeTimes)) ' spks' ])
+                xlabel('Time [ms]')
+                ylabel('uV')
+                
+                saveName = [PlotDir obj.Plotting.saveTxt '_Spikes_Chan-' num2str(thisChan) '-' saveTag];
+                
+                plotpos = [0 0 15 10];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+               disp('')
+                
+            end
+            
+        end
+        
+        function [obj]  = loadClustTypesAndAlignToSWR_Raster_ClustType(obj, clustType)
+            %if nargin < 2    
+            %    chansToUse = obj.REC.GoodClust_2(:, 2);
+            %end
+            
+            SWR_Python_Dir = [obj.Session.SessionDir 'SWR-Python' obj.DIR.dirD];
+            PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
+            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            
+            if clustType == 2
+                clustChanPairing = obj.REC.GoodClust_2;
+                clustFile = 'ClustType-2.mat';
+                saveTag = 'GoodChan';
+                Yss = [-300 200];
+            elseif clustType == 1
+                clustChanPairing = obj.REC.MUAClust_1;
+                clustFile = 'ClustType-1.mat';
+                saveTag = 'muaChan';
+                Yss = [-300 200];
+            end
+            
+             ChansToLoad = clustChanPairing(:,2);
+             
+            cl= load([SWR_Python_Dir clustFile]);
+            
+            ClusterIDs = cl.clust.ClusterIDs;
+            nClusterIDs = numel(ClusterIDs);
+            spikeTimes_samps = cl.clust.spikeTimes_samps;
+            
+            
+            depthOrder = obj.REC.allChs; % first is deepest
+            
+            for o = 1:numel(spikeTimes_samps)
+                thisOrderInd(o) = find(depthOrder == ChansToLoad(o)); % this is the order of the available chans from lowest to highest
+            end
+            
+            [B, sortInds] = sort(thisOrderInd, 'ascend');
+            
+            %% Load SWR detection File
+            textSearch = '*export_ripples.mat*'; % text search for ripple detection file
+            shWDetectionsFile = dir(fullfile(obj.DIR.SWR_Python_Dir,textSearch));
+           
+            rD = load([obj.DIR.SWR_Python_Dir shWDetectionsFile.name]);
+            rippleDetections = double(rD.data); % ins samples of the original data file
+            rippleDetectionsx50 = rippleDetections*50; % we do this cuz the resolution of the python code is 50
+            nRippleDetections = numel(rippleDetectionsx50);
+            
+            %% Now align the spikes to these events;
+            
+            Fs = obj.Session.sampleRate;
+            spikeWin_s = 0.05; % 50 ms
+            %spikeWin_s = 0.1; % 50 ms
+            spikeWin_samp = spikeWin_s* Fs;
+            thisMaxLength = -spikeWin_samp:spikeWin_samp;
+            thisMaxLength_ms = thisMaxLength/Fs*1000;
+            
+            FROverChans = [];
+            spikesOverChans = [];
+            for q = 1:numel(spikeTimes_samps)
+                
+                intFR  = zeros(1,numel(thisMaxLength)); % we define a vector for integrated FR
+                thisInd = sortInds(q);
+               
+                theseSpikeTimes = spikeTimes_samps{thisInd};
+                
+                allSpikes = [];
+                
+                for o = 1: nRippleDetections
+                    thisRipple = rippleDetectionsx50(o);
+                    
+                    spikeWinOn = thisRipple - spikeWin_samp;
+                    spikeWinOff = thisRipple + spikeWin_samp;
+                    
+                    these_spks_on_chan = theseSpikeTimes(theseSpikeTimes >= spikeWinOn & theseSpikeTimes <= spikeWinOff)-spikeWinOn; % Need it to be relative here
+                    allSpikes{o} = these_spks_on_chan;
+                    
+                    nSpks = numel(these_spks_on_chan);
+                    
+                    % add a 1 to the FR vector for every spike
+                    for ind = 1 : nSpks
+                        if these_spks_on_chan(ind) ~= 0
+                            intFR(these_spks_on_chan(ind)) = intFR(these_spks_on_chan(ind)) +1;
+                        end
+                    end
+                    
+                end
+                
+                spikesOverChans{q} = allSpikes;
+                FROverChans{q} = intFR;
+                
+            end
+            %%
+            cols = {[0.2 0.3 0.6],  [0.2 0.3 0.3],  [0.2 0.3 0.01], [0.1 0.1 0.3], [0.5 0.5 0.6], [0.2 0.8 0.8]...
+                    [0.3 0.3 0.6],  [0.8 0.2 0.3],  [0.2 0.4 0.9], [0.5 0.8 0.6], [0.2 0.3 0.2], [0.1 0.3 0.2]...
+                    [0.5 0.3 0.6],  [0.3 0.5 0.3],  [0.8 0.5 0.6], [0.8 0.4 0.2], [0.2 0.8 0.2], [0.8 0.8 0.2]...
+                    [0.8 0.3 0.6],    [0.1 0.3 0.4], [0.5 0.5 0.8], [0.8 0.3 0.8], [0.2 0.8 0.2], [0.8 0.3 0.2]};
+           
+        %    cols = {[0.2 0.3 0.0], [0.2 0.3 0.6],  [0.2 0.3 0.3],  [0.1 0.1 0.3], [0.5 0.5 0.6], [0.7 0.2 0.2]};
+          
+            %cols = {'k', 'b', 'r', 'm', 'g'
+            
+            
+            %%
+             figH = figure(104);  clf
+            subplot(5, 1, [2 3 4]); cla
+            cnt = 1;  
+            for q = 1:numel(spikeTimes_samps)
+               
+                thisInd = sortInds(q);
+                thisChanLabel = ChansToLoad(thisInd);
+                
+                allSpikes = spikesOverChans{thisInd};
+                
+                for o = 1: nRippleDetections
+                    theseSpikes = allSpikes{o};
+                    xpoints = ones(numel(theseSpikes))*cnt;
+                    
+                    if o ==1
+                        text(0, cnt+300, ['Chan- ' num2str(thisChanLabel)])
+                    end
+                    
+                    hold on
+                    plot(theseSpikes, xpoints, '.', 'color', cols{q}, 'linestyle', 'none', 'MarkerFaceColor',cols{q},'MarkerEdgeColor',cols{q})
+                    
+                    cnt = cnt +1;
+                    
+                end
+            end
+            
+            set(gca,'xtick',[]);
+            set(gca,'ytick',[]);
+            %%
+            axis tight
+            xlim([0 numel(thisMaxLength)])
+            
+            subplot(5, 1, 5); cla
+            hold on
+            for q = 1:numel(spikeTimes_samps)
+                
+                plot(thisMaxLength_ms, smooth(FROverChans{q}, 0.01*Fs), 'color', cols{q}, 'linewidth', 2)
+                %plot(thisMaxLength_ms, FROverChans{q}, 'color', cols{q}, 'linewidth', 2)
+                
+            end
+            axis tight
+            xlim([-spikeWin_s*1000 +spikeWin_s*1000])
+            xlabel('Time [ms]')
+            %%
+              textSearch = '*_data.mat*'; % text search for ripple detection file
+            shWDataFile = dir(fullfile(obj.DIR.SWR_Python_Dir,textSearch));
+            disp('Loading data...')
+            sD = load([SWR_Python_Dir shWDataFile(1).name]);
+          
+            swrData =  sD.dataSegs_V_raw;
+            Fs =  sD.INFO.fs;
+            
+            %%
+            allRipples = [];
+            for o = 1:5
+                
+              
+                
+                %thisRipple = rippleDetectionsx50(o);
+                thisRipple = rippleDetectionsx50(o);
+                
+                roi = thisRipple - spikeWin_samp: thisRipple + spikeWin_samp;
+              
+                
+                allRipples(o,:) = swrData(roi);
+                
+                
+                %title(num2str(o))
+                %axis tight
+                %xlim([-50 50])
+                %ylim([-400 0])
+                %pause
+            end
+            
+            meanripple = mean(allRipples);
+            subplot(5, 1, 1); cla
+            plot(thisMaxLength_ms, allRipples(2,:), 'color', 'k')
+            title([obj.Plotting.titleTxt ': SWR-Aligned spikes - ' clustFile(1:end-4)])
+            
+            %%
+            
+            
+              saveName = [PlotDir obj.Plotting.saveTxt '_SWR-AlignedSpikes-' saveTag];
+                
+                plotpos = [0 0 10 20];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            
+            
+            
+        end
+        
         
         %% Files for NSKToolbox
         
@@ -1281,9 +1647,10 @@ classdef avianSWRAnalysis_OBJ < handle
             xlim([0 2500])
             %%
             plotpos = [0 0 20 30];
-            export_to = set_export_file_format(1); % 2 = png, 1 = epsc
-            plot_filename = ['/home/janie/Dropbox/02_talks/May2018/newFigs/DB-' titl];
-            printFig(figh3, plot_filename, plotpos, export_to )
+            PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
+            
+            plot_filename = [PlotDir 'DB_Ratio'];
+            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
             
             
         end
