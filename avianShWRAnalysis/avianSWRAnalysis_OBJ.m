@@ -523,7 +523,10 @@ classdef avianSWRAnalysis_OBJ < handle
         end
         
         %% SWR Analysis
-        function [obj] = SWR_PythonDetections_shapeStatistics(obj)
+        function [obj] = SWR_PythonDetections_shapeStatistics(obj, useNotch)
+            if nargin <2
+                useNotch = 0;
+            end
             
             SWR_Python_Dir = [obj.Session.SessionDir 'SWR-Python' obj.DIR.dirD];
             obj.DIR.SWR_Python_Dir = SWR_Python_Dir;
@@ -582,7 +585,7 @@ classdef avianSWRAnalysis_OBJ < handle
             thisSegData_s = sD.data_t_s;
             
             disp('Filtering...')
-            %DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(thisSegData));
+            DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(thisSegData));
             DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(thisSegData));
             DataSeg_LF = squeeze(fobj.filt.FL.getFilteredData(thisSegData));
             
@@ -598,6 +601,7 @@ classdef avianSWRAnalysis_OBJ < handle
                     thisROI = rippleDetectionsx50(j)-win_samp:rippleDetectionsx50(j)+win_samp;
                     
                     allSWRs_raw(:,j) = swrData(thisROI);
+                    allSWRs_raw_notch(:,j) = DataSeg_FNotch(thisROI);
                     allSWRs_HP(:,j) = DataSeg_HF(thisROI);
                     allSWRs_LF(:,j) = DataSeg_LF(thisROI);
                     
@@ -607,6 +611,10 @@ classdef avianSWRAnalysis_OBJ < handle
             meanRipple_raw = nanmean(allSWRs_raw, 2);
             medianRipple_raw = nanmedian(allSWRs_raw, 2);
             sem_raw = (std(allSWRs_raw'))/(sqrt(size(allSWRs_raw, 2)));
+            
+            meanRipple_rawNotch = nanmean(allSWRs_raw_notch, 2);
+            medianRipple_rawNotch = nanmedian(allSWRs_raw_notch, 2);
+            sem_rawNotch = (std(allSWRs_raw_notch'))/(sqrt(size(allSWRs_raw_notch, 2)));
             
             meanRipple_LF = nanmean(allSWRs_LF, 2);
             medianRipple_LF = nanmedian(allSWRs_LF, 2);
@@ -619,22 +627,58 @@ classdef avianSWRAnalysis_OBJ < handle
             sem_HP = (std(allSWRs_HP'))/(sqrt(size(allSWRs_HP, 2)));
             
             %%
+            
+             %% Package data
+            SWR.Raw.raw = allSWRs_raw;
+            SWR.Raw.mean = meanRipple_raw;
+            SWR.Raw.median = medianRipple_raw;
+            SWR.Raw.sem = sem_raw;
+            
+            SWR.Notch.raw = allSWRs_raw_notch;
+            SWR.Notch.mean = meanRipple_rawNotch;
+            SWR.Notch.median = medianRipple_rawNotch;
+            SWR.Notch.sem = sem_rawNotch;
+            
+            SWR.LF.raw = allSWRs_LF;
+            SWR.LF.mean = meanRipple_LF;
+            SWR.LF.median = medianRipple_LF;
+            SWR.LF.sem = sem_LF;
+            
+            SWR.HP.raw = allSWRs_HP;
+            SWR.HP.mean = meanRipple_HP;
+            SWR.HP.median = medianRipple_HP;
+            SWR.HP.sem = sem_HP;
+            
+            SWR.detections_samps = rippleDetectionsx50;
+            SWR.timestamps_ms = timestamps_ms;
+            SWR.win_samp = win_samp;
+            SWR.Fs = Fs;
+            
+            %% plot
+            if useNotch
+                data = SWR.Notch;
+            else
+                data = SWR.Raw;
+            end
+                
             figH = figure(100); clf
             subplot(5, 1, [1 2 3 4])
-            jbfill(timestamps_ms,[meanRipple_raw'+sem_raw],[meanRipple_raw'-sem_raw],[.5,0.5,.5],[.5,0.5,.5],[],.3);
+            jbfill(timestamps_ms,[data.mean'+ data.sem],[data.mean'-data.sem],[.5,0.5,.5],[.5,0.5,.5],[],.3);
             hold on
-            plot(timestamps_ms, meanRipple_raw, 'k')
+            plot(timestamps_ms, data.mean, 'k')
             
             jbfill(timestamps_ms,[meanRipple_LF'+sem_LF],[meanRipple_LF'-sem_LF],[.5,0.5,.5],[.5,0.5,.5],[],.3);
             hold on
             plot(timestamps_ms, meanRipple_LF, 'r')
-            title( ['SWR: ' obj.Plotting.titleTxt])
+            title( ['SWR: ' obj.Plotting.titleTxt ' | n = ' num2str(nRippleDetections) ' SWRs in ' num2str(round(obj.Session.recordingDur_hr, 2, 'decimals')) ' hrs'])
             
             subplot(5, 1, 5)
             jbfill(timestamps_ms,[meanRipple_HP'+sem_HP],[meanRipple_HP'-sem_HP],[.5,0.5,.5],[.5,0.5,.5],[],.3);
             hold on
             %jbfill(timestamps_ms,[sumRipple_HP'+sem_HP],[sumRipple_HP'-sem_HP],[.5,0.5,.5],[.5,0.5,.5],[],.3);
             plot(timestamps_ms, meanRipple_HP, 'k')
+            axis tight
+            ylim([-2 2])
             
             xlabel('Time [ms]')
             obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
@@ -647,62 +691,46 @@ classdef avianSWRAnalysis_OBJ < handle
             plotpos = [0 0 10 20];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
-            %% Package data
-            SWR.allSWRs_raw = allSWRs_raw;
-            SWR.allSWRs_raw_mean = meanRipple_raw;
-            SWR.allSWRs_raw_median = medianRipple_raw;
-            SWR.allSWRs_raw_sem = sem_raw;
-            
-            SWR.allSWRs_LF = allSWRs_LF;
-            SWR.allSWRs_LF_mean = meanRipple_LF;
-            SWR.allSWRs_LF_median = medianRipple_LF;
-            SWR.allSWRs_LF_sem = sem_LF;
-            
-            SWR.allSWRs_HP = allSWRs_HP;
-            SWR.allSWRs_HP_mean = meanRipple_HP;
-            SWR.allSWRs_HP_median = medianRipple_HP;
-            SWR.allSWRs_HP_sem = sem_HP;
-            
-            SWR.detections_samps = rippleDetectionsx50;
-            SWR.timestamps_ms = timestamps_ms;
-            SWR.win_samp = win_samp;
-            SWR.Fs = Fs;
-            
-            
             %% Saving Data
-            saveName = [SWR_Python_Dir 'SWR_data.mat'];
+            saveName = [SWR_Python_Dir 'SWR.mat'];
             save(saveName, 'SWR', '-v7.3')
             disp(['Saved: ' saveName])
             
         end
         
-        function [obj] = SWR_wavelet(obj)
+        function [obj] = SWR_wavelet(obj, waveletInd, useNotch)
             
             
             %% Load "SWR_data.mat"
             
-            textSearch = '*SWR_data.mat*'; % text search for ripple detection file
+            textSearch = '*SWR.mat*'; % text search for ripple detection file
             SWR_datafile = dir(fullfile(obj.DIR.SWR_Python_Dir,textSearch));
             PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
             
             disp('Loading...')
             sD = load([obj.DIR.SWR_Python_Dir SWR_datafile.name]);
             
-            
             Fs = sD.SWR.Fs;
             
-            waveletInd = 4;
+            if useNotch
+                data =   sD.SWR.Notch;
+            else
+                data =   sD.SWR.Raw;
+            end
+            
             for j = 1:2
+            
+                %waveletInd = 5;
                 
                 if j ==1
-                    RawData = sD.SWR.allSWRs_raw_mean;
-                    Wavdata = sD.SWR.allSWRs_HP_mean;
+                    RawData = data.mean;
+                    Wavdata = sD.SWR.HP.mean;
                     figH = figure(100+j);clf
                     clims = [0 .5];
                     saveName = [PlotDir obj.Plotting.saveTxt '_SWR_wavelet_mean'];
                 elseif j==2
-                    RawData = sD.SWR.allSWRs_raw(:,waveletInd );
-                    Wavdata = sD.SWR.allSWRs_HP(:,waveletInd );
+                    RawData = data.raw(:,waveletInd );
+                    Wavdata = sD.SWR.HP.raw(:,waveletInd );
                     saveName = [PlotDir obj.Plotting.saveTxt '_SWR_wavelet_single'];
                     clims = [0 20];
                     figH = figure(100+j);clf
@@ -740,6 +768,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 V_wave = reshape(V_wave,nfreqs,[],n_trials);
                 
                 %% Mean PLot
+                
                 tr =1;
                 ax1 = subplot(3,1,1);
                 plot(sD.SWR.timestamps_ms,RawData, 'k');
@@ -777,11 +806,15 @@ classdef avianSWRAnalysis_OBJ < handle
             
         end
         
-        function [obj] = SWR_raster(obj)
+        function [obj] = SWR_raster(obj, binSize_s)
             
+            if nargin <2 
+                binSize_s = 10;
+            end
+                
             %% Load "SWR_data.mat"
             
-            textSearch = '*SWR_data.mat*'; % text search for ripple detection file
+            textSearch = '*SWR.mat*'; % text search for ripple detection file
             SWR_datafile = dir(fullfile(obj.DIR.SWR_Python_Dir,textSearch));
             PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
             
@@ -792,8 +825,8 @@ classdef avianSWRAnalysis_OBJ < handle
             SWRDetections_samps = sD.SWR.detections_samps;
             
             figure(100); clf
-            binSize = 10;
-            length_this_stim = binSize *Fs;
+            %binSize = 5; % s
+            length_this_stim = binSize_s *Fs;
             TOns = 1:length_this_stim:SWRDetections_samps(end);
             nTOns = numel(TOns);
             
@@ -839,7 +872,7 @@ classdef avianSWRAnalysis_OBJ < handle
             
             subplot(1, 5, 5); cla
             
-            FreqPLot_Hz = FreqPLot/binSize;
+            FreqPLot_Hz = FreqPLot/binSize_s;
             xes = 1:1:numel(FreqPLot_Hz);
             plot(smooth(FreqPLot_Hz), xes)
             axis tight
@@ -1104,7 +1137,7 @@ classdef avianSWRAnalysis_OBJ < handle
         end
         
         function [obj]  = loadClustTypesAndAlignToSWR_Raster_ClustType(obj, clustType)
-            %if nargin < 2    
+            %if nargin < 2
             %    chansToUse = obj.REC.GoodClust_2(:, 2);
             %end
             
@@ -1125,8 +1158,8 @@ classdef avianSWRAnalysis_OBJ < handle
                 Yss = [-300 200];
             end
             
-             ChansToLoad = clustChanPairing(:,2);
-             
+            ChansToLoad = clustChanPairing(:,2);
+            
             cl= load([SWR_Python_Dir clustFile]);
             
             ClusterIDs = cl.clust.ClusterIDs;
@@ -1144,9 +1177,9 @@ classdef avianSWRAnalysis_OBJ < handle
             
             %% Load SWR detection File
             textSearch = '*export_ripples.mat*'; % text search for ripple detection file
-            shWDetectionsFile = dir(fullfile(obj.DIR.SWR_Python_Dir,textSearch));
-           
-            rD = load([obj.DIR.SWR_Python_Dir shWDetectionsFile.name]);
+            shWDetectionsFile = dir(fullfile(SWR_Python_Dir,textSearch));
+            
+            rD = load([SWR_Python_Dir shWDetectionsFile.name]);
             rippleDetections = double(rD.data); % ins samples of the original data file
             rippleDetectionsx50 = rippleDetections*50; % we do this cuz the resolution of the python code is 50
             nRippleDetections = numel(rippleDetectionsx50);
@@ -1166,7 +1199,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 
                 intFR  = zeros(1,numel(thisMaxLength)); % we define a vector for integrated FR
                 thisInd = sortInds(q);
-               
+                
                 theseSpikeTimes = spikeTimes_samps{thisInd};
                 
                 allSpikes = [];
@@ -1197,21 +1230,21 @@ classdef avianSWRAnalysis_OBJ < handle
             end
             %%
             cols = {[0.2 0.3 0.6],  [0.2 0.3 0.3],  [0.2 0.3 0.01], [0.1 0.1 0.3], [0.5 0.5 0.6], [0.2 0.8 0.8]...
-                    [0.3 0.3 0.6],  [0.8 0.2 0.3],  [0.2 0.4 0.9], [0.5 0.8 0.6], [0.2 0.3 0.2], [0.1 0.3 0.2]...
-                    [0.5 0.3 0.6],  [0.3 0.5 0.3],  [0.8 0.5 0.6], [0.8 0.4 0.2], [0.2 0.8 0.2], [0.8 0.8 0.2]...
-                    [0.8 0.3 0.6],    [0.1 0.3 0.4], [0.5 0.5 0.8], [0.8 0.3 0.8], [0.2 0.8 0.2], [0.8 0.3 0.2]};
-           
-        %    cols = {[0.2 0.3 0.0], [0.2 0.3 0.6],  [0.2 0.3 0.3],  [0.1 0.1 0.3], [0.5 0.5 0.6], [0.7 0.2 0.2]};
-          
+                [0.3 0.3 0.6],  [0.8 0.2 0.3],  [0.2 0.4 0.9], [0.5 0.8 0.6], [0.2 0.3 0.2], [0.1 0.3 0.2]...
+                [0.5 0.3 0.6],  [0.3 0.5 0.3],  [0.8 0.5 0.6], [0.8 0.4 0.2], [0.2 0.8 0.2], [0.8 0.8 0.2]...
+                [0.8 0.3 0.6],    [0.1 0.3 0.4], [0.5 0.5 0.8], [0.8 0.3 0.8], [0.2 0.8 0.2], [0.8 0.3 0.2]};
+            
+            %    cols = {[0.2 0.3 0.0], [0.2 0.3 0.6],  [0.2 0.3 0.3],  [0.1 0.1 0.3], [0.5 0.5 0.6], [0.7 0.2 0.2]};
+            
             %cols = {'k', 'b', 'r', 'm', 'g'
             
             
             %%
-             figH = figure(104);  clf
+            figH = figure(104);  clf
             subplot(5, 1, [2 3 4]); cla
-            cnt = 1;  
+            cnt = 1;
             for q = 1:numel(spikeTimes_samps)
-               
+                
                 thisInd = sortInds(q);
                 thisChanLabel = ChansToLoad(thisInd);
                 
@@ -1251,48 +1284,31 @@ classdef avianSWRAnalysis_OBJ < handle
             xlim([-spikeWin_s*1000 +spikeWin_s*1000])
             xlabel('Time [ms]')
             %%
-              textSearch = '*_data.mat*'; % text search for ripple detection file
-            shWDataFile = dir(fullfile(obj.DIR.SWR_Python_Dir,textSearch));
+            textSearch = '*_data.mat*'; % text search for ripple detection file
+            shWDataFile = dir(fullfile(SWR_Python_Dir,textSearch));
             disp('Loading data...')
             sD = load([SWR_Python_Dir shWDataFile(1).name]);
-          
+            
             swrData =  sD.dataSegs_V_raw;
             Fs =  sD.INFO.fs;
             
             %%
-            allRipples = [];
-            for o = 1:5
-                
-              
-                
-                %thisRipple = rippleDetectionsx50(o);
-                thisRipple = rippleDetectionsx50(o);
-                
-                roi = thisRipple - spikeWin_samp: thisRipple + spikeWin_samp;
-              
-                
-                allRipples(o,:) = swrData(roi);
-                
-                
-                %title(num2str(o))
-                %axis tight
-                %xlim([-50 50])
-                %ylim([-400 0])
-                %pause
-            end
+            RipplePlot = [];
+            thisRipple = rippleDetectionsx50(obj.REC.waveletInd);
+            roi = thisRipple - spikeWin_samp: thisRipple + spikeWin_samp;
+            RipplePlot(:,1) = swrData(roi);
             
-            meanripple = mean(allRipples);
             subplot(5, 1, 1); cla
-            plot(thisMaxLength_ms, allRipples(2,:), 'color', 'k')
+            plot(thisMaxLength_ms, RipplePlot, 'color', 'k')
             title([obj.Plotting.titleTxt ': SWR-Aligned spikes - ' clustFile(1:end-4)])
             
             %%
             
             
-              saveName = [PlotDir obj.Plotting.saveTxt '_SWR-AlignedSpikes-' saveTag];
-                
-                plotpos = [0 0 10 20];
-                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            saveName = [PlotDir obj.Plotting.saveTxt '_SWR-AlignedSpikes-' saveTag];
+            
+            plotpos = [0 0 10 20];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
             
             

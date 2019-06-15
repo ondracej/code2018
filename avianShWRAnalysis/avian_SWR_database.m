@@ -2969,7 +2969,7 @@ avianSWR_DB(rfc).DIR.dirD= dirD;
 
 avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
-avianSWR_DB(rfc).REC.bestChs  = [];
+avianSWR_DB(rfc).REC.bestChs  = [7 2 12];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
 avianSWR_DB(rfc).REC.cscEMG  = [];
@@ -3175,7 +3175,7 @@ avianSWR_DB(rfc).DIR.dirD= dirD;
 
 avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
-avianSWR_DB(rfc).REC.bestChs  = [];
+avianSWR_DB(rfc).REC.bestChs  = [7 2 13];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
 avianSWR_DB(rfc).REC.cscEMG  = [];
@@ -3183,6 +3183,9 @@ avianSWR_DB(rfc).REC.hasEOG  = 0;
 avianSWR_DB(rfc).REC.csc_EOG  = []';
 avianSWR_DB(rfc).REC.hasEKG  = 0;
 avianSWR_DB(rfc).REC.cscEKG  = 0;
+avianSWR_DB(rfc).REC.waveletInd  = 5;
+avianSWR_DB(rfc).REC.GoodClust_2  = [21 2]; % clust id, Real channel
+avianSWR_DB(rfc).REC.MUAClust_1  = [32 7];
 
 avianSWR_DB(rfc).Plotting.rawOffset = 500;
 avianSWR_DB(rfc).Plotting.rawYlim = [-avianSWR_DB(rfc).Plotting.rawOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.rawOffset];

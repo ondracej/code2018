@@ -14,7 +14,7 @@ addpath(genpath(pathToOpenEphysAnalysisTools))
 addpath(genpath(pathToNSKToolbox)) 
 
 %% Define Session
-recSession = 61; % One session at a time; 54:75
+recSession = 63; % One session at a time; 54:75
 D_OBJ = avianSWRAnalysis_OBJ(recSession); 
 disp([D_OBJ.INFO.birdName ': ' D_OBJ.Session.time])
 
@@ -40,10 +40,10 @@ D_OBJ = batchPlotDataForOpenEphys_singleChannel(D_OBJ); % default is doPlot, 40s
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% FullFile - creates a "_py_fullFile"
-%chanOverride = [];
 
-D_OBJ = prepareDataForShWRDetection_FullFile_Python(D_OBJ, 11); 
-%[D_OBJ] = prepareDataForShWRDetection_FullFile_Python(D_OBJ);
+%chanOverride = 7;
+%D_OBJ = prepareDataForShWRDetection_FullFile_Python(D_OBJ, chanOverride); 
+[D_OBJ] = prepareDataForShWRDetection_FullFile_Python(D_OBJ);
 
 %% Do NOT USE - use fullfile option for now
 %chanOverride = [];
@@ -62,16 +62,25 @@ D_OBJ = prepareDataForShWRDetection_FullFile_Python(D_OBJ, 11);
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Mean shape, saves the snippets for the detections "SWR_data.mat"
-[D_OBJ] = SWR_PythonDetections_shapeStatistics(D_OBJ);
+
+
+%% Remember to change the data name to x_data
+
+useNotch =0;
+
+[D_OBJ] = SWR_PythonDetections_shapeStatistics(D_OBJ, useNotch );
 
 pathToChronuxToolbox = 'C:\Users\Administrator\Documents\code\GitHub\chronux\';
 addpath(genpath(pathToChronuxToolbox)) 
 
 %% Wavelet
-[D_OBJ] = SWR_wavelet(D_OBJ);
+waveletInd = 5;
+useNotch = 1;
+[D_OBJ] = SWR_wavelet(D_OBJ, waveletInd, useNotch );
 
 %% Frequency raster
-[D_OBJ] = SWR_raster(D_OBJ);
+binSize_s = 15;
+[D_OBJ] = SWR_raster(D_OBJ, binSize_s);
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Spikesorting with KiloSort
@@ -89,18 +98,20 @@ pathToYourConfigFile = 'C:\Users\Administrator\Documents\code\GitHub\code2018\Ki
 
 % Config Files - check that the channel map is set correctly there!
 %nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_6088.m';
-%nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_5915.m';
+nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_5915.m';
 %nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_7281.m';
-nameOfConfigFile =  'StandardConfig_avian16Chan_Chick10';
+%nameOfConfigFile =  'StandardConfig_avian16Chan_Chick10';
 runKilosortFromConfigFile(D_OBJ, pathToYourConfigFile, nameOfConfigFile)
 
 disp(['Finished Processing ' D_OBJ.Session.SessionDir])
 %% Running Phy
 % navigate to the data directory in cmd window (the location of the .dat file)
 %> activate phy
-%> template-gui params.py
-
+%> phy template-gui params.py
+% pip install git+https://github.com/kwikteam/phy git+https://github.com/kwikteam/phy-contrib --upgrade
 %% Make sure to save which channels have which clusters on them!!
+
+D_OBJ = avianSWRAnalysis_OBJ(recSession); 
 
 
 %% Make plots of spikes aligned to SWRs
@@ -108,7 +119,7 @@ disp(['Finished Processing ' D_OBJ.Session.SessionDir])
 addpath(genpath('C:\Users\Administrator\Documents\code\GitHub\npy-matlab'))
 addpath(genpath('C:\Users\Administrator\Documents\code\GitHub\spikes'))
 
-ClustType = 1;
+ClustType = 2;
 % - 0 = noise
 % - 1 = mua
 % - 2 = good
@@ -116,8 +127,8 @@ ClustType = 1;
 
 [D_OBJ] = importPhyClusterSpikeTimes(D_OBJ, ClustType);
 
-% Make plots of the spikes
-%ClustType = 2;
+%% Make plots of the spikes
+ClustType = 1;
 if ~isfield(D_OBJ.REC, 'GoodClust_2') || ~isfield(D_OBJ.REC, 'MUAClust_1')
     disp('***Make sure to set the cluster information in the database before running!***')
 else
