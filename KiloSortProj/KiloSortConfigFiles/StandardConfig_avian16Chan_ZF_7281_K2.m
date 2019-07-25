@@ -6,17 +6,11 @@ ops.showfigures         = 1; % whether to plot figures during optimization
 ops.datatype            = 'openEphys';  % binary ('dat', 'bin') or 'openEphys'		
 ops.chanMap             = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSilicon.mat'; % make this file using createChannelMapFile.m		
 
-%% Works - ZF-60-88 | 14-43-33
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_14-43-33'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_14-43-33'); % will be created for 'openEphys'		
+%% Works - ZF-72-81 | 21-26-59
+ops.root                = 'F:\TUM\SWR-Project\ZF-72-81\Ephys\2019-05-16_21-26-59'; % 'openEphys' only: where raw files are		
+ops.fbinary             = fullfile(ops.root, '2019-05-16_21-26-59'); % will be created for 'openEphys'		
 
-%% Works - ZF-60-88 | 15-01-45
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-01-45'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_15-01-45'); % will be created for 'openEphys'		
 
-%% Works - ZF-60-88 | 15-02-55
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-02-55'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_15-02-55'); % will be created for 'openEphys'		
 
 
 %%

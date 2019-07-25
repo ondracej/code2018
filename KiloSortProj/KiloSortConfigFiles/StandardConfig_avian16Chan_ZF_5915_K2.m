@@ -5,19 +5,25 @@ ops.showfigures         = 1; % whether to plot figures during optimization
 		
 ops.datatype            = 'openEphys';  % binary ('dat', 'bin') or 'openEphys'		
 ops.chanMap             = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSilicon.mat'; % make this file using createChannelMapFile.m		
+%% Works - ZF-59-15 | 18-07-21
+%ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_18-07-21'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-04-28_18-07-21'); % will be created for 'openEphys'		
 
-%% Works - ZF-60-88 | 14-43-33
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_14-43-33'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_14-43-33'); % will be created for 'openEphys'		
+%% Works - ZF-59-15 | 18-48-02
+%ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_18-48-02'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-04-28_18-48-02'); % will be created for 'openEphys'		
 
-%% Works - ZF-60-88 | 15-01-45
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-01-45'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_15-01-45'); % will be created for 'openEphys'		
+%% Works - ZF-59-15 | 19-34-00
+ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_19-34-00'; % 'openEphys' only: where raw files are		
+ops.fbinary             = fullfile(ops.root, '2019-04-28_19-34-00'); % will be created for 'openEphys'		
 
-%% Works - ZF-60-88 | 15-02-55
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-02-55'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_15-02-55'); % will be created for 'openEphys'		
+%% Works - ZF-59-15 | 20-20-36
+%ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_20-20-36'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-04-28_20-20-36'); % will be created for 'openEphys'		
 
+%% Works - ZF-59-15 | 21-05-36
+%ops.root                = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_21-05-36'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-04-28_21-05-36'); % will be created for 'openEphys'		
 
 %%
 ops.fproc               = fullfile(ops.root, 'temp_wh.dat'); % residual from RAM of preprocessed data		
@@ -30,7 +36,8 @@ ops.fs = 30000;
 ops.fshigh = 150;   
 
 % minimum firing rate on a "good" channel (0 to skip)
-ops.minfr_goodchannels = 0; 
+%ops.minfr_goodchannels = 0;
+ops.minfr_goodchannels = 0.01;
 
 % threshold on projections (like in Kilosort1, can be different for last pass like [10 4])
 ops.Th = [10 4];  
@@ -70,3 +77,4 @@ ops.nSkipCov            = 25; % compute whitening matrix from every N-th batch
 ops.scaleproc           = 200;   % int16 scaling of whitened data
 ops.nPCs                = 3; % how many PCs to project the spikes into
 ops.useRAM              = 0; % not yet available
+

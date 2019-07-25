@@ -5,18 +5,16 @@ ops.showfigures         = 1; % whether to plot figures during optimization
 		
 ops.datatype            = 'openEphys';  % binary ('dat', 'bin') or 'openEphys'		
 ops.chanMap             = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSilicon.mat'; % make this file using createChannelMapFile.m		
+%% Works - Cuban Tree Frog 03.07.2019
 
-%% Works - ZF-60-88 | 14-43-33
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_14-43-33'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_14-43-33'); % will be created for 'openEphys'		
+%ops.root                = 'F:\Grass\FrogSleep\CubanTreeFrog1\20190703\20190703_13-47\Ephys\2019-07-03_13-47-07'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-07-03_13-47-07'); % will be created for 'openEphys'		
 
-%% Works - ZF-60-88 | 15-01-45
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-01-45'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_15-01-45'); % will be created for 'openEphys'		
+%ops.root                = 'F:\Grass\FrogSleep\CubanTreeFrog1\20190701\20190701_09-15\Ephys\2019-07-01_09-15-37'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-07-01_09-15-37'); % will be created for 'openEphys'		
 
-%% Works - ZF-60-88 | 15-02-55
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-02-55'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_15-02-55'); % will be created for 'openEphys'		
+ops.root                = 'F:\Grass\FrogSleep\CubanTreeFrog1\20190625\20190625_08-32\Ephys\2019-06-25_08-32-20'; % 'openEphys' only: where raw files are		
+ops.fbinary             = fullfile(ops.root, '2019-06-25_08-32-20'); % will be created for 'openEphys'		
 
 
 %%
@@ -30,7 +28,8 @@ ops.fs = 30000;
 ops.fshigh = 150;   
 
 % minimum firing rate on a "good" channel (0 to skip)
-ops.minfr_goodchannels = 0; 
+%ops.minfr_goodchannels = 0;
+ops.minfr_goodchannels = 0.01;
 
 % threshold on projections (like in Kilosort1, can be different for last pass like [10 4])
 ops.Th = [10 4];  
@@ -70,3 +69,4 @@ ops.nSkipCov            = 25; % compute whitening matrix from every N-th batch
 ops.scaleproc           = 200;   % int16 scaling of whitened data
 ops.nPCs                = 3; % how many PCs to project the spikes into
 ops.useRAM              = 0; % not yet available
+

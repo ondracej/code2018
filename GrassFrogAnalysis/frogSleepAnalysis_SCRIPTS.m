@@ -1,4 +1,4 @@
-%avianSWRAnalysis_SCRIPTS
+%% frogSleepAnalysis_SCRIPTS
 
 close all
 clear all
@@ -14,9 +14,23 @@ addpath(genpath(pathToOpenEphysAnalysisTools))
 addpath(genpath(pathToNSKToolbox)) 
 
 %% Define Session
-recSession = 64; % One session at a time; 54:75
-D_OBJ = avianSWRAnalysis_OBJ(recSession); 
-disp([D_OBJ.INFO.birdName ': ' D_OBJ.Session.time])
+
+%recSession = 44; % 20190624_19-14
+
+%recSession = 46; % 20190625_08-32;
+%recSession = 50; % 20190626_09-00
+%recSession = 54; % 20190627_08-43
+%recSession = 56; % 20190628_10-01
+%recSession = 63; % 20190630_16-39
+%recSession = 69; % 20190630_16-39 -corrupted??
+
+% Frog 2
+ recSession = 105; % 20190624_19-14
+ 
+ 
+ %%
+D_OBJ = frogSleepAnalysis_OBJ(recSession); 
+disp([D_OBJ.INFO.Name ': ' D_OBJ.Session.time])
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plotting 
@@ -31,11 +45,34 @@ disp([D_OBJ.INFO.birdName ': ' D_OBJ.Session.time])
 D_OBJ = batchPlotDataForOpenEphys_multiChannel(D_OBJ); % default is doPlot, 40s
 disp('Finished plotting')
 
+%% 
+
+D_OBJ = getTriggers(D_OBJ); 
+disp('Triggers Finished')
+%%
+
+convertMP4toAVI(D_OBJ)
+
+%%
+FrameON = 17000; % 2:40
+FrameOFF = 17300; % 2:45
+ChanSelOverride = [1, 2, 3, 4, 5];
+saveName = 'Test1-jumping';
+combineEphysAndMovie(D_OBJ, FrameON, FrameOFF, saveName, ChanSelOverride)
+
+
 %% Single Channel Plot
 
 %D_OBJ = batchPlotDataForOpenEphys_singleChannel(D_OBJ, doPlot, seg_s); % default is doPlot, 40s
 D_OBJ = batchPlotDataForOpenEphys_singleChannel(D_OBJ); % default is doPlot, 40s
  
+
+%% Wavelet
+
+seg_s = 180;
+waveletPlot_singleChannel(D_OBJ, seg_s)
+
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Pre-processing for Sebastian's ShWR detections
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -110,24 +147,17 @@ binSize_s = 15;
 
 pathToKiloSort = 'C:\Users\Administrator\Documents\code\GitHub\KiloSort2\';
 pathToNumpy = 'C:\Users\Administrator\Documents\code\GitHub\npy-matlab\';
-
 addpath(genpath(pathToKiloSort))
 addpath(genpath(pathToNumpy))
-            
+
+%pathToGUIToolbox = 'C:\Users\Administrator\Documents\MATLAB\';
+%addpath(genpath(pathToGUIToolbox))
+
 pathToYourConfigFile = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles'; 
 
 % Config Files - check that the channel map is set correctly there!
-%nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_5915.m';
-nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_5915_K2.m';
 
-%nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_6088.m';
-%nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_6088_K2.m';
-
-%nameOfConfigFile =  'StandardConfig_avian16Chan_Chick10.m';
-%nameOfConfigFile =  'StandardConfig_avian16Chan_Chick10_K2.m';
-
-%nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_7281.m';
-%nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_7281_K2.m';
+nameOfConfigFile =  'StandardConfig_CubanTF1_16Chan_ECoG_K2';
 
 
 %root = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_21-05-36';
@@ -182,9 +212,23 @@ ClustType = 1;
 
 %% Analysis using the Sleep code
 
-[D_OBJ] = getFreqBandDetection(D_OBJ);
 
-[D_OBJ] = plotDBRatio(D_OBJ);
+[D_OBJ] = getFreqBandDetection(D_OBJ);
+disp('Finished Printing dendrograms')
+
+%%
+
+
+
+[D_OBJ] = plotDBRatioWithData(D_OBJ);
+
+%%
+
+plotDBRatioMatrix(D_OBJ)
+
+
+%%
+
 
 
 

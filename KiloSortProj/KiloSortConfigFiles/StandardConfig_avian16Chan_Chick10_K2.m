@@ -6,18 +6,25 @@ ops.showfigures         = 1; % whether to plot figures during optimization
 ops.datatype            = 'openEphys';  % binary ('dat', 'bin') or 'openEphys'		
 ops.chanMap             = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSilicon.mat'; % make this file using createChannelMapFile.m		
 
-%% Works - ZF-60-88 | 14-43-33
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_14-43-33'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_14-43-33'); % will be created for 'openEphys'		
 
-%% Works - ZF-60-88 | 15-01-45
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-01-45'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_15-01-45'); % will be created for 'openEphys'		
+%% Chick 10 - 19-33-33
+%ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_19-33-33'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-04-27_19-33-33'); % will be created for 'openEphys'		
 
-%% Works - ZF-60-88 | 15-02-55
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-02-55'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_15-02-55'); % will be created for 'openEphys'		
+%ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_20-49-27'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-04-27_20-49-27'); % will be created for 'openEphys'		
 
+%ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_21-51-18'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-04-27_21-51-18'); % will be created for 'openEphys'		
+
+%ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_21-57-22'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-04-27_21-57-22'); % will be created for 'openEphys'		
+
+%ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_21-58-36'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-04-27_21-58-36'); % will be created for 'openEphys'		
+
+%ops.root                = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_22-20-26'; % 'openEphys' only: where raw files are		
+%ops.fbinary             = fullfile(ops.root, '2019-04-27_22-20-26'); % will be created for 'openEphys'		
 
 %%
 ops.fproc               = fullfile(ops.root, 'temp_wh.dat'); % residual from RAM of preprocessed data		

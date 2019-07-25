@@ -1,7 +1,7 @@
 function [] = calcOFandMakeVideo()
 
 
-vidToLoad = ''; % enter video filename
+vidToLoad = 'F:\Grass\eBUSData\00000000_000000000047BE55.mp4'; % enter video filename
 
 [pathstr,name,ext] = fileparts(vidToLoad);
 dirD = '\';
@@ -77,8 +77,8 @@ redcolorline = [150 50 0]/255;
 bluecolorline = [0 50 150]/255;
 
 
-%timepoints = (1:1:FrameOff)/10; %in s
-timepoints = (FrameOn+1:1:FrameOff-1)/10; %in s
+timepoints = (1:1:FrameOff-1)/10; %in s
+%timepoints = (FrameOn+1:1:FrameOff)/10; %in s
 
 close all
 

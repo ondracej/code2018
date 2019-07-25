@@ -1,4 +1,4 @@
-classdef avianSWRAnalysis_OBJ < handle
+classdef frogSleepAnalysis_OBJ < handle
     
     
     properties (Access = public)
@@ -6,15 +6,305 @@ classdef avianSWRAnalysis_OBJ < handle
         HOST
         INFO
         Session
+        Vid
         DIR
         REC
         Plotting
-        
+        DB
         ops
+        TRIGS
         
     end
     
     methods
+        
+        
+        function [obj] = getTriggers(obj)
+            dbstop if error
+            
+            %%
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
+            
+            %% Defining Path to data
+            
+            SessionDir = obj.DIR.ephysDir;
+            
+            videoCheck = obj.REC.hasVideo;
+            if videoCheck
+                video = obj.Vid.Names{1};
+                nFrames= obj.Vid.nFrames(1);
+            end
+            
+            %VidObj = VideoReader([obj.DIR.videoDir video]);
+            %nFrames = VidObj.NumberOfFrames;
+            %VidFrameRate = VidObj.FrameRate;
+            
+            %             PlotDir = [obj.DIR.plotDir];
+            %             if exist(PlotDir, 'dir') == 0
+            %                 mkdir(PlotDir);
+            %                 disp(['Created: '  PlotDir])
+            %             end
+            %
+            TriggerFile = obj.REC.triggerChan;
+            extSearch = ['*' TriggerFile '*'];
+            allOpenEphysFiles=dir(fullfile(SessionDir,extSearch));
+            
+            tic
+            [data, timestamps, info] = load_open_ephys_data([SessionDir allOpenEphysFiles.name]);
+            %thisSegData_s = timestamps(1:end) - timestamps(1);
+            toc
+            disp('Finished loading data')
+            
+            disp('Finding peaks...')
+            [pks,locs,w,p] = findpeaks(data, 'MinPeakHeight', 1);
+            
+            nTrigs = numel(locs);
+            
+            samples = size(data, 1);
+            sampleRate = info.header.sampleRate;
+            
+            trigRate_s = 0.100;
+            trigRate_samps = trigRate_s*sampleRate;
+            
+            FamesPerTrig = round(nFrames/nTrigs);
+            
+            meanDiffBetweenTrigs = mean(diff(locs));
+            
+            sampsPerFrame = round(meanDiffBetweenTrigs/FamesPerTrig);
+            
+            for j = 1:nFrames
+                
+                if j == 1
+                    Trigs.Frame_sample(j) = locs(1);
+                else
+                    Trigs.Frame_sample(j) = Trigs.Frame_sample(j-1)+sampsPerFrame;
+                end
+            end
+            
+            %Chekc
+            LastTrigFrame = Trigs.Frame_sample(end);
+            lastSamp = samples;
+            
+            if LastTrigFrame > lastSamp
+                disp('Problem')
+            end
+            
+            obj.TRIGS = Trigs;
+            
+            save([SessionDir 'TRIGS.mat'], 'Trigs');
+            
+        end
+        
+        
+        function [] = convertMP4toAVI(obj)
+            
+            vidToLoad = [obj.DIR.videoDir obj.Vid.Names{1}];
+            
+            %%
+            VideoObj = VideoReader(vidToLoad, 'Tag', 'CurrentVideo');
+            nFrames = VideoObj.NumberOfFrames;
+            
+            fig1 = figure(100); clf
+            
+            for p = 1:nFrames
+                
+                %subplot(4, 3, [1 2 3 4 5 6 7 8 9])
+                
+                thisFrame = read(VideoObj, p);
+                image(thisFrame)
+                axis('off')
+                
+                F(p) = getframe(fig1);
+                
+            end
+            
+            VidSaveName = [obj.DIR.videoDir obj.Vid.Names{1} 'converted'];
+            DS_vidObj = VideoWriter(VidSaveName, 'Motion JPEG AVI');
+            DS_vidObj.FrameRate = 10;
+            DS_vidObj.Quality=  75;
+            
+            tic
+            disp('Saving movie...');
+            open(DS_vidObj)
+            writeVideo(DS_vidObj, F);
+            close(DS_vidObj)
+            disp(['Saved file: ' VidSaveName]);
+            toc
+            
+            
+        end
+        
+        %% Make a movie and aling data
+        
+        function [] = combineEphysAndMovie(obj, FrameON, FrameOFF, saveName, ChanSel)
+            if nargin < 5
+                
+                ChanSel = obj.REC.allChs(1:5);
+            end
+            
+            
+            %% turtle AD25
+            
+            allCSCs = ChanSel;
+            %saveName = ['/storage/laur/Data_3/OndracekJanie/AnalysisForMunicTalk/TurtleAD25_SleepWater2.avi'];
+            
+            %cheetahFiles = '/storage/laur/Data_3/OndracekJanie/SleepTurtles/turtle_AD25/06.28.2016/18-20-52_cheetah/';
+            
+            vidToLoad = [obj.DIR.videoDir obj.Vid.Names{1}];
+            %searchString1 = 'Frame: 266840;';
+            %searchString2 = 'Frame: 267240;';
+            
+            %%
+            VideoObj = VideoReader(vidToLoad, 'Tag', 'CurrentVideo');
+            
+            % nFrames = VideoObj.NumberOfFrames;
+            % VideoFrameRate = VideoObj.FrameRate;
+            % vidHeight = VideoObj.Height;
+            % vidWidth = VideoObj.Width;
+            % vidFormat = VideoObj.VideoFormat;
+            
+            
+            %% Triggers
+            
+            TRIGS = obj.TRIGS;
+            
+            FrameOnSamps = TRIGS.Frame_sample(FrameON);
+            FrameOffSamps = TRIGS.Frame_sample(FrameOFF);
+            
+            %% Search for Matrox frames
+            
+            % dataRecordingObj = NLRecording([cheetahFiles]);
+            % [Trig_ms,chNumber,chName]=dataRecordingObj.getTrigger;
+            %
+            % MatroxTrigs_ms = Trig_ms{1, 10};
+            % MatroxTrigs_names = chName{1, 10};
+            %
+            % % Start Frame
+            % frameMatchsInds = cellfun(@(x) strfind(x, searchString1), MatroxTrigs_names, 'uniformOutput', 0 );
+            % matroxStartInd = find(cellfun(@(x) ~isempty(x), frameMatchsInds)); % ins in event string for the Frame 0s
+            % matroxStartInd_ms = MatroxTrigs_ms(matroxStartInd);
+            %
+            % % Stop Frame
+            % frameMatchsInds = cellfun(@(x) strfind(x, searchString2), MatroxTrigs_names, 'uniformOutput', 0 );
+            % matroxStopInd = find(cellfun(@(x) ~isempty(x), frameMatchsInds)); % ins in event string for the Frame 0s
+            % matroxStopInd_ms = MatroxTrigs_ms(matroxStopInd);
+            %
+            % diffMs = matroxStopInd_ms-matroxStartInd_ms;
+            % diff_s = diffMs/1000;
+            %
+            % allMatroxTimepointsInRegion = MatroxTrigs_ms(matroxStartInd:matroxStopInd);
+            % allMatronNamesInRegion = MatroxTrigs_names(matroxStartInd:matroxStopInd);
+            %
+            % fs=dataRecordingObj.samplingFrequency(1);
+            
+            %% Extract voltage traces for CSCs
+            
+            allVs = [];
+            chanOrders = [];
+            
+            for j = 1:numel(allCSCs)
+                
+                thisChan = allCSCs(j);
+                
+                
+                eval(['fileAppend = ''106_CH' num2str(thisChan) '.continuous'';'])
+                fileName = [obj.DIR.ephysDir fileAppend];
+                
+                [data, timestamps, info] = load_open_ephys_data(fileName);
+                
+                allVs(:,j) = data(FrameOnSamps:FrameOffSamps);
+                
+            end
+            
+            thisSegData_s = timestamps(1:end) - timestamps(1);
+            thisSegData_roi = thisSegData_s(FrameOnSamps:FrameOffSamps);
+            
+            
+            %timepoints = t+matroxStartInd_ms; % this is the shifted time (t starts at 0, so + the timestamp of the first frame
+            %linemov = (allMatroxTimepointsInRegion(2)-allMatroxTimepointsInRegion(1))/10;
+            %linemov = ((allMatroxTimepointsInRegion(2)-allMatroxTimepointsInRegion(1))/10)*2; %liz 14
+            
+            %% Plotting Figure
+            fig1 = figure(100);clf
+            
+            FrameSelection = FrameON:FrameOFF;
+            nFrames = numel(FrameSelection);
+            
+            linemov = (thisSegData_roi(end) - thisSegData_roi(1)) / nFrames;
+            linePos  = thisSegData_roi(1):linemov:thisSegData_roi(end);
+            cnt = 1;
+            for p = FrameSelection
+                
+                subplot(4, 3, [1 2 3 4 5 6 7 8 9])
+                
+                thisFrame = read(VideoObj, p);
+                image(thisFrame)
+                axis('off')
+                
+                subplot(4, 3, [10 11 12])
+                %subplot(2, 2, [3 4])
+                
+                hold on
+                
+                for j = 1:numel(allCSCs)
+                    
+                    %offset = 500*j-1; %lizard
+                    offset = 500*j-1;
+                    
+                    plot((thisSegData_roi), allVs(:,j)+offset, 'k') %
+                    %plot((t+matroxStartInd_ms), allVs(:,j), 'k') % one plot
+                end
+                
+                %     xticks_ms = get(gca, 'xtick');
+                %     xticks_s = xticks_ms /1000;
+                %     xticklabel = {};
+                %     for o =1:numel( xticks_s)
+                %         xticklabel = [xticklabel num2str(xticks_s(o))];
+                %     end
+                %
+                %     set(gca, 'xticklabel', xticklabel)
+                axis tight
+                %ylim([0 3000]) % lizard
+                %ylim([50 1300])
+                yss = ylim;
+                xlabel('Time [s]')
+                %% make lines
+                
+                %     hold on
+                %     if p ==1
+                %         thisTimepoint = allMatroxTimepointsInRegion(p);
+                %     else
+                %         thisTimepoint = thisTimepoint+linemov;
+                %
+                %     end
+                line([linePos(cnt)  linePos(cnt)], [yss(1) yss(2)])
+                F(cnt) = getframe(fig1);clf
+                cnt = cnt+1;
+            end
+            
+            VidSaveName = [obj.DIR.videoDir saveName];
+            DS_vidObj = VideoWriter(VidSaveName, 'Motion JPEG AVI');
+            DS_vidObj.FrameRate = 10;
+            DS_vidObj.Quality=  75;
+            
+            tic
+            disp('Saving movie...');
+            open(DS_vidObj)
+            writeVideo(DS_vidObj, F);
+            close(DS_vidObj)
+            disp(['Saved file: ' VidSaveName]);
+            toc
+            
+            
+            
+            disp('')
+            
+            
+        end
+        
+        
+        
         
         %% Plotting Raw data
         function [obj] = batchPlotDataForOpenEphys_multiChannel(obj, doPlot, seg)
@@ -24,19 +314,14 @@ classdef avianSWRAnalysis_OBJ < handle
                 seg = 40; % seconds
             end
             %%
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             %% Defining Path to data
             
-            SessionDir = obj.Session.SessionDir;
+            SessionDir = obj.DIR.ephysDir;
             
-            if isempty(SessionDir)
-                disp('There is a typo in the database')
-                keyboard
-            end
-            
-            PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
+            PlotDir = [obj.DIR.plotDir];
             if exist(PlotDir, 'dir') == 0
                 mkdir(PlotDir);
                 disp(['Created: '  PlotDir])
@@ -47,6 +332,8 @@ classdef avianSWRAnalysis_OBJ < handle
             nFiles=numel(allOpenEphysFiles);
             
             chanSet=obj.REC.allChs;
+            triggerChan = obj.REC.triggerChan;
+            
             recordingDuration_s=obj.Session.recordingDur_s;
             Fs=obj.Session.sampleRate;
             
@@ -112,9 +399,9 @@ classdef avianSWRAnalysis_OBJ < handle
                     
                     
                     %% Loading Data
-                    %s=1;
+                   % s=1;
                     %eval(['fileAppend = ''100_CH' num2str(s) '.continuous'';'])
-                    eval(['fileAppend = ''101_CH' num2str(s) '.continuous'';'])
+                    eval(['fileAppend = ''106_CH' num2str(s) '.continuous'';'])
                     fileName = [SessionDir fileAppend];
                     
                     [data, timestamps, info] = load_open_ephys_data(fileName);
@@ -124,10 +411,10 @@ classdef avianSWRAnalysis_OBJ < handle
                     sampleRate = info.header.sampleRate;
                     
                     %%
-                    if samples ~= obj.Session.samples
-                        disp('Sample count mismatch..');
-                        keyboard
-                    end
+%                     if samples ~= obj.Session.samples
+%                         disp('Sample count mismatch..');
+%                         keyboard
+%                     end
                     
                     %% Put it in an array for the filters
                     [V_uV_data_full,nshifts] = shiftdim(data',-1);
@@ -188,6 +475,7 @@ classdef avianSWRAnalysis_OBJ < handle
                         offsetHP  = offsetHP + obj.Plotting.hpOffset;
                         offsetHP_R  = offsetHP_R + obj.Plotting.hpRectOffset;
                         
+                        disp('')
                     end
                 end
                 
@@ -255,42 +543,62 @@ classdef avianSWRAnalysis_OBJ < handle
                 seg = 40; % seconds
             end
             
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             %% Defining Path to data
             
-            SessionDir = obj.Session.SessionDir;
+              fObj = filterData(Fs);
             
-            if isempty(SessionDir)
-                disp('There is a typo in the database')
-                keyboard
-            end
+            fobj.filt.FL=filterData(Fs);
+            %fobj.filt.FL.lowPassPassCutoff=4.5;
+            %fobj.filt.FL.lowPassPassCutoff=20;
+            %fobj.filt.FL.lowPassStopCutoff=30;
+            fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.FL.lowPassStopCutoff=40;
+            fobj.filt.FL.attenuationInLowpass=20;
+            fobj.filt.FL=fobj.filt.FL.designLowPass;
+            fobj.filt.FL.padding=true;
             
-            PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
+            fobj.filt.FH2=filterData(Fs);
+            fobj.filt.FH2.highPassCutoff=100;
+            fobj.filt.FH2.lowPassCutoff=2000;
+            fobj.filt.FH2.filterDesign='butter';
+            fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+            fobj.filt.FH2.padding=true;
+            
+            fobj.filt.FN =filterData(Fs);
+            fobj.filt.FN.filterDesign='cheby1';
+            fobj.filt.FN.padding=true;
+            fobj.filt.FN=fobj.filt.FN.designNotch;
+            %%
+            SessionDir = obj.DIR.ephysDir;
+            
+            PlotDir = [obj.DIR.plotDir];
             if exist(PlotDir, 'dir') == 0
                 mkdir(PlotDir);
                 disp(['Created: '  PlotDir])
             end
             
-            extSearch ='*.continuous*';
-            allOpenEphysFiles=dir(fullfile(SessionDir,extSearch));
-            nFiles=numel(allOpenEphysFiles);
-            
-            chanSet=obj.REC.allChs;
-            recordingDuration_s=obj.Session.recordingDur_s;
-            Fs=obj.Session.sampleRate;
-            
-            if numel(chanSet) > 1
-                plotMulti = 1;
-            else
-                plotMulti = 0;
-            end
-            
-            
-            %% Define Filters
-            
-            
+%             extSearch ='*.continuous*';
+%             allOpenEphysFiles=dir(fullfile(SessionDir,extSearch));
+%             nFiles=numel(allOpenEphysFiles);
+             
+chanSet=obj.REC.bestChs;
+%for s=chanSet
+          
+ eval(['fileAppend = ''106_CH' num2str(chanSet) '.continuous'';'])
+                fileName = [SessionDir fileAppend];
+                
+                [data, timestamps, info] = load_open_ephys_data(fileName);
+                thisSegData_s = timestamps(1:end) - timestamps(1);
+                
+                samples = numel(data);
+                Fs = info.header.sampleRate;
+                
+                 
+            recordingDuration_s= samples/Fs;
+           
             
             %% Define Segements
             
@@ -298,28 +606,8 @@ classdef avianSWRAnalysis_OBJ < handle
             overlapWin=2*Fs;
             nCycles=numel(TOn);
             chanCnt = 1;
-            
-            %% start loop over channel selectiondbquit
-            
-            for s=chanSet
-                
-                %% Loading Data
-                %s=1;
-                eval(['fileAppend = ''100_CH' num2str(s) '.continuous'';'])
-                fileName = [SessionDir fileAppend];
-                
-                [data, timestamps, info] = load_open_ephys_data(fileName);
-                thisSegData_s = timestamps(1:end) - timestamps(1);
-                
-                samples = numel(data);
-                sampleRate = info.header.sampleRate;
-                
+             
                 %%
-                if samples ~= obj.Session.samples
-                    disp('Sample count mismatch..');
-                    keyboard
-                end
-                
                 for i=1:nCycles-1
                     
                     %         if i ==1
@@ -331,11 +619,11 @@ classdef avianSWRAnalysis_OBJ < handle
                     thisROI = TOn(i):TOn(i+1)-1;
                     
                     offsetLP = 0;
-                    offsetHP = 0;
+                    offsetHP = 1000;
                     offsetHP_R = 0;
                     
-                    CDC = [];
-                    CDC.AllData = NaN(numel(thisROI), numel(chanSet));
+                    %CDC = [];
+                    %CDC.AllData = NaN(numel(thisROI), numel(chanSet));
                     
                     %% Put it in an array for the filters
                     [V_uV_data_full,nshifts] = shiftdim(data',-1);
@@ -349,14 +637,14 @@ classdef avianSWRAnalysis_OBJ < handle
                     DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(SegData));
                     Data_SegData = squeeze(SegData);
                     
-                    CDC.AllData(:,chanCnt) = Data_SegData;
-                    CDC.SegData_s = SegData_s;
-                    CDC.sampleRate = sampleRate;
-                    CDC.maxSamples = samples;
+                    %CDC.AllData(:,chanCnt) = Data_SegData;
+                    %CDC.SegData_s = SegData_s;
+                    %CDC.sampleRate = Fs;
+                    %CDC.maxSamples = samples;
                     
-                    CDCSaveTxt = ['_' num2str(SegData_s(1)) '-' num2str(SegData_s(end)) 's'];
+                    %CDCSaveTxt = ['_' num2str(SegData_s(1)) '-' num2str(SegData_s(end)) 's'];
                     
-                    chanCnt = chanCnt +1;
+                    %chanCnt = chanCnt +1;
                     
                     %% Smooth for HP rect
                     
@@ -373,7 +661,7 @@ classdef avianSWRAnalysis_OBJ < handle
                         FigH = figure(300); clf;
                         subplot(2, 1, 1)
                         plot(SegData_s, Data_SegData + offsetLP, 'k'); %title( ['Raw Voltage']);
-                        text(SegData_s(1), Data_SegData(1)+obj.Plotting.rawOffset/2, ['Ch-' num2str(s)])
+                        text(SegData_s(1), Data_SegData(1)+obj.Plotting.rawOffset/2, ['Ch-' num2str(chanSet)])
                         grid 'on'
                         
                         % Low Frequency
@@ -383,7 +671,7 @@ classdef avianSWRAnalysis_OBJ < handle
                         subplot(2, 1, 2)
                         % High Pass
                         hold on
-                        plot(SegData_s, DataSeg_HF + offsetHP);
+                        plot(SegData_s, DataSeg_HF*5 + offsetHP);
                         plot(SegData_s, DataSeg_rect_HF - obj.Plotting.hpRectOffset, 'r');
                         grid 'on'
                         
@@ -393,7 +681,7 @@ classdef avianSWRAnalysis_OBJ < handle
                         figure(FigH)
                         subplot(2, 1, 1)
                         axis tight
-                        ylim(obj.Plotting.rawYlim);
+                        ylim([-obj.Plotting.rawOffset -obj.Plotting.rawOffset]);
                         title(['Raw Voltage: '  obj.Plotting.titleTxt ' | ' sprintf('%03d', i)])
                         
                         subplot(2, 1, 2)
@@ -415,6 +703,123 @@ classdef avianSWRAnalysis_OBJ < handle
                 end
             end
         end
+        
+        
+        
+        function [obj] = waveletPlot_singleChannel(obj, seg)
+            dbstop if error
+            if nargin <2
+                seg = 180; % seconds
+            end
+            
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
+            
+            %% Defining Path to data
+            
+            SessionDir = obj.DIR.ephysDir;
+            
+            PlotDir = [obj.DIR.plotDir];
+            if exist(PlotDir, 'dir') == 0
+                mkdir(PlotDir);
+                disp(['Created: '  PlotDir])
+            end
+            
+            chanSet = obj.REC.bestChs;
+            
+            eval(['fileAppend = ''106_CH' num2str(chanSet(1)) '.continuous'';'])
+            fileName = [SessionDir fileAppend];
+            
+            [data, timestamps, info] = load_open_ephys_data(fileName);
+            thisSegData_s = timestamps(1:end) - timestamps(1);
+            
+            samples = size(data, 1);
+            Fs = info.header.sampleRate;
+            
+            recordingDuration_s  = samples/Fs;
+            
+            
+            %% Define Segements
+            
+            TOn=1:seg*Fs:(recordingDuration_s*Fs-seg*Fs);
+            overlapWin=2*Fs;
+            nCycles=numel(TOn);
+            
+            for i=1:nCycles-1
+                
+                thisROI = TOn(i):TOn(i+1)-1;
+                
+                [V_uV_data_full,nshifts] = shiftdim(data',-1);
+                
+                SegData = V_uV_data_full(:,:, thisROI);
+                SegData_s = thisSegData_s(thisROI);
+                
+                %DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(SegData));
+                %DataSeg_LF = squeeze(fobj.filt.FL.getFilteredData(SegData));
+                %DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(SegData));
+                Data_SegData = squeeze(SegData);
+                
+                
+                thisSegData_wav = SegData;
+                %[thisSegData_wav,nshifts] = shiftdim(thisSegData_wav',-1);
+                
+                dsf = 20;
+                Fsd = Fs/dsf;
+                hcf = 400;
+                [n_ch,n_tr,N] = size(thisSegData_wav);
+                
+                [bb,aa] = butter(2,hcf/(Fs/2),'low');
+                V_ds = reshape(permute(thisSegData_wav,[3 1 2]),[],n_ch*n_tr);
+                V_ds = downsample(filtfilt(bb,aa,V_ds),dsf);
+                V_ds = reshape(V_ds,[],n_ch,n_tr);
+                
+                %
+                [N,n_chs,n_trials] = size(V_ds);
+                nfreqs = 60;
+                min_freq = 0.1;
+                max_freq = 800;
+                Fsd = Fs/dsf;
+                min_scale = 1/max_freq*Fsd;
+                max_scale = 1/min_freq*Fsd;
+                wavetype = 'cmor1-1';
+                scales = logspace(log10(min_scale),log10(max_scale),nfreqs);
+                wfreqs = scal2frq(scales,wavetype,1/Fsd);
+                
+                use_ch = 1;
+                cur_V = squeeze(V_ds(:,use_ch,:));
+                V_wave = cwt(cur_V(:),scales,wavetype);
+                V_wave = reshape(V_wave,nfreqs,[],n_trials);
+                
+                %% Mean PLot
+                figure(100); clf
+                tr =1;
+                subplot(2, 1, 1)
+                plot(SegData_s,Data_SegData, 'k');
+                axis tight
+                ylim([-4000 4000])
+                title( ['Raw Data'])
+                
+                subplot(2, 1, 2)
+                clims = [0 7000];
+                pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
+                %set(gca,'yscale','log');
+                axis tight
+                ylim([min_freq 30])
+                caxis(clims);
+                %xlim([0.7 1.3])
+                title('Wavelet transform')
+                
+                xlabel('Time [s]')
+                ylabel('Frequency [Hz]')
+                
+                %%
+                saveName = [PlotDir obj.Plotting.saveTxt '_Wavelet_' sprintf('%03d', i)];
+                plotpos = [0 0 30 15];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            end
+        end
+        
+        
         
         %% Preparation for Sebastians SWR detection
         function [obj] = prepareDataForShWRDetection_Python(obj, chanOverride, durCutoffOverride)
@@ -629,7 +1034,7 @@ classdef avianSWRAnalysis_OBJ < handle
             
             %%
             
-             %% Package data
+            %% Package data
             SWR.Raw.raw = allSWRs_raw;
             SWR.Raw.mean = meanRipple_raw;
             SWR.Raw.median = medianRipple_raw;
@@ -661,7 +1066,7 @@ classdef avianSWRAnalysis_OBJ < handle
             else
                 data = SWR.Raw;
             end
-                
+            
             figH = figure(100); clf
             subplot(5, 1, [1 2 3 4])
             jbfill(timestamps_ms,[data.mean'+ data.sem],[data.mean'-data.sem],[.5,0.5,.5],[.5,0.5,.5],[],.3);
@@ -720,7 +1125,7 @@ classdef avianSWRAnalysis_OBJ < handle
             end
             
             for j = 1:2
-            
+                
                 %waveletInd = 5;
                 
                 if j ==1
@@ -772,6 +1177,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 
                 tr =1;
                 ax1 = subplot(3,1,1);
+                %plot(sD.SWR.timestamps_ms,RawData, 'k');
                 plot(sD.SWR.timestamps_ms,RawData, 'k');
                 axis tight
                 xlim([-300 300])
@@ -789,10 +1195,10 @@ classdef avianSWRAnalysis_OBJ < handle
                 pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
                 %set(gca,'yscale','log');
                 axis tight
-                ylim([0 800])
+                ylim([0 300])
                 %caxis(clims);
                 caxis(clims);
-                xlim([0.7 1.3])
+                %xlim([0.7 1.3])
                 
                 xlabel('Time [ms]')
                 ylabel('Frequency [Hz]')
@@ -809,10 +1215,10 @@ classdef avianSWRAnalysis_OBJ < handle
         
         function [obj] = SWR_raster(obj, binSize_s)
             
-            if nargin <2 
+            if nargin <2
                 binSize_s = 10;
             end
-                
+            
             %% Load "SWR_data.mat"
             
             textSearch = '*SWR.mat*'; % text search for ripple detection file
@@ -916,33 +1322,33 @@ classdef avianSWRAnalysis_OBJ < handle
             save('C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap.mat', 'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
             %}
             
-%             Nchannels = 2;
-%             connected = true(Nchannels, 1);
-%             %chanMap   = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
-%             chanMap   = [2 10];
-%             chanMap0ind = chanMap - 1;
-%             xcoords   = ones(Nchannels,1);
-%             ycoords   = ones(Nchannels,1);
-%             kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
-%             
-%             fs = 30000; % sampling frequency
-%             save('F:\TUM\SWR-Project\KiloSortConfigFiles\testMap.mat', 'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
+            %             Nchannels = 2;
+            %             connected = true(Nchannels, 1);
+            %             %chanMap   = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
+            %             chanMap   = [2 10];
+            %             chanMap0ind = chanMap - 1;
+            %             xcoords   = ones(Nchannels,1);
+            %             ycoords   = ones(Nchannels,1);
+            %             kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
+            %
+            %             fs = 30000; % sampling frequency
+            %             save('F:\TUM\SWR-Project\KiloSortConfigFiles\testMap.mat', 'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
             
-% 
-%             Nchannels = 16;
-%             connected = true(Nchannels, 1);
-%             chanMap   = [1:16];
-%             chanMap0ind = chanMap - 1;
-%             
-%             xcoords   = ones(Nchannels,1);
-%              ycoords   = ones(Nchannels,1);
-%              kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
-% 
-%             fs = 30000; % sampling frequency
-%             save('C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSeq.mat', 'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
-% 
-
-
+            %
+            %             Nchannels = 16;
+            %             connected = true(Nchannels, 1);
+            %             chanMap   = [1:16];
+            %             chanMap0ind = chanMap - 1;
+            %
+            %             xcoords   = ones(Nchannels,1);
+            %              ycoords   = ones(Nchannels,1);
+            %              kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
+            %
+            %             fs = 30000; % sampling frequency
+            %             save('C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSeq.mat', 'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
+            %
+            
+            
             %%
             tic; % start timer
             %
@@ -1020,11 +1426,11 @@ classdef avianSWRAnalysis_OBJ < handle
             fprintf('Looking for data inside %s \n', rootZ)
             
             % is there a channel map file in this folder?
-%             fs = dir(fullfile(rootZ, 'chan*.mat'));
-%             if ~isempty(fs)
-%                 ops.chanMap = fullfile(rootZ, fs(1).name);
-%                 ops.chanMap = fullfile(rootZ, fs(1).name);
-%             end
+            %             fs = dir(fullfile(rootZ, 'chan*.mat'));
+            %             if ~isempty(fs)
+            %                 ops.chanMap = fullfile(rootZ, fs(1).name);
+            %                 ops.chanMap = fullfile(rootZ, fs(1).name);
+            %             end
             
             if ops.GPU
                 gpuDevice(1); % initialize GPU (will erase any existing GPU arrays)
@@ -1074,7 +1480,7 @@ classdef avianSWRAnalysis_OBJ < handle
             save(fname, 'rez', '-v7.3');
             
         end
-            
+        
         function [obj] = importPhyClusterSpikeTimes(obj, clustType)
             
             %clustType
@@ -1084,55 +1490,55 @@ classdef avianSWRAnalysis_OBJ < handle
             % - 3 = unsorted
             
             dataDir = obj.Session.SessionDir;
-          
-            %% load some spikes and compute some basic things
-                
-                % clu is a length nSpikes vector with the cluster identities of every spike
-                clu = readNPY(fullfile(dataDir,  'spike_clusters.npy')); %cluster IDs
-                
-                % ss is a length nSpikes vector with the spike time of every spike (in samples)
-                ss = readNPY(fullfile(dataDir,  'spike_times.npy'));
-                
-                % [cids, cgs] = readClusterGroupsCSV(fullfile(folderNames{f},  'cluster_groups.csv'));
-                [cids, cgs] = readClusterGroupsCSV(fullfile(dataDir,  'cluster_group.tsv'));
-                
-                % cids is length nClusters, the cluster ID numbers
-                % cgs is length nClusters, the "cluster group":
-                % - 0 = noise
-                % - 1 = mua
-                % - 2 = good
-                % - 3 = unsorted
-                
-                ClustersInds = find(cgs==clustType);
-                ClusterIDs = cids(ClustersInds);
-                
-                spikeTimes_samps = [];
-                for j = 1:numel(ClusterIDs)
-                    
-                    spikeTimesInds = find(clu == ClusterIDs(j));
-                    spikeTimes_samps{j} = double(ss(spikeTimesInds));
-                end
-                
-                clust.clustType = clustType;
-                clust.ClusterIDs = ClusterIDs;
-                clust.spikeTimes_samps = spikeTimes_samps;
-                clust.dataDir = dataDir;
-                clust.cids = cids;
-                clust.cgs = cgs;
-                clust.cgs = cgs;
-                clust.ss = ss;
-                clust.clu = clu;
             
-                %% Saving
-                SWR_Python_Dir = [obj.Session.SessionDir 'SWR-Python' obj.DIR.dirD];
-                obj.DIR.SWR_Python_Dir  = SWR_Python_Dir;
+            %% load some spikes and compute some basic things
+            
+            % clu is a length nSpikes vector with the cluster identities of every spike
+            clu = readNPY(fullfile(dataDir,  'spike_clusters.npy')); %cluster IDs
+            
+            % ss is a length nSpikes vector with the spike time of every spike (in samples)
+            ss = readNPY(fullfile(dataDir,  'spike_times.npy'));
+            
+            % [cids, cgs] = readClusterGroupsCSV(fullfile(folderNames{f},  'cluster_groups.csv'));
+            [cids, cgs] = readClusterGroupsCSV(fullfile(dataDir,  'cluster_group.tsv'));
+            
+            % cids is length nClusters, the cluster ID numbers
+            % cgs is length nClusters, the "cluster group":
+            % - 0 = noise
+            % - 1 = mua
+            % - 2 = good
+            % - 3 = unsorted
+            
+            ClustersInds = find(cgs==clustType);
+            ClusterIDs = cids(ClustersInds);
+            
+            spikeTimes_samps = [];
+            for j = 1:numel(ClusterIDs)
                 
-                saveName = [obj.DIR.SWR_Python_Dir 'ClustType-' num2str(clustType) '.mat'];
-                
-                save(saveName, 'clust', '-v7.3')
-                disp(['Saved: ' saveName])
-                
-                
+                spikeTimesInds = find(clu == ClusterIDs(j));
+                spikeTimes_samps{j} = double(ss(spikeTimesInds));
+            end
+            
+            clust.clustType = clustType;
+            clust.ClusterIDs = ClusterIDs;
+            clust.spikeTimes_samps = spikeTimes_samps;
+            clust.dataDir = dataDir;
+            clust.cids = cids;
+            clust.cgs = cgs;
+            clust.cgs = cgs;
+            clust.ss = ss;
+            clust.clu = clu;
+            
+            %% Saving
+            SWR_Python_Dir = [obj.Session.SessionDir 'SWR-Python' obj.DIR.dirD];
+            obj.DIR.SWR_Python_Dir  = SWR_Python_Dir;
+            
+            saveName = [obj.DIR.SWR_Python_Dir 'ClustType-' num2str(clustType) '.mat'];
+            
+            save(saveName, 'clust', '-v7.3')
+            disp(['Saved: ' saveName])
+            
+            
         end
         
         function [obj]  = loadClustTypesAndMakeSpikePlots(obj, clustType)
@@ -1223,7 +1629,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 
                 plotpos = [0 0 15 10];
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-               disp('')
+                disp('')
                 
             end
             
@@ -1412,19 +1818,122 @@ classdef avianSWRAnalysis_OBJ < handle
         
         function [obj] = getFreqBandDetection(obj)
             chanToUse = obj.REC.bestChs(1);
-            SessionDir = obj.Session.SessionDir;
-            obj.Session.SessionDir;
+            SessionDir = obj.DIR.ephysDir;
+            %obj.Session.SessionDir;
             
-            eval(['fileAppend = ''100_CH' num2str(chanToUse) '.continuous'';'])
+            eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
             fileName = [SessionDir fileAppend];
+             PlotDir = [obj.DIR.plotDir];
+             
+             if exist(PlotDir, 'dir') == 0
+                 mkdir(PlotDir);
+                 disp(['Created: '  PlotDir])
+             end
+            
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             [data, timestamps, info] = load_open_ephys_data(fileName);
             thisSegData_s = timestamps(1:end) - timestamps(1);
             Fs = info.header.sampleRate;
+            samples = numel(data);
+           
+            thisSegData_hrs = thisSegData_s/3600; 
             
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
-            PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
+            figH = figure(100); clf
+            %plot(thisSegData_hrs, data, 'k')
+            plot(thisSegData_hrs(1:Fs:end), data(1:Fs:end), 'k')
+            
+            axis tight
+            ylim([-6500 6500])
+            ylim([0 15.5])
+            xlabel('Clock Time')
+            ylabel('Microvolts')
+            
+            StartingClockTime = obj.Session.RecStartTime;
+            StartingAlignmentTime = '18:00:00';
+              
+            colon = ':';
+            sInMin = 60;
+            minInHr = 60;
+            sInHr = sInMin*minInHr;
+            Day_24Hr = 24;
+            zero = 0;
+            
+            thisStr = StartingAlignmentTime;
+            match = find(thisStr == colon);
+            
+            Alignment_s_vid = str2double(thisStr(match(2)+1:end));
+            Alignment_mins_vid = str2double(thisStr(match(1)+1:match(2)-1));
+            Alignment_hrs_vid = str2double(thisStr(1:match(1)-1));
+            
+            thisStr = StartingClockTime;
+            match = find(thisStr == colon);
+            
+            FirstStart_s_vid = str2double(thisStr(match(2)+1:end));
+            FirstStart_mins_vid = str2double(thisStr(match(1)+1:match(2)-1));
+            FirstStart_hrs_vid = str2double(thisStr(1:match(1)-1));
+            
+            Alignment_diff_s = FirstStart_s_vid - Alignment_s_vid;
+            
+            Alignment_diff_s_cnt = 0;
+            if Alignment_diff_s > 0
+                FirstStart_mins_vid = FirstStart_mins_vid+1;
+                Alignment_diff_s_cnt = sInMin - Alignment_diff_s;
+            else
+                Alignment_diff_s_cnt = Alignment_diff_s;
+            end
+            
+            diff_min = minInHr - FirstStart_mins_vid;
+            
+            if diff_min > 0
+                FirstStart_hrs_vid = FirstStart_hrs_vid +1;
+                Alignment_diff_s_for_min = diff_min*sInMin;
+                Alignment_diff_s_cnt = Alignment_diff_s_for_min + Alignment_diff_s_cnt;
+            end
+            
+            nSecondsToFirstAlignment = Alignment_diff_s_cnt;
+            
+            %%
+            
+            xtickts_sampls = nSecondsToFirstAlignment*Fs:sInHr*Fs:samples;
+            xtickts_hrs = xtickts_sampls/Fs/3600;
+            
+            xLab_pt1 = Alignment_hrs_vid:1:24;
+            xLab_pt2  = 1:1:24;
+            xlabs_n = [xLab_pt1 xLab_pt2 xLab_pt2 xLab_pt2];
+            
+            theseLabs = xlabs_n(1:numel(xtickts_sampls));
+            
+            xlabs = [];
+            for k = 1:numel(xtickts_hrs)
+                xlabs{k} = [num2str(theseLabs(k)) ':00'];
+            end
+            
+            set(gca, 'xtick', xtickts_hrs);
+            set(gca, 'xtickLabel',  xlabs)
+            
+            saveName = [PlotDir 'RawData'];
+            
+            plotpos = [0 0 30 15];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            
+           totalTime_s  = samples/Fs;
+            
+            %totalTime = obj.Session.recordingDur_s;
+            %samples = obj.Session.samples;
+            %totalTime = thisSegData_s(end);
+            batchDuration_s = 5*60*60; % 1 hr
+            batchDuration_samp = batchDuration_s*Fs;
+            
+            tOn_s = 1:batchDuration_s:totalTime_s;
+            tOn_samp = tOn_s*Fs;
+            nBatches = numel(tOn_samp);
+            
+            
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
+            PlotDir = [obj.DIR.plotDir];
             
             %% Filters
             fObj = filterData(Fs);
@@ -1466,8 +1975,6 @@ classdef avianSWRAnalysis_OBJ < handle
             
             %% Raw Data  - Parameters from [data]=getFreqBandDetection(obj,varargin)
             
-            [V_uV_data_full,nshifts] = shiftdim(data',-1);
-            thisSegData = V_uV_data_full(:,:,:);
             
             %addParameter(parseObj,'fMax',30,@isnumeric); %max freq. to examine
             %fMax = 30;
@@ -1498,103 +2005,410 @@ classdef avianSWRAnalysis_OBJ < handle
             hSpectra = 0;
             
             %%
-            FMLong=fobj.filt.F.getFilteredData(thisSegData );
-            
-            %calculate initial parameters
-            segmentSamples = round(segmentLength*fobj.filt.FFs);
-            samplesOL = round(segmentSamples*WelchOL);
-            samplesBin = round(binDuration*fobj.filt.FFs);
-            
-            nBins=floor(numel(FMLong)/samplesBin);
-            
-            if (numel(FMLong)/samplesBin)~=round(numel(FMLong)/samplesBin)
-                nBins=nBins-1;
-                FMLong=FMLong(1:(samplesBin*nBins));
-                disp('Last bin in recording not included due to a missmatch between recording duration and binDuration');
-            end
-            
-            FMLongB=reshape(FMLong,[samplesBin,nBins]);
-            
-            [pxx,f] = pwelch(FMLongB,segmentSamples,samplesOL,dftPoints,fobj.filt.FFs);
-            %
-            %figure(100); clf
-            %plot(mean(10*log10(pxx)))
-            p=find(f<fMax);
-            pp=find(sum(pxx(p,:))<0.4e6);
-            
-            sPxx=pxx(p,pp);
-            freqHz=f(p);
-            normsPxx=bsxfun(@rdivide,sPxx,mean(sPxx,2));
-            corrMat=corrcoef(normsPxx);
-            
-            if maxDendroClusters==2
+            for b = 1:nBatches
                 
-                [DC,order,clusters]=DendrogramMatrix(corrMat,'linkMetric','euclidean','linkMethod','ward','maxClusters',maxDendroClusters);
-                
-                S1=mean(normsPxx(:,clusters==1),2);
-                S2=mean(normsPxx(:,clusters==2),2);
-                if mean(S1(1:3))>mean(S2(1:3))
-                    crossFreq=freqHz(find(S2-S1>=0,1,'first'))
+                if b == nBatches
+                    thisData = data(tOn_samp(b):samples);
                 else
-                    crossFreq=freqHz(find(S1-S2>=0,1,'first'))
-                end
-            else
-                crossFreq=[];order=[];clusters=[];
-            end
-            
-            plotDendrogram =1;
-            
-            if plotDendrogram
-                maxDendroClusters=2;
-                
-                if cLim==0
-                    cLim=[];
+                    thisData = data(tOn_samp(b):tOn_samp(b)+batchDuration_samp);
                 end
                 
-                if hDendro==0
-                    hDendro=[];
+                [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                
+                thisSegData = V_uV_data_full(:,:,:);
+                
+                
+                %[DataSeg_F, t_DS] = fobj.filt.F.getFilteredData(thisSegData); % t_DS is in ms
+                
+                %t_DS_s = t_DS/1000;
+                
+                
+                FMLong=fobj.filt.F.getFilteredData(thisSegData );
+                
+                %calculate initial parameters
+                segmentSamples = round(segmentLength*fobj.filt.FFs);
+                samplesOL = round(segmentSamples*WelchOL);
+                samplesBin = round(binDuration*fobj.filt.FFs);
+                
+                nBins=floor(numel(FMLong)/samplesBin);
+                
+                if (numel(FMLong)/samplesBin)~=round(numel(FMLong)/samplesBin)
+                    nBins=nBins-1;
+                    FMLong=FMLong(1:(samplesBin*nBins));
+                    disp('Last bin in recording not included due to a missmatch between recording duration and binDuration');
+                end
+                
+                FMLongB=reshape(FMLong,[samplesBin,nBins]);
+                
+                [pxx,f] = pwelch(FMLongB,segmentSamples,samplesOL,dftPoints,fobj.filt.FFs);
+                %
+                %figure(100); clf
+                %plot(mean(10*log10(pxx)))
+                p=find(f<fMax);
+                pp=find(sum(pxx(p,:))<0.4e6);
+                
+                sPxx=pxx(p,pp);
+                freqHz=f(p);
+                normsPxx=bsxfun(@rdivide,sPxx,mean(sPxx,2));
+                corrMat=corrcoef(normsPxx);
+                
+                if maxDendroClusters==2
+                    
+                    [DC,order,clusters]=DendrogramMatrix(corrMat,'linkMetric','euclidean','linkMethod','ward','maxClusters',maxDendroClusters);
+                    
+                    S1=mean(normsPxx(:,clusters==1),2);
+                    S2=mean(normsPxx(:,clusters==2),2);
+                    if mean(S1(1:3))>mean(S2(1:3))
+                        crossFreq=freqHz(find(S2-S1>=0,1,'first'))
+                    else
+                        crossFreq=freqHz(find(S1-S2>=0,1,'first'))
+                    end
                 else
-                    savePlots=[];
+                    crossFreq=[];order=[];clusters=[];
                 end
                 
-                figh3 = figure(100); clf
+                plotDendrogram =1;
+                crossFreq
+                if plotDendrogram
+                    maxDendroClusters=2;
+                    
+                    if cLim==0
+                        cLim=[];
+                    end
+                    
+                    if hDendro==0
+                        hDendro=[];
+                    else
+                        savePlots=[];
+                    end
+                    
+                    %figh3 = figure(100+b); clf
+                    
+                    [DC,order,clusters,h]=DendrogramMatrix(corrMat,'linkMetric','euclidean','linkMethod','ward','maxClusters',maxDendroClusters,...
+                        'toPlotBinaryTree',1,'cLim',cLim,'hDendro',hDendro,'plotOrderLabels',0);
+                    %h(3).Position=[0.9149    0.7595    0.0137    0.1667];
+                    ylabel(h(3),'Corr.');
+                    xlabel(h(2),'Segment');
+                    xlabel(h(1),'Distance');
+                    title(obj.Plotting.titleTxt)
+                    %%
+                    
+                    saveName = [PlotDir obj.Plotting.saveTxt '_FreqBandDetection_' sprintf('%02d',b)];
+                    
+                    plotpos = [0 0 25 15];
+                    print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                    %print_in_A4(0, saveName, '-depsc', 0, plotpos);
+                end
                 
-                [DC,order,clusters,h]=DendrogramMatrix(corrMat,'linkMetric','euclidean','linkMethod','ward','maxClusters',maxDendroClusters,...
-                    'toPlotBinaryTree',1,'cLim',cLim,'hDendro',hDendro,'plotOrderLabels',0);
-                %h(3).Position=[0.9149    0.7595    0.0137    0.1667];
-                ylabel(h(3),'Corr.');
-                xlabel(h(2),'Segment');
-                xlabel(h(1),'Distance');
-                title(obj.Plotting.titleTxt)
-                %%
-                
-                saveName = [PlotDir obj.Plotting.saveTxt '_FreqBandDetection'];
-                
-                plotpos = [0 0 25 15];
-                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-                %print_in_A4(0, saveName, '-depsc', 0, plotpos);
             end
             
         end
         
         
-        function [obj] = plotDBRatio(obj)
+        function [obj] = plotDBRatioWithData(obj)
             
             
             chanToUse = obj.REC.bestChs(1);
-            SessionDir = obj.Session.SessionDir;
-            obj.Session.SessionDir;
+            SessionDir = obj.DIR.ephysDir;
+            %obj.Session.SessionDir;
             
-            eval(['fileAppend = ''100_CH' num2str(chanToUse) '.continuous'';'])
+            eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
             fileName = [SessionDir fileAppend];
             
             [data, timestamps, info] = load_open_ephys_data(fileName);
             thisSegData_s = timestamps(1:end) - timestamps(1);
             Fs = info.header.sampleRate;
             
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
-            PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
+            totalTime = obj.Session.recordingDur_s;
+            samples = obj.Session.samples;
+            %totalTime = thisSegData_s(end);
+            %batchDuration_s = 1*60*60; % 1 hr
+            batchDuration_s = 180; % 1 hr
+            batchDuration_samp = batchDuration_s*Fs;
+            
+            tOn_s = 1:batchDuration_s:totalTime;
+            tOn_samp = tOn_s*Fs;
+            nBatches = numel(tOn_samp);
+            
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
+           
+            
+            %% Filters
+            
+            fObj = filterData(Fs);
+            
+            fobj.filt.F=filterData(Fs);
+            fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
+            fobj.filt.F=fobj.filt.F.designDownSample;
+            fobj.filt.F.padding=true;
+            fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
+            
+            %fobj.filt.FL=filterData(Fs);
+            %fobj.filt.FL.lowPassPassCutoff=4.5;
+            %fobj.filt.FL.lowPassStopCutoff=6;
+            %fobj.filt.FL.attenuationInLowpass=20;
+            %fobj.filt.FL=fobj.filt.FL.designLowPass;
+            %fobj.filt.FL.padding=true;
+            
+            fobj.filt.FL=filterData(Fs);
+            fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.FL.lowPassStopCutoff=40;
+            fobj.filt.FL.attenuationInLowpass=20;
+            fobj.filt.FL=fobj.filt.FL.designLowPass;
+            fobj.filt.FL.padding=true;
+            
+            fobj.filt.FH2=filterData(Fs);
+            fobj.filt.FH2.highPassCutoff=100;
+            fobj.filt.FH2.lowPassCutoff=2000;
+            fobj.filt.FH2.filterDesign='butter';
+            fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+            fobj.filt.FH2.padding=true;
+            
+            fobj.filt.FN =filterData(Fs);
+            fobj.filt.FN.filterDesign='cheby1';
+            fobj.filt.FN.padding=true;
+            fobj.filt.FN=fobj.filt.FN.designNotch;
+            
+            %% Raw Data
+            
+           
+            
+            %% Get Filtered Data
+            
+            %DataSeg_FN = fobj.filt.FN.getFilteredData(thisSegData);
+            %DataSeg_FL = fobj.filt.FL.getFilteredData(thisSegData);
+            %DataSeg_FH2 = fobj.filt.FH2.getFilteredData(thisSegData);
+            
+            for b = 1:nBatches
+                
+                if b == nBatches
+                thisData = data(tOn_samp(b):samples);
+                else
+                thisData = data(tOn_samp(b):tOn_samp(b)+batchDuration_samp);
+                end
+                
+                [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                
+                thisSegData = V_uV_data_full(:,:,:);
+                
+                
+                [DataSeg_F, t_DS] = fobj.filt.F.getFilteredData(thisSegData); % t_DS is in ms
+                
+                t_DS_s = t_DS/1000;
+                
+                
+                %%
+                
+                %% Raw Data  - Parameters from data=getDelta2BetaRatio(obj,varargin)
+                
+                % This is all in ms
+                %             addParameter(parseObj,'movLongWin',1000*60*30,@isnumeric); %max freq. to examine
+                %             addParameter(parseObj,'movWin',10000,@isnumeric);
+                %             addParameter(parseObj,'movOLWin',9000,@isnumeric);
+                %             addParameter(parseObj,'segmentWelch',1000,@isnumeric);
+                %             addParameter(parseObj,'dftPointsWelch',2^10,@isnumeric);
+                %             addParameter(parseObj,'OLWelch',0.5);
+                %
+                reductionFactor = .5; % No reduction
+                
+                movWin_Var = 10*reductionFactor; % 10 s
+                movOLWin_Var = 9*reductionFactor; % 9 s
+                
+                segmentWelch = 1*reductionFactor;
+                OLWelch = 0.5*reductionFactor;
+                
+                dftPointsWelch =  2^10;
+                
+                segmentWelchSamples = round(segmentWelch*fobj.filt.FFs);
+                samplesOLWelch = round(segmentWelchSamples*OLWelch);
+                
+                movWinSamples=round(movWin_Var*fobj.filt.FFs);%obj.filt.FFs in Hz, movWin in samples
+                movOLWinSamples=round(movOLWin_Var*fobj.filt.FFs);
+                
+                % run welch once to get frequencies for every bin (f) determine frequency bands
+                [~,f] = pwelch(randn(1,movWinSamples),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
+                
+                deltaBandCutoff = 7;
+                %betaBandLowCutoff = 15;
+                %betaBandHighCutoff = 40;
+                %betaBandLowCutoff = 25;
+                %betaBandHighCutoff = 80;
+                
+                alphaThetaBandLowCutoff  = 8;
+                alphaThetaBandHighCutoff  = 14;
+                
+                betaBandLowCutoff = 15;
+                betaBandHighCutoff = 45;
+                
+                
+                pfLowBand=find(f<=deltaBandCutoff);
+                pfHighBand=find(f>=betaBandLowCutoff & f<betaBandHighCutoff);
+                pfHighBand_alpha=find(f>=alphaThetaBandLowCutoff & f<alphaThetaBandHighCutoff);
+                
+                %%
+                tmp_V_DS = buffer(DataSeg_F,movWinSamples,movOLWinSamples,'nodelay');
+                pValid=all(~isnan(tmp_V_DS));
+                
+                [pxx,f] = pwelch(tmp_V_DS(:,pValid),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
+                
+                % Ratios
+                deltaBetaRatioAll=zeros(1,numel(pValid));
+                deltaBetaRatioAll(pValid)=(mean(pxx(pfLowBand,:))./mean(pxx(pfHighBand,:)))';
+                
+                deltaAlphRatioAll = zeros(1,numel(pValid));
+                deltaAlphRatioAll(pValid)=(mean(pxx(pfLowBand,:))./mean(pxx(pfHighBand_alpha,:)))';
+                 
+                % single elements
+                deltaAll=zeros(1,numel(pValid));
+                deltaAll(pValid)=mean(pxx(pfLowBand,:))';
+                
+                betaAll=zeros(1,numel(pValid));
+                betaAll(pValid)=mean(pxx(pfHighBand,:))';
+                
+                alphAll=zeros(1,numel(pValid));
+                alphaAll(pValid)=mean(pxx(pfHighBand_alpha,:))';
+                
+                % Pool all data ratios
+                bufferedDeltaBetaRatio=deltaBetaRatioAll;
+                bufferedDelta=deltaAll;
+                bufferedBeta=betaAll;
+                allV_DS = squeeze(DataSeg_F);
+                
+                
+%                 bufferedDeltaBetaRatio(i,:)=deltaBetaRatioAll;
+%                 bufferedDeltaGammaRatio(i,:)=deltaGammaRatioAll;
+%                 
+%                 bufferedDelta(i,:)=deltaAll;
+%                 bufferedBeta(i,:)=betaAll;
+%                 bufferedGamma(i,:)=gammaAll;
+%                 
+%                 allV_BP_DS{i} = squeeze(tmp_V_BP_DS);
+%                 allV_BP_DS{i} = squeeze(tmpV);
+                
+                
+                %%
+                sizestr = ['movWin =' num2str(movWin_Var) 's; movOLWin = ' num2str(movOLWin_Var) ' s'];
+                Betacolor = [150 50 0]/255;
+                Deltacolor = [0 50 150]/255;
+                Alphacolor = [0 150 150]/255;
+                
+                betaAll_norm = betaAll./(max(betaAll));
+                deltaAll_norm = deltaAll./(max(deltaAll));
+                alphaAll_norm = alphaAll./(max(alphaAll));
+                
+                figh3 = figure(300); clf
+                subplot(3, 1, 1)
+                plot(smooth(betaAll_norm), 'color', Betacolor, 'linewidth', 1)
+                hold on
+                plot(smooth(deltaAll_norm), 'color', Deltacolor, 'linewidth', 1)
+                plot(smooth(alphaAll_norm), 'color', Alphacolor, 'linewidth', 1)
+                
+                axis tight
+                %ylim([0 10000])
+                %set(gca, 'xtick', [])
+                legTxt = [{['Beta: ' num2str(betaBandLowCutoff) '-' num2str(betaBandHighCutoff) ' Hz']} , {['Delta: < ' num2str(deltaBandCutoff) ' Hz']}, {['AlphaTheta: ' num2str(alphaThetaBandLowCutoff) '-' num2str(alphaThetaBandHighCutoff) ' Hz']} ];
+                legend(legTxt)
+                %xlim([0 2500])
+                
+                subplot(3, 1, 2)
+                plot(t_DS_s, squeeze(DataSeg_F), 'k')
+                axis tight
+                title('V_BP_DS')
+                xlabel('Time [s]')
+                axis tight
+                ylim([-4000 4000])
+                %xlim([0 125000])
+                
+                deltaBetaRatioAll_norm = deltaBetaRatioAll./(max(max(deltaBetaRatioAll)));
+                deltaalphaRatioAll_norm = deltaAlphRatioAll./(max(max(deltaAlphRatioAll)));
+                subplot(3, 1, 3)
+                axis tight
+                hold on
+                plot(smooth(deltaBetaRatioAll_norm, 5), 'linewidth', 1)
+                hold on
+                plot(smooth(deltaalphaRatioAll_norm, 5), 'linewidth', 1)
+                title(['Delta/Beta Ratio | ' sizestr ])
+                legTxt = [{'Delta/Beta Ratio'}, {'Delta/AlphaTheta Ratio'}];
+                legend(legTxt)
+              
+                
+                %set(gca, 'xtick', [])
+                axis tight
+               % xlim([0 2500])
+                %%
+                plotpos = [0 0 30 15];
+                PlotDir = [obj.DIR.plotDir];
+                
+                plot_filename = [PlotDir 'DB_Ratio_seg_' sprintf('%02d',b)];
+                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                
+                
+                
+                %%
+                
+                
+                  figh4 = figure(400); clf
+                subplot(2, 1, 1)
+                
+                plot(t_DS_s, squeeze(DataSeg_F), 'k')
+                axis tight
+                title('V_BP_DS')
+                xlabel('Time [s]')
+                axis tight
+                ylim([-4000 4000])
+                %xlim([0 125000])
+                
+                subplot(2, 1, 2)
+                 deltaBetaRatioAll_norm = deltaBetaRatioAll./(max(max(deltaBetaRatioAll)));
+                deltaalphaRatioAll_norm = deltaAlphRatioAll./(max(max(deltaAlphRatioAll)));
+                axis tight
+                hold on
+                %plot(smooth(deltaBetaRatioAll_norm, 5), 'linewidth', 1)
+                hold on
+                plot(smooth(deltaalphaRatioAll_norm, 5), 'linewidth', 1)
+                title(['Delta/Beta Ratio | ' sizestr ])
+                %legTxt = [{'Delta/Beta Ratio'}, {'Delta/AlphaTheta Ratio'}];
+                %legend(legTxt{2})
+                
+                
+                   plotpos = [0 0 30 15];
+                PlotDir = [obj.DIR.plotDir];
+                
+                plot_filename = [PlotDir 'DB_Ratio_seg_Large' sprintf('%02d',b)];
+                print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+                   print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                
+            end
+            
+        end
+        
+        function [obj] = plotDBRatioMatrix(obj)
+            
+            
+            chanToUse = obj.REC.bestChs(1);
+            SessionDir = obj.DIR.ephysDir;
+            
+            eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
+            fileName = [SessionDir fileAppend];
+            
+            [data, timestamps, info] = load_open_ephys_data(fileName);
+            thisSegData_s = timestamps(1:end) - timestamps(1);
+            Fs = info.header.sampleRate;
+            
+            
+            samples = size(data, 1);
+            recordingDuration_s  = samples/Fs;
+            totalTime = recordingDuration_s;
+            batchDuration_s = 1*60*30; % 30 min
+            batchDuration_samp = batchDuration_s*Fs;
+            
+            tOn_s = 1:batchDuration_s:totalTime;
+            tOn_samp = tOn_s*Fs;
+            nBatches = numel(tOn_samp);
+            
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             
             %% Filters
@@ -1621,7 +2435,6 @@ classdef avianSWRAnalysis_OBJ < handle
             fobj.filt.FL=fobj.filt.FL.designLowPass;
             fobj.filt.FL.padding=true;
             
-            
             fobj.filt.FH2=filterData(Fs);
             fobj.filt.FH2.highPassCutoff=100;
             fobj.filt.FH2.lowPassCutoff=2000;
@@ -1634,133 +2447,194 @@ classdef avianSWRAnalysis_OBJ < handle
             fobj.filt.FN.padding=true;
             fobj.filt.FN=fobj.filt.FN.designNotch;
             
-            %% Raw Data
-            
-            [V_uV_data_full,nshifts] = shiftdim(data',-1);
-            
-            thisSegData = V_uV_data_full(:,:,:);
-            
-            %% Get Filtered Data
-            
-            DataSeg_FN = fobj.filt.FN.getFilteredData(thisSegData);
-            DataSeg_FL = fobj.filt.FL.getFilteredData(thisSegData);
-            DataSeg_FH2 = fobj.filt.FH2.getFilteredData(thisSegData);
-            [DataSeg_F, t_DS] = fobj.filt.F.getFilteredData(thisSegData);
-            
-            bla = squeeze(DataSeg_F);
-            figure; plot(bla(1:1000));
-            
-            thisSegData_s = timestamps(1:end) - timestamps(1);
-            
             %%
+            for i = 1:nBatches-1
+                
+                if i == nBatches
+                    thisData = data(tOn_samp(i):samples);
+                else
+                    thisData = data(tOn_samp(i):tOn_samp(i)+batchDuration_samp);
+                end
+                
+                [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                thisSegData = V_uV_data_full(:,:,:);
+                
+                [DataSeg_F, t_DS] = fobj.filt.F.getFilteredData(thisSegData); % t_DS is in ms
+                t_DS_s = t_DS/1000;
+                
+                %% Raw Data  - Parameters from data=getDelta2BetaRatio(obj,varargin)
+                
+                % This is all in ms
+                %             addParameter(parseObj,'movLongWin',1000*60*30,@isnumeric); %max freq. to examine
+                %             addParameter(parseObj,'movWin',10000,@isnumeric);
+                %             addParameter(parseObj,'movOLWin',9000,@isnumeric);
+                %             addParameter(parseObj,'segmentWelch',1000,@isnumeric);
+                %             addParameter(parseObj,'dftPointsWelch',2^10,@isnumeric);
+                %             addParameter(parseObj,'OLWelch',0.5);
+                %
+                %reductionFactor = 0.5; % No reduction
+                reductionFactor = 1; % No reduction
+                
+                movWin_Var = 10*reductionFactor; % 10 s
+                movOLWin_Var = 9*reductionFactor; % 9 s
+                
+                segmentWelch = 1*reductionFactor;
+                OLWelch = 0.5*reductionFactor;
+                
+                dftPointsWelch =  2^10;
+                
+                segmentWelchSamples = round(segmentWelch*fobj.filt.FFs);
+                samplesOLWelch = round(segmentWelchSamples*OLWelch);
+                
+                movWinSamples=round(movWin_Var*fobj.filt.FFs);%obj.filt.FFs in Hz, movWin in samples
+                movOLWinSamples=round(movOLWin_Var*fobj.filt.FFs);
+                
+                % run welch once to get frequencies for every bin (f) determine frequency bands
+                [~,f] = pwelch(randn(1,movWinSamples),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
+                
+                deltaBandCutoff = 5;
+                
+                thetaBandLowCutoff = 4;
+                thetaBandHighCutoff = 8;
+                
+                alphaBandLowCutoff = 8;
+                alphaBandHighCutoff = 12;
+                
+                betaBandLowCutoff = 12;
+                betaBandHighCutoff = 30;
+                
+                gammaBandLowCutoff = 30;
+                gammaBandHighCutoff = 100;
+                
+                pfLowBand_delta=find(f<=deltaBandCutoff);
+                pfHighBand_theta=find(f>=thetaBandLowCutoff & f<thetaBandHighCutoff);
+                pfHighBand_alpha=find(f>=alphaBandLowCutoff & f<alphaBandHighCutoff);
+                pfHighBand_beta=find(f>=betaBandLowCutoff & f<betaBandHighCutoff);
+                pfHighBand_gamma=find(f>=gammaBandLowCutoff & f<gammaBandHighCutoff);
+                
+                %%
+                tmp_V_DS = buffer(DataSeg_F,movWinSamples,movOLWinSamples,'nodelay');
+                pValid=all(~isnan(tmp_V_DS));
+                
+                [pxx,f] = pwelch(tmp_V_DS(:,pValid),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
+                
+                %% Ratios
+                deltaBetaRatioAll=zeros(1,numel(pValid));
+                deltaBetaRatioAll(pValid)=(mean(pxx(pfLowBand_delta,:))./mean(pxx(pfHighBand_beta,:)))';
+                
+                deltaAlphRatioAll = zeros(1,numel(pValid));
+                deltaAlphRatioAll(pValid)=(mean(pxx(pfLowBand_delta,:))./mean(pxx(pfHighBand_alpha,:)))';
+                
+                deltaThetaRatioAll = zeros(1,numel(pValid));
+                deltaThetaRatioAll(pValid)=(mean(pxx(pfLowBand_delta,:))./mean(pxx(pfHighBand_theta,:)))';
+                
+                deltaGammaRatioAll = zeros(1,numel(pValid));
+                deltaGammaRatioAll(pValid)=(mean(pxx(pfLowBand_delta,:))./mean(pxx(pfHighBand_gamma,:)))';
+                
+                %% Single
+                deltaAll=zeros(1,numel(pValid));
+                deltaAll(pValid)=mean(pxx(pfLowBand_delta,:))';
+                
+                thetaAll=zeros(1,numel(pValid));
+                thetaAll(pValid)=mean(pxx(pfHighBand_theta,:))';
+                
+                alphaAll=zeros(1,numel(pValid));
+                alphaAll(pValid)=mean(pxx(pfHighBand_alpha,:))';
+                
+                betaAll=zeros(1,numel(pValid));
+                betaAll(pValid)=mean(pxx(pfHighBand_beta,:))';
+                
+                gammaAll=zeros(1,numel(pValid));
+                gammaAll(pValid)=mean(pxx(pfHighBand_gamma,:))';
+                
+                
+                %%
+                bufferedDeltaBetaRatio(i,:)=deltaBetaRatioAll;
+                bufferedDeltaAlphaRatio(i,:)=deltaAlphRatioAll;
+                bufferedDeltaThetaRatio(i,:)=deltaThetaRatioAll;
+                bufferedDeltaGammaRatio(i,:)=deltaGammaRatioAll;
+                
+                bufferedDelta(i,:)=deltaAll;
+                bufferedBeta(i,:)=betaAll;
+                bufferedTheta(i,:)=thetaAll;
+                bufferedGamma(i,:)=gammaAll;
+                bufferedAlpha(i,:)=alphaAll;
+                
+                allV_DS{i} = squeeze(tmp_V_DS);
+                
+            end
             
-            %% Raw Data  - Parameters from data=getDelta2BetaRatio(obj,varargin)
-            
-            % This is all in ms
-            %             addParameter(parseObj,'movLongWin',1000*60*30,@isnumeric); %max freq. to examine
-            %             addParameter(parseObj,'movWin',10000,@isnumeric);
-            %             addParameter(parseObj,'movOLWin',9000,@isnumeric);
-            %             addParameter(parseObj,'segmentWelch',1000,@isnumeric);
-            %             addParameter(parseObj,'dftPointsWelch',2^10,@isnumeric);
-            %             addParameter(parseObj,'OLWelch',0.5);
-            %
-            reductionFactor = .05; % No reduction
-            
-            movWin_Var = 10*reductionFactor; % 10 s
-            movOLWin_Var = 9*reductionFactor; % 9 s
-            
-            segmentWelch = 1*reductionFactor;
-            OLWelch = 0.5*reductionFactor;
-            
-            dftPointsWelch =  2^10;
-            %dftPointsWelch =  256;
-            
-            segmentWelchSamples = round(segmentWelch*fobj.filt.FFs);
-            samplesOLWelch = round(segmentWelchSamples*OLWelch);
-            
-            movWinSamples=round(movWin_Var*fobj.filt.FFs);%obj.filt.FFs in Hz, movWin in samples
-            movOLWinSamples=round(movOLWin_Var*fobj.filt.FFs);
-            
-            % run welch once to get frequencies for every bin (f) determine frequency bands
-            [~,f] = pwelch(randn(1,movWinSamples),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
-            
-            deltaBandCutoff = 4;
-            %betaBandLowCutoff = 15;
-            %betaBandHighCutoff = 40;
-            %betaBandLowCutoff = 25;
-            %betaBandHighCutoff = 80;
-            
-            betaBandLowCutoff = 7;
-            betaBandHighCutoff = 10;
-            
-            
-            pfLowBand=find(f<=deltaBandCutoff);
-            pfHighBand=find(f>=betaBandLowCutoff & f<betaBandHighCutoff);
-            
-            %%
-            tmp_V_DS = buffer(DataSeg_F,movWinSamples,movOLWinSamples,'nodelay');
-            pValid=all(~isnan(tmp_V_DS));
-            
-            [pxx,f] = pwelch(tmp_V_DS(:,pValid),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
-            
-            % Ratios
-            deltaBetaRatioAll=zeros(1,numel(pValid));
-            deltaBetaRatioAll(pValid)=(mean(pxx(pfLowBand,:))./mean(pxx(pfHighBand,:)))';
-            
-            % single elements
-            deltaAll=zeros(1,numel(pValid));
-            deltaAll(pValid)=mean(pxx(pfLowBand,:))';
-            
-            betaAll=zeros(1,numel(pValid));
-            betaAll(pValid)=mean(pxx(pfHighBand,:))';
-            
-            % Pool all data ratios
-            bufferedDeltaBetaRatio=deltaBetaRatioAll;
-            bufferedDelta=deltaAll;
-            bufferedBeta=betaAll;
-            allV_DS = squeeze(DataSeg_F);
-            
-            %%
-            sizestr = ['movWin =' num2str(movWin_Var) 's; movOLWin = ' num2str(movOLWin_Var) ' s'];
-            Betacolor = [150 50 0]/255;
-            Deltacolor = [0 50 150]/255;
-            
-            figh3 = figure(300); clf
-            subplot(3, 1, 1)
-            plot(betaAll*100, 'color', Betacolor, 'linewidth', 1)
-            hold on
-            plot(deltaAll, 'color', Deltacolor, 'linewidth', 1)
-            axis tight
-            %ylim([0 10000])
-           %set(gca, 'xtick', [])
-            legTxt = [{['Beta: ' num2str(betaBandLowCutoff) '-' num2str(betaBandHighCutoff) ' Hz']} , {['Delta: < ' num2str(deltaBandCutoff) ' Hz']} ];
-            legend(legTxt)
-            xlim([0 2500])
-            
-            subplot(3, 1, 2)
-            plot(t_DS, squeeze(DataSeg_F), 'k')
-            axis tight
-            title('V_BP_DS')
-            xlabel('Time [s]')
-            axis tight
-            xlim([0 125000])
-            
-            deltaBetaRatioAll_norm = deltaBetaRatioAll./(max(max(deltaBetaRatioAll)));
-            subplot(3, 1, 3)
-            axis tight
-            hold on
-            plot(smooth(deltaBetaRatioAll_norm, 5), 'linewidth', 1)
-            title(['Delta/Beta Ratio | ' sizestr ])
-            %set(gca, 'xtick', [])
-            axis tight
-            xlim([0 2500])
-            %%
-            plotpos = [0 0 20 30];
-            PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
-            
-            plot_filename = [PlotDir 'DB_Ratio'];
-            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-            
+            for o = 1:4
+                
+                switch o
+                    
+                    case 1
+                        dataToPlot  = bufferedDeltaThetaRatio;
+                        dbScale = 250;
+                        titletxt = 'Delta/Theta Ratio';
+                        savenametxt = 'DeltaTheta';
+                        
+                    case 2
+                        dataToPlot  = bufferedDeltaAlphaRatio;
+                        dbScale = 500;
+                        titletxt = 'Delta/Alpha Ratio';
+                        savenametxt = 'DeltaAlpha';
+                        
+                    case 3
+                        dataToPlot  = bufferedDeltaBetaRatio;
+                        dbScale = 5000;
+                        titletxt = 'Delta/Beta Ratio';
+                        savenametxt = 'DeltaBeta';
+                        
+                    case 4
+                        dataToPlot  = bufferedDeltaGammaRatio;
+                        dbScale = 50000;
+                        titletxt = 'Delta/Gamma Ratio';
+                        savenametxt = 'DeltaGamma';
+                end
+                
+                %%
+                fig500 = figure(500);clf
+                
+                imagesc(dataToPlot, [0 dbScale])
+                
+                if batchDuration_s == 1800
+                    %xtics = get(gca, 'xtick');
+                    xticks_s = 0:5*60:30*60;
+                    xticks_min = xticks_s/60;
+                    
+                    xticklabs = xticks_min;
+                    
+                    ytics = get(gca, 'ytick');
+                    ytics_Hr = ytics/2;
+                    
+                end
+                xlabs = [];
+                for j = 1:numel(xticklabs)
+                    xlabs{j} = num2str(xticklabs(j));
+                end
+                
+                ytics_Hr_round = [];
+                for j = 1:numel(ytics_Hr)
+                    %ytics_Hr_round{j} = num2str(round(ytics_Hr(j)));
+                    ytics_Hr_round{j} = num2str(ytics_Hr(j));
+                end
+                
+                set(gca, 'xtick', xticks_s)
+                set(gca, 'xticklabel', xlabs)
+                set(gca, 'yticklabel', ytics_Hr_round)
+                
+                xlabel('Time [min]')
+                ylabel('Time [Hr]')
+                title([obj.Session.time ' | ' titletxt])
+                
+                %%
+                plotpos = [0 0 20 15];
+                PlotDir = [obj.DIR.plotDir];
+                
+                plot_filename = [PlotDir 'DBMatrix_' savenametxt];
+                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+            end
             
         end
         
@@ -1775,53 +2649,53 @@ classdef avianSWRAnalysis_OBJ < handle
             
             disp('Getting session info...')
             
-            [avianSWR_DB] = avian_SWR_database(); % This is the database
+            [FrogDB] = frogDatabase(); % This is the database
             
             obj.HOST = gethostname;
-            obj.INFO = avianSWR_DB(rfc).INFO;
-            obj.Session = avianSWR_DB(rfc).Session;
-            obj.DIR = avianSWR_DB(rfc).DIR;
-            obj.REC = avianSWR_DB(rfc).REC;
-            obj.Plotting = avianSWR_DB(rfc).Plotting;
-            
+            obj.INFO = FrogDB(rfc).INFO;
+            obj.Session = FrogDB(rfc).Session;
+            obj.DIR = FrogDB(rfc).DIR;
+            obj.REC = FrogDB(rfc).REC;
+            obj.Plotting = FrogDB(rfc).Plotting;
+            obj.Vid = FrogDB(rfc).Vid;
             
         end
         
         function [obj] = findSessionDir(obj)
             
-            birdDir=[obj.DIR.dataDir obj.INFO.birdName obj.DIR.dirD];
+            %baseDir=[obj.DIR.base];
             
-            FileSearch=obj.Session.time;
+            %FileSearch=obj.Session.time;
             %allDataFiles = dir(fullfile(dataDir,textSearch));
             
-            allDataDirs=dir([birdDir 'Ephys' obj.DIR.dirD]);
-            if isempty(allDataDirs)
-                disp('Did not find any directory, check the file path...')
-                keyboard
-            end
+            %allDataDirs=dir([birdDir 'Ephys' obj.DIR.dirD]);
+            %if isempty(allDataDirs)
+            %    disp('Did not find any directory, check the file path...')
+            %    keyboard
+            %end
             
-            nDataDirs=numel(allDataDirs);
-            for j = 1:nDataDirs
-                dirName=allDataDirs(j).name;
-                %match = strcmpi(dirName, FileSearch);
-                match=strfind(dirName, FileSearch);
-                if match
-                    SessionDir=[birdDir 'Ephys' obj.DIR.dirD dirName obj.DIR.dirD];
-                    disp(['Search: ' FileSearch ' matches ' dirName ])
-                    break
-                end
-            end
+            %             nDataDirs=numel(allDataDirs);
+            %             for j = 1:nDataDirs
+            %                 dirName=allDataDirs(j).name;
+            %                 %match = strcmpi(dirName, FileSearch);
+            %                 match=strfind(dirName, FileSearch);
+            %                 if match
+            %                     SessionDir=[birdDir 'Ephys' obj.DIR.dirD dirName obj.DIR.dirD];
+            %                     disp(['Search: ' FileSearch ' matches ' dirName ])
+            %                     break
+            %                 end
+            %             end
             
-            obj.Session.SessionDir = SessionDir;
-            obj.DIR.birdDir = birdDir;
-            obj.DIR.dirName = dirName;
+            %obj.Session.SessionDir = obj.DIR.base;
+            %obj.DIR.birdDir = birdDir;
+            %obj.DIR.dirName = dirName;
         end
         
     end
     
     methods (Hidden)
         %class constructor
-        function obj = avianSWRAnalysis_OBJ(rfc)
+        function obj = frogSleepAnalysis_OBJ(rfc)
             
             obj = getSessionInfo(obj, rfc);
             obj = findSessionDir(obj);

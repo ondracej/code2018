@@ -15,8 +15,8 @@ ops.chanMap             = 'C:\Users\Administrator\Documents\code\GitHub\code2018
 %ops.fbinary             = fullfile(ops.root, '2019-04-29_15-01-45'); % will be created for 'openEphys'		
 
 %% Works - ZF-60-88 | 15-02-55
-%ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-02-55'; % 'openEphys' only: where raw files are		
-%ops.fbinary             = fullfile(ops.root, '2019-04-29_15-02-55'); % will be created for 'openEphys'		
+ops.root                = 'F:\TUM\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-02-55'; % 'openEphys' only: where raw files are		
+ops.fbinary             = fullfile(ops.root, '2019-04-29_15-02-55'); % will be created for 'openEphys'		
 
 
 %%

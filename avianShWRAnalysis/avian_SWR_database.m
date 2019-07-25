@@ -4153,12 +4153,12 @@ avianSWR_DB(rfc).Plotting.hpOffset = 40;
 avianSWR_DB(rfc).Plotting.hpYlim = [-avianSWR_DB(rfc).Plotting.hpOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.hpOffset];
 
 rfc = rfc+1;
-
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ZF-70-86
 %% 2 LFP, 4 EEG
 %% (83) ZF-70-86 | 23.05.2019 - 21-37-05
 
-avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86 ';
+avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86';
 avianSWR_DB(rfc).INFO.birdID  = 9;
 avianSWR_DB(rfc).INFO.birdSex  = 'F';
 avianSWR_DB(rfc).INFO.birdDOB  = '';
@@ -4171,21 +4171,23 @@ avianSWR_DB(rfc).INFO.electrodeName  = 'Self-Made, Tungsten EEG';
 avianSWR_DB(rfc).INFO.brainAreaN  = 1; % DVR
 avianSWR_DB(rfc).INFO.brainAreaName  = 'DVR, Cortex';
 
+avianSWR_DB(rfc).Session.sampleRate = 30000;
+avianSWR_DB(rfc).Session.samples  = 5446656;
+avianSWR_DB(rfc).Session.recordingDur_s  = avianSWR_DB(rfc).Session.samples/avianSWR_DB(rfc).Session.sampleRate;
+avianSWR_DB(rfc).Session.recordingDur_hr  = avianSWR_DB(rfc).Session.recordingDur_s/3600;
 avianSWR_DB(rfc).Session.Date  = '23.05.2019';
 avianSWR_DB(rfc).Session.time  = '21-37-05';
 avianSWR_DB(rfc).Session.RecStartTime  = '21:37:05';
 avianSWR_DB(rfc).Session.RecStopTime  = '';
 avianSWR_DB(rfc).Session.coords_DV  = 2000; %??
-avianSWR_DB(rfc).Session.comments  = '';
+avianSWR_DB(rfc).Session.comments  = 'Acute';
 avianSWR_DB(rfc).Session.n = rfc;
 
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
-avianSWR_DB(rfc).DIR.base = '';
-avianSWR_DB(rfc).DIR.ephys = [avianSWR_DB(rfc).DIR.base   'ephys' dirD];
-avianSWR_DB(rfc).DIR.videoDir  = [avianSWR_DB(rfc).DIR.base   'videos' dirD];
-avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base   'plots' dirD];
+avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [];
+avianSWR_DB(rfc).REC.allChs  = [8 10 2 12 4 6 14 5 4]; %8, 10 LFP; 2, 12, 4, 6, 14, 5 RRG; 4 EMG
+avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
@@ -4195,16 +4197,18 @@ avianSWR_DB(rfc).REC.csc_EOG  = []';
 avianSWR_DB(rfc).REC.hasEKG  = 0;
 avianSWR_DB(rfc).REC.cscEKG  = 0;
 
-avianSWR_DB(rfc).Plotting.range = 500;
-avianSWR_DB(rfc).Plotting.rawOffset = 500;
-avianSWR_DB(rfc).Plotting.hpOffset = 500;
-avianSWR_DB(rfc).Plotting.hpRectOffset = 500;
+avianSWR_DB(rfc).Plotting.rawOffset = 600;
+avianSWR_DB(rfc).Plotting.rawYlim = [-avianSWR_DB(rfc).Plotting.rawOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.rawOffset];
+avianSWR_DB(rfc).Plotting.hpRectOffset = 60;
+avianSWR_DB(rfc).Plotting.hpRectYlim = [0 1000];
+avianSWR_DB(rfc).Plotting.hpOffset = 150;
+avianSWR_DB(rfc).Plotting.hpYlim = [-avianSWR_DB(rfc).Plotting.hpOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.hpOffset];
 
 rfc = rfc+1;
 
-%% (77) ZF-70-86 | 23.05.2019 - 21-54-18 - short
+%% (84) ZF-70-86 | 23.05.2019 - 21-54-18 - short
 
-avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86 ';
+avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86';
 avianSWR_DB(rfc).INFO.birdID  = 9;
 avianSWR_DB(rfc).INFO.birdSex  = 'F';
 avianSWR_DB(rfc).INFO.birdDOB  = '';
@@ -4217,6 +4221,10 @@ avianSWR_DB(rfc).INFO.electrodeName  = 'Self-Made, Tungsten EEG';
 avianSWR_DB(rfc).INFO.brainAreaN  = 1; % DVR
 avianSWR_DB(rfc).INFO.brainAreaName  = 'DVR, Cortex';
 
+avianSWR_DB(rfc).Session.sampleRate = 30000;
+avianSWR_DB(rfc).Session.samples  = 166912;
+avianSWR_DB(rfc).Session.recordingDur_s  = avianSWR_DB(rfc).Session.samples/avianSWR_DB(rfc).Session.sampleRate;
+avianSWR_DB(rfc).Session.recordingDur_hr  = avianSWR_DB(rfc).Session.recordingDur_s/3600;
 avianSWR_DB(rfc).Session.Date  = '23.05.2019';
 avianSWR_DB(rfc).Session.time  = '21-54-18';
 avianSWR_DB(rfc).Session.RecStartTime  = '21:54:18';
@@ -4226,12 +4234,10 @@ avianSWR_DB(rfc).Session.comments  = '';
 avianSWR_DB(rfc).Session.n = rfc;
 
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
-avianSWR_DB(rfc).DIR.base = '';
-avianSWR_DB(rfc).DIR.ephys = [avianSWR_DB(rfc).DIR.base   'ephys' dirD];
-avianSWR_DB(rfc).DIR.videoDir  = [avianSWR_DB(rfc).DIR.base   'videos' dirD];
-avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base   'plots' dirD];
+avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [];
+avianSWR_DB(rfc).REC.allChs  = [8 10 2 12 4 6 14 5 4]; %8, 10 LFP; 2, 12, 4, 6, 14, 5 RRG; 4 EMG
+avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
@@ -4241,16 +4247,17 @@ avianSWR_DB(rfc).REC.csc_EOG  = []';
 avianSWR_DB(rfc).REC.hasEKG  = 0;
 avianSWR_DB(rfc).REC.cscEKG  = 0;
 
-avianSWR_DB(rfc).Plotting.range = 500;
-avianSWR_DB(rfc).Plotting.rawOffset = 500;
-avianSWR_DB(rfc).Plotting.hpOffset = 500;
-avianSWR_DB(rfc).Plotting.hpRectOffset = 500;
-
+avianSWR_DB(rfc).Plotting.rawOffset = 600;
+avianSWR_DB(rfc).Plotting.rawYlim = [-avianSWR_DB(rfc).Plotting.rawOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.rawOffset];
+avianSWR_DB(rfc).Plotting.hpRectOffset = 60;
+avianSWR_DB(rfc).Plotting.hpRectYlim = [0 1000];
+avianSWR_DB(rfc).Plotting.hpOffset = 150;
+avianSWR_DB(rfc).Plotting.hpYlim = [-avianSWR_DB(rfc).Plotting.hpOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.hpOffset];
 rfc = rfc+1;
 
-%% (77) ZF-70-86 | 23.05.2019 - 21-55-43 - short
+%% (85) ZF-70-86 | 23.05.2019 - 21-55-43 - short
 
-avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86 ';
+avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86';
 avianSWR_DB(rfc).INFO.birdID  = 9;
 avianSWR_DB(rfc).INFO.birdSex  = 'F';
 avianSWR_DB(rfc).INFO.birdDOB  = '';
@@ -4263,6 +4270,10 @@ avianSWR_DB(rfc).INFO.electrodeName  = 'Self-Made, Tungsten EEG';
 avianSWR_DB(rfc).INFO.brainAreaN  = 1; % DVR
 avianSWR_DB(rfc).INFO.brainAreaName  = 'DVR, Cortex';
 
+avianSWR_DB(rfc).Session.sampleRate = 30000;
+avianSWR_DB(rfc).Session.samples  = 270336;
+avianSWR_DB(rfc).Session.recordingDur_s  = avianSWR_DB(rfc).Session.samples/avianSWR_DB(rfc).Session.sampleRate;
+avianSWR_DB(rfc).Session.recordingDur_hr  = avianSWR_DB(rfc).Session.recordingDur_s/3600;
 avianSWR_DB(rfc).Session.Date  = '23.05.2019';
 avianSWR_DB(rfc).Session.time  = '21-55-43';
 avianSWR_DB(rfc).Session.RecStartTime  = '21:55:43';
@@ -4272,12 +4283,10 @@ avianSWR_DB(rfc).Session.comments  = '';
 avianSWR_DB(rfc).Session.n = rfc;
 
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
-avianSWR_DB(rfc).DIR.base = '';
-avianSWR_DB(rfc).DIR.ephys = [avianSWR_DB(rfc).DIR.base   'ephys' dirD];
-avianSWR_DB(rfc).DIR.videoDir  = [avianSWR_DB(rfc).DIR.base   'videos' dirD];
-avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base   'plots' dirD];
+avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [];
+avianSWR_DB(rfc).REC.allChs  = [8 10 2 12 4 6 14 5 4]; %8, 10 LFP; 2, 12, 4, 6, 14, 5 RRG; 4 EMG
+avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
@@ -4287,17 +4296,19 @@ avianSWR_DB(rfc).REC.csc_EOG  = []';
 avianSWR_DB(rfc).REC.hasEKG  = 0;
 avianSWR_DB(rfc).REC.cscEKG  = 0;
 
-avianSWR_DB(rfc).Plotting.range = 500;
-avianSWR_DB(rfc).Plotting.rawOffset = 500;
-avianSWR_DB(rfc).Plotting.hpOffset = 500;
-avianSWR_DB(rfc).Plotting.hpRectOffset = 500;
+avianSWR_DB(rfc).Plotting.rawOffset = 600;
+avianSWR_DB(rfc).Plotting.rawYlim = [-avianSWR_DB(rfc).Plotting.rawOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.rawOffset];
+avianSWR_DB(rfc).Plotting.hpRectOffset = 60;
+avianSWR_DB(rfc).Plotting.hpRectYlim = [0 1000];
+avianSWR_DB(rfc).Plotting.hpOffset = 150;
+avianSWR_DB(rfc).Plotting.hpYlim = [-avianSWR_DB(rfc).Plotting.hpOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.hpOffset];
 
 rfc = rfc+1;
 
 
-%% (78) ZF-70-86 | 23.05.2019 - 21-56-18 - short
+%% (86) ZF-70-86 | 23.05.2019 - 21-56-18 - short
 
-avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86 ';
+avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86';
 avianSWR_DB(rfc).INFO.birdID  = 9;
 avianSWR_DB(rfc).INFO.birdSex  = 'F';
 avianSWR_DB(rfc).INFO.birdDOB  = '';
@@ -4310,6 +4321,10 @@ avianSWR_DB(rfc).INFO.electrodeName  = 'Self-Made, Tungsten EEG';
 avianSWR_DB(rfc).INFO.brainAreaN  = 1; % DVR
 avianSWR_DB(rfc).INFO.brainAreaName  = 'DVR, Cortex';
 
+avianSWR_DB(rfc).Session.sampleRate = 30000;
+avianSWR_DB(rfc).Session.samples  = 210944;
+avianSWR_DB(rfc).Session.recordingDur_s  = avianSWR_DB(rfc).Session.samples/avianSWR_DB(rfc).Session.sampleRate;
+avianSWR_DB(rfc).Session.recordingDur_hr  = avianSWR_DB(rfc).Session.recordingDur_s/3600;
 avianSWR_DB(rfc).Session.Date  = '23.05.2019';
 avianSWR_DB(rfc).Session.time  = '21-56-18';
 avianSWR_DB(rfc).Session.RecStartTime  = '21:56:18';
@@ -4319,12 +4334,10 @@ avianSWR_DB(rfc).Session.comments  = '';
 avianSWR_DB(rfc).Session.n = rfc;
 
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
-avianSWR_DB(rfc).DIR.base = '';
-avianSWR_DB(rfc).DIR.ephys = [avianSWR_DB(rfc).DIR.base   'ephys' dirD];
-avianSWR_DB(rfc).DIR.videoDir  = [avianSWR_DB(rfc).DIR.base   'videos' dirD];
-avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base   'plots' dirD];
+avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [];
+avianSWR_DB(rfc).REC.allChs  = [8 10 2 12 4 6 14 5 4]; %8, 10 LFP; 2, 12, 4, 6, 14, 5 RRG; 4 EMG
+avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
@@ -4334,17 +4347,19 @@ avianSWR_DB(rfc).REC.csc_EOG  = []';
 avianSWR_DB(rfc).REC.hasEKG  = 0;
 avianSWR_DB(rfc).REC.cscEKG  = 0;
 
-avianSWR_DB(rfc).Plotting.range = 500;
-avianSWR_DB(rfc).Plotting.rawOffset = 500;
-avianSWR_DB(rfc).Plotting.hpOffset = 500;
-avianSWR_DB(rfc).Plotting.hpRectOffset = 500;
+avianSWR_DB(rfc).Plotting.rawOffset = 600;
+avianSWR_DB(rfc).Plotting.rawYlim = [-avianSWR_DB(rfc).Plotting.rawOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.rawOffset];
+avianSWR_DB(rfc).Plotting.hpRectOffset = 60;
+avianSWR_DB(rfc).Plotting.hpRectYlim = [0 1000];
+avianSWR_DB(rfc).Plotting.hpOffset = 150;
+avianSWR_DB(rfc).Plotting.hpYlim = [-avianSWR_DB(rfc).Plotting.hpOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.hpOffset];
 
 rfc = rfc+1;
 
 
-%% (78) ZF-70-86 | 23.05.2019 - 21-58-55
+%% (87) ZF-70-86 | 23.05.2019 - 21-58-55
 
-avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86 ';
+avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86';
 avianSWR_DB(rfc).INFO.birdID  = 9;
 avianSWR_DB(rfc).INFO.birdSex  = 'F';
 avianSWR_DB(rfc).INFO.birdDOB  = '';
@@ -4357,6 +4372,10 @@ avianSWR_DB(rfc).INFO.electrodeName  = 'Self-Made, Tungsten EEG';
 avianSWR_DB(rfc).INFO.brainAreaN  = 1; % DVR
 avianSWR_DB(rfc).INFO.brainAreaName  = 'DVR, Cortex';
 
+avianSWR_DB(rfc).Session.sampleRate = 30000;
+avianSWR_DB(rfc).Session.samples  = 17550336;
+avianSWR_DB(rfc).Session.recordingDur_s  = avianSWR_DB(rfc).Session.samples/avianSWR_DB(rfc).Session.sampleRate;
+avianSWR_DB(rfc).Session.recordingDur_hr  = avianSWR_DB(rfc).Session.recordingDur_s/3600;
 avianSWR_DB(rfc).Session.Date  = '23.05.2019';
 avianSWR_DB(rfc).Session.time  = '21-58-55';
 avianSWR_DB(rfc).Session.RecStartTime  = '21:58:55';
@@ -4366,12 +4385,10 @@ avianSWR_DB(rfc).Session.comments  = '';
 avianSWR_DB(rfc).Session.n = rfc;
 
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
-avianSWR_DB(rfc).DIR.base = '';
-avianSWR_DB(rfc).DIR.ephys = [avianSWR_DB(rfc).DIR.base   'ephys' dirD];
-avianSWR_DB(rfc).DIR.videoDir  = [avianSWR_DB(rfc).DIR.base   'videos' dirD];
-avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base   'plots' dirD];
+avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [];
+avianSWR_DB(rfc).REC.allChs  = [8 10 2 12 4 6 14 5 4]; %8, 10 LFP; 2, 12, 4, 6, 14, 5 RRG; 4 EMG
+avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
@@ -4381,16 +4398,18 @@ avianSWR_DB(rfc).REC.csc_EOG  = []';
 avianSWR_DB(rfc).REC.hasEKG  = 0;
 avianSWR_DB(rfc).REC.cscEKG  = 0;
 
-avianSWR_DB(rfc).Plotting.range = 500;
-avianSWR_DB(rfc).Plotting.rawOffset = 500;
-avianSWR_DB(rfc).Plotting.hpOffset = 500;
-avianSWR_DB(rfc).Plotting.hpRectOffset = 500;
+avianSWR_DB(rfc).Plotting.rawOffset = 600;
+avianSWR_DB(rfc).Plotting.rawYlim = [-avianSWR_DB(rfc).Plotting.rawOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.rawOffset];
+avianSWR_DB(rfc).Plotting.hpRectOffset = 60;
+avianSWR_DB(rfc).Plotting.hpRectYlim = [0 1000];
+avianSWR_DB(rfc).Plotting.hpOffset = 150;
+avianSWR_DB(rfc).Plotting.hpYlim = [-avianSWR_DB(rfc).Plotting.hpOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.hpOffset];
 
 rfc = rfc+1;
 
-%% (79) ZF-70-86 | 23.05.2019 - 23-06-05
+%% (88) ZF-70-86 | 23.05.2019 - 23-06-05
 
-avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86 ';
+avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86';
 avianSWR_DB(rfc).INFO.birdID  = 9;
 avianSWR_DB(rfc).INFO.birdSex  = 'F';
 avianSWR_DB(rfc).INFO.birdDOB  = '';
@@ -4403,6 +4422,10 @@ avianSWR_DB(rfc).INFO.electrodeName  = 'Self-Made, Tungsten EEG';
 avianSWR_DB(rfc).INFO.brainAreaN  = 1; % DVR
 avianSWR_DB(rfc).INFO.brainAreaName  = 'DVR, Cortex';
 
+avianSWR_DB(rfc).Session.sampleRate = 30000;
+avianSWR_DB(rfc).Session.samples  = 33253376;
+avianSWR_DB(rfc).Session.recordingDur_s  = avianSWR_DB(rfc).Session.samples/avianSWR_DB(rfc).Session.sampleRate;
+avianSWR_DB(rfc).Session.recordingDur_hr  = avianSWR_DB(rfc).Session.recordingDur_s/3600;
 avianSWR_DB(rfc).Session.Date  = '23.05.2019';
 avianSWR_DB(rfc).Session.time  = '23-06-05';
 avianSWR_DB(rfc).Session.RecStartTime  = '23:06:05';
@@ -4412,12 +4435,10 @@ avianSWR_DB(rfc).Session.comments  = '';
 avianSWR_DB(rfc).Session.n = rfc;
 
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
-avianSWR_DB(rfc).DIR.base = '';
-avianSWR_DB(rfc).DIR.ephys = [avianSWR_DB(rfc).DIR.base   'ephys' dirD];
-avianSWR_DB(rfc).DIR.videoDir  = [avianSWR_DB(rfc).DIR.base   'videos' dirD];
-avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base   'plots' dirD];
+avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [];
+avianSWR_DB(rfc).REC.allChs  = [8 10 2 12 4 6 14 5 4]; %8, 10 LFP; 2, 12, 4, 6, 14, 5 RRG; 4 EMG
+avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
@@ -4427,16 +4448,18 @@ avianSWR_DB(rfc).REC.csc_EOG  = []';
 avianSWR_DB(rfc).REC.hasEKG  = 0;
 avianSWR_DB(rfc).REC.cscEKG  = 0;
 
-avianSWR_DB(rfc).Plotting.range = 500;
-avianSWR_DB(rfc).Plotting.rawOffset = 500;
-avianSWR_DB(rfc).Plotting.hpOffset = 500;
-avianSWR_DB(rfc).Plotting.hpRectOffset = 500;
+avianSWR_DB(rfc).Plotting.rawOffset = 600;
+avianSWR_DB(rfc).Plotting.rawYlim = [-avianSWR_DB(rfc).Plotting.rawOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.rawOffset];
+avianSWR_DB(rfc).Plotting.hpRectOffset = 60;
+avianSWR_DB(rfc).Plotting.hpRectYlim = [0 1000];
+avianSWR_DB(rfc).Plotting.hpOffset = 150;
+avianSWR_DB(rfc).Plotting.hpYlim = [-avianSWR_DB(rfc).Plotting.hpOffset avianSWR_DB(rfc).REC.nChs*avianSWR_DB(rfc).Plotting.hpOffset];
 
 rfc = rfc+1;
 
-%% (80) ZF-70-86 | 23.05.2019 - 00-08-59 -- Overnight
+%% (89) ZF-70-86 | 23.05.2019 - 00-08-59 -- Overnight
 
-avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86 ';
+avianSWR_DB(rfc).INFO.birdName  = 'ZF-70-86';
 avianSWR_DB(rfc).INFO.birdID  = 9;
 avianSWR_DB(rfc).INFO.birdSex  = 'F';
 avianSWR_DB(rfc).INFO.birdDOB  = '';
@@ -4449,6 +4472,10 @@ avianSWR_DB(rfc).INFO.electrodeName  = 'Self-Made, Tungsten EEG';
 avianSWR_DB(rfc).INFO.brainAreaN  = 1; % DVR
 avianSWR_DB(rfc).INFO.brainAreaName  = 'DVR, Cortex';
 
+avianSWR_DB(rfc).Session.sampleRate = 30000;
+avianSWR_DB(rfc).Session.samples  = 279361536;
+avianSWR_DB(rfc).Session.recordingDur_s  = avianSWR_DB(rfc).Session.samples/avianSWR_DB(rfc).Session.sampleRate;
+avianSWR_DB(rfc).Session.recordingDur_hr  = avianSWR_DB(rfc).Session.recordingDur_s/3600;
 avianSWR_DB(rfc).Session.Date  = '23.05.2019';
 avianSWR_DB(rfc).Session.time  = '00-08-59';
 avianSWR_DB(rfc).Session.RecStartTime  = '00:08:59';
@@ -4458,12 +4485,10 @@ avianSWR_DB(rfc).Session.comments  = '';
 avianSWR_DB(rfc).Session.n = rfc;
 
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
-avianSWR_DB(rfc).DIR.base = '';
-avianSWR_DB(rfc).DIR.ephys = [avianSWR_DB(rfc).DIR.base   'ephys' dirD];
-avianSWR_DB(rfc).DIR.videoDir  = [avianSWR_DB(rfc).DIR.base   'videos' dirD];
-avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base   'plots' dirD];
+avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [];
+avianSWR_DB(rfc).REC.allChs  = [8 10 2 12 4 6 14 5 4]; %8, 10 LFP; 2, 12, 4, 6, 14, 5 RRG; 4 EMG
+avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
