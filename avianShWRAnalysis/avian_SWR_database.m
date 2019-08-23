@@ -4186,7 +4186,7 @@ avianSWR_DB(rfc).Session.n = rfc;
 avianSWR_DB(rfc).DIR.dataDir = DataDir;
 avianSWR_DB(rfc).DIR.dirD= dirD;
 
-avianSWR_DB(rfc).REC.allChs  = [8 10 2 12 4 6 14 5 4]; %8, 10 LFP; 2, 12, 4, 6, 14, 5 RRG; 4 EMG
+avianSWR_DB(rfc).REC.allChs  = [8 10 2 12 4 6 14 5 4]; %8, 10 LFP; 2, 12, 4, 6, 14, 5 EEG; 4 EMG
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
 avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];

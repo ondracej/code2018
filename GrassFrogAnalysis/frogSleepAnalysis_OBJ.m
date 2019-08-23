@@ -603,14 +603,14 @@ classdef frogSleepAnalysis_OBJ < handle
             
             
             %%
-            for i=1:nCycles-1
+            for i=500:nCycles-1
                 
           
                 
                 thisROI = TOn(i):TOn(i+1)-1;
                 
                 offsetLP = 0;
-                offsetHP = 1000;
+                offsetHP = 500;
                 offsetHP_R = 0;
                 
          
@@ -673,7 +673,7 @@ classdef frogSleepAnalysis_OBJ < handle
                     title( ['HF Rectified: ' obj.Plotting.titleTxt])
                     xlabel('Time [s]')
                     
-                    saveName = [PlotDir obj.Plotting.saveTxt '_Raw-HP-singleChan_' sprintf('%03d', i)];
+                    saveName = [PlotDir obj.Plotting.saveTxt '_Raw-HP-singleChan_' num2str(chanSet) '_' sprintf('%03d', i)];
                     plotpos = [0 0 30 15];
                     print_in_A4(0, saveName, '-djpeg', 0, plotpos);
                     

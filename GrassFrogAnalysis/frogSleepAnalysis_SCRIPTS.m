@@ -25,7 +25,23 @@ addpath(genpath(pathToNSKToolbox))
 %recSession = 69; % 20190630_16-39 -corrupted??
 
 % Frog 2
- recSession = 105; % 20190624_19-14
+ recSession = 108; % 20190624_19-14
+ 
+ 
+ 
+ 
+ %% Frog
+
+%dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190627\20190627_08-43\Ephys\2019-06-27_08-43-09';
+%dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190624\20190624_19-14\Ephys\2019-06-24_19-14-36';
+dir = 'F:\Grass\FrogSleep\CubanTreeFrog5\CubanTF5_2019-08-13_10-33-23';
+dbstop if error
+dataRecordingObj = OERecordingMF(dir);
+
+%% 
+dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
+timeSeriesViewer(dataRecordingObj); % loads all the channels
+
  
  
  %%

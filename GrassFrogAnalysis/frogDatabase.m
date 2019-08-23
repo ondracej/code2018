@@ -6387,3 +6387,187 @@ FrogDB(rfc).DB.G_hiFreq  = 80;
 
 rfc = rfc+1;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% (106) CubanTreeFrog2 | 20190724_19-15
+
+FrogDB(rfc).INFO.Name  = 'CubanTreeFrog2';
+FrogDB(rfc).INFO.ID  = 1;
+FrogDB(rfc).INFO.Weight_g  = 28;
+FrogDB(rfc).INFO.electrodeType  = 1; % 
+FrogDB(rfc).INFO.electrodeName  = 'inSitu-16Chan';
+FrogDB(rfc).INFO.brainAreaN  = 1; 
+FrogDB(rfc).INFO.brainAreaName  = 'Pallium';
+
+FrogDB(rfc).Session.Dir  = '20190724_19-15';
+FrogDB(rfc).Session.Date  = '20190724';
+FrogDB(rfc).Session.time  = '2019-07-24_19-15-37';
+FrogDB(rfc).Session.RecStartTime  = '19:15:37';
+FrogDB(rfc).Session.RecDuration  = '21:12:10';
+FrogDB(rfc).Session.RecStopTime  = [];
+FrogDB(rfc).Session.TempStopTime  = [];
+FrogDB(rfc).Session.TempStopTime  = []; 
+FrogDB(rfc).Session.comments  = 'moving around, not always in focus';
+FrogDB(rfc).Session.n = rfc;
+
+FrogDB(rfc).Vid.Names = {'12-03_Sideview_20190714_00032_converted.avi', '12-03_Sideview_20190714_00032_converted-short_001.avi'};
+FrogDB(rfc).Vid.fps= [30, 30];
+
+FrogDB(rfc).DIR.base = [DataDir FrogDB(rfc).INFO.Name dirD FrogDB(rfc).Session.Date dirD];
+FrogDB(rfc).DIR.ephysDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Ephys' dirD FrogDB(rfc).Session.time dirD];
+FrogDB(rfc).DIR.videoDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Videos' dirD];
+FrogDB(rfc).DIR.temperatureDir = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Temperature' dirD];
+FrogDB(rfc).DIR.plotDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Plots' dirD];
+
+FrogDB(rfc).REC.hasVideo = 1;
+FrogDB(rfc).REC.hasEphys = 0;
+FrogDB(rfc).REC.hasTemp = 0;
+FrogDB(rfc).REC.hasEMG  = 0;
+FrogDB(rfc).REC.hasEKG  = 0;
+
+%FrogDB(rfc).REC.allChs  = [15 10 7 2 14 11 6 3 16 9 8 1 13 12 5 4]; %% %Organized by rows (P-A)
+FrogDB(rfc).REC.allChs  = [2 3 1 4 7 6 8 5 10 11 9 12 15 14 16 13]; %% Organized by columns (M-L)
+FrogDB(rfc).REC.nChs  = numel(FrogDB(rfc).REC.allChs);
+FrogDB(rfc).REC.bestChs  = [14];
+FrogDB(rfc).REC.triggerChan  = ['ADC1'];
+FrogDB(rfc).REC.cscEMG  = [];
+FrogDB(rfc).REC.cscEKG  = 0;
+
+
+FrogDB(rfc).Plotting.rawOffset = 600;
+FrogDB(rfc).Plotting.rawYlim = [-FrogDB(rfc).Plotting.rawOffset FrogDB(rfc).REC.nChs*FrogDB(rfc).Plotting.rawOffset];
+FrogDB(rfc).Plotting.hpRectOffset = 500;
+FrogDB(rfc).Plotting.hpRectYlim = [-500 2000];
+FrogDB(rfc).Plotting.hpOffset = 100;
+FrogDB(rfc).Plotting.hpYlim = [-FrogDB(rfc).Plotting.hpOffset FrogDB(rfc).REC.nChs*FrogDB(rfc).Plotting.hpOffset];
+
+FrogDB(rfc).DB.D_CutoffFreq  = 4;
+FrogDB(rfc).DB.B_lowFreq  = 15;
+FrogDB(rfc).DB.B_hiFreq  = 40;
+FrogDB(rfc).DB.G_lowFreq  = 50;
+FrogDB(rfc).DB.G_hiFreq  = 80;
+
+rfc = rfc+1;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% (107) CubanTreeFrog2 | 20190724_21-06
+
+FrogDB(rfc).INFO.Name  = 'CubanTreeFrog2';
+FrogDB(rfc).INFO.ID  = 1;
+FrogDB(rfc).INFO.Weight_g  = 28;
+FrogDB(rfc).INFO.electrodeType  = 1; % 
+FrogDB(rfc).INFO.electrodeName  = 'inSitu-16Chan';
+FrogDB(rfc).INFO.brainAreaN  = 1; 
+FrogDB(rfc).INFO.brainAreaName  = 'Pallium';
+
+FrogDB(rfc).Session.Dir  = '20190724_21-06';
+FrogDB(rfc).Session.Date  = '20190724';
+FrogDB(rfc).Session.time  = '2019-07-24_21-06-20';
+FrogDB(rfc).Session.RecStartTime  = '21:06:20';
+FrogDB(rfc).Session.RecDuration  = '21:12:10';
+FrogDB(rfc).Session.RecStopTime  = [];
+FrogDB(rfc).Session.TempStopTime  = [];
+FrogDB(rfc).Session.TempStopTime  = []; 
+FrogDB(rfc).Session.comments  = 'moving around, not always in focus';
+FrogDB(rfc).Session.n = rfc;
+
+FrogDB(rfc).Vid.Names = {'12-03_Sideview_20190714_00032_converted.avi', '12-03_Sideview_20190714_00032_converted-short_001.avi'};
+FrogDB(rfc).Vid.fps= [30, 30];
+
+FrogDB(rfc).DIR.base = [DataDir FrogDB(rfc).INFO.Name dirD FrogDB(rfc).Session.Date dirD];
+FrogDB(rfc).DIR.ephysDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Ephys' dirD FrogDB(rfc).Session.time dirD];
+FrogDB(rfc).DIR.videoDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Videos' dirD];
+FrogDB(rfc).DIR.temperatureDir = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Temperature' dirD];
+FrogDB(rfc).DIR.plotDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Plots' dirD];
+
+FrogDB(rfc).REC.hasVideo = 1;
+FrogDB(rfc).REC.hasEphys = 0;
+FrogDB(rfc).REC.hasTemp = 0;
+FrogDB(rfc).REC.hasEMG  = 0;
+FrogDB(rfc).REC.hasEKG  = 0;
+
+%FrogDB(rfc).REC.allChs  = [15 10 7 2 14 11 6 3 16 9 8 1 13 12 5 4]; %% %Organized by rows (P-A)
+FrogDB(rfc).REC.allChs  = [2 3 1 4 7 6 8 5 10 11 9 12 15 14 16 13]; %% Organized by columns (M-L)
+FrogDB(rfc).REC.nChs  = numel(FrogDB(rfc).REC.allChs);
+FrogDB(rfc).REC.bestChs  = [14];
+FrogDB(rfc).REC.triggerChan  = ['ADC1'];
+FrogDB(rfc).REC.cscEMG  = [];
+FrogDB(rfc).REC.cscEKG  = 0;
+
+
+FrogDB(rfc).Plotting.rawOffset = 600;
+FrogDB(rfc).Plotting.rawYlim = [-FrogDB(rfc).Plotting.rawOffset FrogDB(rfc).REC.nChs*FrogDB(rfc).Plotting.rawOffset];
+FrogDB(rfc).Plotting.hpRectOffset = 500;
+FrogDB(rfc).Plotting.hpRectYlim = [-500 2000];
+FrogDB(rfc).Plotting.hpOffset = 100;
+FrogDB(rfc).Plotting.hpYlim = [-FrogDB(rfc).Plotting.hpOffset FrogDB(rfc).REC.nChs*FrogDB(rfc).Plotting.hpOffset];
+
+FrogDB(rfc).DB.D_CutoffFreq  = 4;
+FrogDB(rfc).DB.B_lowFreq  = 15;
+FrogDB(rfc).DB.B_hiFreq  = 40;
+FrogDB(rfc).DB.G_lowFreq  = 50;
+FrogDB(rfc).DB.G_hiFreq  = 80;
+
+rfc = rfc+1;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% (108) CubanTreeFrog2 | 20190724_21-19 - corrupted
+
+FrogDB(rfc).INFO.Name  = 'CubanTreeFrog2';
+FrogDB(rfc).INFO.ID  = 1;
+FrogDB(rfc).INFO.Weight_g  = 28;
+FrogDB(rfc).INFO.electrodeType  = 1; % 
+FrogDB(rfc).INFO.electrodeName  = 'inSitu-16Chan';
+FrogDB(rfc).INFO.brainAreaN  = 1; 
+FrogDB(rfc).INFO.brainAreaName  = 'Pallium';
+
+FrogDB(rfc).Session.Dir  = '20190724_21-19';
+FrogDB(rfc).Session.Date  = '20190724';
+FrogDB(rfc).Session.time  = '2019-07-24_21-19-14';
+FrogDB(rfc).Session.RecStartTime  = '21:19:14';
+FrogDB(rfc).Session.RecDuration  = '21:12:10';
+FrogDB(rfc).Session.RecStopTime  = [];
+FrogDB(rfc).Session.TempStopTime  = [];
+FrogDB(rfc).Session.TempStopTime  = []; 
+FrogDB(rfc).Session.comments  = 'moving around, not always in focus';
+FrogDB(rfc).Session.n = rfc;
+
+FrogDB(rfc).Vid.Names = {'12-03_Sideview_20190714_00032_converted.avi', '12-03_Sideview_20190714_00032_converted-short_001.avi'};
+FrogDB(rfc).Vid.fps= [30, 30];
+
+FrogDB(rfc).DIR.base = [DataDir FrogDB(rfc).INFO.Name dirD FrogDB(rfc).Session.Date dirD];
+FrogDB(rfc).DIR.ephysDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Ephys' dirD FrogDB(rfc).Session.time dirD];
+FrogDB(rfc).DIR.videoDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Videos' dirD];
+FrogDB(rfc).DIR.temperatureDir = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Temperature' dirD];
+FrogDB(rfc).DIR.plotDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Plots' dirD];
+
+FrogDB(rfc).REC.hasVideo = 1;
+FrogDB(rfc).REC.hasEphys = 0;
+FrogDB(rfc).REC.hasTemp = 0;
+FrogDB(rfc).REC.hasEMG  = 0;
+FrogDB(rfc).REC.hasEKG  = 0;
+
+%FrogDB(rfc).REC.allChs  = [15 10 7 2 14 11 6 3 16 9 8 1 13 12 5 4]; %% %Organized by rows (P-A)
+FrogDB(rfc).REC.allChs  = [2 3 1 4 7 6 8 5 10 11 9 12 15 14 16 13]; %% Organized by columns (M-L)
+FrogDB(rfc).REC.nChs  = numel(FrogDB(rfc).REC.allChs);
+FrogDB(rfc).REC.bestChs  = [5];
+FrogDB(rfc).REC.triggerChan  = ['ADC1'];
+FrogDB(rfc).REC.cscEMG  = [];
+FrogDB(rfc).REC.cscEKG  = 0;
+
+
+FrogDB(rfc).Plotting.rawOffset = 300;
+FrogDB(rfc).Plotting.rawYlim = [-FrogDB(rfc).Plotting.rawOffset FrogDB(rfc).REC.nChs*FrogDB(rfc).Plotting.rawOffset];
+FrogDB(rfc).Plotting.hpRectOffset = 500;
+FrogDB(rfc).Plotting.hpRectYlim = [-500 1000];
+FrogDB(rfc).Plotting.hpOffset = 100;
+FrogDB(rfc).Plotting.hpYlim = [-FrogDB(rfc).Plotting.hpOffset FrogDB(rfc).REC.nChs*FrogDB(rfc).Plotting.hpOffset];
+
+FrogDB(rfc).DB.D_CutoffFreq  = 4;
+FrogDB(rfc).DB.B_lowFreq  = 15;
+FrogDB(rfc).DB.B_hiFreq  = 40;
+FrogDB(rfc).DB.G_lowFreq  = 50;
+FrogDB(rfc).DB.G_hiFreq  = 80;
+
+rfc = rfc+1;
+
+

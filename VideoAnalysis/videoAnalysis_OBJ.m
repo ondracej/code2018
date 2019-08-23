@@ -120,8 +120,8 @@ classdef videoAnalysis_OBJ < handle
             
             dbstop if error
             
-            dirToRename = 'F:\Grass\DataShare\6Tadpoles_grp4_20190725_10-13\' ;
-            renamedDir = 'F:\Grass\DataShare\6Tadpoles_grp4_20190725_10-13\' ;
+            dirToRename = 'F:\Grass\DataShare\5Tadpoles_20190725_21-13\' ;
+            renamedDir = 'F:\Grass\DataShare\5Tadpoles_20190725_21-13\' ;
             
             if exist(renamedDir, 'dir') == 0
                 mkdir(renamedDir);

@@ -120,10 +120,10 @@ videoName = '20190710_09-Overview_20190714_00032_converted-short';
  
  %%
  
- imageDir = {'F:\Grass\DataShare\5Tadpoles_20190724_19-17\'};
- movieName = '5Tadpoles_20190724_19-17';
- saveDir = {'F:\Grass\Tadpoles\'};
- VideoFrameRate = 2;
+ imageDir = {'F:\Grass\DataShare\3Tadpoles_20190802_11-05\'};
+ movieName = '3Tadpoles_20190802_11-05';
+ saveDir = {'F:\Grass\DataShare\'};
+ VideoFrameRate = 10;
  makeMultipleMoviesFromImages(V_OBJ, imageDir, movieName, saveDir, VideoFrameRate)
  
  disp('Finished making movies...')
