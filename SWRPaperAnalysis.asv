@@ -139,7 +139,7 @@ timeSeriesViewer(dataRecordingObj); % loads all the channels
 %% Spikesorting with JRCLUST - must run in matlab 2019
 
 %pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\Chick-10\Ephys\2019-04-27_19-33-33\dat\2019-04-27_19-33-33.dat';
-pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\Chick-10\Ephys\2019-04-27_20-49-27\dat\2019-04-27_20-49-27.dat';
+pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\Chick-10\Ephys\2019-04-27_19-33-33\dat\2019-04-27_19-33-33.dat';
 
 jrc bootstrap
 % use probe silico120_1col_1 - will give 2 peakFeature
@@ -165,7 +165,7 @@ eval(['jrc sort ' cnfg]); % if this crahses it is because nPeaksFeatures needs t
 
 eval(['jrc detect-sort ' cnfg]); % and sort directly
 
-eval(['jrc manual ' cnfg]); % manual checking of clusters
+eval(['jrc manual ' cnfg]); % manual checking
 
 %% Sharp Wave Detection
 %detectSWRs(D_OBJ, dataRecordingObj)

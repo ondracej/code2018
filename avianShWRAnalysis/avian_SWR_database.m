@@ -1,7 +1,7 @@
 function [avianSWR_DB] = avian_SWR_database()
 
 if ispc
-    DataDir = 'F:\TUM\SWR-Project\';
+    DataDir = 'C:\Users\Janie\Documents\Data\SWR-Project\';
     dirD = '\';
 elseif isunix
     DataDir = [];
