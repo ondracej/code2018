@@ -93,6 +93,29 @@ addpath(genpath(pathToJRCLUST))
 
 % 4, 2, 14, 12, 16, 6, 5, 10, 8
 
+%% 71-76 - 16 chsn chronic silicon probe
+% (90) ZF-71-76 | 15.09.2019 - 17-48-44 -- Isoflorane
+% (91) ZF-71-76 | 15.09.2019 - 18-03-52 -- Isoflorane
+% (92) ZF-71-76 | 15.09.2019 - 18-17-37 -- Isoflorane
+% (93) ZF-71-76 | 15.09.2019 - 18-21-24 -- Isoflorane
+% (94) ZF-71-76 | 15.09.2019 - 18-32-10 -- Isoflorane
+% (95) ZF-71-76 | 15.09.2019 - 18-46-58 -- Isoflorane
+% (96) ZF-71-76 | 15.09.2019 - 19-50-51 --  short
+% (97) ZF-71-76 | 15.09.2019  - 19-55-39 -- short
+% (98) ZF-71-76 | 15.09.2019  - 20-01-48 -- Overnight 
+% (99) ZF-71-76 | 16.09.2019  - 08-48-23 -- Day recording
+% (100) ZF-71-76 | 16.09.2019  - 18-01-51 - short
+% (101) ZF-71-76 | 16.09.2019  - 18-05-58 - Overnight *** good
+% (102) ZF-71-76 | 17.09.2019  - 09-00-29 - Day recording
+% (103) ZF-71-76 | 17.09.2019  - 16-04-39 - Day recording - short
+% (104) ZF-70-86 | 17.09.2019  - 16-05-11 - Overnight *** good
+% (105) ZF-70-86 | 18.09.2019  - 18-04-28 - Overnight ***
+% (106) ZF-70-86 | 19.09.2019  - 17-39-19 - Short
+% (107) ZF-70-86 | 19.09.2019  - 17-51-46 - Overnight *** good
+% (108) ZF-70-86 | 20.09.2019  - 12-10-40 - Daytime
+% (109) ZF-70-86 | 20.09.2019  - 18-37-00 - Overnight *** good
+% (110) ZF-70-86 | 23.09.2019  - 18-21-42 - Overnight ***
+
 %% Make Channel Map for Marks code
 
 % saveDir = 'C:\Users\Administrator\Documents\code\GitHub\NET\timeSeriesViewer\electrode layouts\layout_16_A16_5mm_wAdapter.mat';
@@ -104,6 +127,38 @@ addpath(genpath(pathToJRCLUST))
 % save(saveDir, 'En', 'Ena', 'Enp')
 
 %% Define Record
+%recSession =  98; dat
+recSession =  101; %good / dat
+%recSession =  104; %good / dat
+%recSession =  105; 
+%recSession =  107; %good 
+%recSession =  109; %good
+%recSession =  110;
+D_OBJ = avianSWRAnalysis_OBJ(recSession);
+
+
+%%
+
+plotDBRatioWithData(D_OBJ)
+
+plotDBRatioMatrix(D_OBJ)
+
+
+%%
+
+detectSWR_w_NEO(D_OBJ)
+
+
+%%
+dataDir = D_OBJ.Session.SessionDir;
+dataDir = dataDir(1:end-1);
+ 
+dataRecordingObj = OERecordingMF(dataDir);
+dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
+
+timeSeriesViewer(dataRecordingObj); % loads all the channels
+%7 10 2 15 3 14 4 13 1 16 5 12 6 11 8 9 %chonic
+
 
 %% Batch process data
 
@@ -123,35 +178,67 @@ for j = 1:numel(allRecSessions)
     convertOpenEphysToRawBinary_JO(dataDir, chanMap);  % convert data, only for OpenEphys
     
     dbstop if error
-    %dataRecordingObj = OERecordingMF(dataDir);
-    %dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
+    dataRecordingObj = OERecordingMF(dataDir);
+    dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
     %calcCSD(D_OBJ, dataRecordingObj)
 end
 
 %%
-timeSeriesViewer(dataRecordingObj); % loads all the channels
 
+recSession = 64;
+
+dataDir = 'D:\ZF-\Ephys\71-76_chronic_2019-09-15_20-01-48';
+dataDir = 'D:\ZF-\Ephys\71-76_chronic_2019-09-16_18-05-58';
+dataDir = 'D:\ZF-\Ephys\YFAcute_2019-09-15_18-32-10';
+dataDir = 'D:\ZF-\Ephys\YFAcute_2019-09-15_18-03-52';
+
+D_OBJ = avianSWRAnalysis_OBJ(recSession);
+disp([D_OBJ.INFO.birdName ': ' D_OBJ.Session.time])
+%
+dataDir = D_OBJ.Session.SessionDir;
+
+dataRecordingObj = OERecordingMF(dataDir);
+dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
+
+timeSeriesViewer(dataRecordingObj); % loads all the channels
+%7 10 2 15 3 14 4 13 1 16 5 12 6 11 8 9 %chonic
 %5, 4, 6, 3, 9, 16, 8, 1, 11, 14, 12, 13, 10, 15, 7, 2
 %LFP scale = 500
 %Spike scale = 150
 %timeWin = 40000
+%%
+%dataDir = 'D:\ZF-\Ephys\71-76_chronic_2019-09-16_18-05-58';
+%dataDir = 'D:\ZF-\Ephys\71-76_chronic_2019-09-15_20-01-48';
+dataDir = 'D:\TUM\SWR-Project\ZF-71-76\71-76_chronic_2019-09-17_16-05-11';
+chanMap = [7 10 2 15 3 14 13 1 16 5 12 6 11 8 9]; %4 is broken
+convertOpenEphysToRawBinary_JO(dataDir, chanMap);  % convert data, only for OpenEphys
 
 %% Spikesorting with JRCLUST - must run in matlab 2019
 
 %pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\Chick-10\Ephys\2019-04-27_19-33-33\dat\2019-04-27_19-33-33.dat';
-pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\Chick-10\Ephys\2019-04-27_20-49-27\dat\2019-04-27_20-49-27.dat';
+%pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-01-45\dat\2019-04-29_15-01-45.dat';
+%pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-02-55\dat\2019-04-29_15-02-55.dat';
+
+pathToDat = 'D:\TUM\SWR-Project\ZF-71-76\Ephys\71-76_chronic_2019-09-16_18-05-58\dat\71-76_chronic_2019-09-16_18-05-58.dat';
 
 jrc bootstrap
 % use probe silico120_1col_1 - will give 2 peakFeature
 %nPeaksFeatures = 2; % (formerly nFet_use) Number of potential peaks to use when computing features
 % change nchanels to 16
-% probePad = [23, 23]; % (formerly vrSiteHW) Recording contact pad size (in m) (Height x width)
-% shankMap = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]; % (formerly viShank_site) Shank ID of each site
-% siteLoc = [0, 0; 0, 100; 0, 200; 0, 300; 0, 400; 0, 500; 0, 600; 0, 700; 0, 800; 0, 900; 0, 1000; 0, 1100; 0, 1200; 0, 1300; 0, 1400; 0, 1500]; % (formerly mrSiteXY) Site locations (in m) (x values in the first column, y values in the second column)
-% siteMap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]; % (formerly viSite2Chan) Map of channel index to site ID (The mapping siteMap(i) = j corresponds to the statement 'site i is stored as channel j in the recording')
+probePad = [23, 23]; % (formerly vrSiteHW) Recording contact pad size (in m) (Height x width)
+shankMap = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]; % (formerly viShank_site) Shank ID of each site
+siteLoc = [0, 0; 0, 100; 0, 200; 0, 300; 0, 400; 0, 500; 0, 600; 0, 700; 0, 800; 0, 900; 0, 1000; 0, 1100; 0, 1200; 0, 1300; 0, 1400; 0, 1500]; % (formerly mrSiteXY) Site locations (in m) (x values in the first column, y values in the second column)
+siteMap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]; % (formerly viSite2Chan) Map of channel index to site ID (The mapping siteMap(i) = j corresponds to the statement 'site i is stored as channel j in the recording')
 
 cnfg = [pathToDat(1:end-3) 'prm'];
+%%
+cnfg = 'C:\Users\Janie\Documents\Data\SWR-Project\Chick-10\Ephys\2019-04-27_19-33-33\dat\2019-04-27_19-33-33.prm';
 
+%% ZF 60-88
+%cnfg = 'C:\Users\Janie\Documents\Data\SWR-Project\ZF-60-88\Ephys\2019-04-29_14-43-33\dat\2019-04-29_14-43-33.prm';
+cnfg = 'C:\Users\Janie\Documents\Data\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-01-45\dat\2019-04-29_15-01-45.prm';
+pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-02-55\dat\2019-04-29_15-02-55.prm';
+%%
 %Check probe layout
 eval(['jrc probe ' cnfg]);
 
@@ -181,12 +268,14 @@ chan = 2; % 57
 D_OBJ = avianSWRAnalysis_OBJ(recSession);
 disp([D_OBJ.INFO.birdName ': ' D_OBJ.Session.time])
 
-%
+%% SWR detection
 dataDir = D_OBJ.Session.SessionDir;
 dataRecordingObj = OERecordingMF(dataDir);
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
-
+chan = 15;
 D_OBJ = detectSWRs_SleepAnalysisObj(chan, D_OBJ, dataRecordingObj);
+
+D_OBJ =  detectSWRsOld(D_OBJ, dataRecordingObj);
 
 %%
 plotConsecutiveSWRs(D_OBJ, dataRecordingObj);

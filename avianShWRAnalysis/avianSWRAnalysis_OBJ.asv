@@ -2507,8 +2507,6 @@ classdef avianSWRAnalysis_OBJ < handle
                             
                             absPeakTime_Fs_LF = (peakTime_Fs_LF(maxInd) + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
                             
-                            relPeakTime_Fs_LF = (peakTime_Fs_LF(maxInd) + peakTime_Fs(q)-WinSizeL); % for plotting
-                            
                             templatePeaks.peakH_LF(cnt) = peakH_LF(maxInd);
                             templatePeaks.absPeakTime_Fs_LF(cnt) = absPeakTime_Fs_LF;
                             templatePeaks.peakW_LF(cnt) = peakW_LF(maxInd);
@@ -2521,19 +2519,19 @@ classdef avianSWRAnalysis_OBJ < handle
                                 
                                 subplot(5,1, 5)
                                 hold on;
-                                plot(SegData_s(relPeakTime_Fs_LF), DataSeg_HF(peakTime_Fs(q)), 'bv');
+                                plot(SegData_s(absPeakTime_Fs_LF), DataSeg_HF(peakTime_Fs(q)), 'bv');
                                 
                                 subplot(5, 1,4)
                                 hold on;
-                                plot(SegData_s(relPeakTime_Fs_LF), DataSeg_rect_HF(peakTime_Fs(q)), 'b*');
+                                plot(SegData_s(absPeakTime_Fs_LF), DataSeg_rect_HF(peakTime_Fs(q)), 'b*');
                                 
                                 subplot(5, 1, 1)
                                 hold on
-                                plot(SegData_s(relPeakTime_Fs_LF), 0, 'b*')
+                                plot(SegData_s(absPeakTime_Fs_LF), 0, 'b*')
                                 
                                 subplot(5, 1, 2)
                                 hold on
-                                plot(SegData_s(relPeakTime_Fs_LF), 0, 'b*')
+                                plot(SegData_s(absPeakTime_Fs_LF), 0, 'b*')
                             end
                             continue
                             
@@ -2550,7 +2548,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 plot_filename = [PlotDir 'SWR_Detections-Plots' sprintf('%03d', i)];
                 
                 plotpos = [0 0 25 15];
-                figure(300);
+                figure(100);
                 print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
                 
                 
