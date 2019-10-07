@@ -4,11 +4,20 @@ close all
 clear all
 dbstop if error
 
-% Code dependencies
-pathToCodeRepository = 'C:\Users\Administrator\Documents\code\GitHub\code2018\';
-pathToOpenEphysAnalysisTools = 'C:\Users\Administrator\Documents\code\GitHub\analysis-tools\';
-pathToNSKToolbox = 'C:\Users\Administrator\Documents\code\GitHub\code2018\NSKToolBox\';
 
+if ispc
+    
+    % Code dependencies
+    pathToCodeRepository = 'C:\Users\Administrator\Documents\code\GitHub\code2018\';
+    pathToOpenEphysAnalysisTools = 'C:\Users\Administrator\Documents\code\GitHub\analysis-tools\';
+    pathToNSKToolbox = 'C:\Users\Administrator\Documents\code\GitHub\code2018\NSKToolBox\';
+elseif isunix
+    pathToCodeRepository = '/home/janie/Documents/code/code2018/';
+    pathToOpenEphysAnalysisTools = '/home/janie/Documents/code/analysis-tools-master/';
+    pathToNSKToolbox = '/home/janie/Documents/code/NET-master/';
+end
+
+    
 addpath(genpath(pathToCodeRepository)) 
 addpath(genpath(pathToOpenEphysAnalysisTools)) 
 addpath(genpath(pathToNSKToolbox)) 
@@ -34,7 +43,10 @@ addpath(genpath(pathToNSKToolbox))
 
 %dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190627\20190627_08-43\Ephys\2019-06-27_08-43-09';
 %dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190624\20190624_19-14\Ephys\2019-06-24_19-14-36';
-dir = 'F:\Grass\FrogSleep\CubanTreeFrog5\CubanTF5_2019-08-13_10-33-23';
+
+
+
+dir = '/home/janie/Data/TUM/SleepChicken/Ephys/Chick1/Chick1K-X_2018-04-27_16-43-53/';
 dbstop if error
 dataRecordingObj = OERecordingMF(dir);
 
