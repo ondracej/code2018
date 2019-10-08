@@ -276,7 +276,8 @@ chan = 15;
 D_OBJ = detectSWRs_SleepAnalysisObj(chan, D_OBJ, dataRecordingObj);
 
 D_OBJ =  detectSWRsOld(D_OBJ, dataRecordingObj);
-
+D_OBJ =  detectSWRsOld_rippleBand(D_OBJ, dataRecordingObj);
+%D_OBJ =  detectSWRsOld_LF_first(D_OBJ, dataRecordingObj);
 %%
 plotConsecutiveSWRs(D_OBJ, dataRecordingObj);
 
