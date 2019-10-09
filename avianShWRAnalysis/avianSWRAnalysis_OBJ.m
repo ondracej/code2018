@@ -2672,20 +2672,55 @@ classdef avianSWRAnalysis_OBJ < handle
             for i=1:numel(pCycle)
                 
                 
-                thisROI = TOn(pCycle(i)):TOn(pCycle(i)+1);
+                %thisROI = TOn(pCycle(i)):TOn(pCycle(i)+1);
+                thisROI = TOn((i)):TOn((i)+1);
                 SegData = V_uV_data_full(:,:, thisROI);
                 
+                %DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP));
                 %DataSeg_BP = fobj.filt.BP.getFilteredData(SegData);
                 DataSeg_ripple = fobj.filt.Ripple.getFilteredData(SegData);
-                %DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP));
+                DataSeg_SW = fobj.filt.SW.getFilteredData(SegData);
                 
-                figure; plot(smooth(DataSeg_rect_HF))
+                
                 %%
-                smoothWin = 0.10*Fs;
+                smoothWin = 0.05*Fs;
                 %DataSeg_rect_HF = smooth(DataSeg_HF.^2, smoothWin);
-                DataSeg_rect_HF = rms(squeeze(DataSeg_ripple), 2);
+                DataSeg_ripple_rms = rms(squeeze(DataSeg_ripple), 2);
+                DataSeg_SW_rms = rms(squeeze(DataSeg_SW), 2);
                 
-                Mtest{i} = DataSeg_rect_HF;
+                Mtest{i} = DataSeg_ripple_rms;
+                
+                
+                figure(80);clf
+                subplot(5, 1, 1)
+                plot(squeeze(SegData))
+                axis tight
+                
+                subplot(5, 1, 2)
+                plot(squeeze(DataSeg_ripple))
+                axis tight
+                
+                subplot(5, 1, 3)
+                plot(smooth(DataSeg_ripple_rms, smoothWin))
+                axis tight
+                
+                std4_ripple = std(smooth(DataSeg_ripple_rms, smoothWin))*4;
+                subplot(5, 1, 3)
+                hold on
+                line([0 numel(DataSeg_ripple_rms)], [std4_ripple std4_ripple], 'color', 'r')
+               
+               subplot(5, 1, 4)
+                plot(squeeze(DataSeg_SW))
+                axis tight
+                
+                subplot(5, 1, 5)
+                plot(smooth(DataSeg_SW_rms, smoothWin))
+                axis tight
+                
+                std4_SW = std(smooth(DataSeg_SW_rms, smoothWin))*4;
+                subplot(5, 1, 5)
+                hold on
+                line([0 numel(DataSeg_ripple_rms)], [std4_SW std4_SW], 'color', 'r')
                 
             end
             Mtest=cell2mat(Mtest);
@@ -2728,7 +2763,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 smoothWin = 0.10*Fs;
                 DataSeg_LF_neg = -DataSeg_LF;
                 %figure; plot(DataSeg_LF_neg)
-                DataSeg_rect_HF = smooth(DataSeg_HF.^2, smoothWin);
+                DataSeg_ripple_rms = smooth(DataSeg_HF.^2, smoothWin);
                 %baseline = mean(DataSeg_rect_HF)*2;
                 
                 %figure; plot(SegData_s, DataSeg_rect_HF); axis tight
@@ -2740,7 +2775,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 minPeakHeight = peakHeight_iqr;
                 minPeakProminence = 30;
                 
-                [peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
+                [peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_ripple_rms,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
                 
                 %%
                 
@@ -2790,7 +2825,7 @@ classdef avianSWRAnalysis_OBJ < handle
                     axis tight
                     
                     subplot(5, 1,4)
-                    plot(SegData_s, DataSeg_rect_HF); title( ['HF Rectified']);
+                    plot(SegData_s, DataSeg_ripple_rms); title( ['HF Rectified']);
                     hold on;
                     %plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'r*');
                     axis tight
@@ -2831,7 +2866,7 @@ classdef avianSWRAnalysis_OBJ < handle
                         subplot(5, 1,4)
                         %plot(SegData_s, DataSeg_rect_HF); title( ['HF Rectified']);
                         hold on;
-                        plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'r*');
+                        plot(SegData_s(peakTime_Fs(q)), DataSeg_ripple_rms(peakTime_Fs(q)), 'r*');
                         axis tight
                         ylim([0 500])
                         
@@ -2913,7 +2948,7 @@ classdef avianSWRAnalysis_OBJ < handle
                                 
                                 subplot(5, 1,4)
                                 hold on;
-                                plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'k*');
+                                plot(SegData_s(peakTime_Fs(q)), DataSeg_ripple_rms(peakTime_Fs(q)), 'k*');
                                 
                                 subplot(5, 1, 1)
                                 hold on
@@ -2964,7 +2999,7 @@ classdef avianSWRAnalysis_OBJ < handle
                                 
                                 subplot(5, 1,4)
                                 hold on;
-                                plot(SegData_s(relPeakTime_Fs_LF), DataSeg_rect_HF(peakTime_Fs(q)), 'b*');
+                                plot(SegData_s(relPeakTime_Fs_LF), DataSeg_ripple_rms(peakTime_Fs(q)), 'b*');
                                 
                                 subplot(5, 1, 1)
                                 hold on
