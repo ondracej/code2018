@@ -3631,7 +3631,7 @@ avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base avianSWR_DB(rfc).Sess
 
 avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
-avianSWR_DB(rfc).REC.bestChs  = [1];
+avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
 avianSWR_DB(rfc).REC.cscEMG  = [];
@@ -3688,7 +3688,7 @@ avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base avianSWR_DB(rfc).Sess
 
 avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
-avianSWR_DB(rfc).REC.bestChs  = [8, 6, 16];
+avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
 avianSWR_DB(rfc).REC.cscEMG  = [];
@@ -3745,7 +3745,7 @@ avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base avianSWR_DB(rfc).Sess
 
 avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
-avianSWR_DB(rfc).REC.bestChs  = [7];
+avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
 avianSWR_DB(rfc).REC.cscEMG  = [];
@@ -3802,7 +3802,7 @@ avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base avianSWR_DB(rfc).Sess
 
 avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
-avianSWR_DB(rfc).REC.bestChs  = [9, 8];
+avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
 avianSWR_DB(rfc).REC.cscEMG  = [];
@@ -3859,7 +3859,7 @@ avianSWR_DB(rfc).DIR.plotDir  = [avianSWR_DB(rfc).DIR.base avianSWR_DB(rfc).Sess
 
 avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
-avianSWR_DB(rfc).REC.bestChs  = [5, 6];
+avianSWR_DB(rfc).REC.bestChs  = [];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
 avianSWR_DB(rfc).REC.cscEMG  = [];

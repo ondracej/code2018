@@ -138,12 +138,12 @@ addpath(genpath(pathToJRCLUST))
 %%
 %(81) ZF-72-81 | 16.05.2019 - 21-26-59 - Overnight
 %recSession =  81;
-recSession =  107;
+recSession =  109;
 
 D_OBJ = avianSWRAnalysis_OBJ(recSession);
 
 %%
-recSet = [59:73];
+recSet = [107 109 110];
 nrecs = numel(recSet);
 
 for j = 1:nrecs

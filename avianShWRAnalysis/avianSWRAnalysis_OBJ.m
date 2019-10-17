@@ -9,6 +9,7 @@ classdef avianSWRAnalysis_OBJ < handle
         DIR
         REC
         Plotting
+        Vid
         SWR
         
         ops
@@ -16,6 +17,48 @@ classdef avianSWRAnalysis_OBJ < handle
     end
     
     methods
+        
+        
+        function [obj] = getTriggers(obj)
+            dbstop if error
+            
+            %%
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
+            
+            %% Defining Path to data
+            
+            SessionDir = obj.DIR.ephysDir;
+            
+            VidName = obj.Vid.Names;
+            nVidFrames = obj.Vid.frames;
+            %
+            TriggerFile = obj.REC.triggerChan;
+            extSearch = ['*' TriggerFile '*'];
+            allOpenEphysFiles=dir(fullfile(SessionDir,extSearch));
+            
+            tic
+            [data, timestamps, info] = load_open_ephys_data([SessionDir allOpenEphysFiles.name]);
+            %thisSegData_s = timestamps(1:end) - timestamps(1);
+            toc
+            disp('Finished loading data')
+            
+            disp('Finding peaks...')
+            [pks,locs,w,p] = findpeaks(data, 'MinPeakHeight', 1);
+            
+            nTrigs = numel(locs);
+            
+            %% Figure out how many triggers are present for each frame
+            
+            divider = round(nTrigs/nVidFrames);
+            
+            trigs = locs;
+            trigs = trigs(1:2:end,:);
+            
+            save([obj.DIR.analysisDir 'TRIGS.mat'], 'Trigs');
+            
+        end
+        
         
         %% Plotting Raw data
         function [obj] = batchPlotDataForOpenEphys_multiChannel(obj, doPlot, seg)
@@ -25,8 +68,8 @@ classdef avianSWRAnalysis_OBJ < handle
                 seg = 40; % seconds
             end
             %%
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             %% Defining Path to data
             
@@ -256,8 +299,8 @@ classdef avianSWRAnalysis_OBJ < handle
                 seg = 40; % seconds
             end
             
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             %% Defining Path to data
             
@@ -533,8 +576,8 @@ classdef avianSWRAnalysis_OBJ < handle
             SWR_Python_Dir = [obj.Session.SessionDir 'SWR-Python' obj.DIR.dirD];
             obj.DIR.SWR_Python_Dir = SWR_Python_Dir;
             
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             
             textSearch = '*export_ripples*'; % text search for ripple detection file
@@ -683,8 +726,8 @@ classdef avianSWRAnalysis_OBJ < handle
             ylim([-2 2])
             
             xlabel('Time [ms]')
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             %%
             PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
@@ -1141,8 +1184,8 @@ classdef avianSWRAnalysis_OBJ < handle
             
             SWR_Python_Dir = [obj.Session.SessionDir 'SWR-Python' obj.DIR.dirD];
             PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             if clustType == 2
                 clustChanPairing = obj.REC.GoodClust_2;
@@ -1237,8 +1280,8 @@ classdef avianSWRAnalysis_OBJ < handle
             
             SWR_Python_Dir = [obj.Session.SessionDir 'SWR-Python' obj.DIR.dirD];
             PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             if clustType == 2
                 clustChanPairing = obj.REC.GoodClust_2;
@@ -1408,7 +1451,7 @@ classdef avianSWRAnalysis_OBJ < handle
             
         end
         
-     
+        
         
         function [] = calcCSD(obj, dataRecordingObj)
             
@@ -1417,8 +1460,8 @@ classdef avianSWRAnalysis_OBJ < handle
             
             %SessionDir = obj.Session.SessionDir;
             %obj.Session.SessionDir;
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
             
             
@@ -1560,136 +1603,136 @@ classdef avianSWRAnalysis_OBJ < handle
             
             
             %% chekc if detected files exist
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             SWRDir = [obj.DIR.birdDir 'SWR' obj.DIR.dirD obj.DIR.dirName '_swrs' obj.DIR.dirD];
             savePath = [SWRDir  obj.Plotting.saveTxt '_SWR.mat'];
-%             
-%             if   exist(savePath, 'file') ~= 0
-%                 
-%                 disp('SWR file already exists...')
-%                 
-%                 load(savePath)
-%                 
-%                 obj.SWR = SWR;
-%                 obj.SWR.parSharpWaves = parSharpWaves;
-%                 
-%             else
-                
-                
-                %%
-                
-                
-                Fs = obj.Session.sampleRate;
-                recordingDuration_s = obj.Session.recordingDur_s;
-                
-                fObj = filterData(Fs);
-                
-                %% Filters
-                %
-                %             fobj.filt.FL=filterData(Fs);
-                %             %fobj.filt.FL.lowPassPassCutoff=4.5;
-                %             %fobj.filt.FL.lowPassPassCutoff=20;
-                %             %fobj.filt.FL.lowPassStopCutoff=30;
-                %             fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
-                %             fobj.filt.FL.lowPassStopCutoff=40;
-                %             fobj.filt.FL.attenuationInLowpass=20;
-                %             fobj.filt.FL=fobj.filt.FL.designLowPass;
-                %             fobj.filt.FL.padding=true;
-                %
-                %             fobj.filt.FH2=filterData(Fs);
-                %             fobj.filt.FH2.highPassCutoff=80;
-                %             fobj.filt.FH2.lowPassCutoff=400;
-                %             fobj.filt.FH2.filterDesign='butter';
-                %             fobj.filt.FH2=fobj.filt.FH2.designBandPass;
-                %             fobj.filt.FH2.padding=true;
-                %
-                %             fobj.filt.FN =filterData(Fs);
-                %             fobj.filt.FN.filterDesign='cheby1';
-                %             fobj.filt.FN.padding=true;
-                %             fobj.filt.FN=fobj.filt.FN.designNotch;
-                
-                fobj.filt.BP=filterData(Fs);
-                fobj.filt.BP.highPassCutoff=1;
-                fobj.filt.BP.lowPassCutoff=2000;
-                fobj.filt.BP.filterDesign='butter';
-                fobj.filt.BP=fobj.filt.BP.designBandPass;
-                fobj.filt.BP.padding=true;
-                
-                fobj.filt.DS4Hz=filterData(Fs);
-                fobj.filt.DS4Hz.downSamplingFactor=240; % 125 samples
-                %fobj.filt.DS4Hz.lowPassCutoff=4;
-                fobj.filt.DS4Hz.lowPassCutoff=55;
-                fobj.filt.DS4Hz.padding=true;
-                fobj.filt.DS4Hz=fobj.filt.DS4Hz.designDownSample;
-                
-                %% Define template
-                nTestSegments = 15;
-                percentile4ScaleEstimation = 5;
-                
-                rng(1);
-                
-                seg_ms=20000;
-                TOn=1:seg_ms:recordingDuration_s*1000-seg_ms;
-                nCycles = numel(TOn);
-                
-                [tmpV, t_ms] =dataRecordingObj.getData(2,TOn(1),seg_ms);
-                
-                %pCycle=sort(randperm(nCycles,nTestSegments));
-                pCycle=[4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 267, 274, 281];
-                %pCycle=sort(nCycles,nTestSegments);
-                ch = chan;
-                Mtest=cell(nTestSegments,1);
-                tTest=cell(nTestSegments,1);
-                for i=1:numel(pCycle)
+            %
+            %             if   exist(savePath, 'file') ~= 0
+            %
+            %                 disp('SWR file already exists...')
+            %
+            %                 load(savePath)
+            %
+            %                 obj.SWR = SWR;
+            %                 obj.SWR.parSharpWaves = parSharpWaves;
+            %
+            %             else
+            
+            
+            %%
+            
+            
+            Fs = obj.Session.sampleRate;
+            recordingDuration_s = obj.Session.recordingDur_s;
+            
+            fObj = filterData(Fs);
+            
+            %% Filters
+            %
+            %             fobj.filt.FL=filterData(Fs);
+            %             %fobj.filt.FL.lowPassPassCutoff=4.5;
+            %             %fobj.filt.FL.lowPassPassCutoff=20;
+            %             %fobj.filt.FL.lowPassStopCutoff=30;
+            %             fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            %             fobj.filt.FL.lowPassStopCutoff=40;
+            %             fobj.filt.FL.attenuationInLowpass=20;
+            %             fobj.filt.FL=fobj.filt.FL.designLowPass;
+            %             fobj.filt.FL.padding=true;
+            %
+            %             fobj.filt.FH2=filterData(Fs);
+            %             fobj.filt.FH2.highPassCutoff=80;
+            %             fobj.filt.FH2.lowPassCutoff=400;
+            %             fobj.filt.FH2.filterDesign='butter';
+            %             fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+            %             fobj.filt.FH2.padding=true;
+            %
+            %             fobj.filt.FN =filterData(Fs);
+            %             fobj.filt.FN.filterDesign='cheby1';
+            %             fobj.filt.FN.padding=true;
+            %             fobj.filt.FN=fobj.filt.FN.designNotch;
+            
+            fobj.filt.BP=filterData(Fs);
+            fobj.filt.BP.highPassCutoff=1;
+            fobj.filt.BP.lowPassCutoff=2000;
+            fobj.filt.BP.filterDesign='butter';
+            fobj.filt.BP=fobj.filt.BP.designBandPass;
+            fobj.filt.BP.padding=true;
+            
+            fobj.filt.DS4Hz=filterData(Fs);
+            fobj.filt.DS4Hz.downSamplingFactor=240; % 125 samples
+            %fobj.filt.DS4Hz.lowPassCutoff=4;
+            fobj.filt.DS4Hz.lowPassCutoff=55;
+            fobj.filt.DS4Hz.padding=true;
+            fobj.filt.DS4Hz=fobj.filt.DS4Hz.designDownSample;
+            
+            %% Define template
+            nTestSegments = 15;
+            percentile4ScaleEstimation = 5;
+            
+            rng(1);
+            
+            seg_ms=20000;
+            TOn=1:seg_ms:recordingDuration_s*1000-seg_ms;
+            nCycles = numel(TOn);
+            
+            [tmpV, t_ms] =dataRecordingObj.getData(2,TOn(1),seg_ms);
+            
+            %pCycle=sort(randperm(nCycles,nTestSegments));
+            pCycle=[4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 267, 274, 281];
+            %pCycle=sort(nCycles,nTestSegments);
+            ch = chan;
+            Mtest=cell(nTestSegments,1);
+            tTest=cell(nTestSegments,1);
+            for i=1:numel(pCycle)
                 %    for i=13:nCycles
-                    MTmp=dataRecordingObj.getData(ch,TOn(pCycle(i)),seg_ms);
-                    MTmpBP=fobj.filt.BP.getFilteredData(MTmp);
-                    %MTmp=dataRecordingObj.getData(ch,TOn(i),seg_ms);
-                    %plot(squeeze(MTmp))
-                    %i
-                    %pause
-                    [Mtest{i},tTest{i}]=fobj.filt.DS4Hz.getFilteredData(MTmpBP);
-                    tTest{i}=tTest{i}'+TOn(pCycle(i));
-                    Mtest{i}=squeeze(Mtest{i});
-                end
-                Mtest=cell2mat(Mtest);
-                tTest=cell2mat(tTest);
-                sortedMtest=sort(Mtest);
-                scaleEstimator=sortedMtest(round(percentile4ScaleEstimation/100*numel(sortedMtest)));
-                
-                tmpFs=fobj.filt.DS4Hz.filteredSamplingFrequency;
-                
-                %%
-                
-                % addParameter(parseObj,'minPeakWidth',200,@isnumeric);
-                % addParameter(parseObj,'minPeakInterval',1000,@isnumeric);
-                % addParameter(parseObj,'detectOnlyDuringSWS',true);
-                % addParameter(parseObj,'preTemplate',400,@isnumeric);
-                % addParameter(parseObj,'winTemplate',1500,@isnumeric);
-                
-                % minPeakWidth = 200;
-                % minPeakInterval = 1000;
-                % preTemplate = 400;
-                % winTemplate = 1500;
-                
-                %in ms ZF
-                %minPeakWidth = 20;
-                %maxPeakWidth = 130;
-                %minPeakInterval = 200;
-                %preTemplate = 200;
-                %winTemplate = 600;
-                
-                minPeakWidth = 20;
-                maxPeakWidth = 300;
-                minPeakInterval = 50;
-                
-                preTemplate = 200;
-                winTemplate = 200;
-                
-                [peakVal,peakTime,peakWidth,peakProminance]=findpeaks(-Mtest,'MinPeakHeight',-scaleEstimator,'MinPeakDistance',minPeakInterval/1000*tmpFs,'MinPeakProminence',-scaleEstimator/2,'MinPeakWidth',minPeakWidth/1000*tmpFs, 'MaxPeakWidth', maxPeakWidth/1000*tmpFs,'WidthReference','halfprom');
-                
-                %{
+                MTmp=dataRecordingObj.getData(ch,TOn(pCycle(i)),seg_ms);
+                MTmpBP=fobj.filt.BP.getFilteredData(MTmp);
+                %MTmp=dataRecordingObj.getData(ch,TOn(i),seg_ms);
+                %plot(squeeze(MTmp))
+                %i
+                %pause
+                [Mtest{i},tTest{i}]=fobj.filt.DS4Hz.getFilteredData(MTmpBP);
+                tTest{i}=tTest{i}'+TOn(pCycle(i));
+                Mtest{i}=squeeze(Mtest{i});
+            end
+            Mtest=cell2mat(Mtest);
+            tTest=cell2mat(tTest);
+            sortedMtest=sort(Mtest);
+            scaleEstimator=sortedMtest(round(percentile4ScaleEstimation/100*numel(sortedMtest)));
+            
+            tmpFs=fobj.filt.DS4Hz.filteredSamplingFrequency;
+            
+            %%
+            
+            % addParameter(parseObj,'minPeakWidth',200,@isnumeric);
+            % addParameter(parseObj,'minPeakInterval',1000,@isnumeric);
+            % addParameter(parseObj,'detectOnlyDuringSWS',true);
+            % addParameter(parseObj,'preTemplate',400,@isnumeric);
+            % addParameter(parseObj,'winTemplate',1500,@isnumeric);
+            
+            % minPeakWidth = 200;
+            % minPeakInterval = 1000;
+            % preTemplate = 400;
+            % winTemplate = 1500;
+            
+            %in ms ZF
+            %minPeakWidth = 20;
+            %maxPeakWidth = 130;
+            %minPeakInterval = 200;
+            %preTemplate = 200;
+            %winTemplate = 600;
+            
+            minPeakWidth = 20;
+            maxPeakWidth = 300;
+            minPeakInterval = 50;
+            
+            preTemplate = 200;
+            winTemplate = 200;
+            
+            [peakVal,peakTime,peakWidth,peakProminance]=findpeaks(-Mtest,'MinPeakHeight',-scaleEstimator,'MinPeakDistance',minPeakInterval/1000*tmpFs,'MinPeakProminence',-scaleEstimator/2,'MinPeakWidth',minPeakWidth/1000*tmpFs, 'MaxPeakWidth', maxPeakWidth/1000*tmpFs,'WidthReference','halfprom');
+            
+            %{
             widthTimes = peakWidth/tmpFs*1000;
             figure
             hist(widthTimes, 0:1:maxPeakWidth)
@@ -1698,16 +1741,16 @@ classdef avianSWRAnalysis_OBJ < handle
             plot(Mtest)
             hold on
             plot(peakTime, 50, 'rv')
-                %}
-                %%
-                [allSW,tSW]=dataRecordingObj.getData(ch,tTest(peakTime)-preTemplate,winTemplate*2);
-                [FLallSW,tFLallSW]=fobj.filt.DS4Hz.getFilteredData(allSW);
-                
-                template=squeeze(median(FLallSW,2));
-                nTemplate=numel(template);
-                ccEdge=floor(nTemplate/2);
-                [~,pTemplatePeak]=min(template);
-                %{
+            %}
+            %%
+            [allSW,tSW]=dataRecordingObj.getData(ch,tTest(peakTime)-preTemplate,winTemplate*2);
+            [FLallSW,tFLallSW]=fobj.filt.DS4Hz.getFilteredData(allSW);
+            
+            template=squeeze(median(FLallSW,2));
+            nTemplate=numel(template);
+            ccEdge=floor(nTemplate/2);
+            [~,pTemplatePeak]=min(template);
+            %{
                 allSWRs = squeeze(allSW);
                 for j = 1:numel(peakTime)
                     
@@ -1715,77 +1758,77 @@ classdef avianSWRAnalysis_OBJ < handle
                     plot(tSW, allSWRs(j,:))
                     pause
                 end
-                %}
-                
-                
-                %{
+            %}
+            
+            
+            %{
             figure(100); clf
             plot(tFLallSW, template)
-                %}
+            %}
+            
+            %%
+            seg=20000;
+            TOn=0:seg:recordingDuration_s*1000-seg;
+            TWin=seg*ones(1,numel(TOn));
+            nCycles=numel(TOn);
+            
+            
+            
+            C_Height = 0.1;
+            C_Prom = 0.05;
+            
+            
+            absolutePeakTimes=cell(nCycles,1);
+            for i=1:nCycles
+                [tmpM,tmpT]=dataRecordingObj.getData(ch,TOn(i),TWin(i));
+                [tmpBP,~]=fobj.filt.BP.getFilteredData(tmpM);
                 
-                %%
-                seg=20000;
-                TOn=0:seg:recordingDuration_s*1000-seg;
-                TWin=seg*ones(1,numel(TOn));
-                nCycles=numel(TOn);
+                [tmpFM,tmpFT]=fobj.filt.DS4Hz.getFilteredData(tmpBP);
                 
+                [C]=xcorrmat(squeeze(tmpFM),template);
+                C=C(numel(tmpFM)-ccEdge:end-ccEdge);
                 
-                
-                C_Height = 0.1;
-                C_Prom = 0.05;
-                
-                
-                absolutePeakTimes=cell(nCycles,1);
-                for i=1:nCycles
-                    [tmpM,tmpT]=dataRecordingObj.getData(ch,TOn(i),TWin(i));
-                    [tmpBP,~]=fobj.filt.BP.getFilteredData(tmpM);
-                    
-                    [tmpFM,tmpFT]=fobj.filt.DS4Hz.getFilteredData(tmpBP);
-                    
-                    [C]=xcorrmat(squeeze(tmpFM),template);
-                    C=C(numel(tmpFM)-ccEdge:end-ccEdge);
-                    
-                    %{
+                %{
                                 figure(103); clf
                                subplot(2, 1, 1 )
                                 plot(C); axis tight
-                    %}
-                    %C=xcorr(squeeze(tmpFM),template,'coeff');
-                    
-                    %[~,peakTime]=findpeaks(C,'MinPeakHeight',0.1,'MinPeakProminence',0.2,'WidthReference','halfprom');
-                    [~,peakTime]=findpeaks(C,'MinPeakHeight',C_Height ,'MinPeakProminence',C_Prom,'WidthReference','halfprom');
-                    
-                    %{
+                %}
+                %C=xcorr(squeeze(tmpFM),template,'coeff');
+                
+                %[~,peakTime]=findpeaks(C,'MinPeakHeight',0.1,'MinPeakProminence',0.2,'WidthReference','halfprom');
+                [~,peakTime]=findpeaks(C,'MinPeakHeight',C_Height ,'MinPeakProminence',C_Prom,'WidthReference','halfprom');
+                
+                %{
                                 hold on
                                 plot(peakTime, 0.1, 'rv')
                 
                                 subplot(2, 1, 2)
-                                hold on; 
+                                hold on;
                                 %plot(tmpT, squeeze(tmpBP))
                                 plot(tmpFT, squeeze(tmpFM))
                                 %plot(relPeakTime, 100, 'rv')
                    
                                 %linkaxes(h,'x');
                     
-                    %}
-                    
-                    peakTime(peakTime<=pTemplatePeak)=[]; %remove peaks at the edges where templates is not complete
-                    %relPeakTime = tmpFT(peakTime-round(pTemplatePeak/2))';
-                    relPeakTime = tmpFT(peakTime+pTemplatePeak)';
-                    %relPeakTime = tmpFT(peakTime-pTemplatePeak)';
-                    absolutePeakTimes{i}=tmpFT(peakTime-round(pTemplatePeak/2))'+TOn(i);
-                    %absolutePeakTimes{i}=tmpFT(peakTime)'+TOn(i);
-                     
+                %}
                 
-                    %h(1)=subplot(2,1,1);plot(squeeze(tmpFM));h(2)=subplot(2,1,2);plot((1:numel(C))-pTemplatePeak,C);linkaxes(h,'x');
-                end
+                peakTime(peakTime<=pTemplatePeak)=[]; %remove peaks at the edges where templates is not complete
+                %relPeakTime = tmpFT(peakTime-round(pTemplatePeak/2))';
+                relPeakTime = tmpFT(peakTime+pTemplatePeak)';
+                %relPeakTime = tmpFT(peakTime-pTemplatePeak)';
+                absolutePeakTimes{i}=tmpFT(peakTime-round(pTemplatePeak/2))'+TOn(i);
+                %absolutePeakTimes{i}=tmpFT(peakTime)'+TOn(i);
                 
                 
-                
-                 
-%                 [allSW,tSW]=dataRecordingObj.getData(ch,(tSW),winTemplate);
-%                 
-%                 allSWRs = squeeze(allSW);
+                %h(1)=subplot(2,1,1);plot(squeeze(tmpFM));h(2)=subplot(2,1,2);plot((1:numel(C))-pTemplatePeak,C);linkaxes(h,'x');
+            end
+            
+            
+            
+            
+            %                 [allSW,tSW]=dataRecordingObj.getData(ch,(tSW),winTemplate);
+            %
+            %                 allSWRs = squeeze(allSW);
             
             %{
             figure (105); clf
@@ -1796,45 +1839,45 @@ classdef avianSWRAnalysis_OBJ < handle
                 pause
             end
             %}
-                
-                tSW=cell2mat(absolutePeakTimes);
-                
-                
-                SWR.tSWR_samps = tSW;
-                SWR.template_V = FLallSW;
-                SWR.template_T = tFLallSW;
-                SWR.mediantemplate = template;
-                SWR.pTemplatePeak = pTemplatePeak;
-                SWR.ch= ch;
-                
-                parSharpWaves.minPeakWidth = minPeakWidth;
-                parSharpWaves.minPeakInterval = minPeakInterval;
-                parSharpWaves.preTemplate = preTemplate;
-                parSharpWaves.winTemplate = winTemplate;
-                parSharpWaves.C_MinPeakHeight = C_Height;
-                parSharpWaves.C_MinPeakProminence = C_Prom;
-                parSharpWaves.tmpFs = tmpFs;
-                
-                SessionDir = obj.Session.SessionDir;
-                
-                obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-                obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
-                SWRDir = [obj.DIR.birdDir 'SWR' obj.DIR.dirD obj.DIR.dirName '_swrs' obj.DIR.dirD];
-                
-                if exist(SWRDir, 'dir') == 0
-                    mkdir(SWRDir);
-                    disp(['Created: '  SWRDir])
-                end
-                savePath = [SWRDir  obj.Plotting.saveTxt '_SWR.mat'];
-                
-                save(savePath,'SWR','parSharpWaves');
-                disp(['Saved:' savePath])
-                obj.SWR = SWR;
-                obj.SWR.parSharpWaves = parSharpWaves;
-                
-                
+            
+            tSW=cell2mat(absolutePeakTimes);
+            
+            
+            SWR.tSWR_samps = tSW;
+            SWR.template_V = FLallSW;
+            SWR.template_T = tFLallSW;
+            SWR.mediantemplate = template;
+            SWR.pTemplatePeak = pTemplatePeak;
+            SWR.ch= ch;
+            
+            parSharpWaves.minPeakWidth = minPeakWidth;
+            parSharpWaves.minPeakInterval = minPeakInterval;
+            parSharpWaves.preTemplate = preTemplate;
+            parSharpWaves.winTemplate = winTemplate;
+            parSharpWaves.C_MinPeakHeight = C_Height;
+            parSharpWaves.C_MinPeakProminence = C_Prom;
+            parSharpWaves.tmpFs = tmpFs;
+            
+            SessionDir = obj.Session.SessionDir;
+            
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
+            SWRDir = [obj.DIR.birdDir 'SWR' obj.DIR.dirD obj.DIR.dirName '_swrs' obj.DIR.dirD];
+            
+            if exist(SWRDir, 'dir') == 0
+                mkdir(SWRDir);
+                disp(['Created: '  SWRDir])
             end
-%         end
+            savePath = [SWRDir  obj.Plotting.saveTxt '_SWR.mat'];
+            
+            save(savePath,'SWR','parSharpWaves');
+            disp(['Saved:' savePath])
+            obj.SWR = SWR;
+            obj.SWR.parSharpWaves = parSharpWaves;
+            
+            
+        end
+        %         end
         
         
         
@@ -1853,7 +1896,7 @@ classdef avianSWRAnalysis_OBJ < handle
             
             preTemplate = obj.SWR.parSharpWaves.preTemplate;
             winTemplate = obj.SWR.parSharpWaves.winTemplate;
-            %figure; 
+            %figure;
             %plot(template_T, template_v)
             %obj.Session.recordingDur_s
             
@@ -1936,8 +1979,8 @@ classdef avianSWRAnalysis_OBJ < handle
             plot(template_T, template_v, 'r', 'linewidth', 1)
             axis tight
             %subplot(9, 1, [3])
-            %plot(template_T, template_v, 'r', 'linewidth', 1)            
-                        
+            %plot(template_T, template_v, 'r', 'linewidth', 1)
+            
             % LF SWR example
             %[exLF,t_ms] =  fobj.filt.FL.getFilteredData(exSWR);
             %hold on
@@ -2004,7 +2047,7 @@ classdef avianSWRAnalysis_OBJ < handle
             set(gca, 'xticklabel', xticks_s)
             set(gca,'XMinorTick','on','YMinorTick','on')
             
-            title([obj.INFO.birdName ' | ' obj.DIR.dirName])
+            title([obj.INFO.Name ' | ' obj.DIR.dirName])
             
             %numel(spks_ms(spks_ms >= (tOn(o)-1) & spks_ms < (tOn(o)+spkWin_ms-1)));
             
@@ -2516,7 +2559,7 @@ classdef avianSWRAnalysis_OBJ < handle
                             templatePeaks.peakW(cnt) = peakW(q);
                             templatePeaks.peakP(cnt) = peakP(q);
                             
-                            %choose HighestPeak                            
+                            %choose HighestPeak
                             [pmax, maxInd] = max(peakH_LF);
                             
                             absPeakTime_Fs_LF = (peakTime_Fs_LF(maxInd) + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
@@ -2575,19 +2618,21 @@ classdef avianSWRAnalysis_OBJ < handle
             save(DetectionSaveName, 'templatePeaks', 'ripplePeaks');
             
             disp(['Saved:' DetectionSaveName ])
-
+            
         end
-    
- function [obj] = detectSWRsOld_rippleBand(obj, dataRecordingObj)
+        
+        function [obj] = detectSWRs_ripple_SW_Band(obj)
             
             %%
             doPlot = 1;
+            dbstop if error
             
-            chanToUse = obj.REC.bestChs(2);
-            SessionDir = obj.Session.SessionDir;
+            chanToUse = obj.REC.bestChs(1);
+            SessionDir = obj.DIR.ephysDir;
             
-            eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
-            fileName = [SessionDir fileAppend];
+            search = ['*CH' num2str(chanToUse) '*'];
+            matchFile = dir(fullfile(SessionDir, search));
+            fileName = [SessionDir matchFile.name];
             
             [data, timestamps, info] = load_open_ephys_data(fileName);
             Fs = info.header.sampleRate;
@@ -2603,7 +2648,6 @@ classdef avianSWRAnalysis_OBJ < handle
             fObj = filterData(Fs);
             
             fobj.filt.F=filterData(Fs);
-            %fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
             fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
             fobj.filt.F=fobj.filt.F.designDownSample;
             fobj.filt.F.padding=true;
@@ -2656,94 +2700,156 @@ classdef avianSWRAnalysis_OBJ < handle
             fobj.filt.FN.padding=true;
             fobj.filt.FN=fobj.filt.FN.designNotch;
             
-            %% For estiamting scale
-            nTestSegments = 40;
-            percentile4ScaleEstimation = 20;
+            %% For estimating scale
             
             rng(1);
             
-            seg_s= 20;
+            seg_s= 40;
             TOn=1:seg_s*Fs:(recordingDuration_s*Fs-seg_s*Fs);
+            nTestSegments = round(numel(TOn)*.3);
+            
             nCycles = numel(TOn);
+            if nCycles >100
+                nTestSegments  = 40;
+            end
             
             pCycle=sort(randperm(nCycles,nTestSegments));
-            Mtest=cell(nTestSegments,1);
-            tTest=cell(nTestSegments,1);
+            %pCycle=TOn(1:nTestSegments);
+            Mtest_ripple=cell(nTestSegments,1);
+            Mtest_SW=cell(nTestSegments,1);
+            smoothWin = 0.10*Fs;
             for i=1:numel(pCycle)
                 
                 
-                %thisROI = TOn(pCycle(i)):TOn(pCycle(i)+1);
-                thisROI = TOn((i)):TOn((i)+1);
+                thisROI = TOn(pCycle(i)):TOn(pCycle(i)+1);
+                %thisROI = TOn((i)):TOn((i)+1);
                 SegData = V_uV_data_full(:,:, thisROI);
                 
                 %DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP));
-                %DataSeg_BP = fobj.filt.BP.getFilteredData(SegData);
-                DataSeg_ripple = fobj.filt.Ripple.getFilteredData(SegData);
-                DataSeg_SW = fobj.filt.SW.getFilteredData(SegData);
+                DataSeg_BP = fobj.filt.BP.getFilteredData(SegData);
+                DataSeg_BPFL = fobj.filt.FL.getFilteredData(DataSeg_BP);
                 
-                
+                DataSeg_ripple = squeeze(fobj.filt.Ripple.getFilteredData(SegData));
+                DataSeg_SW = fobj.filt.SW.getFilteredData(DataSeg_BPFL);
+                DataSeg_BPFL = squeeze(DataSeg_BPFL);
                 %%
-                smoothWin = 0.05*Fs;
+                %smoothWin = 0.05*Fs;
                 %DataSeg_rect_HF = smooth(DataSeg_HF.^2, smoothWin);
-                DataSeg_ripple_rms = rms(squeeze(DataSeg_ripple), 2);
+                DataSeg_ripple_rms = rms(DataSeg_ripple, 2);
+                DataSeg_ripple_rms_smooth =  smooth(DataSeg_ripple_rms, smoothWin);
+                
+                DataSeg_rect_ripple = smooth(DataSeg_ripple.^2, smoothWin);
+                
                 DataSeg_SW_rms = rms(squeeze(DataSeg_SW), 2);
+                %DataSeg_SW_sq = squeeze(DataSeg_SW).^2;
                 
-                Mtest{i} = DataSeg_ripple_rms;
+                %DataSeg_BPLF = squeeze(DataSeg_BPFL);
+                %DataSeg_SW_rms_smooth =  smooth(DataSeg_SW_rms, smoothWin);
                 
+                %Mtest_ripple{i} = DataSeg_ripple_rms_smooth;
+                Mtest_ripple{i} = DataSeg_rect_ripple;
                 
+                Mtest_SW{i} = -DataSeg_BPFL;
+                
+                %{
                 figure(80);clf
-                subplot(5, 1, 1)
-                plot(squeeze(SegData))
+                subplot(6, 1, 1)
+                plot(squeeze(SegData)); title('raw data')
                 axis tight
+                grid on
                 
-                subplot(5, 1, 2)
-                plot(squeeze(DataSeg_ripple))
+                subplot(6, 1, 2)
+                plot(squeeze(DataSeg_ripple)); title('ripple')
                 axis tight
+                grid on
                 
-                subplot(5, 1, 3)
-                plot(smooth(DataSeg_ripple_rms, smoothWin))
-                axis tight
-                
-                std4_ripple = std(smooth(DataSeg_ripple_rms, smoothWin))*4;
-                subplot(5, 1, 3)
+                subplot(6, 1, 3)
+                plot(smooth(DataSeg_ripple_rms, smoothWin)); title('smooth ripple rms')
                 hold on
-                line([0 numel(DataSeg_ripple_rms)], [std4_ripple std4_ripple], 'color', 'r')
+                plot(DataSeg_rect_ripple); title('rectified ripple')
+                  
+                axis tight
+                grid on
+                
+                std_ripple = std(smooth(DataSeg_ripple_rms, smoothWin));
+                subplot(6, 1, 3)
+                hold on
+                line([0 numel(DataSeg_ripple_rms)], [std_ripple*3 std_ripple*3], 'color', 'r')
+                line([0 numel(DataSeg_ripple_rms)], [std_ripple*4 std_ripple*4], 'color', 'b')
                
-               subplot(5, 1, 4)
-                plot(squeeze(DataSeg_SW))
-                axis tight
-                
-                subplot(5, 1, 5)
-                plot(smooth(DataSeg_SW_rms, smoothWin))
-                axis tight
-                
-                std4_SW = std(smooth(DataSeg_SW_rms, smoothWin))*4;
-                subplot(5, 1, 5)
+               subplot(6, 1, 4)
+                plot(-DataSeg_BPFL) ; title('neg Bp LF')
                 hold on
-                line([0 numel(DataSeg_ripple_rms)], [std4_SW std4_SW], 'color', 'r')
+                std_bplf = std(DataSeg_BPFL)*2;
+                th_bplf = median(DataSeg_BPFL)+iqr(DataSeg_BPFL)*2;
+                %thr=median(DataSeg_SW_rms_smooth)+1*iqr(DataSeg_SW_rms_smooth);
+                line([0 numel(DataSeg_ripple_rms)], [std_bplf std_bplf], 'color', 'r')
+                line([0 numel(DataSeg_ripple_rms)], [150 150], 'color', 'b')
+                axis tight
                 
+                grid on
+                
+                subplot(6, 1, 5)
+                plot(DataSeg_SW_rms); title('SW rms')
+                axis tight
+                grid on
+                %std_SW = std(smooth(DataSeg_SW_rms, smoothWin))*3;
+                
+%                 subplot(6, 1, 6)
+%                 hold on
+%                 %plot(-DataSeg_LF)
+%                 plot(smooth(DataSeg_SW_rms_smooth, smoothWin))
+%                 axis tight
+%                 std_Swrms = std(DataSeg_SW_rms_smooth)*3;
+%                 %thr=median(DataSeg_SW_rms_smooth)+1*iqr(DataSeg_SW_rms_smooth);
+%                 line([0 numel(DataSeg_ripple_rms)], [std_Swrms std_Swrms], 'color', 'r')
+%                 grid on
+                  
+                %pause
+                %}
             end
-            Mtest=cell2mat(Mtest);
             
-            sortedMtest=sort(Mtest);
-            peakHeight_iqr = 3*iqr(sortedMtest);
             
-            clear('Mtest', 'sortedMtest')
+            Mtest_ripple=cell2mat(Mtest_ripple);
+            Mtest_SW=cell2mat(Mtest_SW);
+            
+            sortedMtest_ripple=sort(Mtest_ripple);
+            sortedMtest_SW=sort(Mtest_SW);
+            
+            percentile4ScaleEstimation = 90;
+            scaleEstimator_ripple=sortedMtest_ripple(round(percentile4ScaleEstimation/100*numel(sortedMtest_ripple)));
+            
+            scaleEstimator_sw=sortedMtest_SW(round(percentile4ScaleEstimation/100*numel(sortedMtest_SW)));
+            
+            figure; plot(sortedMtest_ripple); axis tight
+            figure; plot(sortedMtest_SW); axis tight
+            
+            peakHeight_iqr = iqr(Mtest_ripple);
+            
+            
+            ripple_Std = std(Mtest_ripple);
+            means = mean(Mtest_ripple);
+            medians = median(Mtest_ripple);
+            
+            thresh = means +3*ripple_Std;
+            thresh = medians+2*ripple_Std;
             
             %%
-            seg_s=40;
+            seg_s=20;
             TOn=1:seg_s*Fs:(recordingDuration_s*Fs-seg_s*Fs);
             overlapWin = 2*Fs;
             
             nCycles = numel(TOn);
             
-            cnt = 1;
-            cnnt = 1;
+            rcnt = 1;
+            scnt = 1;
             
             templatePeaks = [];
             ripplePeaks = [];
             
             for i=1:nCycles-1
+                
+                disp([num2str(i) '/' num2str(nCycles)])
                 figure(300); clf
                 if i ==1
                     thisROI = TOn(i):TOn(i+1);
@@ -2754,127 +2860,161 @@ classdef avianSWRAnalysis_OBJ < handle
                 SegData = V_uV_data_full(:,:, thisROI);
                 SegData_s = thisSegData_s(thisROI);
                 
+                DataSeg_ripple = squeeze(fobj.filt.Ripple.getFilteredData(SegData));
+                %DataSeg_LF = fobj.filt.FL.getFilteredData(SegData);
+                %DataSeg_SW = fobj.filt.SW.getFilteredData(DataSeg_LF);
+                
                 DataSeg_BP = fobj.filt.BP.getFilteredData(SegData);
-                DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
-                DataSeg_LF = squeeze(fobj.filt.FL.getFilteredData(DataSeg_BP));
-                DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP));
-                Data_SegData = squeeze(SegData);
-                %%
+                DataSeg_BPFL = fobj.filt.FL.getFilteredData(DataSeg_BP);
+                %DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
+                %DataSeg_LF = squeeze(fobj.filt.FL.getFilteredData(DataSeg_BP));
+                %DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP));
+                
                 smoothWin = 0.10*Fs;
-                DataSeg_LF_neg = -DataSeg_LF;
+                DataSeg_rect_HF = smooth(DataSeg_ripple.^2, smoothWin);
+                %DataSeg_ripple_rms_smooth = smooth(rms(squeeze(DataSeg_ripple), 2), smoothWin );
+                %DataSeg_SW_rms_smooth = smooth(rms(squeeze(DataSeg_SW), 2), smoothWin );
+                %DataSeg_ripple = squeeze(DataSeg_ripple);
+                Data_SegData = squeeze(SegData);
+                %DataSeg_LF = squeeze(DataSeg_LF);
+                DataSeg_BPFL = squeeze(DataSeg_BPFL);
+                DataSeg_BP = squeeze(DataSeg_BP);
+                %%
+                %smoothWin = 0.10*Fs;
+                %DataSeg_LF_neg = -DataSeg_LF;
                 %figure; plot(DataSeg_LF_neg)
-                DataSeg_ripple_rms = smooth(DataSeg_HF.^2, smoothWin);
+                %DataSeg_ripple_rms = smooth(DataSeg_HF.^2, smoothWin);
                 %baseline = mean(DataSeg_rect_HF)*2;
                 
                 %figure; plot(SegData_s, DataSeg_rect_HF); axis tight
                 
-                %% Find Peaks
-                interPeakDistance = 0.2*Fs;
-                minPeakWidth = 0.05*Fs;
+                %% Find Peaks in ripples first
+                interPeakDistance = 0.1*Fs;
+                minPeakWidth = 0.01*Fs;
                 %minPeakHeight = 200;
-                minPeakHeight = peakHeight_iqr;
-                minPeakProminence = 30;
+                %minPeakHeight = ripple_Std*3;
+                minPeakHeight =scaleEstimator_ripple;
+                %minPeakProminence = 5;
                 
-                [peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_ripple_rms,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
+                %[peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_ripple_rms_smooth,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
+                [peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth,'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
+                %[peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakWidth', minPeakWidth,'MinPeakDistance', interPeakDistance, 'WidthReference','halfheight'); %For HF
                 
+                %minPeakHeight_SW = 120;
+                %minPeakHeight_SW = 100;
+                minPeakHeight_SW = scaleEstimator_sw;
+                interPeakDistance_SW = 0.1*Fs;
+                minPeakWidth_SW = 0.01*Fs;
+                
+                [peakSW_H,peakTimeSW_Fs, peakSW_W, peakSW_P]=findpeaks(-DataSeg_BPFL,'MinPeakHeight',minPeakHeight_SW, 'MinPeakWidth', minPeakWidth_SW,'MinPeakDistance', interPeakDistance_SW, 'WidthReference','halfheight'); %For HF
                 %%
                 
-                absPeakTime_s =  SegData_s(peakTime_Fs);
-                asPeakTime_fs = peakTime_Fs+thisROI(1)-1;
+                absPeakTime_ripples_s =  SegData_s(peakTime_Fs);
+                absPeakTime_ripples_fs = peakTime_Fs+thisROI(1)-1;
+                
+                absPeakTime_SW_s =  SegData_s(peakTimeSW_Fs);
+                absPeakTime_SW_fs = peakTimeSW_Fs+thisROI(1)-1;
+                
                 % relPeakTime_s  = peakTime_Fs;
                 
                 %%
                 if doPlot
-                    %{
-                                        figure(100);clf;
                     
-                                        subplot(3,1,1)
-                                        plot(SegData_s, DataSeg_FNotch, 'k'); title( ['Raw']);
-                                        axis tight
-                                        ylim([-300 300])
-                    
-                                        subplot(3, 1, 2)
-                                        plot(SegData_s, DataSeg_HF, 'k'); title( ['Ripple']);
-                                        axis tight
-                                        ylim([-80 80])
-                    
-                                        subplot(3, 1, 3)
-                                        plot(SegData_s, smooth(DataSeg_rect_HF, .05*Fs), 'k'); title( ['Ripple Rectified']);
-                                        axis tight
-                                        ylim([0 400])
-                                        hold on
-                                        plot(SegData_s(peakTime_Fs), 200, 'rv')
-                    %}
+                    %                     figure(100);clf;
+                    %
+                    %                     subplot(3,1,1)
+                    %                     plot(SegData_s, squeeze(DataSeg_BP), 'k'); title( ['Raw']);
+                    %                     axis tight
+                    %                     %ylim([-300 300])
+                    %
+                    %                     subplot(3, 1, 2)
+                    %                     plot(SegData_s, squeeze(DataSeg_ripple), 'k'); title( ['Ripple']);
+                    %                     axis tight
+                    %                     % ylim([-80 80])
+                    %
+                    %                     subplot(3, 1, 3)
+                    %                     plot(SegData_s, DataSeg_ripple_rms_smooth, 'k'); title( ['Ripple Rectified']);
+                    %                     axis tight
+                    %                     ylim([0 400])
+                    %                     hold on
+                    %                     plot(SegData_s(peakTime_Fs), 10, 'rv')
+                    %                     axis tight
+                    %
                     
                     figure(300);
                     
                     subplot(5, 1, 1)
                     plot(SegData_s, Data_SegData); title( ['Raw Voltage']);
                     hold on
-                    %plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
+                    if ~isempty(peakTime_Fs)
+                        plot(SegData_s(peakTime_Fs), 0, 'r*')
+                    end
+                    
+                    if ~isempty(peakTimeSW_Fs)
+                        plot(SegData_s(peakTimeSW_Fs), 0, 'rv')
+                    end
                     axis tight
                     
                     subplot(5, 1, 2)
-                    plot(SegData_s, DataSeg_FNotch); title( ['Notch Filter']);
+                    plot(SegData_s, DataSeg_BP); title( ['BP Filter']);
                     hold on
-                    %plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
+                    if ~isempty(peakTime_Fs)
+                        plot(SegData_s(peakTime_Fs), 0, 'r*')
+                    end
+                    
+                    if ~isempty(peakTimeSW_Fs)
+                        plot(SegData_s(peakTimeSW_Fs), 0, 'rv')
+                    end
                     axis tight
                     
                     subplot(5, 1, 3)
-                    plot(SegData_s, DataSeg_LF); title( ['LF']);
+                    plot(SegData_s, -DataSeg_BPFL); title(['Neg BP LF']);
+                    hold on
+                    if ~isempty(peakTimeSW_Fs)
+                        plot(SegData_s(peakTimeSW_Fs), -DataSeg_BPFL(peakTimeSW_Fs), 'rv');
+                    end
                     axis tight
                     
-                    subplot(5, 1,4)
-                    plot(SegData_s, DataSeg_ripple_rms); title( ['HF Rectified']);
+                    subplot(5,1, 4)
+                    plot(SegData_s, DataSeg_ripple); title( ['ripple band']);
                     hold on;
-                    %plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'r*');
                     axis tight
-                    ylim([0 500])
                     
-                    subplot(5,1, 5)
-                    plot(SegData_s, DataSeg_HF); title( ['HF Rectified']);
+                    subplot(5, 1,5)
+                    plot(SegData_s, DataSeg_rect_HF); title( ['Ripple rms smooth']);
                     hold on;
-                    %plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'rv');
+                    if ~isempty(peakTime_Fs)
+                        plot(SegData_s(peakTime_Fs), DataSeg_rect_HF(peakTime_Fs), 'r*');
+                    end
+                    
                     axis tight
+                    %ylim([0 500])
                     
                 end
                 
-                WinSizeL = 0.15*Fs;
-                WinSizeR = 0.15*Fs;
+                %%
                 
+                WinSizeL = 0.1*Fs;
+                WinSizeR = 0.1*Fs;
+                
+                %% Go through Ripple peaks first
                 for q =1:numel(peakTime_Fs)
                     
                     if doPlot
+                        
                         figure(300);
                         
-                        subplot(5, 1, 1)
-                        %plot(SegData_s, Data_SegData); title( ['Raw Voltage']);
+                        %                     subplot(5, 1, 3)
+                        %                     plot(SegData_s, -DataSeg_BPFL); title(['Neg BP LF']);
+                        %                     hold on
+                        %                     plot(SegData_s(peakTimeSW_Fs), -DataSeg_BPFL(peakTimeSW_Fs), 'bv');
+                        %                     axis tight
+                        %
+                        subplot(5, 1,5)
                         hold on
-                        plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
+                        plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'b*');
                         axis tight
-                        
-                        subplot(5, 1, 2)
-                        %plot(SegData_s, DataSeg_FNotch); title( ['Notch Filter']);
-                        hold on
-                        plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
-                        axis tight
-                        
-                        subplot(5, 1, 3)
-                        plot(SegData_s, DataSeg_LF); title( ['LF']);
-                        axis tight
-                        
-                        subplot(5, 1,4)
-                        %plot(SegData_s, DataSeg_rect_HF); title( ['HF Rectified']);
-                        hold on;
-                        plot(SegData_s(peakTime_Fs(q)), DataSeg_ripple_rms(peakTime_Fs(q)), 'r*');
-                        axis tight
-                        ylim([0 500])
-                        
-                        subplot(5,1, 5)
-                        %plot(SegData_s, DataSeg_HF); title( ['HF Rectified']);
-                        hold on;
-                        plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'rv');
-                        axis tight
+                        %ylim([0 500])
                         
                         
                     end
@@ -2886,44 +3026,53 @@ classdef avianSWRAnalysis_OBJ < handle
                         continue
                     else
                         
-                        LFWin = -DataSeg_LF(winROI);
+                        smoothWinW = 0.05*Fs;
+                        rippleWin = smooth(DataSeg_rect_HF(winROI), smoothWinW);
                         
-                        minPeakWidth_LF = 0.030*Fs;
-                        %minPeakHeight_LF = 150;
-                        %minPeakProminence = 195;
-                        minPeakHeight_LF = 20;
-                        minPeakProminence = 100;
+                        minPeakWidth = 0.015*Fs;
+                        %minPeakProminence = 1;
                         
-                        [peakH_LF,peakTime_Fs_LF, peakW_LF, peakP_LF]=findpeaks(LFWin,'MinPeakHeight',minPeakHeight_LF, 'MinPeakProminence',minPeakProminence, 'MinPeakWidth', minPeakWidth_LF, 'WidthReference','halfprom'); %For HF
-                        % prominence is realted to window size
+                        %[peakH_LF,peakTime_Fs_LF, peakW_LF, peakP_LF]=findpeaks(rippleWin,'MinPeakHeight',minPeakHeight_LF,'MinPeakWidth', minPeakWidth_LF, 'WidthReference','halfprom'); %For HF
+                        %[peakH_ripcheck,peakTime_Fs_ripcheck, peakW_ripcheck, peakP_ripcheck]=findpeaks(rippleWin,'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence,'WidthReference','halfheight'); %For HF
+                        [peakH_ripcheck,peakTime_Fs_ripcheck, peakW_ripcheck, peakP_ripcheck]=findpeaks(rippleWin,'MinPeakWidth', minPeakWidth, 'WidthReference','halfheight'); %For HF
                         
+                        peak_ms = (peakW_ripcheck/Fs)*1000;
                         %% Test
                         %{
                             figure(104);clf
-                            winROI_s = SegData_s(winROI);
-                            plot(winROI_s, LFWin); axis tight
+                            winROI_ms = SegData_s(winROI)*1000;
+                            plot(winROI_ms , rippleWin); axis tight
                             hold on
-                            plot(winROI_s(peakTime_Fs_LF), LFWin(peakTime_Fs_LF), '*')
+                            plot(winROI_ms (peakTime_Fs_ripcheck), rippleWin(peakTime_Fs_ripcheck), '*')
                         %}
                         %%
                         disp('')
                         
-                        if numel(peakTime_Fs_LF) == 1
+                        if numel(peakTime_Fs_ripcheck) == 1 % sharp wave and ripple
                             
-                            templatePeaks.peakH(cnt) = peakH(q);
-                            templatePeaks.asPeakTime_fs(cnt) = asPeakTime_fs(q);
-                            templatePeaks.absPeakTime_s(cnt) = absPeakTime_s(q);
-                            templatePeaks.peakW(cnt) = peakW(q);
-                            templatePeaks.peakP(cnt) = peakP(q);
+                            Ripple.peakH(rcnt) = peakH(q);
+                            Ripple.asPeakTime_fs(rcnt) = absPeakTime_ripples_fs(q);
+                            Ripple.absPeakTime_s(rcnt) = absPeakTime_ripples_s(q);
+                            Ripple.peakW(rcnt) = peakW(q);
+                            Ripple.peakP(rcnt) = peakP(q);
                             
-                            absPeakTime_Fs_LF = (peakTime_Fs_LF + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
+                            absPeakTime_Fs_rippleCheck = (peakTime_Fs_ripcheck + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
                             
-                            templatePeaks.peakH_LF(cnt) = peakH_LF;
-                            templatePeaks.absPeakTime_Fs_LF(cnt) = absPeakTime_Fs_LF;
-                            templatePeaks.peakW_LF(cnt) = peakW_LF;
-                            templatePeaks.peakP_LF(cnt) = peakP_LF;
+                            Ripple.peakH_ripcheck(rcnt) = peakH_ripcheck;
+                            Ripple.absPeakTime_Fs_LF(rcnt) = absPeakTime_Fs_rippleCheck;
+                            Ripple.peakW_ripcheck(rcnt) = peakW_ripcheck;
+                            Ripple.peakP_ripcheck(rcnt) = peakP_ripcheck;
                             
-                            cnt = cnt+1;
+                            rcnt = rcnt+1;
+                            
+                            if doPlot
+                                RelPeak_fs = absPeakTime_Fs_rippleCheck-thisROI(1)-1;
+                                subplot(5, 1,5)
+                                hold on
+                                plot(SegData_s(RelPeak_fs), DataSeg_rect_HF(RelPeak_fs), 'ko');
+                                axis tight
+                                %ylim([0 500])
+                            end
                             
                             
                             %% Test
@@ -2938,76 +3087,34 @@ classdef avianSWRAnalysis_OBJ < handle
                             %line([ thisSegData_s(absPeakTime_Fs_LF(q)) thisSegData_s(absPeakTime_Fs_LF(q))], [-1000 500]);
                             
                             
-                        elseif isempty(peakTime_Fs_LF)
-                            if doPlot
-                                figure(300);
-                                
-                                subplot(5,1, 5)
-                                hold on;
-                                plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'kv');
-                                
-                                subplot(5, 1,4)
-                                hold on;
-                                plot(SegData_s(peakTime_Fs(q)), DataSeg_ripple_rms(peakTime_Fs(q)), 'k*');
-                                
-                                subplot(5, 1, 1)
-                                hold on
-                                plot(SegData_s(peakTime_Fs(q)), 0, 'k*')
-                                
-                                subplot(5, 1, 2)
-                                hold on
-                                plot(SegData_s(peakTime_Fs(q)), 0, 'k*')
-                            end
-                            
-                            ripplePeaks.peakH(cnnt) = peakH(q);
-                            ripplePeaks.asPeakTime_fs(cnnt) = asPeakTime_fs(q);
-                            ripplePeaks.absPeakTime_s(cnnt) = absPeakTime_s(q);
-                            ripplePeaks.peakW(cnnt) = peakW(q);
-                            ripplePeaks.peakP(cnnt) = peakP(q);
-                            
-                            cnnt = cnnt+1;
+                        elseif isempty(peakTime_Fs_ripcheck) % only ripple, no SW
                             
                             continue
                         else % two detections
+                            %choose HighestPeak
+                            [pmax, maxInd] = max(peakH_ripcheck);
                             
-                            templatePeaks.peakH(cnt) = peakH(q);
-                            templatePeaks.asPeakTime_fs(cnt) = asPeakTime_fs(q);
-                            templatePeaks.absPeakTime_s(cnt) = absPeakTime_s(q);
-                            templatePeaks.peakW(cnt) = peakW(q);
-                            templatePeaks.peakP(cnt) = peakP(q);
+                            Ripple.peakH(rcnt) = peakH(q);
+                            Ripple.asPeakTime_fs(rcnt) = absPeakTime_ripples_fs(q);
+                            Ripple.absPeakTime_s(rcnt) = absPeakTime_ripples_s(q);
+                            Ripple.peakW(rcnt) = peakW(q);
+                            Ripple.peakP(rcnt) = peakP(q);
                             
-                            %choose HighestPeak                            
-                            [pmax, maxInd] = max(peakH_LF);
+                            absPeakTime_Fs_rippleCheck = (peakTime_Fs_ripcheck(maxInd) + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
                             
-                            absPeakTime_Fs_LF = (peakTime_Fs_LF(maxInd) + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
+                            Ripple.peakH_ripcheck(rcnt) = peakH_ripcheck(maxInd);
+                            Ripple.absPeakTime_Fs_LF(rcnt) = absPeakTime_Fs_rippleCheck;
+                            Ripple.peakW_ripcheck(rcnt) = peakW_ripcheck(maxInd);
+                            Ripple.peakP_ripcheck(rcnt) = peakP_ripcheck(maxInd);
                             
-                            relPeakTime_Fs_LF = (peakTime_Fs_LF(maxInd) + peakTime_Fs(q)-WinSizeL); % for plotting
+                            rcnt = rcnt+1;
                             
-                            templatePeaks.peakH_LF(cnt) = peakH_LF(maxInd);
-                            templatePeaks.absPeakTime_Fs_LF(cnt) = absPeakTime_Fs_LF;
-                            templatePeaks.peakW_LF(cnt) = peakW_LF(maxInd);
-                            templatePeaks.peakP_LF(cnt) = peakP_LF(maxInd);
-                            
-                            cnt = cnt+1;
-                            
+                            RelPeak_fs = absPeakTime_Fs_rippleCheck-thisROI(1)-1;
                             if doPlot
-                                figure(300);
-                                
-                                subplot(5,1, 5)
-                                hold on;
-                                plot(SegData_s(relPeakTime_Fs_LF), DataSeg_HF(peakTime_Fs(q)), 'bv');
-                                
-                                subplot(5, 1,4)
-                                hold on;
-                                plot(SegData_s(relPeakTime_Fs_LF), DataSeg_ripple_rms(peakTime_Fs(q)), 'b*');
-                                
-                                subplot(5, 1, 1)
+                                subplot(5, 1,5)
                                 hold on
-                                plot(SegData_s(relPeakTime_Fs_LF), 0, 'b*')
-                                
-                                subplot(5, 1, 2)
-                                hold on
-                                plot(SegData_s(relPeakTime_Fs_LF), 0, 'b*')
+                                plot(SegData_s(RelPeak_fs), DataSeg_rect_HF(RelPeak_fs), 'ko');
+                                axis tight
                             end
                             continue
                             
@@ -3016,26 +3123,162 @@ classdef avianSWRAnalysis_OBJ < handle
                     
                 end
                 
-                PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
-                if exist(PlotDir, 'dir') == 0
-                    mkdir(PlotDir);
-                    disp(['Created: '  PlotDir])
+                
+                
+                
+                %%
+                
+                
+                
+                %  absPeakTime_SW_s =  SegData_s(peakTimeSW_Fs);
+                % absPeakTime_SW_fs = peakTimeSW_Fs+thisROI(1)-1;
+                
+                
+                
+                
+                %% Now For SWs
+                
+                for q =1:numel(peakTimeSW_Fs)
+                    
+                    if doPlot
+                        
+                        figure(300);
+                        
+                        subplot(5, 1, 3)
+                        %plot(SegData_s, -DataSeg_BPFL); title(['Neg BP LF']);
+                        hold on
+                        plot(SegData_s(peakTimeSW_Fs(q)), -DataSeg_BPFL(peakTimeSW_Fs(q)), 'bv');
+                        axis tight
+                        
+                    end
+                    
+                    winROI = peakTimeSW_Fs(q)-WinSizeL:peakTimeSW_Fs(q)+WinSizeR;
+                    
+                    if winROI(end) >= size(SegData_s, 1) || winROI(1) <=0
+                        disp('Win is too big/small')
+                        continue
+                    else
+                        
+                        SWWin = -DataSeg_BPFL(winROI);
+                        
+                        minPeakWidth = 0.015*Fs;
+                        minPeakProminence = 5;
+                        
+                        %[peakH_LF,peakTime_Fs_LF, peakW_LF, peakP_LF]=findpeaks(rippleWin,'MinPeakHeight',minPeakHeight_LF,'MinPeakWidth', minPeakWidth_LF, 'WidthReference','halfprom'); %For HF
+                        [peakH_SWcheck,peakTime_Fs_SWcheck, peakW_SWcheck, peakP_SWcheck]=findpeaks(SWWin,'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence,'WidthReference','halfheight'); %For HF
+                        
+                        peak_ms = (peakW_SWcheck/Fs)*1000;
+                        %% Test
+                        %{
+                        figure(104);clf
+                        winROI_ms = SegData_s(winROI)*1000;
+                        plot(winROI_ms , SWWin); axis tight
+                        hold on
+                        plot(winROI_ms (peakTime_Fs_SWcheck), SWWin(peakTime_Fs_SWcheck), '*')
+                        %}
+                        %%
+                        disp('')
+                        
+                        if numel(peakTime_Fs_SWcheck) == 1 % sharp wave and ripple
+                            
+                            SW.peakSW_H(scnt) = peakSW_H(q);
+                            SW.absPeakTime_SW_fs(scnt) = absPeakTime_SW_fs(q);
+                            SW.absPeakTime_SW_s(scnt) = absPeakTime_SW_s(q);
+                            SW.peakSW_W(scnt) = peakSW_W(q);
+                            SW.peakSW_P(scnt) = peakSW_P(q);
+                            
+                            absPeakTime_Fs_SWCheck = (peakTime_Fs_SWcheck + peakTimeSW_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
+                            
+                            SW.peakH_SWcheck(scnt) = peakH_SWcheck;
+                            SW.absPeakTime_Fs_LF(scnt) = absPeakTime_Fs_SWCheck;
+                            SW.peakW_SWcheck(scnt) = peakW_SWcheck;
+                            SW.peakP_SWcheck(scnt) = peakP_SWcheck;
+                            
+                            
+                            scnt = scnt+1;
+                            
+                            %plot(SegData_s, -DataSeg_BPFL); title(['Neg BP LF']);
+                            RelPeak_fs = absPeakTime_Fs_SWCheck-thisROI(1)-1;
+                            
+                            if doPlot
+                                subplot(5, 1, 3)
+                                hold on
+                                plot(SegData_s(RelPeak_fs), -DataSeg_BPFL(RelPeak_fs), 'ko');
+                                axis tight
+                            end
+                            
+                            
+                            %% Test
+                            % testROI = asPeakTime_fs(q)-0.2*Fs:asPeakTime_fs(q)+0.2*Fs;% THis is the HF, it will be offset from the peak of the SHW
+                            % figure; plot(SegData_s(testROI), DataSeg_rect_HF(testROI)); axis tight
+                            % figure; plot(SegData_s(testROI), DataSeg_FNotch(testROI)); axis tight
+                            %line([ thisSegData_s(asPeakTime_fs(q)) thisSegData_s(asPeakTime_fs(q))], [-1000 500]);
+                            
+                            %testROI = absPeakTime_Fs_LF-(0.2*Fs):absPeakTime_Fs_LF+(0.2*Fs);
+                            %figure(200); plot(SegData_s(testROI),  DataSeg_LF(testROI), 'k'); axis tight
+                            %hold on; plot(SegData_s(testROI), DataSeg_FNotch(testROI)); axis tight
+                            %line([ thisSegData_s(absPeakTime_Fs_LF(q)) thisSegData_s(absPeakTime_Fs_LF(q))], [-1000 500]);
+                            
+                            
+                        elseif isempty(peakTime_Fs_SWcheck) % only ripple, no SW
+                            
+                            continue
+                        else % two detections
+                            %choose HighestPeak
+                            [pmax, maxInd] = max(peakH_SWcheck);
+                            
+                            SW.peakSW_H(scnt) = peakSW_H(q);
+                            SW.absPeakTime_SW_fs(scnt) = absPeakTime_SW_fs(q);
+                            SW.absPeakTime_SW_s(scnt) = absPeakTime_SW_s(q);
+                            SW.peakSW_W(scnt) = peakSW_W(q);
+                            SW.peakSW_P(scnt) = peakSW_P(q);
+                            
+                            absPeakTime_Fs_SWCheck = (peakTime_Fs_SWcheck(maxInd) + peakTimeSW_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
+                            
+                            SW.peakH_SWcheck(scnt) = peakH_SWcheck(maxInd);
+                            SW.absPeakTime_Fs_LF(scnt) = absPeakTime_Fs_SWCheck;
+                            SW.peakW_SWcheck(scnt) = peakW_SWcheck(maxInd);
+                            SW.peakP_SWcheck(scnt) = peakP_SWcheck(maxInd);
+                            
+                            
+                            scnt = scnt+1;
+                            RelPeak_fs = absPeakTime_Fs_SWCheck-thisROI(1)-1;
+                            if doPlot
+                                subplot(5, 1, 3)
+                                %plot(SegData_s, -DataSeg_BPFL); title(['Neg BP LF']);
+                                hold on
+                                plot(SegData_s(RelPeak_fs), -DataSeg_BPFL(RelPeak_fs), 'ko');
+                                axis tight
+                            end
+                            continue
+                            
+                        end
+                    end
+                    
                 end
-                plot_filename = [PlotDir 'SWR_Detections-Plots' sprintf('%03d', i)];
-                
-                plotpos = [0 0 25 15];
-                figure(300);
-                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
                 
                 
+                if doPlot
+                    PlotDir = [obj.DIR.plotDir];
+                    if exist(PlotDir, 'dir') == 0
+                        mkdir(PlotDir);
+                        disp(['Created: '  PlotDir])
+                    end
+                    plot_filename = [PlotDir 'SWR_Detections-Plots' sprintf('%03d', i)];
+                    
+                    plotpos = [0 0 25 15];
+                    figure(300);
+                    print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                    print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+                end
                 
             end
             
-            DetectionSaveName = [PlotDir '-Detections'];
-            save(DetectionSaveName, 'templatePeaks', 'ripplePeaks');
+            DetectionSaveName = [obj.DIR.analysisDir obj.Session.time '__SWR-Detections.mat'];
+            save(DetectionSaveName, 'Ripple', 'SW');
             
             disp(['Saved:' DetectionSaveName ])
-
+            
         end
         
         function [obj] = detectSWRsOld_LF_first(obj, dataRecordingObj)
@@ -3385,7 +3628,7 @@ classdef avianSWRAnalysis_OBJ < handle
                             templatePeaks.peakW(cnt) = peakW(q);
                             templatePeaks.peakP(cnt) = peakP(q);
                             
-                            %choose HighestPeak                            
+                            %choose HighestPeak
                             [pmax, maxInd] = max(peakH_LF);
                             
                             absPeakTime_Fs_LF = (peakTime_Fs_LF(maxInd) + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
@@ -3444,38 +3687,34 @@ classdef avianSWRAnalysis_OBJ < handle
             save(DetectionSaveName, 'templatePeaks', 'ripplePeaks');
             
             disp(['Saved:' DetectionSaveName ])
-
+            
         end
-    
         
-        
-   function [obj] = plotDBRatioWithData(obj)
+        function [] = plotPowerSpectrum(obj)
+         chanToUse = obj.REC.bestChs(1);
+            SessionDir = obj.DIR.ephysDir;
             
-            
-            chanToUse = obj.REC.bestChs(1);
-            SessionDir = obj.Session.SessionDir;
-            %obj.Session.SessionDir;
-            
-            eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
-            fileName = [SessionDir fileAppend];
+            search = ['*CH' num2str(chanToUse) '*'];
+            matchFile = dir(fullfile(SessionDir, search));
+            fileName = [SessionDir matchFile.name];
             
             [data, timestamps, info] = load_open_ephys_data(fileName);
-        
+            
             %%
             Fs = info.header.sampleRate;
-            samples = numel(data);  
+            samples = numel(data);
             totalTime = samples/Fs;
-        
-            batchDuration_s = 30; % 1 hr
+            
+            batchDuration_s = 30; % 3 mi
             batchDuration_samp = batchDuration_s*Fs;
             
             tOn_s = 1:batchDuration_s:totalTime;
             tOn_samp = tOn_s*Fs;
             nBatches = numel(tOn_samp);
             
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
-           
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
+            
             
             %% Filters
             
@@ -3523,20 +3762,20 @@ classdef avianSWRAnalysis_OBJ < handle
             
             %% Raw Data
             
-           
+            
             
             %% Get Filtered Data
             
             %DataSeg_FN = fobj.filt.FN.getFilteredData(thisSegData);
             %DataSeg_FL = fobj.filt.FL.getFilteredData(thisSegData);
             %DataSeg_FH2 = fobj.filt.FH2.getFilteredData(thisSegData);
-            
-            for b = 1:nBatches
-                
+            inds = find(tOn_samp > 1.5*3600*Fs);
+            for b = inds
+                b
                 if b == nBatches
-                thisData = data(tOn_samp(b):samples);
+                    thisData = data(tOn_samp(b):samples);
                 else
-                thisData = data(tOn_samp(b):tOn_samp(b)+batchDuration_samp);
+                    thisData = data(tOn_samp(b):tOn_samp(b)+batchDuration_samp);
                 end
                 
                 [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
@@ -3562,7 +3801,161 @@ classdef avianSWRAnalysis_OBJ < handle
                 %             addParameter(parseObj,'dftPointsWelch',2^10,@isnumeric);
                 %             addParameter(parseObj,'OLWelch',0.5);
                 %
-                reductionFactor = .15; % No reduction
+                
+                movWin_Var = 10; % 10 s
+                movOLWin_Var = 9; % 9 s
+                segmentWelch = 1;
+                OLWelch = 0.5;
+                dftPointsWelch =  2^10;
+                
+                segmentWelchSamples = round(segmentWelch*fobj.filt.FFs);
+                samplesOLWelch = round(segmentWelchSamples*OLWelch);
+                
+                movWinSamples=round(movWin_Var*fobj.filt.FFs);%obj.filt.FFs in Hz, movWin in samples
+                movOLWinSamples=round(movOLWin_Var*fobj.filt.FFs);
+                
+                % run welch once to get frequencies for every bin (f) determine frequency bands
+                [~,f] = pwelch(randn(1,movWinSamples),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
+                
+                %%
+                tmp_V_DS = buffer(DataSeg_F,movWinSamples,movOLWinSamples,'nodelay');
+                pValid=all(~isnan(tmp_V_DS));
+                
+                [pxx,f] = pwelch(tmp_V_DS(:,pValid),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
+                figure(342);clf
+                subplot(2, 1, 1)
+                plot(t_DS, squeeze(DataSeg_F))
+                axis tight
+                
+                subplot(2, 1, 2)
+                plot(10*log10(pxx))
+                xlim([0 200])
+                pause
+            end
+        end
+        
+        function [obj] = plotDBRatioWithData(obj)
+            
+            
+            chanToUse = obj.REC.bestChs(1);
+            SessionDir = obj.DIR.ephysDir;
+            
+            search = ['*CH' num2str(chanToUse) '*'];
+            matchFile = dir(fullfile(SessionDir, search));
+            fileName = [SessionDir matchFile.name];
+            
+            [data, timestamps, info] = load_open_ephys_data(fileName);
+            
+            %%
+            Fs = info.header.sampleRate;
+            samples = numel(data);
+            totalTime = samples/Fs;
+            
+            batchDuration_s = 300; % 3 mi
+            batchDuration_samp = batchDuration_s*Fs;
+            
+            tOn_s = 1:batchDuration_s:totalTime;
+            tOn_samp = tOn_s*Fs;
+            nBatches = numel(tOn_samp);
+            
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
+            
+            
+            %% Filters
+            
+            fObj = filterData(Fs);
+            
+            fobj.filt.F=filterData(Fs);
+            %fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
+            fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
+            fobj.filt.F=fobj.filt.F.designDownSample;
+            fobj.filt.F.padding=true;
+            fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
+            
+            %fobj.filt.FL=filterData(Fs);
+            %fobj.filt.FL.lowPassPassCutoff=4.5;
+            %fobj.filt.FL.lowPassStopCutoff=6;
+            %fobj.filt.FL.attenuationInLowpass=20;
+            %fobj.filt.FL=fobj.filt.FL.designLowPass;
+            %fobj.filt.FL.padding=true;
+            
+            fobj.filt.FL=filterData(Fs);
+            fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.FL.lowPassStopCutoff=40;
+            fobj.filt.FL.attenuationInLowpass=20;
+            fobj.filt.FL=fobj.filt.FL.designLowPass;
+            fobj.filt.FL.padding=true;
+            
+            fobj.filt.BP=filterData(Fs);
+            fobj.filt.BP.highPassCutoff=1;
+            fobj.filt.BP.lowPassCutoff=2000;
+            fobj.filt.BP.filterDesign='butter';
+            fobj.filt.BP=fobj.filt.BP.designBandPass;
+            fobj.filt.BP.padding=true;
+            
+            fobj.filt.FH2=filterData(Fs);
+            fobj.filt.FH2.highPassCutoff=100;
+            fobj.filt.FH2.lowPassCutoff=2000;
+            fobj.filt.FH2.filterDesign='butter';
+            fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+            fobj.filt.FH2.padding=true;
+            
+            fobj.filt.FN =filterData(Fs);
+            fobj.filt.FN.filterDesign='cheby1';
+            fobj.filt.FN.padding=true;
+            fobj.filt.FN=fobj.filt.FN.designNotch;
+            
+            %% Raw Data
+            
+            
+            
+            %% Get Filtered Data
+            
+            %DataSeg_FN = fobj.filt.FN.getFilteredData(thisSegData);
+            %DataSeg_FL = fobj.filt.FL.getFilteredData(thisSegData);
+            %DataSeg_FH2 = fobj.filt.FH2.getFilteredData(thisSegData);
+            inds = find(tOn_samp > 2.5*3600*Fs);
+            for b = 57:154
+                b
+                if b == nBatches
+                    thisData = data(tOn_samp(b):samples);
+                else
+                    thisData = data(tOn_samp(b):tOn_samp(b)+batchDuration_samp);
+                end
+                
+                [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                
+                d.V_uV_data_full = V_uV_data_full;
+                d.tOn = tOn_samp(b);
+                d.batchDuration_samp = batchDuration_samp;
+                PlotDir = [obj.DIR.plotDir]; 
+                plot_filename = [PlotDir 'data' sprintf('%02d',b) '.mat'];
+                save(plot_filename, 'd')
+                
+                thisSegData = V_uV_data_full(:,:,:);
+                
+                [DataSeg_Notch, ~] = fobj.filt.FN.getFilteredData(thisSegData); % t_DS is in ms
+                [DataSeg_BP, ~] = fobj.filt.BP.getFilteredData(thisSegData); % t_DS is in ms
+                [DataSeg_F, t_DS] = fobj.filt.F.getFilteredData(DataSeg_BP); % t_DS is in ms
+                
+                t_DS_s = t_DS/1000;
+                
+                
+                %%
+                
+                %% Raw Data  - Parameters from data=getDelta2BetaRatio(obj,varargin)
+                
+                % This is all in ms
+                %             addParameter(parseObj,'movLongWin',1000*60*30,@isnumeric); %max freq. to examine
+                %             addParameter(parseObj,'movWin',10000,@isnumeric);
+                %             addParameter(parseObj,'movOLWin',9000,@isnumeric);
+                %             addParameter(parseObj,'segmentWelch',1000,@isnumeric);
+                %             addParameter(parseObj,'dftPointsWelch',2^10,@isnumeric);
+                %             addParameter(parseObj,'OLWelch',0.5);
+                %
+                %reductionFactor = .15; % No reduction
+                reductionFactor = 1; % No reduction
                 
                 movWin_Var = 10*reductionFactor; % 10 s
                 movOLWin_Var = 9*reductionFactor; % 9 s
@@ -3581,12 +3974,12 @@ classdef avianSWRAnalysis_OBJ < handle
                 % run welch once to get frequencies for every bin (f) determine frequency bands
                 [~,f] = pwelch(randn(1,movWinSamples),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
                 
-%                  feats_(n, 1    :c  ) = bandpower(x,fs,[.5 4])./bandp; % delta
-%     feats_(n, c+1  :2*c) = bandpower(x,fs,[4 8])./bandp; % theta
-%     feats_(n, 2*c+1:3*c) = bandpower(x,fs,[8 12])./bandp; % alpha
-%     feats_(n, 3*c+1:4*c) = bandpower(x,fs,[12 30])./bandp; % beta
-%     feats_(n, 4*c+1:5*c) = bandpower(x,fs,[30 100])./bandp; % gamma
-%     
+                %                  feats_(n, 1    :c  ) = bandpower(x,fs,[.5 4])./bandp; % delta
+                %     feats_(n, c+1  :2*c) = bandpower(x,fs,[4 8])./bandp; % theta
+                %     feats_(n, 2*c+1:3*c) = bandpower(x,fs,[8 12])./bandp; % alpha
+                %     feats_(n, 3*c+1:4*c) = bandpower(x,fs,[12 30])./bandp; % beta
+                %     feats_(n, 4*c+1:5*c) = bandpower(x,fs,[30 100])./bandp; % gamma
+                %
                 deltaBandLowCutoff = 1;
                 deltaBandHighCutoff = 4;
                 
@@ -3604,11 +3997,20 @@ classdef avianSWRAnalysis_OBJ < handle
                 gammaBandLowCutoff = 25;
                 gammaBandHighCutoff = 140;
                 
+                highBandLowCutoff = 25;
+                highBandHighCutoff = 180;
+                
+                lowBandLowCutoff = 1;
+                lowBandHighCutoff = 25;
+                
                 pfDeltaBand=find(f>=deltaBandLowCutoff & f<deltaBandHighCutoff);
                 pfThetaBand=find(f>=thetaBandLowCutoff & f<thetaBandHighCutoff);
                 pfAlphaBand=find(f>=alphaBandLowCutoff & f<alphaBandHighCutoff);
                 pfBetaBand=find(f>=betaBandLowCutoff & f<betaBandHighCutoff);
                 pfGammBand=find(f>=gammaBandLowCutoff & f<gammaBandHighCutoff);
+                
+                pfLowBand=find(f>=lowBandLowCutoff & f<lowBandHighCutoff);
+                pfHighBand=find(f>=highBandLowCutoff & f<highBandHighCutoff);
                 
                 %pfLowBand=find(f<=deltaBandCutoff);
                 %pfHighBand=find(f>=betaBandLowCutoff & f<betaBandHighCutoff);
@@ -3620,6 +4022,28 @@ classdef avianSWRAnalysis_OBJ < handle
                 
                 [pxx,f] = pwelch(tmp_V_DS(:,pValid),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
                 
+                
+                bla = randperm(size(pxx, 2));
+                sel = bla(1:20);
+                
+                figure(103);clf
+                subsampl = pxx(:, 1:20);
+                plot(10*log10(subsampl), 'color', [.5 .5 .5])
+                xlim([0 200])
+                means = mean(subsampl, 2);
+                hold on
+                plot(10*log10(means), 'k', 'linewidth', 2)
+                ylabel('dB')
+                xlabel('Freq. (Hz)')
+                
+                plotpos = [0 0 10 8];
+                
+                PlotDir = [obj.DIR.plotDir];
+                
+                plot_filename = [PlotDir 'powerSpec_' sprintf('%02d',b)];
+                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+                
                 %% Ratios
                 deltaBetaRatioAll=zeros(1,numel(pValid));
                 deltaBetaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfBetaBand,:)))';
@@ -3629,7 +4053,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 
                 deltaAlphRatioAll = zeros(1,numel(pValid));
                 deltaAlphRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfAlphaBand,:)))';
-                 
+                
                 deltaGammaRatioAll = zeros(1,numel(pValid));
                 deltaGammaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfGammBand,:)))';
                 
@@ -3638,6 +4062,9 @@ classdef avianSWRAnalysis_OBJ < handle
                 
                 thetaGammaRatioAll = zeros(1,numel(pValid));
                 thetaGammaRatioAll (pValid)=(mean(pxx(pfThetaBand,:))./mean(pxx(pfGammBand,:)))';
+                
+                lowHighRatioAll = zeros(1,numel(pValid));
+                lowHighRatioAll (pValid)=(mean(pxx(pfLowBand,:))./mean(pxx(pfHighBand,:)))';
                 
                 %% single elements
                 deltaAll=zeros(1,numel(pValid));
@@ -3655,13 +4082,18 @@ classdef avianSWRAnalysis_OBJ < handle
                 gammaAll=zeros(1,numel(pValid));
                 gammaAll(pValid)=mean(pxx(pfGammBand,:))';
                 
+                lowAll=zeros(1,numel(pValid));
+                lowAll(pValid)=mean(pxx(pfLowBand,:))';
+                
+                highAll=zeros(1,numel(pValid));
+                highAll(pValid)=mean(pxx(pfHighBand,:))';
                 
                 % Pool all data ratios
                 bufferedDeltaBetaRatio=deltaBetaRatioAll;
-               
+                
                 bufferedDelta=deltaAll;
                 bufferedBeta=betaAll;
-               
+                
                 allV_DS = squeeze(DataSeg_F);
                 
                 %%
@@ -3678,28 +4110,32 @@ classdef avianSWRAnalysis_OBJ < handle
                 betaAll_norm = betaAll./(max(betaAll));
                 gammaAll_norm = gammaAll./(max(gammaAll));
                 
-                
+                lowAll_norm = lowAll./(max(lowAll));
+                highAll_norm = highAll./(max(highAll));
                 %%
                 figh3 = figure(302); clf
                 subplot(3, 1, 1)
-                plot(smooth(deltaAll_norm), 'color', Deltacolor, 'linewidth', 1)
+                plot(smooth(deltaAll_norm), 'color', 'r', 'linewidth', 1)
                 hold on
-                plot(smooth(thetaAll_norm), 'color', Thetacolor, 'linewidth', 1)
+                %plot(smooth(thetaAll_norm), 'color', Thetacolor, 'linewidth', 1)
                 %plot(smooth(alphaAll_norm), 'color', Alphacolor, 'linewidth', 1)
                 %plot(smooth(betaAll_norm), 'color', Betacolor, 'linewidth', 1)
-                plot(smooth(gammaAll_norm), 'color', Gammacolor, 'linewidth', 1)
+                plot(smooth(gammaAll_norm), 'color', 'b', 'linewidth', 1)
+                plot(smooth(lowAll_norm), 'color', 'k', 'linewidth', 1)
+                 plot(smooth(highAll_norm), 'color', Alphacolor, 'linewidth', 1)
                 
                 axis tight
-%                 legTxt = [{['Delta: ' num2str(deltaBandLowCutoff) '-' num2str(deltaBandHighCutoff) ' Hz']},...
-%                             {['Theta: ' num2str(thetaBandLowCutoff) '-' num2str(thetaBandHighCutoff) ' Hz']},...         
-%                             {['Alpha: ' num2str(alphaBandLowCutoff) '-' num2str(alphaBandHighCutoff) ' Hz']},... 
-%                             {['Beta: ' num2str(betaBandLowCutoff) '-' num2str(betaBandHighCutoff) ' Hz']},... 
-%                             {['Gamma: ' num2str(gammaBandLowCutoff) '-' num2str(gammaBandHighCutoff) ' Hz']}];
-%                         
-                        legTxt = [{['Delta: ' num2str(deltaBandLowCutoff) '-' num2str(deltaBandHighCutoff) ' Hz']},...
-                            {['Theta: ' num2str(thetaBandLowCutoff) '-' num2str(thetaBandHighCutoff) ' Hz']},...         
-                            {['Gamma: ' num2str(gammaBandLowCutoff) '-' num2str(gammaBandHighCutoff) ' Hz']}];
-               
+                %                 legTxt = [{['Delta: ' num2str(deltaBandLowCutoff) '-' num2str(deltaBandHighCutoff) ' Hz']},...
+                %                             {['Theta: ' num2str(thetaBandLowCutoff) '-' num2str(thetaBandHighCutoff) ' Hz']},...
+                %                             {['Alpha: ' num2str(alphaBandLowCutoff) '-' num2str(alphaBandHighCutoff) ' Hz']},...
+                %                             {['Beta: ' num2str(betaBandLowCutoff) '-' num2str(betaBandHighCutoff) ' Hz']},...
+                %                             {['Gamma: ' num2str(gammaBandLowCutoff) '-' num2str(gammaBandHighCutoff) ' Hz']}];
+                %
+                legTxt = [{['Delta: ' num2str(deltaBandLowCutoff) '-' num2str(deltaBandHighCutoff) ' Hz']},...
+                    {['Gamma: ' num2str(gammaBandLowCutoff) '-' num2str(gammaBandHighCutoff) ' Hz']},...
+                {['Low: ' num2str(lowBandLowCutoff) '-' num2str(lowBandHighCutoff) ' Hz']},...
+                {['High: ' num2str(highBandLowCutoff) '-' num2str(highBandHighCutoff) ' Hz']}];
+                
                 legend(legTxt)
                 
                 subplot(3, 1, 2)
@@ -3709,96 +4145,109 @@ classdef avianSWRAnalysis_OBJ < handle
                 xlabel('Time [s]')
                 axis tight
                 ylim([-500 500])
-             
+                
                 deltaThetaRatioAll_norm = deltaThetaRatioAll./(max(max(deltaThetaRatioAll)));
                 deltaAlphaRatioAll_norm = deltaAlphRatioAll./(max(max(deltaAlphRatioAll)));
                 deltaBetaRatioAll_norm = deltaBetaRatioAll./(max(max(deltaBetaRatioAll)));
                 deltaGammaRatioAll_norm = deltaGammaRatioAll./(max(max(deltaGammaRatioAll)));
-                 betaGammaRatioAll_norm = betaGammaRatioAll./(max(max(betaGammaRatioAll)));
-                  thetaGammaRatioAll_norm = thetaGammaRatioAll./(max(max(thetaGammaRatioAll)));
-                  
+                betaGammaRatioAll_norm = betaGammaRatioAll./(max(max(betaGammaRatioAll)));
+                thetaGammaRatioAll_norm = thetaGammaRatioAll./(max(max(thetaGammaRatioAll)));
+                lowHighRatioAll_norm = lowHighRatioAll./(max(max(lowHighRatioAll)));
+                
                 subplot(3, 1, 3)
                 axis tight
                 hold on
-               % plot(smooth(deltaThetaRatioAll_norm, 5), 'linewidth', 1)
-               % plot(smooth(deltaAlphaRatioAll_norm, 5), 'linewidth', 1)
+                % plot(smooth(deltaThetaRatioAll_norm, 5), 'linewidth', 1)
+                % plot(smooth(deltaAlphaRatioAll_norm, 5), 'linewidth', 1)
                 %plot(smooth(deltaBetaRatioAll_norm, 5), 'linewidth', 1)
                 plot(smooth(deltaGammaRatioAll_norm, 5), 'linewidth', 1)
+                plot(smooth(lowHighRatioAll_norm, 5), 'linewidth', 1)
                 %plot(smooth(betaGammaRatioAll_norm, 5), 'linewidth', 1)
-                plot(smooth(thetaGammaRatioAll_norm, 5), 'linewidth', 1)
+                %plot(smooth(thetaGammaRatioAll_norm, 5), 'linewidth', 1)
                 title(['Freq Ratios | ' sizestr ])
-%                 legTxt = [{'Delta/Theta Ratio'},...
-%                           {'Delta/Alpha Ratio'},...
-%                           {'Delta/Beta Ratio'},...
-%                           {'Delta/Gamma Ratio'},...
-%                          {'Beta/Gamma Ratio'},...
-%                      {'Theta/Gamma Ratio'}];
-                 
-                 legTxt = [{'Delta/Gamma Ratio'},...
-                     {'Theta/Gamma Ratio'}];
+                %                 legTxt = [{'Delta/Theta Ratio'},...
+                %                           {'Delta/Alpha Ratio'},...
+                %                           {'Delta/Beta Ratio'},...
+                %                           {'Delta/Gamma Ratio'},...
+                %                          {'Beta/Gamma Ratio'},...
+                %                      {'Theta/Gamma Ratio'}];
+                
+                legTxt = [{'Delta/Gamma Ratio'}, {'Low/High Ratio'}];
                 legend(legTxt)
                 
                 %set(gca, 'xtick', [])
                 axis tight
-               % xlim([0 2500])
-                end
-               
-               %%
-                plotpos = [0 0 30 15];
-                
-                PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
-                 
-                plot_filename = [PlotDir 'DB_Ratio_seg_' sprintf('%02d',b)];
-                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-                
-                
-                
-                %%
-                
-                
-                  figh4 = figure(400); clf
-                subplot(2, 1, 1)
-                
-                plot(t_DS_s, squeeze(DataSeg_F), 'k')
-                axis tight
-                title('V_BP_DS')
-                xlabel('Time [s]')
-                axis tight
-                ylim([-4000 4000])
-                %xlim([0 125000])
-                
-                subplot(2, 1, 2)
-                 deltaBetaRatioAll_norm = deltaBetaRatioAll./(max(max(deltaBetaRatioAll)));
-                deltaalphaRatioAll_norm = deltaAlphRatioAll./(max(max(deltaAlphRatioAll)));
-                axis tight
-                hold on
-                %plot(smooth(deltaBetaRatioAll_norm, 5), 'linewidth', 1)
-                hold on
-                plot(smooth(deltaalphaRatioAll_norm, 5), 'linewidth', 1)
-                title(['Delta/Beta Ratio | ' sizestr ])
-                %legTxt = [{'Delta/Beta Ratio'}, {'Delta/AlphaTheta Ratio'}];
-                %legend(legTxt{2})
-                
-                
-                   plotpos = [0 0 30 15];
-                PlotDir = [obj.DIR.plotDir];
-                
-                plot_filename = [PlotDir 'DB_Ratio_seg_Large' sprintf('%02d',b)];
-                print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
-                   print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-                
+                % xlim([0 2500])
+                disp('')
+                pause
+            end
+            
+            %%
+            plotpos = [0 0 30 15];
+            
+            PlotDir = [obj.DIR.plotDir];
+            
+            plot_filename = [PlotDir 'DB_Ratio_seg_' sprintf('%02d',b)];
+            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+            print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
             
             
-   end
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            %%
+            
+            
+            figh4 = figure(400); clf
+            subplot(2, 1, 1)
+            
+            plot(t_DS_s, squeeze(DataSeg_F), 'k')
+            axis tight
+            title('V_BP_DS')
+            xlabel('Time [s]')
+            axis tight
+            ylim([-4000 4000])
+            %xlim([0 125000])
+            
+            subplot(2, 1, 2)
+            deltaBetaRatioAll_norm = deltaBetaRatioAll./(max(max(deltaBetaRatioAll)));
+            deltaalphaRatioAll_norm = deltaAlphRatioAll./(max(max(deltaAlphRatioAll)));
+            axis tight
+            hold on
+            %plot(smooth(deltaBetaRatioAll_norm, 5), 'linewidth', 1)
+            hold on
+            plot(smooth(deltaalphaRatioAll_norm, 5), 'linewidth', 1)
+            title(['Delta/Beta Ratio | ' sizestr ])
+            %legTxt = [{'Delta/Beta Ratio'}, {'Delta/AlphaTheta Ratio'}];
+            %legend(legTxt{2})
+            
+            
+            plotpos = [0 0 30 15];
+            PlotDir = [obj.DIR.plotDir];
+            
+            plot_filename = [PlotDir 'DB_Ratio_seg_Large' sprintf('%02d',b)];
+            print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+            
+            
+            
+        end
         
         
         function [obj] = plotDBRatioMatrix(obj)
             
             
             chanToUse = obj.REC.bestChs(1);
-            SessionDir = obj.Session.SessionDir;
+            SessionDir = obj.DIR.ephysDir;
             
             eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
+            %eval(['fileAppend = ''100_CH' num2str(chanToUse) '.continuous'';'])
             fileName = [SessionDir fileAppend];
             
             [data, timestamps, info] = load_open_ephys_data(fileName);
@@ -3816,8 +4265,8 @@ classdef avianSWRAnalysis_OBJ < handle
             tOn_samp = tOn_s*Fs;
             nBatches = numel(tOn_samp);
             
-            obj.Plotting.titleTxt = [obj.INFO.birdName ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.birdName '_' obj.Session.time];
+            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
+            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
             
             %% Filters
             fObj = filterData(Fs);
@@ -3867,7 +4316,7 @@ classdef avianSWRAnalysis_OBJ < handle
             bufferedDelta= [];
             bufferedGamma= [];
             allV_DS = [];
-                
+            
             for i = 1:nBatches-1
                 
                 if i == nBatches
@@ -3878,7 +4327,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 
                 [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
                 thisSegData = V_uV_data_full(:,:,:);
-               
+                
                 [DataSeg_Notch, ~] = fobj.filt.FN.getFilteredData(thisSegData); % t_DS is in ms
                 [DataSeg_BP, ~] = fobj.filt.BP.getFilteredData(thisSegData); % t_DS is in ms
                 [DataSeg_F, t_DS] = fobj.filt.F.getFilteredData(DataSeg_BP); % t_DS is in ms
@@ -3896,9 +4345,9 @@ classdef avianSWRAnalysis_OBJ < handle
                 %             addParameter(parseObj,'OLWelch',0.5);
                 %
                 %reductionFactor = 0.5; % No reduction
-                   %reductionFactor = 0.15; % No reduction
-                   %reductionFactor = 0.5; % No reduction
-                   reductionFactor = 1; % No reduction
+                %reductionFactor = 0.15; % No reduction
+                %reductionFactor = 0.5; % No reduction
+                reductionFactor = 1; % No reduction
                 
                 movWin_Var = 10*reductionFactor; % 10 s
                 movOLWin_Var = 9*reductionFactor; % 9 s
@@ -3917,7 +4366,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 % run welch once to get frequencies for every bin (f) determine frequency bands
                 [~,f] = pwelch(randn(1,movWinSamples),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
                 
-               deltaBandLowCutoff = 1;
+                deltaBandLowCutoff = 1;
                 deltaBandHighCutoff = 4;
                 
                 thetaBandLowCutoff  = 4;
@@ -3957,7 +4406,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 
                 deltaAlphRatioAll = zeros(1,numel(pValid));
                 deltaAlphRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfAlphaBand,:)))';
-                 
+                
                 deltaGammaRatioAll = zeros(1,numel(pValid));
                 deltaGammaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfGammBand,:)))';
                 
@@ -4033,6 +4482,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 fig500 = figure(500);clf
                 
                 imagesc(dataToPlot, [0 1200])
+                %imagesc(dataToPlot, [0 300])
                 %imagesc(dataToPlot(2:29, :), [0 1200])
                 %imagesc(dataToPlot(2:29, :))
                 
@@ -4065,16 +4515,16 @@ classdef avianSWRAnalysis_OBJ < handle
                 xlabel('Time [min]')
                 ylabel('Time [Hr]')
                 title([obj.Session.time ' | ' titletxt])
-                
+                colorbar
                 %%
                 plotpos = [0 0 25 15];
-                PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
+                PlotDir = [obj.DIR.plotDir];
                 if exist(PlotDir, 'dir') == 0
                     mkdir(PlotDir);
                     disp(['Created: '  PlotDir])
                 end
                 
-                plot_filename = [PlotDir 'DBMatrix_' savenametxt];
+                plot_filename = [PlotDir 'DBMatrix_' savenametxt '-' obj.Session.Date '-' obj.Session.time];
                 print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
                 print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
             end
@@ -4091,20 +4541,20 @@ classdef avianSWRAnalysis_OBJ < handle
             fileName = [SessionDir fileAppend];
             
             [data, timestamps, info] = load_open_ephys_data(fileName);
-             Fs = info.header.sampleRate;
-%             
-%             chnl_order=[5     4     6     3     9    16    8    1    11    14    12    13    10    15     7     2];  %%%%%%%%%%%%% recording channels with their actual location in order
-%             % this is the mapping of channels: [5     4     6     3     9    16     8  1    11    14    12    13    10    15     7     2], ...
-%             % from most superficial to deepest
-%             save_dir='D:\Janie\ZF-60-88\zf-60-88-CSD_SPWtimes_plots';  % directory to save results
-%             fs=30000; %%%%%%%%%%%%%%%% sampling rate
-%             
-%             % loading EEG channels
-%             kk=1; % loop variable for loading channels
-%             for chn = chnl_order
-%                 filename =[selpath '\' '100_CH' num2str(chn) '.continuous'];
-%                 [eeg(:,kk),~, ~] = load_open_ephys_data(filename);     kk=kk+1;
-%             end
+            Fs = info.header.sampleRate;
+            %
+            %             chnl_order=[5     4     6     3     9    16    8    1    11    14    12    13    10    15     7     2];  %%%%%%%%%%%%% recording channels with their actual location in order
+            %             % this is the mapping of channels: [5     4     6     3     9    16     8  1    11    14    12    13    10    15     7     2], ...
+            %             % from most superficial to deepest
+            %             save_dir='D:\Janie\ZF-60-88\zf-60-88-CSD_SPWtimes_plots';  % directory to save results
+            %             fs=30000; %%%%%%%%%%%%%%%% sampling rate
+            %
+            %             % loading EEG channels
+            %             kk=1; % loop variable for loading channels
+            %             for chn = chnl_order
+            %                 filename =[selpath '\' '100_CH' num2str(chn) '.continuous'];
+            %                 [eeg(:,kk),~, ~] = load_open_ephys_data(filename);     kk=kk+1;
+            %             end
             % for time stamp
             %[~,time, ~] = load_open_ephys_data(filename);
             time=timestamps-timestamps(1);
@@ -4147,7 +4597,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 hold on;
                 %title([fparts{end}  ', chnl: ' num2str(chnl) ',  Time ref: ' num2str(t0)]);
             end
-            %ylabel('channels'); yticks((-N+1:1:0)*500);  yticklabels(num2cell(fliplr(chnl_order)));  
+            %ylabel('channels'); yticks((-N+1:1:0)*500);  yticklabels(num2cell(fliplr(chnl_order)));
             xlabel('Time (sec)');
             % since yticks are going upwards, the ytick labels also shall start from
             % buttom to up so they are flipped
@@ -4165,7 +4615,7 @@ classdef avianSWRAnalysis_OBJ < handle
             title(['Raw signal'])
             ylabel('(\muV)'); xlim(plot_time); ylim([-400 400])
             % Fig 1 (SW & R)
-            subplot(4,1,2); 
+            subplot(4,1,2);
             plot(t_signal,spwsig(:,1),'k');
             axis tight
             %title('Filtered 1-100Hz (SPW)' ); ylabel('(\muV)'); xlim(plot_time); ylim([-400 270])
@@ -4190,13 +4640,13 @@ classdef avianSWRAnalysis_OBJ < handle
             % plot for raw data + spw detection threshold
             figure(204); clf
             subplot(2,1,1);
-            plot(t_signal,spwsig(:,k)); 
-            %title(['LFP (1-100 Hz)  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   
-            title(['LFP (1-100 Hz)']);  
-            ylabel('(\muV)');   
+            plot(t_signal,spwsig(:,k));
+            %title(['LFP (1-100 Hz)  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');
+            title(['LFP (1-100 Hz)']);
+            ylabel('(\muV)');
             xlim(plot_time)
             subplot(2,1,2);cla
-            plot(t_signal,tig(:,k),'b'); hold on; 
+            plot(t_signal,tig(:,k),'b'); hold on;
             line(plot_time,[thr(k) thr(k)],'LineStyle','--', 'color', 'r');  title('TEO ' );
             ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
             
@@ -4350,35 +4800,50 @@ classdef avianSWRAnalysis_OBJ < handle
             obj.Session = avianSWR_DB(rfc).Session;
             obj.DIR = avianSWR_DB(rfc).DIR;
             obj.REC = avianSWR_DB(rfc).REC;
+            obj.Vid = avianSWR_DB(rfc).Vid;
             obj.Plotting = avianSWR_DB(rfc).Plotting;
+            
+            %% Make directories
+            plotDir = [obj.DIR.plotDir];
+            analysisDir = [obj.DIR.analysisDir];
+            
+            if exist(plotDir, 'dir') == 0
+                mkdir(plotDir);
+                disp(['Created: '  plotDir])
+            end
+            
+            if exist(analysisDir, 'dir') == 0
+                mkdir(analysisDir);
+                disp(['Created: '  analysisDir])
+            end
             
             
         end
         
         function [obj] = findSessionDir(obj)
             
-            birdDir=[obj.DIR.dataDir obj.INFO.birdName obj.DIR.dirD];
-            
-            FileSearch=obj.Session.time;
-            %allDataFiles = dir(fullfile(dataDir,textSearch));
-            
-            allDataDirs=dir([birdDir 'Ephys' obj.DIR.dirD]);
-            if isempty(allDataDirs)
-                disp('Did not find any directory, check the file path...')
-                keyboard
-            end
-            
-            nDataDirs=numel(allDataDirs);
-            for j = 1:nDataDirs
-                dirName=allDataDirs(j).name;
-                %match = strcmpi(dirName, FileSearch);
-                match=strfind(dirName, FileSearch);
-                if match
-                    SessionDir=[birdDir 'Ephys' obj.DIR.dirD dirName obj.DIR.dirD];
-                    disp(['Search: ' FileSearch ' matches ' dirName ])
-                    break
-                end
-            end
+            %             birdDir=[obj.DIR.dataDir obj.INFO.Name obj.DIR.dirD];
+            %
+            %             FileSearch=obj.Session.time;
+            %             %allDataFiles = dir(fullfile(dataDir,textSearch));
+            %
+            %             allDataDirs=dir([birdDir 'Ephys' obj.DIR.dirD]);
+            %             if isempty(allDataDirs)
+            %                 disp('Did not find any directory, check the file path...')
+            %                 keyboard
+            %             end
+            %
+            %             nDataDirs=numel(allDataDirs);
+            %             for j = 1:nDataDirs
+            %                 dirName=allDataDirs(j).name;
+            %                 %match = strcmpi(dirName, FileSearch);
+            %                 match=strfind(dirName, FileSearch);
+            %                 if match
+            %                     SessionDir=[birdDir 'Ephys' obj.DIR.dirD dirName obj.DIR.dirD];
+            %                     disp(['Search: ' FileSearch ' matches ' dirName ])
+            %                     break
+            %                 end
+            %             end
             
             obj.Session.SessionDir = SessionDir;
             obj.DIR.birdDir = birdDir;
@@ -4392,7 +4857,7 @@ classdef avianSWRAnalysis_OBJ < handle
         function obj = avianSWRAnalysis_OBJ(rfc)
             
             obj = getSessionInfo(obj, rfc);
-            obj = findSessionDir(obj);
+            %obj = findSessionDir(obj);
             
         end
     end

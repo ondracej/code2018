@@ -20,6 +20,12 @@ addpath(genpath(pathToJRCLUST))
 
 %dataDir = 'D:\TUM\SWR-Project\ZF-71-76\Ephys\71-76_chronic_2019-09-15_20-01-48';
 dataDir = 'D:\TUM\SWR-Project\ZF-71-76\Ephys\71-76_chronic_2019-09-16_18-05-58';
+
+%%
+
+%dataDir = 'D:\TUM\SWR-Project\ZF-72-81\Ephys\2019-05-16_21-26-59';
+dataDir = 'D:\TUM\SWR-Project\ZF-72-81\Ephys\2019-05-16_23-21-04';
+
 %% Data Object
 dataRecordingObj = OERecordingMF(dataDir);
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
