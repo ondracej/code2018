@@ -2632,7 +2632,7 @@ classdef avianSWRAnalysis_OBJ < handle
             
             search = ['*CH' num2str(chanToUse) '*'];
             matchFile = dir(fullfile(SessionDir, search));
-            fileName = [SessionDir matchFile.name];
+            fileName = [SessionDir matchFile(1).name];
             
             [data, timestamps, info] = load_open_ephys_data(fileName);
             Fs = info.header.sampleRate;

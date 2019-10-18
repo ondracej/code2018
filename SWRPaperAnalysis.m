@@ -143,7 +143,7 @@ recSession =  107;
 D_OBJ = avianSWRAnalysis_OBJ(recSession);
 
 %%
-recSet = [59:73];
+recSet = [56:58, 70:73]; %55
 nrecs = numel(recSet);
 
 for j = 1:nrecs

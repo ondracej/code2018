@@ -2846,7 +2846,7 @@ avianSWR_DB(rfc).Vid.frames= [];
 
 avianSWR_DB(rfc).REC.allChs  = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
 avianSWR_DB(rfc).REC.nChs  = numel(avianSWR_DB(rfc).REC.allChs);
-avianSWR_DB(rfc).REC.bestChs  = [];
+avianSWR_DB(rfc).REC.bestChs  = [2, 15];
 avianSWR_DB(rfc).REC.otherChs  = [];
 avianSWR_DB(rfc).REC.hasEMG  = 0;
 avianSWR_DB(rfc).REC.cscEMG  = [];
