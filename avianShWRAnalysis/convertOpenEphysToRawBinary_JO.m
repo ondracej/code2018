@@ -1,11 +1,5 @@
 function ops = convertOpenEphysToRawBinary_JO(dataDir, chanMap)
 
-
-
-
-
-
-
 %fname       = fullfile(ops.root, sprintf('%s.dat', ops.fbinary));
 %fname       = fullfile(ops.root, sprintf('%s', ops.fbinary));
 %fname       = fullfile(sprintf('%s', ops.fbinary]));

@@ -46,7 +46,6 @@ FrogDB(rfc).Session.n = rfc;
 FrogDB(rfc).Vid.Names = {'00000000_0000000000486023.mp4', '00000000_0000000000485B60.mp4'}; % Side video first, Overhead 2nd
 FrogDB(rfc).Vid.fps= [8.5, 8.5];
 
-
 FrogDB(rfc).DIR.base = [DataDir FrogDB(rfc).INFO.Name dirD FrogDB(rfc).Session.Date dirD];
 FrogDB(rfc).DIR.ephysDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Ephys' dirD];
 FrogDB(rfc).DIR.videoDir  = [FrogDB(rfc).DIR.base FrogDB(rfc).Session.Dir dirD 'Videos' dirD];
