@@ -430,6 +430,207 @@ classdef chronoAnalysis_Obj < handle
         
         
         
+        
+        function [] = extractMvmtFromOF(obj, OFPath)
+            
+            fileToLoad = OFPath;
+            
+            d = load(fileToLoad);
+            
+            
+            fv = d.fV1;
+            fvN = fv./(max(max(fv))); % normalize between 1 and 0
+            sortedVals = sort(fvN, 'ascend');
+            
+            percentile4ScaleEstimation = 95; % we choose a threhsold of 95% of the sorted data
+            scaleEstimator_thresh =sortedVals(round(percentile4ScaleEstimation/100*numel(sortedVals)));
+            
+            figure; clf
+            plot(fvN)
+            hold on
+            line([0 numel(fvN)], [scaleEstimator_thresh scaleEstimator_thresh], 'color', 'r')
+            
+            
+            figure; plot(sortedVals)
+            
+            fps = 1;
+            
+            timeWin_min = 6;
+            timeWin_s  = timeWin_min *60;
+            
+            
+            %bin all data into 6 min bins
+            
+            tOn = 1:timeWin_s:numel(fvN);
+            nBatches = numel(tOn);
+            for i = 1:nBatches
+                
+                if i == nBatches
+                    thisData = fvN(tOn(i):numel(fvN));
+                else
+                    thisData = fvN(tOn(i):tOn(i)+timeWin_s-1);
+                end
+                
+                
+                
+                threshCrossInds = find(thisData >= scaleEstimator_thresh);
+                
+                allThreshCross_cnts(i) = numel(threshCrossInds);
+                allThreshCross_inds{i} = threshCrossInds;
+                totalDataSize(i) = numel(thisData); % this last data entry will be smaller than 6 minutes
+            end
+            
+            figure;
+            imagesc(allThreshCross_cnts)
+            
+            
+            
+            
+        end
+
+        
+        
+        function [] = extractMvmtFromOF_separateParts(obj, OFPath)
+            dbstop if error
+            fileToLoad = OFPath;
+            
+            d = load(fileToLoad);
+            
+            
+            fv = d.fV1;
+            fvN = fv./(max(max(fv))); % normalize between 1 and 0
+            
+            
+            figure; clf
+            plot(fvN)
+            hold on
+            
+            %ROI1
+%             start1 = 1;
+%             stop1 = 61920; % need to make sure this is around number of 360
+%             
+%             start2 = 61921;
+%             stop2 = 83880;
+%             
+%             start3 = 83881;
+%             stop3 = 93776;
+%             
+            % ROI 2
+%             start1 = 1;
+%             stop1 = 39960;
+%             
+%             start2 = 39961;
+%             stop2 = 83880;
+%             
+%             start3 = 83881;
+%             stop3 = 93776;
+            
+
+            %ROI 3
+            start1 = 1;
+            stop1 = 47160;
+            
+            start2 = 47161;
+            stop2 = 65520;
+            
+            start3 = 65521;
+            stop3 = 93776;
+
+
+            hold on
+            line([stop1 stop1], [0 1], 'color', 'b')
+            line([start2 start2], [0 1], 'color', 'b')
+            line([stop2 stop2], [0 1], 'color', 'b')
+            line([start3 start3], [0 1], 'color', 'b')
+            
+            %%
+            
+            timeWin_min = 6;
+            timeWin_s  = timeWin_min *60;
+            
+            allPartsTheshCnts = [];
+            allPartsThreshCross_inds = [];
+            allPartsTotalDataSize = [];
+            
+            for o = 1:3
+                switch o
+                    case 1
+                        part_fV = fvN(start1:stop1);
+                           tOn = start1:timeWin_s:stop1;
+                           stop = stop1;
+                    case 2
+                        part_fV = fvN(start2:stop2);
+                        tOn = start2:timeWin_s:stop2;
+                        stop = stop2;
+                    case 3
+                        part_fV = fvN(start3:stop3);
+                        tOn = start3:timeWin_s:stop3;
+                        stop = stop3;
+                end
+                
+                sortedVals = sort(part_fV, 'ascend');
+                percentile4ScaleEstimation = 95; % we choose a threhsold of 95% of the sorted data
+                scaleEstimator_thresh =sortedVals(round(percentile4ScaleEstimation/100*numel(sortedVals)));
+                
+                
+                figure(100); clf
+                plot(part_fV);
+                line([0 numel(part_fV)], [scaleEstimator_thresh scaleEstimator_thresh], 'color', 'r')
+                axis tight
+                %%
+                
+                
+                
+                %bin all data into 6 min bins
+                
+             
+                nBatches = numel(tOn);
+                
+                allThreshCross_cnts = [];
+                allThreshCross_inds = [];
+                totalDataSize = [];
+                for i = 1:nBatches
+                    
+                    if i == nBatches
+                        thisData = fvN(tOn(i):stop);
+                    else
+                        thisData = fvN(tOn(i):tOn(i)+timeWin_s-1);
+                    end
+                    
+                    threshCrossInds = find(thisData >= scaleEstimator_thresh);
+                    
+                    allThreshCross_cnts(i) = numel(threshCrossInds);
+                    allThreshCross_inds{i} = threshCrossInds;
+                    totalDataSize(i) = numel(thisData); % this last data entry will be smaller than 6 minutes
+                end
+                
+                
+                allPartsTheshCnts{o} = allThreshCross_cnts;
+                allPartsThreshCross_inds{o} = allThreshCross_inds;
+                allPartsTotalDataSize{o} = totalDataSize;
+                
+                
+            end
+            disp('')
+            
+            allDetections_6minBins = cell2mat(allPartsTheshCnts);
+            allDurations_s = cell2mat(allPartsTotalDataSize);
+            
+            
+            allDetections_6minBins = allDetections_6minBins(1:end-1); % remove last incomplete bin
+            allDurations_s = allDurations_s(1:end-1);
+            
+            textName = 'Detections-ROI3.txt';
+            fileToSave = ['/media/janie/DataRed1TB/chronoAnalysis/textFileDetections/' textName];
+                
+            fileID = fopen(fileToSave,'w');
+            %fprintf(fileID,'%6s %12s\n','x','exp(x)');
+            fprintf(fileID,'%d\n',allDetections_6minBins);
+            fclose(fileID);
+            
+            
+            
+        end
     end
     
     %%

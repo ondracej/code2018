@@ -1,11 +1,14 @@
 close all
 clear all
 
-pathToCodeRepository = 'C:\Users\Janie\Documents\GitHub\code2018\';
+%pathToCodeRepository = 'C:\Users\Janie\Documents\GitHub\code2018\';
+pathToCodeRepository = '/home/janie/Documents/code/code2018/';
+
 addpath(genpath(pathToCodeRepository)) 
 
 
-vidsToAnalyze = {'E:\chronoAnalysis\OrigVideos\faa1-001-cam1-2019-Nov-14.avi'};
+%vidsToAnalyze = {'E:\chronoAnalysis\OrigVideos\faa1-001-cam1-2019-Nov-14.avi'};
+vidsToAnalyze = {'/media/janie/DataRed1TB/chronoAnalysis/OrigVideos/faa1-001-cam1-2019-Nov-14.avi'};
 
 videoDirectory=[];
 
@@ -57,4 +60,17 @@ VidTag  = 'ROI-3';
 dsFrameRate = 1;
 loadOFDetectionsAndMakePlot(C_OBJ, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime, VidTag)
  
+%%
+
+OFPath = ['/media/janie/DataRed1TB/chronoAnalysis/001_Vids/OF_DS/ROI-1_OF_DSs1_fullFile.mat'];
+
+extractMvmtFromOF(C_OBJ, OFPath)
+            
+%%
+%OFPath = ['/media/janie/DataRed1TB/chronoAnalysis/001_Vids/OF_DS/ROI-1_OF_DSs1_fullFile.mat'];
+%OFPath = ['/media/janie/DataRed1TB/chronoAnalysis/001_Vids/OF_DS/ROI-2_OF_DSs1_fullFile.mat'];
+OFPath = ['/media/janie/DataRed1TB/chronoAnalysis/001_Vids/OF_DS/ROI-3_OF_DSs1_fullFile.mat'];
+extractMvmtFromOF_separateParts(C_OBJ, OFPath)
+
+
  
