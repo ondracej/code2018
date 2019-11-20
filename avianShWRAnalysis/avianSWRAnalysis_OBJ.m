@@ -525,47 +525,6 @@ classdef avianSWRAnalysis_OBJ < handle
             
         end
         
-        function [obj] = prepareDataForShWRDetection_FullFile_Python(obj, chanOverride)
-            dbstop if error
-            if nargin <2
-                chanOverride = obj.REC.bestChs(1);
-            end
-            
-            chanToUse = chanOverride;
-            Fs = obj.Session.sampleRate;
-            samples = obj.Session.samples;
-            
-            SessionDir = obj.Session.SessionDir;
-            obj.Session.SessionDir;
-            
-            eval(['fileAppend = ''100_CH' num2str(chanToUse) '.continuous'';'])
-            fileName = [SessionDir fileAppend];
-            
-            [data, timestamps, info] = load_open_ephys_data(fileName);
-            thisSegData_s = timestamps(1:end) - timestamps(1);
-            
-            saveDir = [SessionDir 'SWR-Python' obj.DIR.dirD];
-            
-            if exist(saveDir, 'dir') == 0
-                mkdir(saveDir);
-                disp(['Created: '  saveDir])
-            end
-            
-            INFO.dataDir = fileName;
-            INFO.fs = Fs;
-            INFO.samples = samples;
-            
-            
-            dataSegs_V_raw = data;
-            data_t_s = thisSegData_s;
-            Fs = info.header.sampleRate;
-            
-            disp('Saving...')
-            saveName = [saveDir obj.Session.time '-Ch-' num2str(chanToUse) '_py_fullFile.mat'];
-            save(saveName, 'dataSegs_V_raw', 'data_t_s', 'INFO', '-v7.3')
-            disp(['Saved: ' saveName])
-            
-        end
         
         %% SWR Analysis
         function [obj] = SWR_PythonDetections_shapeStatistics(obj, useNotch)
@@ -937,187 +896,6 @@ classdef avianSWRAnalysis_OBJ < handle
             
         end
         
-        %% Spike Sorting
-        
-        function [obj] = runKilosortFromConfigFile(obj, pathToConfigFile, nameOfConfigFile)
-            
-            run(fullfile(pathToConfigFile, nameOfConfigFile))
-            
-            obj.ops = ops;
-            
-            %% Chan Config
-            %{
-            Nchannels = 16;
-            connected = true(Nchannels, 1);
-            chanMap   = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5];
-            %chanMap   = [1:Nchannels];
-            chanMap0ind = chanMap - 1;
-            xcoords   = ones(Nchannels,1);
-            ycoords   = 50 * [1:16]; % 50 micron space,
-            kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
-            
-            fs = 30000; % sampling frequency
-            save('C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap.mat', 'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
-            %}
-            
-            %             Nchannels = 2;
-            %             connected = true(Nchannels, 1);
-            %             %chanMap   = [6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];
-            %             chanMap   = [2 10];
-            %             chanMap0ind = chanMap - 1;
-            %             xcoords   = ones(Nchannels,1);
-            %             ycoords   = ones(Nchannels,1);
-            %             kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
-            %
-            %             fs = 30000; % sampling frequency
-            %             save('F:\TUM\SWR-Project\KiloSortConfigFiles\testMap.mat', 'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
-            
-            %
-            %             Nchannels = 16;
-            %             connected = true(Nchannels, 1);
-            %             chanMap   = [1:16];
-            %             chanMap0ind = chanMap - 1;
-            %
-            %             xcoords   = ones(Nchannels,1);
-            %              ycoords   = ones(Nchannels,1);
-            %              kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
-            %
-            %             fs = 30000; % sampling frequency
-            %             save('C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSeq.mat', 'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
-            %
-            
-            
-            %%
-            tic; % start timer
-            %
-            if ops.GPU
-                gpuDevice(1); % initialize GPU (will erase any existing GPU arrays)
-            end
-            
-            if strcmp(ops.datatype , 'openEphys')
-                disp('Converting openephys file...')
-                ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
-            end
-            disp('Finished...')
-            %
-            %%
-            disp('Pre-processing...')
-            [rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes for initialization
-            disp('Fitting templates...')
-            rez                = fitTemplates(rez, DATA, uproj);  % fit templates iteratively
-            disp('Extracting final spike times...')
-            rez                = fullMPMU(rez, DATA);% extract final spike times (overlapping extraction)
-            
-            % AutoMerge. rez2Phy will use for clusters the new 5th column of st3 if you run this)
-            %     rez = merge_posthoc2(rez);
-            
-            % save matlab results file
-            save(fullfile(ops.root,  'rez.mat'), 'rez', '-v7.3');
-            
-            % save python results file for Phy
-            rezToPhy(rez, ops.root);
-            
-            % remove temporary file
-            delete(ops.fproc);
-            
-            disp('Finished')
-            
-            %%s
-            
-        end
-        
-        
-        function [] = runKilosort2fromConfigFile(obj, pathToConfigFile, nameOfConfigFile)
-            
-            %% you need to change most of the paths in this block
-            
-            %addpath(genpath('D:\GitHub\KiloSort2')) % path to kilosort folder
-            %addpath('D:\GitHub\npy-matlab')
-            
-            pathToYourConfigFile = pathToConfigFile; % take from Github folder and put it somewhere else (together with the master_file)
-            run(fullfile(pathToYourConfigFile, nameOfConfigFile))
-            
-            
-            rootH = ops.root;
-            
-            datFiles = dir(fullfile(rootH, '*.dat'));
-            if numel(datFiles) >=2
-                disp('.dat file found..')
-            else
-                if strcmp(ops.datatype , 'openEphys')
-                    disp('Converting openephys file...')
-                    ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
-                end
-            end
-            
-            
-            ops.fproc       = fullfile(rootH, 'temp_wh.dat'); % proc file on a fast SSD
-            %ops.chanMap = chanMap;
-            
-            ops.trange = [0 Inf]; % time range to sort
-            ops.NchanTOT    = 16; % total number of channels in your recording
-            
-            % the binary file is in this folder
-            rootZ = ops.root;
-            
-            %% this block runs all the steps of the algorithm
-            fprintf('Looking for data inside %s \n', rootZ)
-            
-            % is there a channel map file in this folder?
-            %             fs = dir(fullfile(rootZ, 'chan*.mat'));
-            %             if ~isempty(fs)
-            %                 ops.chanMap = fullfile(rootZ, fs(1).name);
-            %                 ops.chanMap = fullfile(rootZ, fs(1).name);
-            %             end
-            
-            if ops.GPU
-                gpuDevice(1); % initialize GPU (will erase any existing GPU arrays)
-            end
-            
-            % find the binary file
-            fs          = [dir(fullfile(rootZ, '*.bin')) dir(fullfile(rootZ, '*.dat'))];
-            ops.fbinary = fullfile(rootZ, fs(1).name);
-            
-            % preprocess data to create temp_wh.dat
-            rez = preprocessDataSub(ops);
-            
-            % time-reordering as a function of drift
-            rez = clusterSingleBatches(rez);
-            save(fullfile(rootZ, 'rez.mat'), 'rez', '-v7.3');
-            
-            % main tracking and template matching algorithm
-            rez = learnAndSolve8b(rez);
-            
-            % final merges
-            rez = find_merges(rez, 1);
-            
-            % final splits by SVD
-            rez = splitAllClusters(rez, 1);
-            
-            % final splits by amplitudes
-            rez = splitAllClusters(rez, 0);
-            
-            % decide on cutoff
-            rez = set_cutoff(rez);
-            
-            fprintf('found %d good units \n', sum(rez.good>0))
-            
-            % write to Phy
-            fprintf('Saving results to Phy  \n')
-            rezToPhy(rez, rootZ);
-            
-            %% if you want to save the results to a Matlab file...
-            
-            % discard features in final rez file (too slow to save)
-            rez.cProj = [];
-            rez.cProjPC = [];
-            
-            % save final results as rez2
-            fprintf('Saving final results in rez2  \n')
-            fname = fullfile(rootZ, 'rez2.mat');
-            save(fname, 'rez', '-v7.3');
-            
-        end
         
         function [obj] = importPhyClusterSpikeTimes(obj, clustType)
             
@@ -1449,8 +1227,156 @@ classdef avianSWRAnalysis_OBJ < handle
             
             
             
-        end
+        end   
         
+        
+        function [] = calcSWR_CSD(obj)
+            
+            dataDir = obj.DIR.ephysDir;
+            
+            dataRecordingObj = OERecordingMF(dataDir);
+            dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
+            
+            Fs = dataRecordingObj.samplingFrequency;
+            
+            Detectionpath = [obj.DIR.analysisDir 'vDetections'];
+         
+            s=load(Detectionpath);
+            
+            allSWR_fs = s.allSWR.allSWR_fs;
+            allSWR_ms  = allSWR_fs/Fs*1000;
+            
+            
+            %allSWR_ms = allSWR_ms(18000:18500);
+            %% Get all SWRs for each channel
+            
+            
+            chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2];
+            %chanMap = [7 10 2 15 3 14 4 13 1 16 5 12 6 11 8 9];
+            %chanMap = [13 1 16 5 12 6 11 8 9];
+            nChans = numel(chanMap);
+            
+            preTemplate_ms = 100;
+            winTemplate = 200;
+            cnt = 1;
+            swr = [];
+            for j = 1:nChans
+                ch = chanMap(j);
+                [allSWR,tSW]=dataRecordingObj.getData(ch,(allSWR_ms-preTemplate_ms),winTemplate);
+                
+                thisMean = mean(squeeze(allSWR), 1);
+                swr(:,cnt) = thisMean;
+                cnt = cnt+1;
+            end
+            
+            %%
+            
+            spw = swr;
+            fs = Fs;
+            N = nChans;
+            chnl_order = chanMap;
+            Fname = [obj.INFO.Name '-' obj.Session.time];
+            %
+            % while n <= length(spw_indx)
+            %     spw(:,:,n)=eeg(spw_indx(n)-fs/10 : spw_indx(n)+fs/10,:); n=n+1;  % spw in the 1st channel
+            % end
+            
+            %avg_spw=mean(spw,2)*10^-6; % for further use in ''SCD'' analysis, data turns to Volts instead of uV
+            avg_spw=swr*10^-6; % for further use in ''SCD'' analysis, data turns to Volts instead of uV
+            spacing=100*10^-6; %%%%%%%%%%% spacing between neiboring electrodes
+            CSDoutput = CSD(avg_spw,fs,spacing,'inverse',5*spacing)';
+            %%
+            figure;clf
+            subplot(1,3,1) % CSD
+            
+            t_peri=((-fs/10:fs/10-1)./fs*1000); % peri-SPW time, +-50 ms around the SPW times
+            y_peri=(1-.5:N-.5)'; % y values for CSD plot, basically electrode channels , we centered the y cvalues so ...
+            % they will be natural numbers + .5
+            imagesc(t_peri,y_peri,CSDoutput, [-10 10]); yticks(.5:1:N-.5);  yticklabels(num2cell(chnl_order)); % flip because of physical placement of channels
+            ylabel(' ventral <--                    Electrode                    --> dorsal');  colormap(flipud(jet)); % blue = sink; red = sourse
+            xlabel('peri-SPW time (ms)');      title('CSD (\color{red}sink, \color{blue}source\color{black})');
+            
+            
+            subplot(1,3,2) % smoothed CSD (spline), we interpolate CSD values in a finer grid
+            t_grid=repmat(t_peri,length(y_peri)+2,1); % grid for current t values, to extra rows for beginning (zero), and the last natural full number, just ...
+            % greater than last row which includes a .5 portion
+            y_grid=repmat([0 ; y_peri ; N] , 1,length(t_peri)); % grid for current y values
+            t_grid_ext=repmat(t_peri,10*N,1); % new fine t grid
+            y_grid_ext=repmat((.1:.1:N)',1,size(t_grid,2)); % new fine y grid
+            [csd_smoo]=interp2( t_grid , y_grid ,[CSDoutput(1,:) ; CSDoutput ; CSDoutput(end,:)],t_grid_ext,y_grid_ext, 'spline'); % CSD interpolation in a finer grid
+            
+            imagesc((-fs/10:fs/10)./fs*1000,(.1:.1:N)',csd_smoo,  [-10 10]); % fixing the color range for comparing different data
+            yticks(.5:1:N-.5);  yticklabels(num2cell(chnl_order));
+            ylabel('Electrode');  colormap((jet)); % blue = source; red = sink
+            xlabel('peri-SPW time (ms)');      title('smoothed CSD (\color{red}sink, \color{blue}source\color{black})');
+            % overlaying SPW traces
+            dist=abs(max(avg_spw(:))*2); % rescaling factor just for plot
+            hold on
+            for k = 1: N
+                plot( (-fs/10:fs/10-1)./fs*1000 ,-avg_spw(:,k)'/dist+k-.5  ,'color', 'k','linewidth',1.5)
+            end
+            
+            subplot(1,3,3) % LFP
+            s=imagesc((-fs/10:fs/10)./fs*1000,1:N,avg_spw', [-30 5]*1e-5); yticks(1:1:N); yticklabels(num2cell(chnl_order));
+            ylabel('Electrode');  colormap(flipud(jet));
+            xlabel('peri-SPW time (ms)');   title(['LFP' Fname])
+            
+             saveName = [obj.DIR.plotDir 'CSD-Summary'];
+             plotpos = [0 0 15 12];
+            
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+              print_in_A4(0, saveName, '-depsc', 0, plotpos);
+            %%
+            figure(103);clf
+            subplot(1, 2, 1)
+            
+          
+            t_grid=repmat(t_peri,length(y_peri)+2,1); % grid for current t values, to extra rows for beginning (zero), and the last natural full number, just ...
+            % greater than last row which includes a .5 portion
+            y_grid=repmat([0 ; y_peri ; N] , 1,length(t_peri)); % grid for current y values
+            t_grid_ext=repmat(t_peri,10*N,1); % new fine t grid
+            y_grid_ext=repmat((.1:.1:N)',1,size(t_grid,2)); % new fine y grid
+            [csd_smoo]=interp2( t_grid , y_grid ,[CSDoutput(1,:) ; CSDoutput ; CSDoutput(end,:)],t_grid_ext,y_grid_ext, 'spline'); % CSD interpolation in a finer grid
+            % -5 4; -10 7
+              imagesc((-fs/10:fs/10)./fs*1000,(.1:.1:N)',csd_smoo, [-5 4]); % fixing the color range for comparing different data
+            yticks(.5:1:N-.5);  yticklabels(num2cell(chnl_order));
+            ylabel('Electrode');  colormap((jet)); % blue = source; red = sink
+            xlabel('peri-SPW time (ms)');      title('smoothed CSD (\color{red}sink, \color{blue}source\color{black})');
+            % overlaying SPW traces
+            dist=abs(max(avg_spw(:))*10); % rescaling factor just for plot
+            
+            colorbar
+            subplot(1, 2, 2)
+            hold on
+            %cnt = 1;
+            %offset = .1;
+            cnt = 0;
+            for k = 1: N
+            
+                thisPlot = avg_spw(:,N-cnt);
+               plot( (-fs/10:fs/10-1)./fs*1000 ,thisPlot'/dist+k-.5  ,'color', 'k','linewidth',1.5)
+                cnt = cnt+1;
+                
+            end
+            axis tight
+            title(['LFP' Fname])
+            colorbar
+            %%
+            
+           saveName = [obj.DIR.plotDir 'CSD-Smooth'];
+             plotpos = [0 0 12 15];
+            
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+              print_in_A4(0, saveName, '-depsc', 0, plotpos);
+            
+            
+            
+            
+            %%
+            
+            
+            
+        end
         
         
         function [] = calcCSD(obj, dataRecordingObj)
@@ -1586,300 +1512,6 @@ classdef avianSWRAnalysis_OBJ < handle
             
             
         end
-        
-        function [obj] = detectSWRs_SleepAnalysisObj(chan , obj, dataRecordingObj)
-            
-            %             addParameter(parseObj,'ch',obj.par.DVRLFPCh{obj.currentPRec},@isnumeric);
-            %             addParameter(parseObj,'nTestSegments',20,@isnumeric);
-            %             addParameter(parseObj,'minPeakWidth',200,@isnumeric);
-            %             addParameter(parseObj,'minPeakInterval',1000,@isnumeric);
-            %             addParameter(parseObj,'detectOnlyDuringSWS',true);
-            %             addParameter(parseObj,'preTemplate',400,@isnumeric);
-            %             addParameter(parseObj,'winTemplate',1500,@isnumeric);
-            %             addParameter(parseObj,'resultsFileName',[],@isstr);
-            %             addParameter(parseObj,'percentile4ScaleEstimation',5,@isnumeric);
-            %             addParameter(parseObj,'overwrite',0,@isnumeric);
-            %             addParameter(parseObj,'inputParams',false,@isnumeric);
-            
-            
-            %% chekc if detected files exist
-            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
-            SWRDir = [obj.DIR.birdDir 'SWR' obj.DIR.dirD obj.DIR.dirName '_swrs' obj.DIR.dirD];
-            savePath = [SWRDir  obj.Plotting.saveTxt '_SWR.mat'];
-            %
-            %             if   exist(savePath, 'file') ~= 0
-            %
-            %                 disp('SWR file already exists...')
-            %
-            %                 load(savePath)
-            %
-            %                 obj.SWR = SWR;
-            %                 obj.SWR.parSharpWaves = parSharpWaves;
-            %
-            %             else
-            
-            
-            %%
-            
-            
-            Fs = obj.Session.sampleRate;
-            recordingDuration_s = obj.Session.recordingDur_s;
-            
-            fObj = filterData(Fs);
-            
-            %% Filters
-            %
-            %             fobj.filt.FL=filterData(Fs);
-            %             %fobj.filt.FL.lowPassPassCutoff=4.5;
-            %             %fobj.filt.FL.lowPassPassCutoff=20;
-            %             %fobj.filt.FL.lowPassStopCutoff=30;
-            %             fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
-            %             fobj.filt.FL.lowPassStopCutoff=40;
-            %             fobj.filt.FL.attenuationInLowpass=20;
-            %             fobj.filt.FL=fobj.filt.FL.designLowPass;
-            %             fobj.filt.FL.padding=true;
-            %
-            %             fobj.filt.FH2=filterData(Fs);
-            %             fobj.filt.FH2.highPassCutoff=80;
-            %             fobj.filt.FH2.lowPassCutoff=400;
-            %             fobj.filt.FH2.filterDesign='butter';
-            %             fobj.filt.FH2=fobj.filt.FH2.designBandPass;
-            %             fobj.filt.FH2.padding=true;
-            %
-            %             fobj.filt.FN =filterData(Fs);
-            %             fobj.filt.FN.filterDesign='cheby1';
-            %             fobj.filt.FN.padding=true;
-            %             fobj.filt.FN=fobj.filt.FN.designNotch;
-            
-            fobj.filt.BP=filterData(Fs);
-            fobj.filt.BP.highPassCutoff=1;
-            fobj.filt.BP.lowPassCutoff=2000;
-            fobj.filt.BP.filterDesign='butter';
-            fobj.filt.BP=fobj.filt.BP.designBandPass;
-            fobj.filt.BP.padding=true;
-            
-            fobj.filt.DS4Hz=filterData(Fs);
-            fobj.filt.DS4Hz.downSamplingFactor=240; % 125 samples
-            %fobj.filt.DS4Hz.lowPassCutoff=4;
-            fobj.filt.DS4Hz.lowPassCutoff=55;
-            fobj.filt.DS4Hz.padding=true;
-            fobj.filt.DS4Hz=fobj.filt.DS4Hz.designDownSample;
-            
-            %% Define template
-            nTestSegments = 15;
-            percentile4ScaleEstimation = 5;
-            
-            rng(1);
-            
-            seg_ms=20000;
-            TOn=1:seg_ms:recordingDuration_s*1000-seg_ms;
-            nCycles = numel(TOn);
-            
-            [tmpV, t_ms] =dataRecordingObj.getData(2,TOn(1),seg_ms);
-            
-            %pCycle=sort(randperm(nCycles,nTestSegments));
-            pCycle=[4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 267, 274, 281];
-            %pCycle=sort(nCycles,nTestSegments);
-            ch = chan;
-            Mtest=cell(nTestSegments,1);
-            tTest=cell(nTestSegments,1);
-            for i=1:numel(pCycle)
-                %    for i=13:nCycles
-                MTmp=dataRecordingObj.getData(ch,TOn(pCycle(i)),seg_ms);
-                MTmpBP=fobj.filt.BP.getFilteredData(MTmp);
-                %MTmp=dataRecordingObj.getData(ch,TOn(i),seg_ms);
-                %plot(squeeze(MTmp))
-                %i
-                %pause
-                [Mtest{i},tTest{i}]=fobj.filt.DS4Hz.getFilteredData(MTmpBP);
-                tTest{i}=tTest{i}'+TOn(pCycle(i));
-                Mtest{i}=squeeze(Mtest{i});
-            end
-            Mtest=cell2mat(Mtest);
-            tTest=cell2mat(tTest);
-            sortedMtest=sort(Mtest);
-            scaleEstimator=sortedMtest(round(percentile4ScaleEstimation/100*numel(sortedMtest)));
-            
-            tmpFs=fobj.filt.DS4Hz.filteredSamplingFrequency;
-            
-            %%
-            
-            % addParameter(parseObj,'minPeakWidth',200,@isnumeric);
-            % addParameter(parseObj,'minPeakInterval',1000,@isnumeric);
-            % addParameter(parseObj,'detectOnlyDuringSWS',true);
-            % addParameter(parseObj,'preTemplate',400,@isnumeric);
-            % addParameter(parseObj,'winTemplate',1500,@isnumeric);
-            
-            % minPeakWidth = 200;
-            % minPeakInterval = 1000;
-            % preTemplate = 400;
-            % winTemplate = 1500;
-            
-            %in ms ZF
-            %minPeakWidth = 20;
-            %maxPeakWidth = 130;
-            %minPeakInterval = 200;
-            %preTemplate = 200;
-            %winTemplate = 600;
-            
-            minPeakWidth = 20;
-            maxPeakWidth = 300;
-            minPeakInterval = 50;
-            
-            preTemplate = 200;
-            winTemplate = 200;
-            
-            [peakVal,peakTime,peakWidth,peakProminance]=findpeaks(-Mtest,'MinPeakHeight',-scaleEstimator,'MinPeakDistance',minPeakInterval/1000*tmpFs,'MinPeakProminence',-scaleEstimator/2,'MinPeakWidth',minPeakWidth/1000*tmpFs, 'MaxPeakWidth', maxPeakWidth/1000*tmpFs,'WidthReference','halfprom');
-            
-            %{
-            widthTimes = peakWidth/tmpFs*1000;
-            figure
-            hist(widthTimes, 0:1:maxPeakWidth)
-            
-            figure(100);clf
-            plot(Mtest)
-            hold on
-            plot(peakTime, 50, 'rv')
-            %}
-            %%
-            [allSW,tSW]=dataRecordingObj.getData(ch,tTest(peakTime)-preTemplate,winTemplate*2);
-            [FLallSW,tFLallSW]=fobj.filt.DS4Hz.getFilteredData(allSW);
-            
-            template=squeeze(median(FLallSW,2));
-            nTemplate=numel(template);
-            ccEdge=floor(nTemplate/2);
-            [~,pTemplatePeak]=min(template);
-            %{
-                allSWRs = squeeze(allSW);
-                for j = 1:numel(peakTime)
-                    
-                    figure(302);clf
-                    plot(tSW, allSWRs(j,:))
-                    pause
-                end
-            %}
-            
-            
-            %{
-            figure(100); clf
-            plot(tFLallSW, template)
-            %}
-            
-            %%
-            seg=20000;
-            TOn=0:seg:recordingDuration_s*1000-seg;
-            TWin=seg*ones(1,numel(TOn));
-            nCycles=numel(TOn);
-            
-            
-            
-            C_Height = 0.1;
-            C_Prom = 0.05;
-            
-            
-            absolutePeakTimes=cell(nCycles,1);
-            for i=1:nCycles
-                [tmpM,tmpT]=dataRecordingObj.getData(ch,TOn(i),TWin(i));
-                [tmpBP,~]=fobj.filt.BP.getFilteredData(tmpM);
-                
-                [tmpFM,tmpFT]=fobj.filt.DS4Hz.getFilteredData(tmpBP);
-                
-                [C]=xcorrmat(squeeze(tmpFM),template);
-                C=C(numel(tmpFM)-ccEdge:end-ccEdge);
-                
-                %{
-                                figure(103); clf
-                               subplot(2, 1, 1 )
-                                plot(C); axis tight
-                %}
-                %C=xcorr(squeeze(tmpFM),template,'coeff');
-                
-                %[~,peakTime]=findpeaks(C,'MinPeakHeight',0.1,'MinPeakProminence',0.2,'WidthReference','halfprom');
-                [~,peakTime]=findpeaks(C,'MinPeakHeight',C_Height ,'MinPeakProminence',C_Prom,'WidthReference','halfprom');
-                
-                %{
-                                hold on
-                                plot(peakTime, 0.1, 'rv')
-                
-                                subplot(2, 1, 2)
-                                hold on;
-                                %plot(tmpT, squeeze(tmpBP))
-                                plot(tmpFT, squeeze(tmpFM))
-                                %plot(relPeakTime, 100, 'rv')
-                   
-                                %linkaxes(h,'x');
-                    
-                %}
-                
-                peakTime(peakTime<=pTemplatePeak)=[]; %remove peaks at the edges where templates is not complete
-                %relPeakTime = tmpFT(peakTime-round(pTemplatePeak/2))';
-                relPeakTime = tmpFT(peakTime+pTemplatePeak)';
-                %relPeakTime = tmpFT(peakTime-pTemplatePeak)';
-                absolutePeakTimes{i}=tmpFT(peakTime-round(pTemplatePeak/2))'+TOn(i);
-                %absolutePeakTimes{i}=tmpFT(peakTime)'+TOn(i);
-                
-                
-                %h(1)=subplot(2,1,1);plot(squeeze(tmpFM));h(2)=subplot(2,1,2);plot((1:numel(C))-pTemplatePeak,C);linkaxes(h,'x');
-            end
-            
-            
-            
-            
-            %                 [allSW,tSW]=dataRecordingObj.getData(ch,(tSW),winTemplate);
-            %
-            %                 allSWRs = squeeze(allSW);
-            
-            %{
-            figure (105); clf
-            for j =1:100
-                plot(tSW, allSWRs(j,:))
-                %ylim([-600 200])
-                j
-                pause
-            end
-            %}
-            
-            tSW=cell2mat(absolutePeakTimes);
-            
-            
-            SWR.tSWR_samps = tSW;
-            SWR.template_V = FLallSW;
-            SWR.template_T = tFLallSW;
-            SWR.mediantemplate = template;
-            SWR.pTemplatePeak = pTemplatePeak;
-            SWR.ch= ch;
-            
-            parSharpWaves.minPeakWidth = minPeakWidth;
-            parSharpWaves.minPeakInterval = minPeakInterval;
-            parSharpWaves.preTemplate = preTemplate;
-            parSharpWaves.winTemplate = winTemplate;
-            parSharpWaves.C_MinPeakHeight = C_Height;
-            parSharpWaves.C_MinPeakProminence = C_Prom;
-            parSharpWaves.tmpFs = tmpFs;
-            
-            SessionDir = obj.Session.SessionDir;
-            
-            obj.Plotting.titleTxt = [obj.INFO.Name ' | ' obj.Session.time];
-            obj.Plotting.saveTxt = [obj.INFO.Name '_' obj.Session.time];
-            SWRDir = [obj.DIR.birdDir 'SWR' obj.DIR.dirD obj.DIR.dirName '_swrs' obj.DIR.dirD];
-            
-            if exist(SWRDir, 'dir') == 0
-                mkdir(SWRDir);
-                disp(['Created: '  SWRDir])
-            end
-            savePath = [SWRDir  obj.Plotting.saveTxt '_SWR.mat'];
-            
-            save(savePath,'SWR','parSharpWaves');
-            disp(['Saved:' savePath])
-            obj.SWR = SWR;
-            obj.SWR.parSharpWaves = parSharpWaves;
-            
-            
-        end
-        %         end
-        
-        
         
         function [] = plotConsecutiveSWRs(obj, dataRecordingObj)
             
@@ -2200,32 +1832,47 @@ classdef avianSWRAnalysis_OBJ < handle
         end
         
         
-        function [obj] = detectSWRsOld(obj, dataRecordingObj)
+        
+        
+        
+        
+        
+        
+        
+        function [obj] = extractSHRs(obj)
+            
+            chanToUse = obj.REC.bestChs(1);
+            %SessionDir = obj.DIR.ephysDir;
+            
+            %search = ['*CH' num2str(chanToUse) '*'];
+            %matchFile = dir(fullfile(SessionDir, search));
+            %fileName = [SessionDir matchFile(1).name];
             
             %%
-            doPlot = 1;
             
-            chanToUse = obj.REC.bestChs(2);
-            SessionDir = obj.Session.SessionDir;
+            dataDir = obj.DIR.ephysDir;
             
-            eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
-            fileName = [SessionDir fileAppend];
+            dataRecordingObj = OERecordingMF(dataDir);
+            dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
             
-            [data, timestamps, info] = load_open_ephys_data(fileName);
-            Fs = info.header.sampleRate;
+            timeSeriesViewer(dataRecordingObj); % loads all the channels
+
             
-            [V_uV_data_full,nshifts] = shiftdim(data',-1);
-            
-            thisSegData = V_uV_data_full(:,:,:);
-            thisSegData_s = timestamps(1:end) - timestamps(1);
-            recordingDuration_s = thisSegData_s(end);
-            
+            Fs = dataRecordingObj.samplingFrequency;
             
             %%
-            fObj = filterData(Fs);
+            Detectionpath = [obj.DIR.analysisDir 'vDetections'];
+            
+            s=load(Detectionpath);
+            
+            allSWR_fs = s.allSWR.allSWR_fs;
+            allSWR_H = s.allSWR.allSWR_H;
+            
+          
+            %%
+             fObj = filterData(Fs);
             
             fobj.filt.F=filterData(Fs);
-            %fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
             fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
             fobj.filt.F=fobj.filt.F.designDownSample;
             fobj.filt.F.padding=true;
@@ -2278,353 +1925,796 @@ classdef avianSWRAnalysis_OBJ < handle
             fobj.filt.FN.padding=true;
             fobj.filt.FN=fobj.filt.FN.designNotch;
             
-            %% For estiamting scale
-            nTestSegments = 40;
-            percentile4ScaleEstimation = 20;
+            %%
+            [sortedHeights, ind] = sort(allSWR_H, 'descend');
             
-            rng(1);
             
-            seg_s= 20;
-            TOn=1:seg_s*Fs:(recordingDuration_s*Fs-seg_s*Fs);
-            nCycles = numel(TOn);
+            allSWRsComplete = allSWR_fs;
+            allSWR_ms_complete  = allSWRsComplete/Fs*1000;
             
-            pCycle=sort(randperm(nCycles,nTestSegments));
-            Mtest=cell(nTestSegments,1);
-            tTest=cell(nTestSegments,1);
-            for i=1:numel(pCycle)
-                
-                
-                thisROI = TOn(pCycle(i)):TOn(pCycle(i)+1);
-                SegData = V_uV_data_full(:,:, thisROI);
-                
-                DataSeg_BP = fobj.filt.BP.getFilteredData(SegData);
-                DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP));
-                %%
-                smoothWin = 0.10*Fs;
-                DataSeg_rect_HF = smooth(DataSeg_HF.^2, smoothWin);
-                
-                Mtest{i} = DataSeg_rect_HF;
-                
-            end
-            Mtest=cell2mat(Mtest);
-            
-            sortedMtest=sort(Mtest);
-            peakHeight_iqr = 3*iqr(sortedMtest);
-            
-            clear('Mtest', 'sortedMtest')
+            SWRsByHeight = allSWR_fs(ind);
+            allSWR_ms  = SWRsByHeight/Fs*1000;
+            allSWR_ms_sel  = allSWR_ms(1:250);
+            %allSWR_ms_sel  = allSWR_ms(250:500);
             
             %%
-            seg_s=40;
-            TOn=1:seg_s*Fs:(recordingDuration_s*Fs-seg_s*Fs);
-            overlapWin = 2*Fs;
+            preTemplate_ms = 250;
+            winTemplate = 500;
+            cnt = 1;
+            swr = [];
             
-            nCycles = numel(TOn);
+            %%
+                [allSWR,tSW]=dataRecordingObj.getData(chanToUse,(allSWR_ms_sel-preTemplate_ms),winTemplate);
+                 DataSeg_ripple = squeeze(fobj.filt.Ripple.getFilteredData(allSWR));
+               
+                 allSWR = squeeze(allSWR);
+                
+                %%
+                thisMean = mean(allSWR, 1);
+                thisMedian = median(allSWR, 1);
+                thissem =   (std(allSWR))/(sqrt(size(allSWR, 1)));
+                
+                figure(201);clf
+                %hold on
+                subplot(2, 1, 1)
+                plot(tSW, thisMean);
+                hold on
+                jbfill(tSW, [thisMean+thissem],[thisMean-thissem],'k','k',[],.3);
+                ylim([-1000 200])
+                %
+                title([obj.INFO.Name '_' obj.Session.time])
+                thisMean_R = mean(DataSeg_ripple, 1);
+                thisMedian_R = median(DataSeg_ripple, 1);
+                thissem_R =   (std(DataSeg_ripple))/(sqrt(size(DataSeg_ripple, 1)));
+                
+                subplot(2, 1, 2)
+                plot(tSW, thisMean_R);
+                hold on
+                jbfill(tSW, [thisMean_R+thissem_R],[thisMean_R-thissem_R],'k','k',[],.3);
+                ylim([-100 100])
+             
+                %%
+                  
+                saveName = [obj.DIR.plotDir 'SWR_plot-' obj.INFO.Name '_' obj.Session.time];
+                plotpos = [0 0 12 15];
+                
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                print_in_A4(0, saveName, '-depsc', 0, plotpos);
+                
+                
+               %% Package to Save
+               
+               info.preTemplate_ms = preTemplate_ms;
+               info.winTemplate = winTemplate;
+               info.Fs = Fs;
+               
+               SWR.heights = sortedHeights;
+               SWR.allSWR_ms_sel = allSWR_ms_sel;
+               SWR.SWRsByHeight_fs = SWRsByHeight;
+               SWR.tSW = tSW;
+               
+               SWR.allSWR = allSWR;
+               SWR.allSWR_mean = thisMean;
+               SWR.allSWR_median = thisMedian;
+               SWR.allSWR_sem = thissem;
+               
+               SWR.all_ripple = DataSeg_ripple;
+               SWR.all_ripple_mean = thisMean_R;
+               SWR.all_ripple_median = thisMedian_R;
+               SWR.all_ripple_sem = thissem_R;
+               
+               
+               saveName = 'SWRs.mat';
+               save([obj.DIR.analysisDir saveName], 'info', 'SWR')
+               
+               
+               
+               
+               
+            %% check this
+            disp('')
             
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+        end
+        
+        
+        function [obj] = validateSWRs(obj, doPlot)
+            % based on validateSWRs.m
+            dbstop if error
+            
+            loadData = 1;
+            doChronic = 0;
+            
+            chanToUse = obj.REC.bestChs(1);
+            SessionDir = obj.DIR.ephysDir;
+            
+            search = ['*CH' num2str(chanToUse) '*'];
+            matchFile = dir(fullfile(SessionDir, search));
+            fileName = [SessionDir matchFile(1).name];
+            
+            %%
+            detectionFilePath = obj.DIR.analysisDir;
+            
+            search = ['*__SWR-Detections.mat*'];
+            matchFile = dir(fullfile(detectionFilePath, search));
+            detectionFileName = [detectionFilePath matchFile.name];
+            
+            s = load(detectionFileName);
+            
+            Ripple = s.Ripple;
+            SW = s.SW;
+            Fs = 30000;
+            
+            if loadData
+                disp('Loading data...')
+                [data, timestamps, info] = load_open_ephys_data(fileName);
+                disp('Fininshed loading...')
+                Fs = info.header.sampleRate;
+                
+                [V_uV_data_full,nshifts] = shiftdim(data',-1);
+                
+                thisSegData = V_uV_data_full(:,:,:);
+                thisSegData_s = timestamps(1:end) - timestamps(1);
+                recordingDuration_s = thisSegData_s(end);
+                fObj = filterData(Fs);
+                
+                %% Filters
+                
+                fobj.filt.FH2=filterData(Fs);
+                fobj.filt.FH2.highPassCutoff=100;
+                fobj.filt.FH2.lowPassCutoff=2000;
+                fobj.filt.FH2.filterDesign='butter';
+                fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+                fobj.filt.FH2.padding=true;
+                
+                fobj.filt.BP=filterData(Fs);
+                fobj.filt.BP.highPassCutoff=1;
+                fobj.filt.BP.lowPassCutoff=2000;
+                fobj.filt.BP.filterDesign='butter';
+                fobj.filt.BP=fobj.filt.BP.designBandPass;
+                fobj.filt.BP.padding=true;
+                
+                fobj.filt.FN =filterData(Fs);
+                fobj.filt.FN.filterDesign='cheby1';
+                fobj.filt.FN.padding=true;
+                fobj.filt.FN=fobj.filt.FN.designNotch;
+                
+            end
+            
+            %% SWs
+            
+            sw_peakH_1 = SW.peakSW_H;
+            sw_peakTime_fs_1 = SW.absPeakTime_SW_fs; % first detection
+            sw_peakW_fs_1 = SW.peakSW_W; % at half prominence
+            
+            % Use the verified 2nd detections
+            sw_peakTime_fs_2 = SW.absPeakTime_Fs_LF; % second detection
+            sw_peakH_2 = SW.peakH_SWcheck; % second detection
+            sw_peakW_2 = SW.peakW_SWcheck; % at half width
+            
+            [C,UInds,ic] = unique(sw_peakTime_fs_2); % since we have an overlap, we have to get rid of all the double detections
+            
+            sw_peakW = sw_peakW_2(UInds);
+            sw_peakH = sw_peakH_2(UInds);
+            sw_peakTime_fs = sw_peakTime_fs_2(UInds);
+            
+            %% Ripples
+            
+            Rip_peakH_1 = Ripple.peakH;
+            Rip_peakTime_fs_1 = Ripple.asPeakTime_fs; % first detection
+            Rip_peakW_fs_1 = Ripple.peakW; % at half prominence
+            
+            % Use the verified 2nd detections
+            rip_peakH_2 = Ripple.peakH_ripcheck; % second detection
+            rip_peakTime_fs_2 = Ripple.absPeakTime_Fs_LF; % second detection
+            rip_peakW_2 = Ripple.peakW_ripcheck; % at half width
+            
+            [C,UInds,ic] = unique(rip_peakTime_fs_2); % since we have an overlap, we have to get rid of all the double detections
+            
+            rip_peakW = rip_peakW_2(UInds);
+            rip_peakH = rip_peakH_2(UInds);
+            rip_peakTime_fs = rip_peakTime_fs_2(UInds);
+            
+            %% Get rid of 10 ms overlaps ripples
+            FsWin = 10/1000 *Fs;
+            
+            peakDiffs = diff(rip_peakTime_fs);
+            smallDiffs = find(peakDiffs <= FsWin);
+            
+            rip_peakW_nDD  = rip_peakW;
+            rip_peakH_nDD  = rip_peakH;
+            rip_peakfs_nDD  = rip_peakTime_fs;
+            
+            rip_peakW_nDD(smallDiffs+1) = [];
+            rip_peakH_nDD(smallDiffs+1) = [];
+            rip_peakfs_nDD(smallDiffs+1) = [];
+            
+            %% Get rid of very large ripple peaks and small
+            
+            outliers_h_ind = find(rip_peakH_nDD >1500);
+            
+            rip_peakH_nDD(outliers_h_ind) = [];
+            rip_peakW_nDD(outliers_h_ind) = [];
+            rip_peakfs_nDD(outliers_h_ind) = [];
+            
+            if doChronic
+                outliers_h_ind = find(rip_peakH_nDD <115);
+                
+                rip_peakH_nDD(outliers_h_ind) = [];
+                rip_peakW_nDD(outliers_h_ind) = [];
+                rip_peakfs_nDD(outliers_h_ind) = [];
+            end
+            
+            %%
+            
+            
+            figure(102);clf
+            
+            subplot(3, 1, 1); plot(rip_peakfs_nDD/Fs/3600, rip_peakH_nDD, 'k.'); axis tight; title('Ripple height')
+            subplot(3, 1, 2); plot(rip_peakfs_nDD/Fs/3600, rip_peakW_nDD/Fs*1000, 'k.'); axis tight; title('Ripple width')
+            subplot(3, 1, 3); plot(rip_peakH_nDD, rip_peakW_nDD/Fs*1000, 'k.'); axis tight; title('Ripple height vs width')
+            
+            saveName = [obj.DIR.plotDir 'RippleWidthScatterTimePlots'];
+            plotpos = [0 0 40 20];
+            
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            print_in_A4(0, saveName, '-depsc', 0, plotpos);
+            
+            %% Find all peaks that are within 10 ms of eachother;
+            FsWin = 10/1000 *Fs;
+            
+            peakDiffs = diff(sw_peakTime_fs);
+            smallDiffs = find(peakDiffs <= FsWin);
+            
+            
+            sw_peakW_nDD  = sw_peakW;
+            sw_peakH_nDD  = sw_peakH;
+            sw_peakfs_nDD  = sw_peakTime_fs;
+            
+            sw_peakW_nDD(smallDiffs+1) = [];
+            sw_peakH_nDD(smallDiffs+1) = [];
+            sw_peakfs_nDD(smallDiffs+1) = [];
+            
+            outliers_w_ind = find(sw_peakW_nDD >= 0.120*Fs);
+            sw_peakH_nDD(outliers_w_ind) = [];
+            sw_peakW_nDD(outliers_w_ind) = [];
+            sw_peakfs_nDD(outliers_w_ind) = [];
+            
+            %% test for normal distribution
+            
+            [h, p] = kstest(sw_peakH);
+            [h, p] = kstest(sw_peakW);
+            
+            
+            % for chicken
+               outliers_h_ind = find(sw_peakH_nDD >1600);
+                
+                sw_peakH_nDD(outliers_h_ind) = [];
+                sw_peakW_nDD(outliers_h_ind) = [];
+                sw_peakfs_nDD(outliers_h_ind) = [];
+                
+                
+            
+            if doChronic
+                %% Find height and width outliers
+                
+                outliers_h_ind = find(sw_peakH_nDD >430);
+                
+                sw_peakH_nDD(outliers_h_ind) = [];
+                sw_peakW_nDD(outliers_h_ind) = [];
+                sw_peakfs_nDD(outliers_h_ind) = [];
+                
+                %% Also look for SHWs smaller than 80 uV
+                outliers_h_ind = find(sw_peakH_nDD <85);
+                
+                sw_peakH_nDD(outliers_h_ind) = [];
+                sw_peakW_nDD(outliers_h_ind) = [];
+                sw_peakfs_nDD(outliers_h_ind) = [];
+
+                %% Outliers
+                outliers_H_m = find(isoutlier(sw_peakH_nDD, 'median', 'ThresholdFactor', 6));
+                outliers_H_fs = sw_peakfs_nDD(outliers_H_m);
+                outliers_H_vals = sw_peakH_nDD(outliers_H_m);
+                outliers_H_Wvals = sw_peakW_nDD(outliers_H_m);
+                
+                figure; plot(outliers_H_Wvals, outliers_H_vals, 'k*');
+                
+                outliers_W_m = find(isoutlier(sw_peakW_nDD, 'median', 'ThresholdFactor', 5));
+                outliers_W_fs = sw_peakfs_nDD(outliers_W_m);
+                outliers_W_vals = sw_peakW_nDD(outliers_W_m);
+                outliers_W_Hvals = sw_peakH_nDD(outliers_W_m);
+                
+                figure; plot(outliers_W_vals, outliers_W_Hvals, 'k*');
+                
+                medianH = median(sw_peakH);
+                medianW_ms = median(sw_peakW/Fs)*1000;
+                stdH = std(sw_peakH)*6;
+                stdW = std((sw_peakW/Fs)*1000)*6;
+            end
+            
+            %%
+            
+            finalPeakTimes_fs = sw_peakfs_nDD;
+            finalPeakH = sw_peakH_nDD;
+            finalPeakW_fs = sw_peakW_nDD;
+            
+            rip_peakTime_fs = rip_peakfs_nDD;
+            
+            
+            %% Go over all Shs and look for ripples
+            
+            peakWinL = 0.03*Fs;
+            peakWinR = 0.03*Fs;
+            
+            allSW_fs = []; allSWR_H = []; allSWR_W_fs = [];
+            allSWR_fs = []; allSW_H = []; allSW_W_fs = [];
+            allSWR_rips_fs = []; allSWR_rips_H = []; allSWR_rips_W = [];
             cnt = 1;
             cnnt = 1;
             
-            templatePeaks = [];
-            ripplePeaks = [];
-            
-            for i=1:nCycles-1
-                figure(300); clf
-                if i ==1
-                    thisROI = TOn(i):TOn(i+1);
-                else
-                    thisROI = TOn(i)-overlapWin:TOn(i+1);
+            for j = 1:numel(finalPeakTimes_fs)
+                
+                sw_thisPeak_fs = finalPeakTimes_fs(j);
+                
+                checkL = sw_thisPeak_fs-peakWinL;
+                checkR = sw_thisPeak_fs+peakWinR;
+                
+                match = numel(rip_peakTime_fs(rip_peakTime_fs >= checkL & rip_peakTime_fs <= checkR));
+                if match == 1
+                    thisRipple_fs = rip_peakTime_fs(rip_peakTime_fs >= checkL & rip_peakTime_fs <= checkR);
+                    rippleInd = find(rip_peakTime_fs == thisRipple_fs(1));
                 end
-                
-                SegData = V_uV_data_full(:,:, thisROI);
-                SegData_s = thisSegData_s(thisROI);
-                
-                DataSeg_BP = fobj.filt.BP.getFilteredData(SegData);
-                DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
-                DataSeg_LF = squeeze(fobj.filt.FL.getFilteredData(DataSeg_BP));
-                DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP));
-                Data_SegData = squeeze(SegData);
-                %%
-                smoothWin = 0.10*Fs;
-                DataSeg_LF_neg = -DataSeg_LF;
-                %figure; plot(DataSeg_LF_neg)
-                DataSeg_rect_HF = smooth(DataSeg_HF.^2, smoothWin);
-                %baseline = mean(DataSeg_rect_HF)*2;
-                
-                %figure; plot(SegData_s, DataSeg_rect_HF); axis tight
-                
-                %% Find Peaks
-                interPeakDistance = 0.2*Fs;
-                minPeakWidth = 0.05*Fs;
-                %minPeakHeight = 200;
-                minPeakHeight = peakHeight_iqr;
-                minPeakProminence = 30;
-                
-                [peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
-                
-                %%
-                
-                absPeakTime_s =  SegData_s(peakTime_Fs);
-                asPeakTime_fs = peakTime_Fs+thisROI(1)-1;
-                % relPeakTime_s  = peakTime_Fs;
-                
-                %%
-                if doPlot
-                    %{
-                                        figure(100);clf;
+                if match == 1 % 1 SW, 1 ripple
                     
-                                        subplot(3,1,1)
-                                        plot(SegData_s, DataSeg_FNotch, 'k'); title( ['Raw']);
-                                        axis tight
-                                        ylim([-300 300])
+                    allSWR_fs(cnt) = sw_thisPeak_fs;
+                    allSWR_H(cnt) = finalPeakH(j);
+                    allSWR_W_fs(cnt) = finalPeakW_fs(j);
                     
-                                        subplot(3, 1, 2)
-                                        plot(SegData_s, DataSeg_HF, 'k'); title( ['Ripple']);
-                                        axis tight
-                                        ylim([-80 80])
+                    allSWR_rips_fs(cnt) = thisRipple_fs;
+                    allSWR_rips_H(cnt) = rip_peakH_nDD(rippleInd);
+                    allSWR_rips_W(cnt) = rip_peakW_nDD(rippleInd);
+                    cnt = cnt+1;
                     
-                                        subplot(3, 1, 3)
-                                        plot(SegData_s, smooth(DataSeg_rect_HF, .05*Fs), 'k'); title( ['Ripple Rectified']);
-                                        axis tight
-                                        ylim([0 400])
-                                        hold on
-                                        plot(SegData_s(peakTime_Fs), 200, 'rv')
-                    %}
-                    
-                    figure(300);
-                    
-                    subplot(5, 1, 1)
-                    plot(SegData_s, Data_SegData); title( ['Raw Voltage']);
-                    hold on
-                    %plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
-                    axis tight
-                    
-                    subplot(5, 1, 2)
-                    plot(SegData_s, DataSeg_FNotch); title( ['Notch Filter']);
-                    hold on
-                    %plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
-                    axis tight
-                    
-                    subplot(5, 1, 3)
-                    plot(SegData_s, DataSeg_LF); title( ['LF']);
-                    axis tight
-                    
-                    subplot(5, 1,4)
-                    plot(SegData_s, DataSeg_rect_HF); title( ['HF Rectified']);
-                    hold on;
-                    %plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'r*');
-                    axis tight
-                    ylim([0 500])
-                    
-                    subplot(5,1, 5)
-                    plot(SegData_s, DataSeg_HF); title( ['HF Rectified']);
-                    hold on;
-                    %plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'rv');
-                    axis tight
-                    
-                end
-                
-                WinSizeL = 0.15*Fs;
-                WinSizeR = 0.15*Fs;
-                
-                for q =1:numel(peakTime_Fs)
-                    
-                    if doPlot
-                        figure(300);
+                elseif match > 1
+                    thisRipple_fs = rip_peakTime_fs(rip_peakTime_fs >= checkL & rip_peakTime_fs <= checkR);
+                    diffTimes_ms= (diff(thisRipple_fs)/Fs)*1000;
+                      rippleInd = find(rip_peakTime_fs == thisRipple_fs(1));
+                    if diffTimes_ms <50 % take the first time
+                        peakTodelete =thisRipple_fs(2);
+                        bla = find(rip_peakTime_fs ==peakTodelete);
+                        rip_peakTime_fs(bla) = [];
                         
-                        subplot(5, 1, 1)
-                        %plot(SegData_s, Data_SegData); title( ['Raw Voltage']);
-                        hold on
-                        plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
-                        axis tight
+                        allSWR_fs(cnt) = sw_thisPeak_fs;
+                        allSWR_H(cnt) = finalPeakH(j);
+                        allSWR_W_fs(cnt) = finalPeakW_fs(j);
                         
-                        subplot(5, 1, 2)
-                        %plot(SegData_s, DataSeg_FNotch); title( ['Notch Filter']);
-                        hold on
-                        plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
-                        axis tight
+                        allSWR_rips_fs(cnt) = thisRipple_fs(1);
+                        allSWR_rips_H(cnt) = rip_peakH_nDD(rippleInd);
+                        allSWR_rips_W(cnt) = rip_peakW_nDD(rippleInd);
+                        cnt = cnt+1;
                         
-                        subplot(5, 1, 3)
-                        plot(SegData_s, DataSeg_LF); title( ['LF']);
-                        axis tight
-                        
-                        subplot(5, 1,4)
-                        %plot(SegData_s, DataSeg_rect_HF); title( ['HF Rectified']);
-                        hold on;
-                        plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'r*');
-                        axis tight
-                        ylim([0 500])
-                        
-                        subplot(5,1, 5)
-                        %plot(SegData_s, DataSeg_HF); title( ['HF Rectified']);
-                        hold on;
-                        plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'rv');
-                        axis tight
-                        
-                        
-                    end
-                    
-                    winROI = peakTime_Fs(q)-WinSizeL:peakTime_Fs(q)+WinSizeR;
-                    
-                    if winROI(end) > size(SegData_s, 1) || winROI(1) <0
-                        disp('Win is too big/small')
-                        continue
                     else
-                        
-                        LFWin = -DataSeg_LF(winROI);
-                        
-                        minPeakWidth_LF = 0.030*Fs;
-                        %minPeakHeight_LF = 150;
-                        %minPeakProminence = 195;
-                        minPeakHeight_LF = 20;
-                        minPeakProminence = 100;
-                        
-                        [peakH_LF,peakTime_Fs_LF, peakW_LF, peakP_LF]=findpeaks(LFWin,'MinPeakHeight',minPeakHeight_LF, 'MinPeakProminence',minPeakProminence, 'MinPeakWidth', minPeakWidth_LF, 'WidthReference','halfprom'); %For HF
-                        % prominence is realted to window size
-                        
-                        %% Test
-                        %{
-                            figure(104);clf
-                            winROI_s = SegData_s(winROI);
-                            plot(winROI_s, LFWin); axis tight
-                            hold on
-                            plot(winROI_s(peakTime_Fs_LF), LFWin(peakTime_Fs_LF), '*')
-                        %}
-                        %%
                         disp('')
-                        
-                        if numel(peakTime_Fs_LF) == 1
-                            
-                            templatePeaks.peakH(cnt) = peakH(q);
-                            templatePeaks.asPeakTime_fs(cnt) = asPeakTime_fs(q);
-                            templatePeaks.absPeakTime_s(cnt) = absPeakTime_s(q);
-                            templatePeaks.peakW(cnt) = peakW(q);
-                            templatePeaks.peakP(cnt) = peakP(q);
-                            
-                            absPeakTime_Fs_LF = (peakTime_Fs_LF + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
-                            
-                            templatePeaks.peakH_LF(cnt) = peakH_LF;
-                            templatePeaks.absPeakTime_Fs_LF(cnt) = absPeakTime_Fs_LF;
-                            templatePeaks.peakW_LF(cnt) = peakW_LF;
-                            templatePeaks.peakP_LF(cnt) = peakP_LF;
-                            
-                            cnt = cnt+1;
-                            
-                            
-                            %% Test
-                            % testROI = asPeakTime_fs(q)-0.2*Fs:asPeakTime_fs(q)+0.2*Fs;% THis is the HF, it will be offset from the peak of the SHW
-                            % figure; plot(SegData_s(testROI), DataSeg_rect_HF(testROI)); axis tight
-                            % figure; plot(SegData_s(testROI), DataSeg_FNotch(testROI)); axis tight
-                            %line([ thisSegData_s(asPeakTime_fs(q)) thisSegData_s(asPeakTime_fs(q))], [-1000 500]);
-                            
-                            %testROI = absPeakTime_Fs_LF-(0.2*Fs):absPeakTime_Fs_LF+(0.2*Fs);
-                            %figure(200); plot(SegData_s(testROI),  DataSeg_LF(testROI), 'k'); axis tight
-                            %hold on; plot(SegData_s(testROI), DataSeg_FNotch(testROI)); axis tight
-                            %line([ thisSegData_s(absPeakTime_Fs_LF(q)) thisSegData_s(absPeakTime_Fs_LF(q))], [-1000 500]);
-                            
-                            
-                        elseif isempty(peakTime_Fs_LF)
-                            if doPlot
-                                figure(300);
-                                
-                                subplot(5,1, 5)
-                                hold on;
-                                plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'kv');
-                                
-                                subplot(5, 1,4)
-                                hold on;
-                                plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'k*');
-                                
-                                subplot(5, 1, 1)
-                                hold on
-                                plot(SegData_s(peakTime_Fs(q)), 0, 'k*')
-                                
-                                subplot(5, 1, 2)
-                                hold on
-                                plot(SegData_s(peakTime_Fs(q)), 0, 'k*')
-                            end
-                            
-                            ripplePeaks.peakH(cnnt) = peakH(q);
-                            ripplePeaks.asPeakTime_fs(cnnt) = asPeakTime_fs(q);
-                            ripplePeaks.absPeakTime_s(cnnt) = absPeakTime_s(q);
-                            ripplePeaks.peakW(cnnt) = peakW(q);
-                            ripplePeaks.peakP(cnnt) = peakP(q);
-                            
-                            cnnt = cnnt+1;
-                            
-                            continue
-                        else % two detections
-                            
-                            templatePeaks.peakH(cnt) = peakH(q);
-                            templatePeaks.asPeakTime_fs(cnt) = asPeakTime_fs(q);
-                            templatePeaks.absPeakTime_s(cnt) = absPeakTime_s(q);
-                            templatePeaks.peakW(cnt) = peakW(q);
-                            templatePeaks.peakP(cnt) = peakP(q);
-                            
-                            %choose HighestPeak
-                            [pmax, maxInd] = max(peakH_LF);
-                            
-                            absPeakTime_Fs_LF = (peakTime_Fs_LF(maxInd) + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
-                            
-                            relPeakTime_Fs_LF = (peakTime_Fs_LF(maxInd) + peakTime_Fs(q)-WinSizeL); % for plotting
-                            
-                            templatePeaks.peakH_LF(cnt) = peakH_LF(maxInd);
-                            templatePeaks.absPeakTime_Fs_LF(cnt) = absPeakTime_Fs_LF;
-                            templatePeaks.peakW_LF(cnt) = peakW_LF(maxInd);
-                            templatePeaks.peakP_LF(cnt) = peakP_LF(maxInd);
-                            
-                            cnt = cnt+1;
-                            
-                            if doPlot
-                                figure(300);
-                                
-                                subplot(5,1, 5)
-                                hold on;
-                                plot(SegData_s(relPeakTime_Fs_LF), DataSeg_HF(peakTime_Fs(q)), 'bv');
-                                
-                                subplot(5, 1,4)
-                                hold on;
-                                plot(SegData_s(relPeakTime_Fs_LF), DataSeg_rect_HF(peakTime_Fs(q)), 'b*');
-                                
-                                subplot(5, 1, 1)
-                                hold on
-                                plot(SegData_s(relPeakTime_Fs_LF), 0, 'b*')
-                                
-                                subplot(5, 1, 2)
-                                hold on
-                                plot(SegData_s(relPeakTime_Fs_LF), 0, 'b*')
-                            end
-                            continue
-                            
-                        end
                     end
+                    %{
+                    roi = sw_thisPeak_fs(1)-.1*Fs: sw_thisPeak_fs(1)+.1*Fs;
+                    
+                    thisData = data(roi);
+                    [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                    DataSeg_BP = fobj.filt.BP.getFilteredData(V_uV_data_full);
+                    DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
+                    DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(V_uV_data_full));
+                    
+                    figure(403); clf
+                    plot(DataSeg_HF);
+                    hold on
+                    %plot(times_fs-roi(1), 0, 'rv')
+                    plot(sw_thisPeak_fs-roi(1), 0, 'rv')
+                    plot(DataSeg_FNotch);
+                    axis tight
+                    %}
+                    disp('')
+                elseif match == 0
+                    
+                    allSW_fs(cnnt) = sw_thisPeak_fs;
+                    allSW_H(cnnt) = finalPeakH(j);
+                    allSW_W_fs(cnnt) = finalPeakW_fs(j);
+                    cnnt = cnnt+1;
                     
                 end
-                
-                PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
-                if exist(PlotDir, 'dir') == 0
-                    mkdir(PlotDir);
-                    disp(['Created: '  PlotDir])
-                end
-                plot_filename = [PlotDir 'SWR_Detections-Plots' sprintf('%03d', i)];
-                
-                plotpos = [0 0 25 15];
-                figure(300);
-                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-                
-                
                 
             end
             
-            DetectionSaveName = [PlotDir '-Detections'];
-            save(DetectionSaveName, 'templatePeaks', 'ripplePeaks');
+            %% Package all validated SWRs
+            allSWR.allSWR_fs = allSWR_fs;
+            allSWR.allSWR_H = allSWR_H;
+            allSWR.allSWR_W_fs = allSWR_W_fs;
             
-            disp(['Saved:' DetectionSaveName ])
+            allSWR_rips.allSWR_rips_fs = allSWR_rips_fs;
+            allSWR_rips.allSWR_rips_H = allSWR_rips_H;
+            allSWR_rips.allSWR_rips_W = allSWR_rips_W;
+            
+            allSW.allSW_fs = allSW_fs;
+            allSW.allSW_H = allSW_H;
+            allSW.allSW_W_fs = allSW_W_fs;
+            
+            saveName = 'vDetections.mat';
+            save([detectionFilePath saveName], 'allSWR', 'allSWR_rips', 'allSW')
+            
+            %% Plot of SWR over time
+            
+            figure(103);clf
+            
+            if doChronic
+                timebase = 3600;
+                xlab = 'Time (hr)';
+            else
+                timebase = 60;
+                xlab = 'Time (min)';
+            end
+            
+            subplot(7, 1, [1 2] ); plot(allSWR_fs/Fs/timebase, allSWR_H, 'k.'); axis tight; ylabel('SWR amplitude (uV)')
+            %ylim([80 450])
+            subplot(7, 1, [3 4]); plot(allSWR_fs/Fs/timebase, allSWR_W_fs/Fs*1000, 'k.'); axis tight; xlabel(xlab ); ylabel('SWR duration (ms)')
+            %ylim([1 150])
+            
+            %subplot(13, 1, [8 9] ); plot(allSWR_rips_fs/Fs/3600, allSWR_rips_H, 'k.'); axis tight; xlabel('Time (hr)'); ylabel('Ripple amplitude (uV)')
+            %subplot(13, 1, [11 12]); plot(allSWR_rips_fs/Fs/3600, allSWR_rips_W/Fs*1000, 'k.'); axis tight; xlabel('Time (hr)'); ylabel('SWR width (ms)')
+            %{
+            %% Histograms
+            
+            
+            maxH = max(allSWR_H);
+            minH = min(allSWR_H);
+            
+            binsC_H = minH:5:maxH;
+            
+            subplot(13, 1, [5 6])
+            histogram(allSWR_H, binsC_H, 'FaceColor', 'k', 'EdgeColor', 'k');
+            meanH = mean(allSWR_H);
+            medianH = median(allSWR_H);
+            hold on
+            plot(medianH, 0, 'rv')
+            plot(meanH, 0, 'bv')
+            title('SWR amplitude(uV)')
+            
+            subplot(7, 5, [15 20]);
+            [cx,cy]=hist(allSWR_H,binsC_H);
+            bla = cumsum(cx) ./ sum(cx);
+            hold on
+            plot(cy, (bla), 'linewidth', 2)
+            clear('cx','cy');
+            
+            % Width
+            peakW_ms = (allSWR_W_fs/Fs)*1000;
+            
+            maxH = max(peakW_ms);
+            minH = min(peakW_ms);
+            
+            binsC_W = minH:2:maxH;
+            subplot(7, 5, [24 29]);
+            histogram(peakW_ms, binsC_W, 'FaceColor', 'k', 'EdgeColor', 'k');
+            meanW = mean(peakW_ms);
+            medianW = median(peakW_ms);
+            hold on
+            plot(medianW, 0, 'rv')
+            plot(meanW, 0, 'bv')
+            title('SWR width (ms)')
+            
+            subplot(7, 5, [25 30]);
+            [cx,cy]=hist(peakW_ms,binsC_W);
+            bla = cumsum(cx) ./ sum(cx);
+            hold on
+            plot(cy, (bla), 'linewidth', 2)
+            clear('cx','cy');
+            %}
+            
+            %% Plots of means over time
+            
+            binSize_s = 1*60;
+            binSize_Fs = binSize_s*Fs;
+            
+            TOns = 1:binSize_Fs:numel(data);
+            
+            for j = 1:numel(TOns)-1
+                theseV_inds =  find(allSWR_fs >= TOns(j) & allSWR_fs < TOns(j)+binSize_Fs);
+                theseV_vals = allSWR_H(theseV_inds);
+                theseW_vals = allSWR_W_fs(theseV_inds);
+                ShWMeanAmp(j) = mean(theseV_vals);
+                ShWMeanWidth(j) = mean(theseW_vals)/Fs*1000;
+                nWRs(j) = numel(theseV_inds);
+            end
+            
+            SWR_rate = nWRs/binSize_s;
+            if doChronic
+                smoothWin = 5;
+            else
+                smoothWin = 3;
+            end
+            
+            subplot(7, 1, [5] );
+            plot(smooth(ShWMeanAmp, smoothWin));
+            ylabel('Amplitude')
+            axis tight
+            
+            subplot(7, 1, [6] );
+            plot(smooth(ShWMeanWidth, smoothWin));
+            axis tight
+            ylabel('Duration')
+            
+            subplot(7, 1, [7] );
+            plot(smooth(SWR_rate));
+            axis tight
+            ylabel('Rate')
+        
+                %% plotting lines for the awake vs sleep
+            if doChronic
+                TimeROi_awake_fs = [1 1*3600*Fs];
+                %TimeROi_sleep_s = [6*3600 7*3600];
+                TimeROi_sleep_s = [3*3600 4*3600];
+                TimeROi_sleep_fs = TimeROi_sleep_s*Fs;
+                
+                subplot(7, 1, [2 3] );
+                hold on
+                yss = ylim;
+                line([TimeROi_awake_fs(1)/Fs/3600 TimeROi_awake_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+                line([TimeROi_awake_fs(2)/Fs/3600 TimeROi_awake_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+                line([TimeROi_sleep_fs(2)/Fs/3600 TimeROi_sleep_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+                line([TimeROi_sleep_fs(1)/Fs/3600 TimeROi_sleep_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+                
+                subplot(7, 1, [5 6]);
+                yss = ylim;
+                line([TimeROi_awake_fs(1)/Fs/3600 TimeROi_awake_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+                line([TimeROi_awake_fs(2)/Fs/3600 TimeROi_awake_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+                line([TimeROi_sleep_fs(2)/Fs/3600 TimeROi_sleep_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+                line([TimeROi_sleep_fs(1)/Fs/3600 TimeROi_sleep_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+            end
+            
+            %% Print plot
+            
+            saveName = [obj.DIR.plotDir 'SWRAmplWidthScatterTimePlots'];
+            plotpos = [0 0 40 20];
+            
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            print_in_A4(0, saveName, '-depsc', 0, plotpos);
+            
+            %% Scatter Hist plots all data
+            
+            figure(310);clf;
+            
+            % subplot(2, 1, 1)
+            % plot(allSWR_H, allSWR_W_fs/Fs*1000, 'k.'); axis tight; xlabel('SWR amplitude (uV)');ylabel('SWR width (ms)')
+            % ylim([0 150])
+            % xlim([80 450])
+            
+            scatterhist(allSWR_H,allSWR_W_fs/Fs*1000,'Kernel','on', 'Location','SouthEast',...
+                'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..')
+            
+            saveName = [obj.DIR.plotDir  'SWRAmplWidthScatterPLots'];
+            
+            plotpos = [0 0 12 10];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            print_in_A4(0, saveName, '-depsc', 0, plotpos);
+            
+            %% Collecting awake vs Sleep data
+            if doChronic
+                theseV_awake_inds =  find(allSWR_fs >= TimeROi_awake_fs(1) & allSWR_fs < TimeROi_awake_fs(2));
+                theseV_sleep_inds =  find(allSWR_fs >= TimeROi_sleep_fs(1) & allSWR_fs < TimeROi_sleep_fs(2));
+                
+                awakeVs = allSWR_H(theseV_awake_inds);
+                awakeWs = allSWR_W_fs(theseV_awake_inds);
+                
+                sleepVs = allSWR_H(theseV_sleep_inds);
+                sleepWs = allSWR_W_fs(theseV_sleep_inds);
+                
+                %% Scatter Hist plots awake sleep data
+                
+                figure(311);clf;
+                
+                group1 = ones(1, numel(awakeVs))*1;
+                group2 = ones(1, numel(sleepVs))*2;
+                
+                groups = [group1 group2];
+                xes = [awakeVs sleepVs];
+                yes = [awakeWs/Fs*1000 sleepWs/Fs*1000];
+                scatterhist(xes,yes,'Group',groups,'Kernel','on', 'Location','SouthEast',...
+                    'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..')
+                
+                saveName = [plotDir  'SWRAmplWidthScatterPLots_AwakeSleep'];
+                
+                plotpos = [0 0 12 10];
+                
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                print_in_A4(0, saveName, '-depsc', 0, plotpos);
+                
+                
+            %% Statistics
+            
+            [h, p] = ttest2(awakeVs, sleepVs);
+            [pp, hh] = ranksum(awakeVs, sleepVs);
+            
+            subplot(6, 5, [9 14]);
+            boxplot(awakeVs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'Awake Amplitude')
+            ylim([80 450])
+            title(['n=' num2str(numel(awakeVs))])
+            subplot(6, 5, [10 15]);
+            boxplot(sleepVs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'sleep Amplitude')
+            title(['n=' num2str(numel(sleepVs))])
+            ylim([80 450])
+            
+            
+            [h, p] = ttest2(awakeWs, sleepWs);
+            [pp, hh] = ranksum(awakeWs, sleepWs);
+            
+            subplot(6, 5, [24 29]);
+            boxplot(awakeWs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'Awake Width')
+            % ylim([80 450])
+            title(['n=' num2str(numel(awakeVs))])
+            subplot(6, 5, [25 30]);
+            boxplot(sleepWs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'sleep Width')
+            title(['n=' num2str(numel(sleepVs))])
+            %  ylim([80 450])
+            
+            end
+            
+            %{
+            %% Histograms
+            % Height
+            figure(310);clf;
+            
+            maxH = max(awakeVs);
+            minH = min(awakeVs);
+            
+            binsC_H = minH:5:maxH;
+            
+            subplot(2, 2, [1]);
+            histogram(awakeVs, binsC_H, 'FaceColor', 'k', 'EdgeColor', 'k');
+            meanH = mean(awakeVs);
+            medianH = median(awakeVs);
+            hold on
+            plot(medianH, 0, 'rv')
+            plot(meanH, 0, 'bv')
+            title('SWR amplitude(uV)')
+            
+            subplot(2, 2, [3]);
+            histogram(sleepVs, binsC_H, 'FaceColor', 'k', 'EdgeColor', 'k');
+            meanH = mean(sleepVs);
+            medianH = median(sleepVs);
+            hold on
+            plot(medianH, 0, 'rv')
+            plot(meanH, 0, 'bv')
+            
+            
+            [cx,cy]=hist(allSWR_H,binsC_H);
+            bla = cumsum(cx) ./ sum(cx);
+            hold on
+            plot(cy, (bla), 'linewidth', 2)
+            clear('cx','cy');
+            
+            % Width
+            peakW_ms = (allSWR_W_fs/Fs)*1000;
+            
+            maxH = max(peakW_ms);
+            minH = min(peakW_ms);
+            
+            binsC_W = minH:2:maxH;
+            subplot(7, 5, [24 29]);
+            histogram(peakW_ms, binsC_W, 'FaceColor', 'k', 'EdgeColor', 'k');
+            meanW = mean(peakW_ms);
+            medianW = median(peakW_ms);
+            hold on
+            plot(medianW, 0, 'rv')
+            plot(meanW, 0, 'bv')
+            title('SWR width (ms)')
+            
+            subplot(7, 5, [25 30]);
+            [cx,cy]=hist(peakW_ms,binsC_W);
+            bla = cumsum(cx) ./ sum(cx);
+            hold on
+            plot(cy, (bla), 'linewidth', 2)
+            clear('cx','cy');
+            
+            %}
+            
+            
+            %% Checcking outliers
+            %{
+            outlierToCheck_fs = outliers_W_fs;
+            valsToUse = outliers_W_vals/Fs*1000;
+            
+            for j = 1:numel(outlierToCheck_fs)
+                
+                
+                peakWinL = 0.1*Fs;
+                peakWinR = 0.1*Fs;
+                
+                %currentPeakInd = TF(j);
+                
+                currentPeak = outlierToCheck_fs(j);
+                
+                %roi = peaks(currentPeakInd)-peakWinL:peaks(currentPeakInd)+peakWinR;
+                roi = currentPeak-peakWinL:currentPeak+peakWinR;
+                roi_s = thisSegData_s(roi);
+                thisData = data(roi);
+                [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                DataSeg_BP = fobj.filt.BP.getFilteredData(V_uV_data_full);
+                DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
+                DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(V_uV_data_full));
+                
+                
+                figH = figure(300);
+                figure(figH); clf;
+                
+                subplot(1, 3, 1)
+                plot(roi_s, DataSeg_FNotch)
+                hold on;
+                plot(roi_s, DataSeg_HF, 'k')
+                
+                %line([ thisSegData_s(peaks(currentPeakInd)) thisSegData_s(peaks(currentPeakInd))], [-300 100])
+                line([ thisSegData_s(currentPeak) thisSegData_s(currentPeak)], [-500 500], 'color', 'r')
+                %text(roi_s(4000), 80, num2str(currentPeakInd), 'color', 'r')
+                axis tight
+                
+                %allPeakInds = getappdata(figH, 'allPeakInds');
+                %currentPeakInd = getappdata(figH, 'currentPeakInd');
+                
+                %if ismember(currentPeakInd,  allPeakInds)
+                %    title('Saved')
+                %else
+                %    title('Not Saved')
+                %end
+                
+                LongRoi =currentPeak-10*peakWinL:currentPeak+10*peakWinR;
+                
+                roi_s = thisSegData_s(LongRoi);
+                thisData = data(LongRoi);
+                [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                DataSeg_BP = fobj.filt.BP.getFilteredData(V_uV_data_full);
+                DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
+                DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(V_uV_data_full));
+                
+                
+                if LongRoi(1) >0
+                    %         FNotch_LongRoi = DataSeg_FNotch(LongRoi);
+                    %         HF_LongRoi = DataSeg_HF(LongRoi);
+                    %         roi_LongRoi_s = thisSegData_s(LongRoi);
+                    
+                    subplot(1, 3, [2 3])
+                    plot(roi_s, DataSeg_FNotch)
+                    hold on;
+                    plot(roi_s, DataSeg_HF, 'k')
+                    
+                    line([ thisSegData_s(currentPeak) thisSegData_s(currentPeak)], [-500 500], 'color', 'r')
+                    axis tight
+                    title(['Val = ' num2str(valsToUse(j))])
+                else
+                    subplot(1, 3, [2 3])
+                end
+                
+                pause
+            end
+            %}
+            
             
         end
         
         function [obj] = detectSWRs_ripple_SW_Band(obj)
             
             %%
-            doPlot = 1;
+            doPlot = 0;
             dbstop if error
             
             chanToUse = obj.REC.bestChs(1);
@@ -2632,7 +2722,7 @@ classdef avianSWRAnalysis_OBJ < handle
             
             search = ['*CH' num2str(chanToUse) '*'];
             matchFile = dir(fullfile(SessionDir, search));
-            fileName = [SessionDir matchFile.name];
+            fileName = [SessionDir matchFile(1).name];
             
             [data, timestamps, info] = load_open_ephys_data(fileName);
             Fs = info.header.sampleRate;
@@ -2704,9 +2794,10 @@ classdef avianSWRAnalysis_OBJ < handle
             
             rng(1);
             
-            seg_s= 40;
+            seg_s= 20;
             TOn=1:seg_s*Fs:(recordingDuration_s*Fs-seg_s*Fs);
-            nTestSegments = round(numel(TOn)*.3);
+            %nTestSegments = round(numel(TOn)*.3);
+            nTestSegments = round(numel(TOn));
             
             nCycles = numel(TOn);
             if nCycles >100
@@ -2718,7 +2809,7 @@ classdef avianSWRAnalysis_OBJ < handle
             Mtest_ripple=cell(nTestSegments,1);
             Mtest_SW=cell(nTestSegments,1);
             smoothWin = 0.10*Fs;
-            for i=1:numel(pCycle)
+            for i=1:numel(pCycle)-1
                 
                 
                 thisROI = TOn(pCycle(i)):TOn(pCycle(i)+1);
@@ -2848,6 +2939,7 @@ classdef avianSWRAnalysis_OBJ < handle
             ripplePeaks = [];
             
             for i=1:nCycles-1
+               % for i=2000:2200
                 
                 disp([num2str(i) '/' num2str(nCycles)])
                 figure(300); clf
@@ -3281,415 +3373,6 @@ classdef avianSWRAnalysis_OBJ < handle
             
         end
         
-        function [obj] = detectSWRsOld_LF_first(obj, dataRecordingObj)
-            
-            %%
-            doPlot = 1;
-            
-            chanToUse = obj.REC.bestChs(2);
-            SessionDir = obj.Session.SessionDir;
-            
-            eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
-            fileName = [SessionDir fileAppend];
-            
-            [data, timestamps, info] = load_open_ephys_data(fileName);
-            Fs = info.header.sampleRate;
-            
-            [V_uV_data_full,nshifts] = shiftdim(data',-1);
-            
-            thisSegData = V_uV_data_full(:,:,:);
-            thisSegData_s = timestamps(1:end) - timestamps(1);
-            recordingDuration_s = thisSegData_s(end);
-            
-            
-            %%
-            fObj = filterData(Fs);
-            
-            fobj.filt.F=filterData(Fs);
-            %fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
-            fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
-            fobj.filt.F=fobj.filt.F.designDownSample;
-            fobj.filt.F.padding=true;
-            fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
-            
-            %fobj.filt.FL=filterData(Fs);
-            %fobj.filt.FL.lowPassPassCutoff=4.5;
-            %fobj.filt.FL.lowPassStopCutoff=6;
-            %fobj.filt.FL.attenuationInLowpass=20;
-            %fobj.filt.FL=fobj.filt.FL.designLowPass;
-            %fobj.filt.FL.padding=true;
-            
-            fobj.filt.FL=filterData(Fs);
-            fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
-            fobj.filt.FL.lowPassStopCutoff=40;
-            fobj.filt.FL.attenuationInLowpass=20;
-            fobj.filt.FL=fobj.filt.FL.designLowPass;
-            fobj.filt.FL.padding=true;
-            
-            fobj.filt.BP=filterData(Fs);
-            fobj.filt.BP.highPassCutoff=1;
-            fobj.filt.BP.lowPassCutoff=2000;
-            fobj.filt.BP.filterDesign='butter';
-            fobj.filt.BP=fobj.filt.BP.designBandPass;
-            fobj.filt.BP.padding=true;
-            
-            fobj.filt.FH2=filterData(Fs);
-            fobj.filt.FH2.highPassCutoff=100;
-            fobj.filt.FH2.lowPassCutoff=2000;
-            fobj.filt.FH2.filterDesign='butter';
-            fobj.filt.FH2=fobj.filt.FH2.designBandPass;
-            fobj.filt.FH2.padding=true;
-            
-            fobj.filt.FN =filterData(Fs);
-            fobj.filt.FN.filterDesign='cheby1';
-            fobj.filt.FN.padding=true;
-            fobj.filt.FN=fobj.filt.FN.designNotch;
-            
-            %% For estiamting scale
-            nTestSegments = 40;
-            percentile4ScaleEstimation = 20;
-            
-            rng(1);
-            
-            seg_s= 20;
-            TOn=1:seg_s*Fs:(recordingDuration_s*Fs-seg_s*Fs);
-            nCycles = numel(TOn);
-            
-            pCycle=sort(randperm(nCycles,nTestSegments));
-            Mtest=cell(nTestSegments,1);
-            tTest=cell(nTestSegments,1);
-            for i=1:numel(pCycle)
-                
-                
-                thisROI = TOn(pCycle(i)):TOn(pCycle(i)+1);
-                SegData = V_uV_data_full(:,:, thisROI);
-                
-                DataSeg_BP = fobj.filt.BP.getFilteredData(SegData);
-                DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP));
-                %%
-                smoothWin = 0.10*Fs;
-                DataSeg_rect_HF = smooth(DataSeg_HF.^2, smoothWin);
-                
-                Mtest{i} = DataSeg_rect_HF;
-                
-            end
-            Mtest=cell2mat(Mtest);
-            
-            sortedMtest=sort(Mtest);
-            peakHeight_iqr = 3*iqr(sortedMtest);
-            
-            clear('Mtest', 'sortedMtest')
-            
-            %%
-            seg_s=40;
-            TOn=1:seg_s*Fs:(recordingDuration_s*Fs-seg_s*Fs);
-            overlapWin = 2*Fs;
-            
-            nCycles = numel(TOn);
-            
-            cnt = 1;
-            cnnt = 1;
-            
-            templatePeaks = [];
-            ripplePeaks = [];
-            
-            for i=1:nCycles-1
-                figure(300); clf
-                if i ==1
-                    thisROI = TOn(i):TOn(i+1);
-                else
-                    thisROI = TOn(i)-overlapWin:TOn(i+1);
-                end
-                
-                SegData = V_uV_data_full(:,:, thisROI);
-                SegData_s = thisSegData_s(thisROI);
-                
-                DataSeg_BP = fobj.filt.BP.getFilteredData(SegData);
-                DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
-                DataSeg_LF = squeeze(fobj.filt.FL.getFilteredData(DataSeg_BP));
-                DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP));
-                Data_SegData = squeeze(SegData);
-                %%
-                smoothWin = 0.10*Fs;
-                DataSeg_LF_neg = -DataSeg_LF;
-                %figure; plot(DataSeg_LF_neg)
-                DataSeg_rect_HF = smooth(DataSeg_HF.^2, smoothWin);
-                %baseline = mean(DataSeg_rect_HF)*2;
-                
-                %figure; plot(SegData_s, DataSeg_rect_HF); axis tight
-                
-                %% Find Peaks
-                interPeakDistance = 0.2*Fs;
-                minPeakWidth = 0.05*Fs;
-                minPeakHeight = 100;
-                %minPeakHeight = peakHeight_iqr;
-                minPeakProminence = 30;
-                
-                %[peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_rect_HF,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
-                [peakH,peakTime_Fs, peakW, peakP]=findpeaks(DataSeg_LF_neg,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth, 'MinPeakProminence',minPeakProminence, 'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom'); %For HF
-                
-                %%
-                
-                absPeakTime_s =  SegData_s(peakTime_Fs);
-                asPeakTime_fs = peakTime_Fs+thisROI(1)-1;
-                % relPeakTime_s  = peakTime_Fs;
-                
-                %%
-                if doPlot
-                    %{
-                                        figure(100);clf;
-                    
-                                        subplot(3,1,1)
-                                        plot(SegData_s, DataSeg_FNotch, 'k'); title( ['Raw']);
-                                        axis tight
-                                        ylim([-300 300])
-                    
-                                        subplot(3, 1, 2)
-                                        plot(SegData_s, DataSeg_HF, 'k'); title( ['Ripple']);
-                                        axis tight
-                                        ylim([-80 80])
-                    
-                                        subplot(3, 1, 3)
-                                        plot(SegData_s, smooth(DataSeg_rect_HF, .05*Fs), 'k'); title( ['Ripple Rectified']);
-                                        axis tight
-                                        ylim([0 400])
-                                        hold on
-                                        plot(SegData_s(peakTime_Fs), 200, 'rv')
-                    %}
-                    
-                    figure(300);
-                    
-                    subplot(5, 1, 1)
-                    plot(SegData_s, Data_SegData); title( ['Raw Voltage']);
-                    hold on
-                    %plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
-                    axis tight
-                    
-                    subplot(5, 1, 2)
-                    plot(SegData_s, DataSeg_FNotch); title( ['Notch Filter']);
-                    hold on
-                    %plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
-                    axis tight
-                    
-                    subplot(5, 1, 3)
-                    plot(SegData_s, DataSeg_LF); title( ['LF']);
-                    axis tight
-                    
-                    subplot(5, 1,4)
-                    plot(SegData_s, DataSeg_rect_HF); title( ['HF Rectified']);
-                    hold on;
-                    %plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'r*');
-                    axis tight
-                    ylim([0 500])
-                    
-                    subplot(5,1, 5)
-                    plot(SegData_s, DataSeg_HF); title( ['HF Rectified']);
-                    hold on;
-                    %plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'rv');
-                    axis tight
-                    
-                end
-                
-                WinSizeL = 0.15*Fs;
-                WinSizeR = 0.15*Fs;
-                
-                for q =1:numel(peakTime_Fs)
-                    
-                    if doPlot
-                        figure(300);
-                        
-                        subplot(5, 1, 1)
-                        %plot(SegData_s, Data_SegData); title( ['Raw Voltage']);
-                        hold on
-                        plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
-                        axis tight
-                        
-                        subplot(5, 1, 2)
-                        %plot(SegData_s, DataSeg_FNotch); title( ['Notch Filter']);
-                        hold on
-                        plot(SegData_s(peakTime_Fs(q)), 0, 'r*')
-                        axis tight
-                        
-                        subplot(5, 1, 3)
-                        plot(SegData_s, DataSeg_LF); title( ['LF']);
-                        axis tight
-                        
-                        subplot(5, 1,4)
-                        %plot(SegData_s, DataSeg_rect_HF); title( ['HF Rectified']);
-                        hold on;
-                        plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'r*');
-                        axis tight
-                        ylim([0 500])
-                        
-                        subplot(5,1, 5)
-                        %plot(SegData_s, DataSeg_HF); title( ['HF Rectified']);
-                        hold on;
-                        plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'rv');
-                        axis tight
-                        
-                        
-                    end
-                    
-                    winROI = peakTime_Fs(q)-WinSizeL:peakTime_Fs(q)+WinSizeR;
-                    
-                    if winROI(end) > size(SegData_s, 1) || winROI(1) <0
-                        disp('Win is too big/small')
-                        continue
-                    else
-                        
-                        %LFWin = -DataSeg_LF(winROI);
-                        LFWin = DataSeg_rect_HF(winROI);
-                        
-                        minPeakWidth_LF = 0.030*Fs;
-                        %minPeakHeight_LF = 150;
-                        %minPeakProminence = 195;
-                        minPeakHeight_LF = 20;
-                        minPeakProminence = 100;
-                        
-                        [peakH_LF,peakTime_Fs_LF, peakW_LF, peakP_LF]=findpeaks(LFWin,'MinPeakHeight',minPeakHeight_LF, 'MinPeakProminence',minPeakProminence, 'MinPeakWidth', minPeakWidth_LF, 'WidthReference','halfprom'); %For HF
-                        % prominence is realted to window size
-                        
-                        %% Test
-                        %{
-                            figure(104);clf
-                            winROI_s = SegData_s(winROI);
-                            plot(winROI_s, smooth(LFWin)); axis tight
-                            hold on
-                            plot(winROI_s(peakTime_Fs_LF), LFWin(peakTime_Fs_LF), '*')
-                        %}
-                        %%
-                        disp('')
-                        
-                        if numel(peakTime_Fs_LF) == 1
-                            
-                            templatePeaks.peakH(cnt) = peakH(q);
-                            templatePeaks.asPeakTime_fs(cnt) = asPeakTime_fs(q);
-                            templatePeaks.absPeakTime_s(cnt) = absPeakTime_s(q);
-                            templatePeaks.peakW(cnt) = peakW(q);
-                            templatePeaks.peakP(cnt) = peakP(q);
-                            
-                            absPeakTime_Fs_LF = (peakTime_Fs_LF + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
-                            
-                            templatePeaks.peakH_LF(cnt) = peakH_LF;
-                            templatePeaks.absPeakTime_Fs_LF(cnt) = absPeakTime_Fs_LF;
-                            templatePeaks.peakW_LF(cnt) = peakW_LF;
-                            templatePeaks.peakP_LF(cnt) = peakP_LF;
-                            
-                            cnt = cnt+1;
-                            
-                            
-                            %% Test
-                            % testROI = asPeakTime_fs(q)-0.2*Fs:asPeakTime_fs(q)+0.2*Fs;% THis is the HF, it will be offset from the peak of the SHW
-                            % figure; plot(SegData_s(testROI), DataSeg_rect_HF(testROI)); axis tight
-                            % figure; plot(SegData_s(testROI), DataSeg_FNotch(testROI)); axis tight
-                            %line([ thisSegData_s(asPeakTime_fs(q)) thisSegData_s(asPeakTime_fs(q))], [-1000 500]);
-                            
-                            %testROI = absPeakTime_Fs_LF-(0.2*Fs):absPeakTime_Fs_LF+(0.2*Fs);
-                            %figure(200); plot(SegData_s(testROI),  DataSeg_LF(testROI), 'k'); axis tight
-                            %hold on; plot(SegData_s(testROI), DataSeg_FNotch(testROI)); axis tight
-                            %line([ thisSegData_s(absPeakTime_Fs_LF(q)) thisSegData_s(absPeakTime_Fs_LF(q))], [-1000 500]);
-                            
-                            
-                        elseif isempty(peakTime_Fs_LF)
-                            if doPlot
-                                figure(300);
-                                
-                                subplot(5,1, 5)
-                                hold on;
-                                plot(SegData_s(peakTime_Fs(q)), DataSeg_HF(peakTime_Fs(q)), 'kv');
-                                
-                                subplot(5, 1,4)
-                                hold on;
-                                plot(SegData_s(peakTime_Fs(q)), DataSeg_rect_HF(peakTime_Fs(q)), 'k*');
-                                
-                                subplot(5, 1, 1)
-                                hold on
-                                plot(SegData_s(peakTime_Fs(q)), 0, 'k*')
-                                
-                                subplot(5, 1, 2)
-                                hold on
-                                plot(SegData_s(peakTime_Fs(q)), 0, 'k*')
-                            end
-                            
-                            ripplePeaks.peakH(cnnt) = peakH(q);
-                            ripplePeaks.asPeakTime_fs(cnnt) = asPeakTime_fs(q);
-                            ripplePeaks.absPeakTime_s(cnnt) = absPeakTime_s(q);
-                            ripplePeaks.peakW(cnnt) = peakW(q);
-                            ripplePeaks.peakP(cnnt) = peakP(q);
-                            
-                            cnnt = cnnt+1;
-                            
-                            continue
-                        else % two detections
-                            
-                            templatePeaks.peakH(cnt) = peakH(q);
-                            templatePeaks.asPeakTime_fs(cnt) = asPeakTime_fs(q);
-                            templatePeaks.absPeakTime_s(cnt) = absPeakTime_s(q);
-                            templatePeaks.peakW(cnt) = peakW(q);
-                            templatePeaks.peakP(cnt) = peakP(q);
-                            
-                            %choose HighestPeak
-                            [pmax, maxInd] = max(peakH_LF);
-                            
-                            absPeakTime_Fs_LF = (peakTime_Fs_LF(maxInd) + peakTime_Fs(q)-WinSizeL) +thisROI(1)-1; % this is realtive to both the LF window and the larger ROI
-                            
-                            relPeakTime_Fs_LF = (peakTime_Fs_LF(maxInd) + peakTime_Fs(q)-WinSizeL); % for plotting
-                            
-                            templatePeaks.peakH_LF(cnt) = peakH_LF(maxInd);
-                            templatePeaks.absPeakTime_Fs_LF(cnt) = absPeakTime_Fs_LF;
-                            templatePeaks.peakW_LF(cnt) = peakW_LF(maxInd);
-                            templatePeaks.peakP_LF(cnt) = peakP_LF(maxInd);
-                            
-                            cnt = cnt+1;
-                            
-                            if doPlot
-                                figure(300);
-                                
-                                subplot(5,1, 5)
-                                hold on;
-                                plot(SegData_s(relPeakTime_Fs_LF), DataSeg_HF(peakTime_Fs(q)), 'bv');
-                                
-                                subplot(5, 1,4)
-                                hold on;
-                                plot(SegData_s(relPeakTime_Fs_LF), DataSeg_rect_HF(peakTime_Fs(q)), 'b*');
-                                
-                                subplot(5, 1, 1)
-                                hold on
-                                plot(SegData_s(relPeakTime_Fs_LF), 0, 'b*')
-                                
-                                subplot(5, 1, 2)
-                                hold on
-                                plot(SegData_s(relPeakTime_Fs_LF), 0, 'b*')
-                            end
-                            continue
-                            
-                        end
-                    end
-                    
-                end
-                
-                PlotDir = [obj.DIR.birdDir 'Plots' obj.DIR.dirD obj.DIR.dirName '_plots' obj.DIR.dirD];
-                if exist(PlotDir, 'dir') == 0
-                    mkdir(PlotDir);
-                    disp(['Created: '  PlotDir])
-                end
-                plot_filename = [PlotDir 'SWR_Detections-Plots' sprintf('%03d', i)];
-                
-                plotpos = [0 0 25 15];
-                figure(300);
-                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-                
-                
-                
-            end
-            
-            DetectionSaveName = [PlotDir '-Detections'];
-            save(DetectionSaveName, 'templatePeaks', 'ripplePeaks');
-            
-            disp(['Saved:' DetectionSaveName ])
-            
-        end
-        
         function [] = plotPowerSpectrum(obj)
          chanToUse = obj.REC.bestChs(1);
             SessionDir = obj.DIR.ephysDir;
@@ -3829,7 +3512,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 
                 subplot(2, 1, 2)
                 plot(10*log10(pxx))
-                xlim([0 200])
+                xlim([0 300])
                 pause
             end
         end
@@ -4273,7 +3956,7 @@ classdef avianSWRAnalysis_OBJ < handle
             
             fobj.filt.F=filterData(Fs);
             %fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
-            fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
+            fobj.filt.F.downSamplingFactor=100; % original is 128 for 32k
             fobj.filt.F=fobj.filt.F.designDownSample;
             fobj.filt.F.padding=true;
             fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
@@ -4483,7 +4166,7 @@ classdef avianSWRAnalysis_OBJ < handle
                 
                 imagesc(dataToPlot, [0 1200])
                 %imagesc(dataToPlot, [0 300])
-                %imagesc(dataToPlot(2:29, :), [0 1200])
+               % imagesc(dataToPlot(2:29, :), [0 1200])
                 %imagesc(dataToPlot(2:29, :))
                 
                 if batchDuration_s == 1800
@@ -4530,258 +4213,6 @@ classdef avianSWRAnalysis_OBJ < handle
             end
             
         end
-        
-        function [] = detectSWR_w_NEO(obj)
-            
-            
-            chanToUse = obj.REC.bestChs(1);
-            SessionDir = obj.Session.SessionDir;
-            
-            eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
-            fileName = [SessionDir fileAppend];
-            
-            [data, timestamps, info] = load_open_ephys_data(fileName);
-            Fs = info.header.sampleRate;
-            %
-            %             chnl_order=[5     4     6     3     9    16    8    1    11    14    12    13    10    15     7     2];  %%%%%%%%%%%%% recording channels with their actual location in order
-            %             % this is the mapping of channels: [5     4     6     3     9    16     8  1    11    14    12    13    10    15     7     2], ...
-            %             % from most superficial to deepest
-            %             save_dir='D:\Janie\ZF-60-88\zf-60-88-CSD_SPWtimes_plots';  % directory to save results
-            %             fs=30000; %%%%%%%%%%%%%%%% sampling rate
-            %
-            %             % loading EEG channels
-            %             kk=1; % loop variable for loading channels
-            %             for chn = chnl_order
-            %                 filename =[selpath '\' '100_CH' num2str(chn) '.continuous'];
-            %                 [eeg(:,kk),~, ~] = load_open_ephys_data(filename);     kk=kk+1;
-            %             end
-            % for time stamp
-            %[~,time, ~] = load_open_ephys_data(filename);
-            time=timestamps-timestamps(1);
-            %disp(['Data len: ' num2str(max(time/60)) ' min' ])
-            fparts=split(fileName,'\'); % extracting file name from full path name
-            %N=length(chnl_order); % number of electrode for further frequent use
-            
-            %% downsampling for SW and Ripples detection, fromm 30000 to 3000
-            signal_raw=downsample(data,10);
-            t_signal=downsample(time,10);
-            fs_=Fs/10;
-            
-            % filtering for SWR and figures
-            % filtering for sharp wave:
-            ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',40, 'SampleRate',fs_);
-            spwsig=filtfilt(ShFilt,signal_raw);
-            % for ripples
-            RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',40,'HalfPowerFrequency2',300, 'SampleRate',fs_);
-            RippSig=filtfilt(RippFilt,signal_raw);
-            
-            %% LFP (<100Hz) plot of all channels
-            % preparation for plot
-            %set(0,'units','pixels');
-            %Obtains this pixel information
-            %pixls = get(0,'screensize');
-            %figure('Position', pixls);
-            
-            t0=1; % 18160;
-            plot_time=[0 30.01];
-            tlim=t0+plot_time;
-            t_lim=tlim(1)*fs_:tlim(2)*fs_;
-            tt=time(t_lim);
-            %for chnl=1:N
-            figure(100); clf
-            N=1;
-            for chnl=1
-                x=spwsig(t_lim,chnl);
-                %plot(t_signal(t_lim),x-500*(chnl-1),'color',[160 chnl*255/N 255-chnl*255/N]/255); % color coded based on channel
-                plot(t_signal(t_lim),x-500*(chnl-1),'color','k') % color coded based on channel
-                hold on;
-                %title([fparts{end}  ', chnl: ' num2str(chnl) ',  Time ref: ' num2str(t0)]);
-            end
-            %ylabel('channels'); yticks((-N+1:1:0)*500);  yticklabels(num2cell(fliplr(chnl_order)));
-            xlabel('Time (sec)');
-            % since yticks are going upwards, the ytick labels also shall start from
-            % buttom to up so they are flipped
-            axis tight
-            ylim([-400 400])
-            %print([save_dir '\' [fparts{end} '-RAW']],'-dpng')
-            
-            %% spw detection by TEO
-            % Fig 1. Raw and SWR for channel 1
-            figure(200); clf
-            plot_time=1+[0 30.01]; %%%%%%%%%
-            subplot(4,1,1);
-            o1=plot(t_signal,signal_raw(:,1));
-            %title(['Raw signal  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec'])
-            title(['Raw signal'])
-            ylabel('(\muV)'); xlim(plot_time); ylim([-400 400])
-            % Fig 1 (SW & R)
-            subplot(4,1,2);
-            plot(t_signal,spwsig(:,1),'k');
-            axis tight
-            %title('Filtered 1-100Hz (SPW)' ); ylabel('(\muV)'); xlim(plot_time); ylim([-400 270])
-            title('Filtered 1-100Hz (SPW)' ); ylabel('(\muV)'); xlim(plot_time); ylim([-400 400])
-            subplot(4,1,3);
-            o3=plot(t_signal,RippSig(:,1),'r');
-            axis tight
-            %title('Filtered 40-300Hz (Ripples)' ); ylabel('(\muV)');
-            title('Filtered 40-300Hz (Ripples)' ); ylabel('(\muV)');
-            xlim(plot_time);
-            % Fig 3 ( ShR )
-            % here we extract a threshold for spw detection using Teager enery
-            subplot(4,1,4);
-            tig=teager(spwsig,[fs_/20]);
-            [~,k]=max(var(spwsig)); % channel to show TEO and spw detection for  %%%%%%%%%%%%%
-            plot(t_signal,tig(:,k),'b'); title('TEO ' ); ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time);
-            thr=median(tig)+8*iqr(tig); % threshold for detection of spw
-            % plotting distribution of TEO values and the threshold for spw detection
-            figure % distribution of TEO values for channel k  %%%%%%%%%%%%%%%
-            hist(tig(:,k),300); y=ylim;  hold on; line([thr(k) thr(k)],y,'LineStyle','--')
-            
-            % plot for raw data + spw detection threshold
-            figure(204); clf
-            subplot(2,1,1);
-            plot(t_signal,spwsig(:,k));
-            %title(['LFP (1-100 Hz)  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');
-            title(['LFP (1-100 Hz)']);
-            ylabel('(\muV)');
-            xlim(plot_time)
-            subplot(2,1,2);cla
-            plot(t_signal,tig(:,k),'b'); hold on;
-            line(plot_time,[thr(k) thr(k)],'LineStyle','--', 'color', 'r');  title('TEO ' );
-            ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
-            
-            %% making template of spws based on spw detection
-            up_tresh=tig.*(tig>thr);
-            [~,spw_indices1] = findpeaks(up_tresh(fs_+1:end-Fs,k)); % Finding peaks in the channel with max variance, omitting the 1st and last sec ...
-            
-            % Now we remove concecutive detected peaks with less than .1 sec interval
-            spw_interval=[1; diff(spw_indices1)]; % assigning the inter-SPW interval to the very next SPW. If it is longer than a specific time, that SPW is accepted.
-            % of course the first SPW is alway accepted so w assign a long enough
-            % interval to it (1).
-            spw_indices=spw_indices1(spw_interval>.3*fs_);
-            
-            spw_indices=spw_indices+fs_; % shifting 1 sec to the right place for the corresponding time (removal of 1st second is compensared)
-            spw1=zeros(2*fs_/5+1,N,length(spw_indices)); % initialization: empty spw matrix, length of spw templates is considered as 500ms
-            n=1;
-            while n <= length(spw_indices)
-                spw1(:,:,n)=spwsig(spw_indices(n)-fs_/5 : spw_indices(n)+fs_/5,:); n=n+1;  % spw in the 1st channel
-            end
-            
-            % removing upward detected-events
-            indx=spw1(round(size(spw1,1)/2),k,:)<mean(spw1([1 end],k,:),1); % for valid spw, middle point shall occur below the line connecting the two sides
-            spw_=spw1(:,:,indx);
-            spw_indx1=spw_indices(indx); % selected set of indices of SPWs that are downward
-            % correcting SPW times, all detected events will be aligned to their
-            % minimum:
-            [~,min_point]=min(spw_(:,k,:),[],1); % extracting index of the minimum point for any detected event
-            align_err1=min_point-ceil(size(spw_,1)/2); % Error = min_point - mid_point
-            align_err=reshape(align_err1,size(spw_indx1));
-            spw_indx=spw_indx1+align_err; % these indices are time-corrected
-            save([save_dir '\' [fparts{end} '-spw_indx']],'spw_indx');
-            
-            
-            
-            %%
-            nSWRs = numel(spw_indx);
-            win_ms = 200;
-            win_samp = win_ms/1000*Fs;
-            for j = 1:nSWRs
-                thisStart =spw_indx(j)-win_samp;
-                thisStop = spw_indx(j)+win_samp;
-                thisROI = data(thisStart:thisStop);
-                
-                figure(100); clf
-                plot(thisROI);
-                axis tight
-                pause
-            end
-            
-            
-            spw_indx
-            
-            
-            
-            
-            
-            
-            % repicking SPW events after time alignment
-            spw=zeros(2*fs_/5+1,N,length(spw_indx)); % initialization: empty spw matrix, length of spw templates is considered as 500ms
-            n=1;
-            while n <= length(spw_indx)
-                spw(:,:,n)=spwsig(spw_indx(n)-fs_/5 : spw_indx(n)+fs_/5,:); n=n+1;  % spw in the 1st channel
-            end
-            save([save_dir '\' [fparts{end} '-spw']],'spw');
-            
-            % plotting all spws and the average shape, for channel k which is the one
-            % with maximum variance
-            figure('Position', [460 100 600 600]);
-            subplot(1,2,1)
-            for i=1:size(spw,3)
-                plot((-fs_/5:fs_/5)/fs_*1000,spw(:,k,i)); hold on
-            end; axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
-            axis([-200 200 -750 150]);
-            title('SPWs in max variance chnl')
-            
-            % plot of average SPWs across channels
-            subplot(1,2,2)
-            hold on
-            for chnl=1:N
-                plot((-fs_/5:fs_/5)/fs_*1000,mean(spw(:,chnl,:),3), ...
-                    'color',[220 chnl*255/N 255-chnl*255/N]/255); % color coded based on channel
-            end
-            axis([-200 200 -400 50]); xlabel('Time (ms)');
-            title({'mean SPW accross chnls'; ['rate: ' num2str( round(size(spw,3) / max(time)*60 ,1)) '/min  ' fparts{end}]}); ylabel('Amplitude (\muV)')
-            print([save_dir '\' [fparts{end} '-SPW']],'-dpng')
-            
-            figure;
-            subplot(2,1,1);
-            plotredu(@plot,t_signal,signal_raw(:,1)); title('Raw signal ' );  ylabel('(\muV)');
-            hold on; plot(t_signal(spw_indx),signal_raw(spw_indx),'+r');  xlim(plot_time)
-            subplot(2,1,2);
-            plotredu(@plot,t_signal,tig(:,k),'b'); hold on; line(plot_time,[thr(k) thr(k)],'LineStyle','--');  title('TEO ' );
-            ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
-            
-            % garbage cleaning
-            clear spw_times up_tresh spw1 align_err align_err1
-            %% Current Sourse Density Analysis
-            avg_spw=mean(spw,3)*10^-6; % for further use in ''SCD'' analysis, data turns to Volts instead of uV
-            spacing=100*10^-6; %%%%%%%%%%% spacing between neiboring electrodes
-            CSDoutput = CSD(avg_spw,fs_,spacing,'inverse',5*spacing)';
-            figure;
-            
-            subplot(1,3,1) % CSD
-            t_peri=(-fs_/5:fs_/5)./fs_*1000; % peri-SPW time
-            y_peri=(1-.5:N-.5)'; % y values for CSD plot, basically electrode channels , we centered the y cvalues so ...
-            % they will be natural numbers + .5
-            imagesc(t_peri,y_peri,CSDoutput, [-8 7]); yticks(.5:1:N-.5);  yticklabels(num2cell(chnl_order));
-            ylabel(' ventral <--                    Electrode                    --> dorsal');  colormap(flipud(jet)); % blue = sink; red = sourse
-            xlabel('peri-SPW time (ms)');      title('CSD (\color{red}sink, \color{blue}source\color{black})');
-            
-            subplot(1,3,2) % smoothed CSD (spline), we interpolate CSD values in a finer grid
-            t_grid=repmat(t_peri,length(y_peri)+2,1); % grid for current t values, to extra rows for beginning (zero), and the last natural full number, just ...
-            % greater than last row which includes a .5 portion
-            y_grid=repmat([0 ; y_peri ; N] , 1,length(t_peri)); % grid for current y values
-            t_grid_ext=repmat(t_peri,10*N,1); % new fine t grid
-            y_grid_ext=repmat((.1:.1:N)',1,size(t_grid,2)); % new fine y grid
-            [csd_smoo]=interp2( t_grid , y_grid ,[CSDoutput(1,:) ; CSDoutput ; CSDoutput(end,:)],t_grid_ext,y_grid_ext, 'spline'); % interpolation of CSD in a finer grid
-            imagesc((-fs_/5:fs_/5)./fs_*1000,(.1:.1:N)',csd_smoo,  [-8 7]); % fixing the color range for comparing different data
-            yticks(.5:1:N-.5);  yticklabels(num2cell(chnl_order));
-            ylabel('Electrode');  colormap(flipud(jet)); % blue = source; red = sink
-            xlabel('peri-SPW time (ms)');      title('smoothed CSD (\color{red}sink, \color{blue}source\color{black})');
-            
-            subplot(1,3,3) % LFP
-            s=imagesc((-fs_/5:fs_/5)./fs_*1000,1:N,flipud(avg_spw)', [-60 6]*1e-5); yticks(1:1:N); yticklabels(num2cell(fliplr(chnl_order)));
-            ylabel('Electrode');  colormap(flipud(jet));
-            xlabel('peri-SPW time (ms)');   title(['LFP' fparts{end}])
-            print(['C:\Users\Spike Sorting\Desktop\Chicken\' [fparts{end} '-CSD']],'-dpng'); % save the plot
-            print([save_dir '\' [fparts{end} '-CSD']],'-dpng')
-            
-            % save CSD matrix for further analysis
-            save([save_dir '\' [fparts{end} '-CSD']],'CSDoutput');
-            
-            % %% analysisng spw peri-event times
-        end
-        
         
         
         

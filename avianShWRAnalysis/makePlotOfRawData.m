@@ -170,11 +170,11 @@ dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecording
 SWRDetectionsFile = 'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Analysis\vDetections.mat';
 s = load(SWRDetectionsFile);
 allSWR = s.allSWR;
-SWRs_ms = allSWR/Fs*1000;
+SWRs_ms = allSWR.allSWR_fs/Fs*1000;
 
 nSWRsToPlot = 1000;
 %%
-SWSelection = SWRs_ms(5000:6000);
+SWSelection = SWRs_ms(10000:11000);
             
               preTemplate_ms = 350;
             winTemplate = 1000;
@@ -189,8 +189,8 @@ SWSelection = SWRs_ms(5000:6000);
             
             %% Collect SWR HFI
             
-            %[tmpHFV,tmpHFT] =  fobj.filt.Ripple.getFilteredData(allSW);
-            [tmpHFV,tmpHFT] =  fobj.filt.FH2.getFilteredData(allSW);
+            [tmpHFV,tmpHFT] =  fobj.filt.Ripple.getFilteredData(allSW);
+            %[tmpHFV,tmpHFT] =  fobj.filt.FH2.getFilteredData(allSW);
             allSWs = squeeze(allSW);
             meanLFP = mean(allSWs(1:nSWRsToPlot,:), 1);
             
@@ -210,13 +210,14 @@ SWSelection = SWRs_ms(5000:6000);
  subplot(8, 2, [9 10 11 12])
             %imagesc(HFI', [0 2500]) %chick
             %imagesc(HFI', [0 40])
-            imagesc(HFI', [0 40])
+            
+            imagesc(HFI', [0 30])
             %imagesc(HFI')
             cb = colorbar('NorthOutside');
 
 
             
-             subplot(8, 2, [13 14])
+             subplot(8, 2, [13 14]); cla
             plot(tmpHFT, meanLFP, 'r', 'linewidth', 1.5)
             legend('mean LFP', 'Location', 'southeast')
             legend('boxoff')
@@ -238,7 +239,8 @@ SWSelection = SWRs_ms(5000:6000);
             
            plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Plots\';
            
-           saveName = [plotDir  'RawDataSWR-HF'];
+           %saveName = [plotDir  'RawDataSWR-HF'];
+           saveName = [plotDir  'RawDataSWR-Ripple'];
             
                plotpos = [0 0 20 50];
             
