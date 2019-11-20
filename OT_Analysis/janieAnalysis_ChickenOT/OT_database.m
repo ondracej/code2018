@@ -8,6 +8,8 @@ efc = 1;
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
 
+% Area =  1 (OT); 2 (MLD) 
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% OT- 18 , efc = 1; 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -27,6 +29,7 @@ rsc  = 1;
 % Recording Session Counter
 OT_DB(efc).RS(sc).recording_session = sc;
 OT_DB(efc).RS(sc).DV_coords = 1015; % microns
+OT_DB(efc).RS(sc).Area = 1; % microns
 
 % WN - WNSeach 
 OT_DB(efc).RS(sc).StimProtocol_ID(rsc) = 5;
