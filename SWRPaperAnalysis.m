@@ -103,10 +103,10 @@ addpath(genpath(pathToJRCLUST))
 % (96) ZF-71-76 | 15.09.2019 - 19-50-51 --  short
 % (97) ZF-71-76 | 15.09.2019  - 19-55-39 -- short
 % (98) ZF-71-76 | 15.09.2019  - 20-01-48 -- Overnight 
-% (99) ZF-71-76 | 16.09.2019  - 08-48-23 -- Day recording
+% (99) ZF-71-76 | 16.09.2019  - 08-48-23 -- Day recording - 2 hrs
 % (100) ZF-71-76 | 16.09.2019  - 18-01-51 - short
-% (101) ZF-71-76 | 16.09.2019  - 18-05-58 - Overnight *** good
-% (102) ZF-71-76 | 17.09.2019  - 09-00-29 - Day recording
+% (101) ZF-71-76 | 16.09.2019  - 18-05-58 - Overnight *** good some % problems with data??
+% (102) ZF-71-76 | 17.09.2019  - 09-00-29 - Day recording - long 7 hrs
 % (103) ZF-71-76 | 17.09.2019  - 16-04-39 - Day recording - short
 % (104) ZF-70-86 | 17.09.2019  - 16-05-11 - Overnight *** good
 % (105) ZF-70-86 | 18.09.2019  - 18-04-28 - Overnight ***
@@ -138,13 +138,14 @@ addpath(genpath(pathToJRCLUST))
 %%
 %(81) ZF-72-81 | 16.05.2019 - 21-26-59 - Overnight
 %recSession =  81;
-recSession =  107;
+recSession =  98;
 
 D_OBJ = avianSWRAnalysis_OBJ(recSession);
 
 %%
-recSet = [56:58, 70:73]; %55
+recSet = [54]; %55
 nrecs = numel(recSet);
+doPlot = 1;
 
 for j = 1:nrecs
     
@@ -152,7 +153,10 @@ for j = 1:nrecs
     disp(['Rec Session:' num2str(recSession)])
     D_OBJ = avianSWRAnalysis_OBJ(recSession);
     
-    detectSWRs_ripple_SW_Band(D_OBJ)
+    %detectSWRs_ripple_SW_Band(D_OBJ)
+    %validateSWRs(D_OBJ, doPlot)
+    %extractSHRs(D_OBJ)
+    calcSWR_CSD(D_OBJ)
 end
 
 %%
@@ -168,12 +172,20 @@ plotPowerSpectrum(D_OBJ)
 
 %%
 
-detectSWR_w_NEO(D_OBJ)
+%detectSWR_w_NEO(D_OBJ)
+
+
+
 detectSWRs_ripple_SW_Band(D_OBJ)
 
+
+
 %%
+recSession =  104;
+
+D_OBJ = avianSWRAnalysis_OBJ(recSession);
 dataDir = D_OBJ.DIR.ephysDir;
-dataDir = dataDir(1:end-1);
+
  
 dataRecordingObj = OERecordingMF(dataDir);
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
@@ -184,8 +196,10 @@ timeSeriesViewer(dataRecordingObj); % loads all the channels
 
 %% Batch process data
 
-allRecSessions = [54];
-chanMap = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5]; % deepes first
+allRecSessions = [95];
+%chanMap = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5]; % deepes first
+chanMap = [9 8 11 6 12 5 16 1 13 4 14 3 15 2 10 7]; % 9 is deepest
+%chanMap = [7 10 2 15 3 14 4 13 1 16 5 12 6 11 8 9]; % deepes first
 for j = 1:numel(allRecSessions)
     
     recSession = allRecSessions(j);
@@ -207,17 +221,17 @@ end
 
 %%
 
-recSession = 64;
+recSession = 95;
 
-dataDir = 'D:\ZF-\Ephys\71-76_chronic_2019-09-15_20-01-48';
-dataDir = 'D:\ZF-\Ephys\71-76_chronic_2019-09-16_18-05-58';
-dataDir = 'D:\ZF-\Ephys\YFAcute_2019-09-15_18-32-10';
-dataDir = 'D:\ZF-\Ephys\YFAcute_2019-09-15_18-03-52';
+%dataDir = 'D:\ZF-\Ephys\71-76_chronic_2019-09-15_20-01-48';
+%dataDir = 'D:\ZF-\Ephys\71-76_chronic_2019-09-16_18-05-58';
+%dataDir = 'D:\ZF-\Ephys\YFAcute_2019-09-15_18-32-10';
+%dataDir = 'D:\ZF-\Ephys\YFAcute_2019-09-15_18-03-52';
 
 D_OBJ = avianSWRAnalysis_OBJ(recSession);
-disp([D_OBJ.INFO.birdName ': ' D_OBJ.Session.time])
+disp([D_OBJ.INFO.Name ': ' D_OBJ.Session.time])
 %
-dataDir = D_OBJ.Session.SessionDir;
+dataDir = D_OBJ.DIR.ephysDir;
 
 dataRecordingObj = OERecordingMF(dataDir);
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
@@ -240,21 +254,27 @@ convertOpenEphysToRawBinary_JO(dataDir, chanMap);  % convert data, only for Open
 pathToDat = 'D:\TUM\SWR-Project\Chick-10\20190427\19-33-33\dat\19-33-33.dat';
 %% Chick-10
 
-%cnfg = 'D:\TUM\SWR-Project\Chick-10\20190427\19-33-33\dat\19-33-33.prm'; %not done
-
+%pathToDat = 'D:\TUM\SWR-Project\Chick-10\20190427\21-58-36\dat\2019-04-27_21-58-36.dat';
+pathToDat = 'D:\TUM\SWR-Project\Chick-10\20190427\20-49-27\dat\2019-04-27_20-49-27.dat';
+dataDir = 'D:\TUM\SWR-Project\Chick-10\20190427\20-49-27\Ephys';
 %% ZF-59-15
 
 % 18-07-21
 pathToDat = 'D:\TUM\SWR-Project\ZF-59-15\Ephys\20190428\18-07-21\Ephys\dat\2019-04-28_18-07-21.dat';
-cnfg =  'D:\TUM\SWR-Project\ZF-59-15\Ephys\20190428\18-07-21\Ephys\dat\2019-04-28_18-07-21.prm';
 
 %18-48-02
-pathToDat = 'D:\TUM\SWR-Project\ZF-59-15\Ephys\20190428\18-48-02\dat\2019-04-28_18-48-02.dat';
-cnfg =  'D:\TUM\SWR-Project\ZF-59-15\Ephys\20190428\18-48-02\dat\2019-04-28_18-48-02.prm';
+pathToDat = 'D:\TUM\SWR-Project\ZF-59-15\20190428\18-48-02\dat\2019-04-28_18-48-02.dat';
 
 dataDir = 'D:\TUM\SWR-Project\ZF-59-15\Ephys\20190428\19-34-00\Ephys';
-pathToDat = 'D:\TUM\SWR-Project\ZF-59-15\Ephys\20190428\19-34-00\dat\2019-04-28_19-34-00.dat';
-cnfg =  'D:\TUM\SWR-Project\ZF-59-15\Ephys\20190428\19-34-00\dat\2019-04-28_19-34-00.prm';
+pathToDat = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\dat\2019-04-28_19-34-00.dat';
+
+%% ZF 60-88
+
+pathToDat = 'D:\TUM\SWR-Project\ZF-60-88\20190429\16-26-20\dat\2019-04-29_16-26-20.dat';
+
+%% 71-76
+pathToDat = 'D:\TUM\SWR-Project\ZF-71-76\20190915\18-46-58_acute\dat\18-46-58_acute.dat';
+
 
 %%
 dataRecordingObj = OERecordingMF(dataDir);
@@ -263,10 +283,6 @@ dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecording
 timeSeriesViewer(dataRecordingObj); % loads all the channels
 %5, 4, 6, 3, 9, 16, 8, 1, 11, 14, 12, 13, 10, 15, 7, 2
 
-%% ZF 60-88
-%cnfg = 'C:\Users\Janie\Documents\Data\SWR-Project\ZF-60-88\Ephys\2019-04-29_14-43-33\dat\2019-04-29_14-43-33.prm';
-%cnfg = 'C:\Users\Janie\Documents\Data\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-01-45\dat\2019-04-29_15-01-45.prm';
-%pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\ZF-60-88\Ephys\2019-04-29_15-02-55\dat\2019-04-29_15-02-55.prm';
 
 %%
 jrc bootstrap
@@ -280,6 +296,9 @@ siteMap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]; % (formerly v
 
 cnfg = [pathToDat(1:end-3) 'prm'];
 %%
+
+%cnfg = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\dat\2019-04-28_19-34-00.prm';
+
 %Check probe layout
 eval(['jrc probe ' cnfg]);
 

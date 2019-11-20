@@ -190,45 +190,45 @@ classdef videoAnalysis_OBJ < handle
             %
             % %% For renaming the files
             %
-
-             if renameVideos
-                 
-               preNameTxt = '5Tadpoles20190717_10-54';
-               nChars = numel(preNameTxt);
-               folder = dirToRename;  % e.g
-               for k=1:nFiles
-                   
-                   thisFile = fileNames{k};
-                   newFilename = thisFile;
-                   newFilename(1) = [];
-                   newFilename(1:nChars) = preNameTxt;
-                   file1 = [folder fileNames{k}];
-                   file2=[folder newFilename];
-                   
-                   movefile(file1 ,file2)
+            
+            if renameVideos
+                
+                preNameTxt = '5Tadpoles20190717_10-54';
+                nChars = numel(preNameTxt);
+                folder = dirToRename;  % e.g
+                for k=1:nFiles
+                    
+                    thisFile = fileNames{k};
+                    newFilename = thisFile;
+                    newFilename(1) = [];
+                    newFilename(1:nChars) = preNameTxt;
+                    file1 = [folder fileNames{k}];
+                    file2=[folder newFilename];
+                    
+                    movefile(file1 ,file2)
                     disp([num2str(k) '/' num2str(nFiles)])
-               end
-             end
+                end
+            end
             %             if renameVideos
-%             
-%                 preNameTxt = '5Tadpoles20190717';
-%                 folder = dirToRename;  % e.g
-%                 for k=1:nFiles
-%                     file1=[folder preNameTxt sprintf('%d.AVI.avi', k)];
-%             
-%                     if numel(k) == 1
-%                         file2=[renamedDir preNameTxt sprintf('00%d.avi',k)];
-%                     elseif numel(k) == 2
-%                         file2=[renamedDir preNameTxt sprintf('0%d.avi',k)];
-%                     elseif numel(k) == 3
-%                         file2=[renamedDir preNameTxt sprintf('%d.avi',k)];
-%                     end
-%             
-%                     movefile(file1 ,file2)
-%                 end
-%             
-%                 keyboard
-%             end
+            %
+            %                 preNameTxt = '5Tadpoles20190717';
+            %                 folder = dirToRename;  % e.g
+            %                 for k=1:nFiles
+            %                     file1=[folder preNameTxt sprintf('%d.AVI.avi', k)];
+            %
+            %                     if numel(k) == 1
+            %                         file2=[renamedDir preNameTxt sprintf('00%d.avi',k)];
+            %                     elseif numel(k) == 2
+            %                         file2=[renamedDir preNameTxt sprintf('0%d.avi',k)];
+            %                     elseif numel(k) == 3
+            %                         file2=[renamedDir preNameTxt sprintf('%d.avi',k)];
+            %                     end
+            %
+            %                     movefile(file1 ,file2)
+            %                 end
+            %
+            %                 keyboard
+            %             end
             %
             % %% Other solutions
             %
@@ -360,7 +360,7 @@ classdef videoAnalysis_OBJ < handle
             
         end
         
-        function [] = convert_and_compress_video_files(obj, FrameRateOverride, doDS, dsFrameRate)
+        function [] = convert_and_compress_video_files(obj, FrameRateOverride, doDS, dsFrameRate, startFrame,endFrame)
             if nargin < 3
                 
                 
@@ -415,6 +415,7 @@ classdef videoAnalysis_OBJ < handle
             OldframeRate = FrameRateOverride;
             
             %%
+            frameSkip = 1;
             
             if doDS % how many frames to skip when downsampling
                 frameSkip = OldframeRate/dsFrameRate;
@@ -474,8 +475,12 @@ classdef videoAnalysis_OBJ < handle
             %% Read one frame at a time.
             
             
-            thisStart = 1;
-            thisStop = nFrames;
+            %thisStart = 1;
+            %thisStop = nFrames;
+            
+            thisStart = startFrame;
+            thisStop = endFrame;
+            
             
             movieLengthFull = thisStop-thisStart;
             newNFrames = floor(movieLengthFull/frameSkip);
@@ -492,8 +497,9 @@ classdef videoAnalysis_OBJ < handle
             %% Saving
             
             disp('Saving...')
+            [pathstr,name,ext] = fileparts(obj.PATH.VidPath{:});
             
-            saveName = [name '__DS-' num2str(dsFrameRate) 'fps__Pt' num2str(o) ext];
+            saveName = [name '__DS-' num2str(dsFrameRate) 'fps' ext];
             
             newSave = [savePath saveName];
             
@@ -945,19 +951,16 @@ classdef videoAnalysis_OBJ < handle
             %%
             VideoObj = VideoReader(vidToLoad, 'Tag', 'CurrentVideo');
             
-            nFrames = VideoObj.NumberOfFrames;
+            %nFrames = VideoObj.NumberOfFrames;
+            nFrames = 547923;
             VideoFrameRate = VideoObj.FrameRate;
             vidHeight = VideoObj.Height;
             vidWidth = VideoObj.Width;
             vidFormat = VideoObj.VideoFormat;
             
             %% if more than 10000 frames...
-            FrameCut = 10000;
             
-            if nFrames > FrameCut;
-                tOn = 1:FrameCut:nFrames;
-                nParts = numel(tOn);
-            end
+            
             %%
             videoReader = vision.VideoFileReader(vidToLoad,'ImageColorSpace','Intensity','VideoOutputDataType','uint8'); % create required video objects
             converter = vision.ImageDataTypeConverter;
@@ -969,48 +972,39 @@ classdef videoAnalysis_OBJ < handle
             
             disp('Extracting frames and calculating the optic flow...')
             
-            for p = 1:nParts
+            mov = struct('cdata',[],'colormap',[]);
+            for frame_ind = FrameOn+1 : FrameOff+1
                 
-                FrameOn = tOn(p);
-                FrameOff = tOn(p)+FrameCut-1;
-                
-                if p== nParts
-                    FrameOff =nFrames;
-                end
-                
-                mov = struct('cdata',[],'colormap',[]);
-                for frame_ind = FrameOn+1 : FrameOff+1
+                mov(mCnt).cdata = read(VideoObj,frame_ind);
+                frame = mov(mCnt).cdata;
+                im = step(converter, frame);
+                if mCnt == 1
+                    figure
+                    imshow(im) %open the first frame
+                    %disp('Select 1st ROI')
                     
-                    mov(mCnt).cdata = read(VideoObj,frame_ind);
-                    frame = mov(mCnt).cdata;
-                    im = step(converter, frame);
-                    if mCnt == 1
-                        figure
-                        imshow(im) %open the first frame
-                        %disp('Select 1st ROI')
-                        
-                        %% Define ROI
-                        rectim1 = getrect; %choose right eye ROI
-                        rectim1=ceil(rectim1);
-                        
-                        %Hardcoded
-                        %disp('Using hardcoded ROI')
-                        %rectim1 =  [5 243 958 576];
-                        
-                    end
-                    im1 = im(rectim1(2):rectim1(2)+rectim1(4),rectim1(1):rectim1(1)+rectim1(3)); %choose this ROI part of the frame to calculate the optic flow
-                    of1 = step(opticalFlow1, im1);
-                    V1=abs(of1); % lenght of the velocity vector
-                    meanV1=mean(mean(V1)); %mean velocity for every pixel
-                    fV1(mCnt)=meanV1;
-                    mCnt =mCnt +1;
-                    disp(strcat('Frame: ',num2str(frame_ind ),' is done'))
+                    %% Define ROI
+                    rectim1 = getrect; %choose right eye ROI
+                    rectim1=ceil(rectim1);
+                    
+                    %Hardcoded
+                    %disp('Using hardcoded ROI')
+                    %rectim1 =  [5 243 958 576];
+                    
                 end
-                
-                fV1(1)=0; % suppress the artifact at the first frame
-                save([OFDir OFSaveName '_pt-' sprintf('%02d',p) '.mat'], 'fV1', 'rectim1', 'im');
-                clear('fV1');
+                im1 = im(rectim1(2):rectim1(2)+rectim1(4),rectim1(1):rectim1(1)+rectim1(3)); %choose this ROI part of the frame to calculate the optic flow
+                of1 = step(opticalFlow1, im1);
+                V1=abs(of1); % lenght of the velocity vector
+                meanV1=mean(mean(V1)); %mean velocity for every pixel
+                fV1(mCnt)=meanV1;
+                mCnt =mCnt +1;
+                disp(strcat('Frame: ',num2str(frame_ind ),' is done'))
             end
+            
+            fV1(1)=0; % suppress the artifact at the first frame
+            save([OFDir OFSaveName '_pt-' sprintf('%02d',p) '.mat'], 'fV1', 'rectim1', 'im');
+            clear('fV1');
+            
             
         end
         
@@ -1021,7 +1015,7 @@ classdef videoAnalysis_OBJ < handle
                 FrameRateOverride = [];
             end
             
-                
+            
             videoToAnalyze = obj.PATH.VidPath{:};
             
             vidToLoad = videoToAnalyze;
@@ -1042,7 +1036,8 @@ classdef videoAnalysis_OBJ < handle
             %%
             VideoObj = VideoReader(vidToLoad, 'Tag', 'CurrentVideo');
             
-            nFrames = VideoObj.NumberOfFrames;
+            %nFrames = VideoObj.NumberOfFrames;
+            nFrames = 75551;
             if isempty(FrameRateOverride)
                 VideoFrameRate = VideoObj.FrameRate;
             else
@@ -1074,9 +1069,10 @@ classdef videoAnalysis_OBJ < handle
             %
             
             %% if more than 10000 frames...
-            FrameCut = VideoFrameRate*60*60; % 1 hour
+            %FrameCut = VideoFrameRate*60*dsFrameRate; % 1 hour
+            FrameCut = 60*60*dsFrameRate; % 1 hour
             
-            if nFrames > FrameCut;
+            if nFrames > FrameCut
                 tOn = 1:FrameCut:nFrames;
                 nParts = numel(tOn);
             else
@@ -1088,7 +1084,7 @@ classdef videoAnalysis_OBJ < handle
             converter = vision.ImageDataTypeConverter;
             opticalFlow1 = vision.OpticalFlow('Method','Lucas-Kanade','ReferenceFrameDelay', 1);% use of the Lucas-Kanade method for optic flow determination
             opticalFlow1.OutputValue = 'Horizontal and vertical components in complex form';
-         
+            
             
             disp('Extracting frames and calculating the optic flow...')
             cnt = 1;
@@ -1772,51 +1768,51 @@ classdef videoAnalysis_OBJ < handle
                 thisFV = zeroPaddedFinal{j};
                 
                 
-%                 [idx,C] = kmeans(thisFV',2);
-%                 
-%                 if C(1) < C(2)
-%                     mvmtC = 2;
-%                     NomvmtC = 1;
-%                 else
-%                     mvmtC = 1;
-%                     NomvmtC = 2;
-%                 end
-%                 
-%                 mvmtInds = find(idx ==mvmtC);
-%                 nonmvmntInds = find(idx ==NomvmtC);
-%                 
-%                 timepoints_hr = (1:1:numel(thisFV))/3600;
-%                 mvmtsTimepoints = timepoints_hr(mvmtInds);
-%                 yvals = ones(1, numel(mvmtsTimepoints))*0.005;
-%                 figure(100); clf
-%                 plot(timepoints_hr, thisFV)
-%                 hold on
-%                 plot(mvmtsTimepoints, yvals, 'r.')
-
+                %                 [idx,C] = kmeans(thisFV',2);
+                %
+                %                 if C(1) < C(2)
+                %                     mvmtC = 2;
+                %                     NomvmtC = 1;
+                %                 else
+                %                     mvmtC = 1;
+                %                     NomvmtC = 2;
+                %                 end
+                %
+                %                 mvmtInds = find(idx ==mvmtC);
+                %                 nonmvmntInds = find(idx ==NomvmtC);
+                %
+                %                 timepoints_hr = (1:1:numel(thisFV))/3600;
+                %                 mvmtsTimepoints = timepoints_hr(mvmtInds);
+                %                 yvals = ones(1, numel(mvmtsTimepoints))*0.005;
+                %                 figure(100); clf
+                %                 plot(timepoints_hr, thisFV)
+                %                 hold on
+                %                 plot(mvmtsTimepoints, yvals, 'r.')
+                
                 thisFV_norm = thisFV./maxFVVal;
-%                 allThreshInds = [];
-%                 for o = 1:numel(tOn)
-%                     
-%                     if o == numel(tOn)
-%                     thisSnippet = thisFV_norm(tOn(o):numel(zeroPaddedFinal{1}));    
-%                     else
-%                         
-%                     thisSnippet = thisFV_norm(tOn(o):tOn(o+1)-1);
-%                     end
-%                     
-%                     thisStd = nanstd(thisSnippet);
-%                     thresh = 5*thisStd;
-%                     
-%                     threshInds = find(thisSnippet > thresh);
-%                     
-%                     allThreshInds = [allThreshInds threshInds+tOn(o)];
-%                     allThresh(o) = thresh;
-%                 end
-%                 
-%                 figure; plot(thisFV_norm);
-%                 hold on
-%                 plot(allThreshInds, thisFV_norm(allThreshInds) ,'r*')
-%                 
+                %                 allThreshInds = [];
+                %                 for o = 1:numel(tOn)
+                %
+                %                     if o == numel(tOn)
+                %                     thisSnippet = thisFV_norm(tOn(o):numel(zeroPaddedFinal{1}));
+                %                     else
+                %
+                %                     thisSnippet = thisFV_norm(tOn(o):tOn(o+1)-1);
+                %                     end
+                %
+                %                     thisStd = nanstd(thisSnippet);
+                %                     thresh = 5*thisStd;
+                %
+                %                     threshInds = find(thisSnippet > thresh);
+                %
+                %                     allThreshInds = [allThreshInds threshInds+tOn(o)];
+                %                     allThresh(o) = thresh;
+                %                 end
+                %
+                %                 figure; plot(thisFV_norm);
+                %                 hold on
+                %                 plot(allThreshInds, thisFV_norm(allThreshInds) ,'r*')
+                %
                 
                 
                 
@@ -1831,7 +1827,7 @@ classdef videoAnalysis_OBJ < handle
                 
             end
             
-         
+            
             %%
             %StartingClockTime = allFVClock{1};
             StartingClockTime = allFVClock{8};
@@ -1913,21 +1909,21 @@ classdef videoAnalysis_OBJ < handle
             %title('Activity during day')
             title('Activity during night')
             
-%             subplot(4, 1, 4)
-%             allmeans = nanmean(allVals, 1);
-%             
-%             %allmeans2 = nanmean(allVals(1:3,:), 1);
-%             plot(allmeans, 'k', 'linewidth', 1.5)
-%             axis tight
-%             set(gca, 'xtick', xtickts);
-%             set(gca, 'xtickLabel',  xlabs)
-%             xlabel('Clock  Time')
-%             hold on
-%             %plot(allmeans2, 'b', 'linewidth', 1.5)
-%             ylim([0 0.01])
-%             set(gca, 'ytick', []);
-%             xlim([nSecondsToFirstAlignment+3600*4 nSecondsToFirstAlignment+3600*16])
-%             %xlim([nSecondsToFirstAlignment nSecondsToFirstAlignment+3600*12])
+            %             subplot(4, 1, 4)
+            %             allmeans = nanmean(allVals, 1);
+            %
+            %             %allmeans2 = nanmean(allVals(1:3,:), 1);
+            %             plot(allmeans, 'k', 'linewidth', 1.5)
+            %             axis tight
+            %             set(gca, 'xtick', xtickts);
+            %             set(gca, 'xtickLabel',  xlabs)
+            %             xlabel('Clock  Time')
+            %             hold on
+            %             %plot(allmeans2, 'b', 'linewidth', 1.5)
+            %             ylim([0 0.01])
+            %             set(gca, 'ytick', []);
+            %             xlim([nSecondsToFirstAlignment+3600*4 nSecondsToFirstAlignment+3600*16])
+            %             %xlim([nSecondsToFirstAlignment nSecondsToFirstAlignment+3600*12])
             
             grid('on')
             
@@ -1937,7 +1933,7 @@ classdef videoAnalysis_OBJ < handle
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
             %%
-               figure(102); clf
+            figure(102); clf
             
             minval = nanmedian(min(allVals));
             maxVal = nanmedian(max(allVals));
@@ -1947,7 +1943,7 @@ classdef videoAnalysis_OBJ < handle
             %colormap('pink')
             colormap('bone')
             colorbar
-              axis tight
+            axis tight
             set(gca, 'xtick', xtickts);
             set(gca, 'xtickLabel',  xlabs)
             
@@ -2004,14 +2000,19 @@ classdef videoAnalysis_OBJ < handle
             
             %% Assumes a fps of 1 fps
             
-            smooth_s = 60;
+            smooth_s = 10*60; % 1 minute smooth
             
             smoothWin = smooth_s*dsFrameRate;
             smoothedOF = smooth(fV1_norm, smoothWin);
             
             %%
-            timepoints_s = 1:1:numel(fV1_norm);
-            timepoints_hrs = timepoints_s/3600;
+            timepoints_x = 1:1:numel(fV1_norm);
+            timepoints_x = timepoints_x/10;
+            timepoints_hrs = timepoints_x/3600;
+            
+            
+            %timepoints_s = 1:1:numel(fV1_norm);
+            %timepoints_hrs = timepoints_s/3600;
             
             %%
             
@@ -2087,15 +2088,15 @@ classdef videoAnalysis_OBJ < handle
             
             %%
             figH = figure(400); clf
-            
+            subplot(4, 1, 1)
             
             plot(timepoints_hrs, fV1_norm, 'color', [0.7 0.7 0.7]);
             hold on
             plot(timepoints_hrs, smoothedOF, 'k', 'linewidth', 1.5)
             
             axis tight
-            set(gca, 'xtick', xtickts/sInHr);
-            set(gca, 'xtickLabel',  xlabs)
+            %set(gca, 'xtick', xtickts/sInHr);
+            %set(gca, 'xtickLabel',  xlabs)
             xlabel('Time [Hr]')
             ylabel('Normalized OF')
             title([VidNameShort ' | Normalized OF, 1s | smooth = ' num2str(smooth_s) ' s'])
@@ -2106,10 +2107,11 @@ classdef videoAnalysis_OBJ < handle
             %FImg = getframe(figH);
             %hcat = horzcat([OFImg.cdata FImg.cdata]);
             %image(hcat)
-            %ylim([0 0.25])
+            ylim([0 0.25])
             
             saveName = [obj.PATH.editedVidPath  VidNameShort '_OF_DSs1'];
-            plotpos = [0 0 25 12];
+            %plotpos = [0 0 25 12];
+            plotpos = [0 0 12 12];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             print_in_A4(0, saveName, '-depsc', 0, plotpos);
             
@@ -2763,7 +2765,7 @@ classdef videoAnalysis_OBJ < handle
         function [] = makeMultipleMoviesFromImages(obj, imageDir, movieName, saveDir, VideoFrameRate)
             
             
-            fileFormat = 1; % (1)- tif, (2) -.jpg
+            fileFormat = 3; % (1)- tif, (2) -.jpg
             
             %%
             switch fileFormat
@@ -2771,19 +2773,26 @@ classdef videoAnalysis_OBJ < handle
                     imgFormat = '*.tiff';
                 case 2
                     imgFormat = '*.jpg';
+                    
+                case 3
+                    imgFormat = '*';
             end
             
             imageNames = dir(fullfile(imageDir{:},imgFormat));
+            imageNames(1) = [];
+            imageNames(1) = [];
             imageNames = {imageNames.name}';
             
             nImags = numel(imageNames);
             underscore = '_';
             period = '.';
             
+            
             endingTxt_dbl = [];
             for o = 1:nImags
                 underscoreInd = find(imageNames{o} == underscore);
                 periodInd = find(imageNames{o} == period);
+                %endingTxt_dbl(o) = str2double(imageNames{o}(underscoreInd(end)+1:periodInd(1)-1));
                 endingTxt_dbl(o) = str2double(imageNames{o}(underscoreInd(end)+1:periodInd(1)-1));
             end
             
@@ -2825,6 +2834,8 @@ classdef videoAnalysis_OBJ < handle
                     if fileFormat == 1
                         img2 = im2uint8(img); % need to convert for .tif files
                     elseif fileFormat ==2
+                        img2 = img;
+                    elseif fileFormat ==3
                         img2 = img;
                     end
                     writeVideo(outputVideo,img2)

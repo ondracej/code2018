@@ -2,14 +2,14 @@ function []  = PlotSWRRasterFR()
 dbstop if error
 close all
 
-d = load('/home/janie/Dropbox/Writing/SWR-Paper/Figs/Final/ZF-71-76_20190919_17-51_46_vDetections.mat');
-fileName = '/home/janie/Data/TUM/106_CH15.continuous';
+d = load('D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Analysis\vDetections.mat');
+fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Ephys\106_CH2.continuous';
 
 
 [data, timestamps, info] = load_open_ephys_data(fileName);
 Fs = info.header.sampleRate;
 
-
+nSamples = numel(data);
 allSWRs = d.allSW;
 %%
 
@@ -19,7 +19,7 @@ Fs = 30000;
 binSize = 1800; % 30 minutes
 
 length_this_stim = binSize *Fs;
-TOns = 1:length_this_stim:allSWRs(end);
+TOns = 1:length_this_stim:nSamples;
 nTOns = numel(TOns);
 
 
@@ -43,9 +43,11 @@ allSpksFR = zeros(length_this_stim,1);
             %must subtract start_stim to arrange spikes relative to onset
             
             these_spks_on_chan = allSWRs(allSWRs >= start_stim & allSWRs <= stop_stim)-start_stim;
-           yvals = ones(1, numel(these_spks_on_chan))*plotPos;
+           
             
-           plot(these_spks_on_chan, yvals, 'k.')
+            yvals = ones(1, numel(these_spks_on_chan))*plotPos;
+            
+           plot(these_spks_on_chan(1:20:end), yvals(1:20:end), 'k.')
          
             
             
@@ -91,11 +93,10 @@ allSpksFR = zeros(length_this_stim,1);
        %flipped_FreqPLot_Hz = flipud(FreqPLot_Hz');
         
         xes = 1:1:numel(FreqPLot_Hz);
-        plot(FreqPLot_Hz,xes, 'ko', 'MarkerFaceColor', 'k')
+        %plot(FreqPLot_Hz,xes, 'ko', 'MarkerFaceColor', 'k')
+        plot(FreqPLot_Hz,xes, 'k')
         hold on
         %plot(smooth(FreqPLot_Hz),xes, 'k')
-        
-        
         
         axis tight
         xtickss = 0:0.5:2.5;
@@ -106,7 +107,14 @@ allSpksFR = zeros(length_this_stim,1);
         
         %%
         
+        plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Plots\';
         
+        saveName = [plotDir  'SWR_detectionsRasterFR_20pnt'];
+        
+        plotpos = [0 0 50 20];
+        
+        print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+        print_in_A4(0, saveName, '-depsc', 0, plotpos);
         
         
         

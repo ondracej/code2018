@@ -2,7 +2,7 @@
 close all
 clear all
 
-pathToCodeRepository = 'C:\Users\Administrator\Documents\code\GitHub\code2018\';
+pathToCodeRepository = 'C:\Users\Janie\Documents\GitHub\code2018\';
 addpath(genpath(pathToCodeRepository)) 
 %%
 % Hunting
@@ -76,7 +76,9 @@ addpath(genpath(pathToCodeRepository))
 % 24 Hrs July 4
 %vidsToAnalyze = {'F:\Grass\FrogSleep\CubanTreeFrog1\20190704\20190704_09-13\Videos\00000000_00000000411EAADB.mp4'};
 
-vidsToAnalyze = {'F:\Grass\DataShare\Overview_20190714_00032_converted.avi'};
+%vidsToAnalyze = {'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Videos\ZF-71-76__17-51-54__547923_Zoom2_00011.avi'};
+
+vidsToAnalyze = {'E:\DataForSilke\faa1-001-cam1-2019-Nov-14.avi'};
 
 videoDirectory=[];
 
@@ -97,20 +99,23 @@ renameFilesinDir(V_OBJ)
 %%
 %startFrame = 1;
 % endFrame = nan;
- startFrame = 1900;
- endFrame = 2150;
- FrameRateOverride = 10;
+ startFrame = 17945;
+ endFrame = 26854;
+ FrameRateOverride = 30;
  
-videoName = '20190710_09-Overview_20190714_00032_converted-short';
+videoName = '20191021134540696_9minStart.avi';
 
  convertWMVToAVI(V_OBJ, startFrame, endFrame, videoName, FrameRateOverride )
  
  %% Loading and downsampling a movie
  
  doDS = 1;
- dsFrameRate = 1;
- FrameRateOverride = 10;
- convert_and_compress_video_files(V_OBJ, FrameRateOverride, doDS, dsFrameRate)
+ dsFrameRate = 30;
+ FrameRateOverride = 30;
+ startFrame = 18000;
+ endFrame = 26854;
+ 
+ convert_and_compress_video_files(V_OBJ, FrameRateOverride, doDS, dsFrameRate, startFrame,endFrame)
  
  %%
  imageDir = {'F:\Grass\DataShare\20190705_12-22_10tadpoles-grp2\'};
@@ -120,10 +125,10 @@ videoName = '20190710_09-Overview_20190714_00032_converted-short';
  
  %%
  
- imageDir = {'F:\Grass\DataShare\3Tadpoles_20190802_11-05\'};
- movieName = '3Tadpoles_20190802_11-05';
- saveDir = {'F:\Grass\DataShare\'};
- VideoFrameRate = 10;
+ imageDir = {'E:\DataForSilke\faa1_002imgs\'};
+ movieName = 'faa1-002-Nov14_Imgs';
+ saveDir = {'E:\DataForSilke\faa1_002_Video\'};
+ VideoFrameRate = 1;
  makeMultipleMoviesFromImages(V_OBJ, imageDir, movieName, saveDir, VideoFrameRate)
  
  disp('Finished making movies...')
@@ -150,8 +155,8 @@ videoName = '20190710_09-Overview_20190714_00032_converted-short';
  calcOFOnDefinedRegion(V_OBJ)
  
  %% Downsampled OF claclulation, 30 fps
- dsFrameRate = 2;
- FrameRateOverride = 2;
+ dsFrameRate = 1;
+ FrameRateOverride = 1;
  
  calcOFOnDefinedRegion_DS(V_OBJ, dsFrameRate, FrameRateOverride)
  
@@ -160,10 +165,10 @@ videoName = '20190710_09-Overview_20190714_00032_converted-short';
  
  %%
  
- vidDir = 'F:\Grass\Tadpoles\10Tadpoles_Grp2\20190705_12-22_10tadpoles-grp2\Videos\';
+ vidDir = 'E:\DataForSilke\faa1_001_Video\';
  dsFrameRate = 1;
- vidFrameRate = 10;
- saveTag = '_ROI-1';
+ vidFrameRate = 1;
+ saveTag = '_ROI-3';
  
  calcOFOnDefinedRegion_DS_multipleFilesInDir(V_OBJ, dsFrameRate, vidDir, vidFrameRate, saveTag)
  
@@ -226,10 +231,10 @@ videoName = '20190710_09-Overview_20190714_00032_converted-short';
 %   StartingAlignmentTime  = '22:00:00'; % Must be the next even time
 %   StartingClockTime = '21:28:00'; % Must be the next even time
 %   
-  vidsToAnalyze = {'F:\Grass\FrogSleep\CubanTreeFrog1\20190701\20190701_09-21\Videos\00000000_0000000031B35A96.mp4'};
-  detectionsDir = 'F:\Grass\FrogSleep\CubanTreeFrog1\20190701\20190701_09-21\Videos\editedVids\OF_DS-00000000_0000000031B35A96\';
-  StartingAlignmentTime  = '10:00:00'; % Must be the next even time
-  StartingClockTime = '09:21:00'; % Must be the next even time
+%   vidsToAnalyze = {'F:\Grass\FrogSleep\CubanTreeFrog1\20190701\20190701_09-21\Videos\00000000_0000000031B35A96.mp4'};
+%   detectionsDir = 'F:\Grass\FrogSleep\CubanTreeFrog1\20190701\20190701_09-21\Videos\editedVids\OF_DS-00000000_0000000031B35A96\';
+%   StartingAlignmentTime  = '10:00:00'; % Must be the next even time
+%   StartingClockTime = '09:21:00'; % Must be the next even time
 %   
 %   vidsToAnalyze = {'F:\Grass\FrogSleep\CubanTreeFrog1\20190701\20190701_21-35\Videos\00000000_0000000034535AF0.mp4'};
 %   detectionsDir = 'F:\Grass\FrogSleep\CubanTreeFrog1\20190701\20190701_21-35\Videos\editedVids\OF_DS-00000000_0000000034535AF0\';
@@ -277,19 +282,26 @@ videoName = '20190710_09-Overview_20190714_00032_converted-short';
 % StartingClockTime = '17:03:00'; % Must be the next even time
 
 
+vidsToAnalyze = {'E:\DataForSilke\faa1-001-cam1-2019-Nov-14.avi'};
+detectionsDir = 'E:\DataForSilke\faa1_001_Video\Roi1\';
+StartingAlignmentTime  = '16:00:00'; % Must be the next even time
+StartingClockTime = '15:34:50'; % Must be the next even time
+
+
 dsFrameRate = 1;
 V_OBJ = videoAnalysis_OBJ(vidsToAnalyze);
 loadOFDetectionsAndMakePlot(V_OBJ, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime)
 
- 
+  
+
  %% Load multiple detections and compare
  
  
- detectionsDir = {'F:\Grass\FrogSleep\CubanTreeFrog1\20190620\20190620_21-27\Videos\editedVids\006858C4_OF_DSs1_fullFile.mat';
-                  'F:\Grass\FrogSleep\CubanTreeFrog1\20190620\20190620_21-27\Videos\editedVids\00685891_OF_DSs1_fullFile.mat'}; 
- dsFrameRate = 1;
- StartingAlignmentTime  = '23:00:00'; % Must be the next even time
- StartingClockTime = '22:58:00'; % Must be the next even time
+ detectionsDir = {'E:\DataForSilke\faa1_001_Video\Roi1\OF_DSOF-faa1-001-Nov14_Imgs_004_ROI-1.mat';
+                  'E:\DataForSilke\faa1_001_Video\Roi1\OF_DSOF-faa1-001-Nov14_Imgs_005_ROI-1.mat'}; 
+ dsFrameRate = 10;
+ StartingAlignmentTime  = '16:00:00'; % Must be the next even time
+ StartingClockTime = '15:34:50'; % Must be the next even time
  
  loadMultipleOFDetectionsAndMakePlot(V_OBJ, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime)
  
