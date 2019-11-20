@@ -245,6 +245,191 @@ classdef chronoAnalysis_Obj < handle
             
         end
         
+        
+        
+        
+        function [] = loadOFDetectionsAndMakePlot(obj, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime, VidTag )
+            
+            
+            searchDir = '*OF*';
+            
+            filesInDir = dir(fullfile(detectionsDir, searchDir));
+            nFilesinDir = numel(filesInDir);
+            
+            for j=1:nFilesinDir
+                fileNames{j} = filesInDir(j).name;
+            end
+            
+            %VidNameShort = fileNames{1}(end-18:end-11);
+            VidNameShort = VidTag;
+            %% Concatenate
+            fV1 = [];
+            for j = 1: nFilesinDir
+                
+                OF = load([detectionsDir fileNames{j}]);
+                fV1 = [fV1 OF.fV1];
+                
+            end
+            
+            %               figure;
+            %               subplot(1, 2, 1)
+            %               plot(fV1)
+            %               subplot(1, 2, 2)
+            %               plot(fV2)
+            
+            
+            
+            fV1_norm = fV1./(max(max(fV1)));
+            
+            
+            %% Assumes a fps of 1 fps
+            
+            smooth_s = 1*60; % 1 minute smooth
+            
+            smoothWin = smooth_s*dsFrameRate;
+            smoothedOF = smooth(fV1_norm, smoothWin);
+            
+            %%
+            timepoints_x = 1:1:numel(fV1_norm);
+            %timepoints_x = timepoints_x;
+            timepoints_hrs = timepoints_x/3600;
+            
+            
+            %timepoints_s = 1:1:numel(fV1_norm);
+            %timepoints_hrs = timepoints_s/3600;
+            
+            %%
+            
+            
+            colon = ':';
+            sInMin = 60;
+            minInHr = 60;
+            sInHr = sInMin*minInHr;
+            Day_24Hr = 24;
+            zero = 0;
+            
+            thisStr = StartingAlignmentTime;
+            match = find(thisStr == colon);
+            
+            Alignment_s_vid = str2double(thisStr(match(2)+1:end));
+            Alignment_mins_vid = str2double(thisStr(match(1)+1:match(2)-1));
+            Alignment_hrs_vid = str2double(thisStr(1:match(1)-1));
+            
+            thisStr = StartingClockTime;
+            match = find(thisStr == colon);
+            
+            FirstStart_s_vid = str2double(thisStr(match(2)+1:end));
+            FirstStart_mins_vid = str2double(thisStr(match(1)+1:match(2)-1));
+            FirstStart_hrs_vid = str2double(thisStr(1:match(1)-1));
+            
+            Alignment_diff_s = FirstStart_s_vid - Alignment_s_vid;
+            
+            Alignment_diff_s_cnt = 0;
+            if Alignment_diff_s > 0
+                FirstStart_mins_vid = FirstStart_mins_vid+1;
+                Alignment_diff_s_cnt = sInMin - Alignment_diff_s;
+            else
+                Alignment_diff_s_cnt = Alignment_diff_s;
+            end
+            
+            diff_min = minInHr - FirstStart_mins_vid;
+            
+            if diff_min > 0
+                FirstStart_hrs_vid = FirstStart_hrs_vid +1;
+                Alignment_diff_s_for_min = diff_min*sInMin;
+                Alignment_diff_s_cnt = Alignment_diff_s_for_min + Alignment_diff_s_cnt;
+            end
+            
+            
+            %
+            %             diff_hr = FirstStart_hrs_vid - Alignment_hrs_vid;
+            %
+            %             if diff_hr < 0
+            %
+            %                 %Alignment_diff_min_for_hrs = (minInHr - diff_min)*sInMin;
+            %                 Alignment_diff_s_for_hrs = abs(diff_hr)*minInHr*sInMin;
+            %                 Alignment_diff_s_cnt = Alignment_diff_s_cnt +Alignment_diff_s_for_hrs;
+            %             elseif diff_hr > 0
+            %                 disp('please choose a later start time')
+            %                 keyboard
+            %             end
+            
+            nSecondsToFirstAlignment = Alignment_diff_s_cnt;
+            
+            xtickts = nSecondsToFirstAlignment:sInHr:numel(fV1_norm);
+            
+            xLab_pt1 = Alignment_hrs_vid:1:24;
+            xLab_pt2  = 1:1:24;
+            xlabs_n = [xLab_pt1 xLab_pt2 xLab_pt2 xLab_pt2];
+            
+            theseLabs = xlabs_n(1:numel(xtickts));
+            
+            xlabs = [];
+            for k = 1:numel(xtickts)
+                xlabs{k} = [num2str(theseLabs(k)) ':00'];
+            end
+            
+            
+            %%
+            figH = figure(400); clf
+            %subplot(4, 1, 1)
+            
+            plot(timepoints_hrs, fV1_norm, 'color', [0.7 0.7 0.7]);
+            hold on
+            plot(timepoints_hrs, smoothedOF, 'k', 'linewidth', 1.5)
+            
+            axis tight
+            set(gca, 'xtick', xtickts/sInHr);
+            set(gca, 'xtickLabel',  xlabs)
+            xlabel('Time [Hr]')
+            ylabel('Normalized OF')
+            title([VidNameShort ' | Normalized OF, 1s | smooth = ' num2str(smooth_s) ' s'])
+            %%
+            %OFImg = getframe(figH);
+            %im = OF.im;
+            %image(im)
+            %FImg = getframe(figH);
+            %hcat = horzcat([OFImg.cdata FImg.cdata]);
+            %image(hcat)
+            ylim([0 0.25])
+            
+            saveName = [obj.PATH.editedVidPath  VidNameShort '_OF_DSs1'];
+            %plotpos = [0 0 25 12];
+            plotpos = [0 0 30 12];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            print_in_A4(0, saveName, '-depsc', 0, plotpos);
+            
+            
+            
+            %% Save concat OF
+            
+            bluecolor = [0 50 150];
+            shapeInserter1 = vision.ShapeInserter('Shape','Rectangles','BorderColor','Custom','LineWidth',2.5,'CustomBorderColor',int32(bluecolor));
+            img1 = step(shapeInserter1,OF.im,OF.rectim1); %insert the ROIs
+            
+            figure(103); clf
+            image(img1)
+            axis off
+            title(['Video: ' VidNameShort])
+            
+            saveName = [obj.PATH.editedVidPath  VidNameShort '_ROI_img'];
+            plotpos = [0 0 15 12];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            
+            %% Clock Info
+            Clock.StartingClockTime = StartingClockTime;
+            
+            rectim1 = OF.rectim1;
+            im = OF.im;
+            save([obj.PATH.editedVidPath  VidNameShort '_OF_DSs1_fullFile.mat'], 'fV1', 'fV1_norm', 'img1', 'im', 'rectim1', 'dsFrameRate', 'Clock');
+            clear('fV1');
+            
+            %%
+            
+        end
+        
+        
+        
     end
     
     %%

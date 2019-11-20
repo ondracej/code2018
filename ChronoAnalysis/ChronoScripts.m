@@ -50,6 +50,11 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
  
  %%
  
- 
+StartingAlignmentTime  = '18:00:00'; % Must be the next even time
+StartingClockTime = '17:47:50'; % Must be the next even time
+detectionsDir = 'E:\chronoAnalysis\001_Vids\ROI-3\';
+VidTag  = 'ROI-3';
+dsFrameRate = 1;
+loadOFDetectionsAndMakePlot(C_OBJ, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime, VidTag)
  
  
