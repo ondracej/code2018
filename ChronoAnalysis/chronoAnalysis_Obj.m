@@ -619,7 +619,10 @@ classdef chronoAnalysis_Obj < handle
             
             allDetections_6minBins = allDetections_6minBins(1:end-1); % remove last incomplete bin
             allDurations_s = allDurations_s(1:end-1);
-            
+   
+            figure
+            imagesc(allDetections_6minBins)
+            %%
             textName = 'Detections-ROI3.txt';
             fileToSave = ['/media/janie/DataRed1TB/chronoAnalysis/textFileDetections/' textName];
                 
@@ -627,6 +630,8 @@ classdef chronoAnalysis_Obj < handle
             %fprintf(fileID,'%6s %12s\n','x','exp(x)');
             fprintf(fileID,'%d\n',allDetections_6minBins);
             fclose(fileID);
+            
+            
             
             
             
