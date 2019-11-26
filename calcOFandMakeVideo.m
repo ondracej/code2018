@@ -9,8 +9,8 @@ elseif ispc
 end
 
 %% Input video data
-VidDir = '/home/janie/Data/VideosForSilke/';
-videoToAnalyze = '20191021134540696.avi';
+VidDir = 'E:\ChronoAnalysis\002_Vids_Nov19\';
+videoToAnalyze = 'faa1-002-Nov19_contrastadj_001.avi';
 
 AnalysisNumber = 1; % in case you want to analyze several versions
 
@@ -95,7 +95,7 @@ bluecolor = [0 50 150];
 redcolorline = [150 50 0]/255;
 bluecolorline = [0 50 150]/255;
 
-timepoints = (FrameOn+1:1:FrameOff-1)/10; %in s
+timepoints = (FrameOn+1:1:FrameOff); %in s
 
 close all
 
@@ -111,7 +111,8 @@ for p = 1:numel(timepoints)
     hold on
     line([timepoints(p),timepoints(p)], [0 1], 'color', [0 0 0])
     axis tight
-     ax = gca;
+    %ylim([0 .3])
+    ax = gca;
     ax.Units = 'pixels';
     pos = ax.Position;
     ti = ax.TightInset;
@@ -133,6 +134,7 @@ for p = 1:numel(timepoints)
     hold on
    line([timepoints(p),timepoints(p)], [0 1], 'color', [0 0 0])
     axis tight
+    %ylim([0 .3])
     xlabel('Time [s]')
     ax = gca;
     ax.Units = 'pixels';

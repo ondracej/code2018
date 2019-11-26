@@ -143,10 +143,11 @@ recSession =  98;
 D_OBJ = avianSWRAnalysis_OBJ(recSession);
 
 %%
-recSet = [54]; %55
+recSet = [64:74]; %55
 nrecs = numel(recSet);
-doPlot = 1;
-
+doPlot = 0;
+   chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2]; %acute
+   %chanMap = [7 10 2 15 3 14 4 13 1 16 5 12 6 11 8 9]; %chronic
 for j = 1:nrecs
     
     recSession = recSet(j);
@@ -156,7 +157,10 @@ for j = 1:nrecs
     %detectSWRs_ripple_SW_Band(D_OBJ)
     %validateSWRs(D_OBJ, doPlot)
     %extractSHRs(D_OBJ)
-    calcSWR_CSD(D_OBJ)
+    calcCorrsForChans(D_OBJ, chanMap, doPlot)
+    
+    
+    %calcSWR_CSD(D_OBJ)
 end
 
 %%
@@ -173,8 +177,6 @@ plotPowerSpectrum(D_OBJ)
 %%
 
 %detectSWR_w_NEO(D_OBJ)
-
-
 
 detectSWRs_ripple_SW_Band(D_OBJ)
 
