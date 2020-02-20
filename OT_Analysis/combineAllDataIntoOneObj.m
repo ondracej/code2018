@@ -1,8 +1,10 @@
 function [] = combineAllDataIntoOneObj()
 
 
-PopulationDir = '/home/janie/Data/TUM/OTAnalysis/FinalPopulation_Janie/';
-dirD = '/';
+%PopulationDir = '/home/janie/Data/TUM/OTAnalysis/FinalPopulation_Janie/';
+PopulationDir = 'E:\OT\OTProject\FinalPopulation_Janie\';
+%dirD = '/';
+dirD = '\';
 
 search_file = ['N*'];
 dir_files = dir(fullfile(PopulationDir, search_file));
@@ -13,7 +15,9 @@ for j = 1:nDirs
     allDirNames{j} = dir_files(j).name;
 end
 
-AllDataDir = '/home/janie/Data/TUM/OTAnalysis/AllData/';
+%AllDataDir = '/home/janie/Data/TUM/OTAnalysis/AllData/';
+AllDataDir = 'E:\OT\OTProject\AllData-Feb2020\/';
+
 
 for k = 1:nDirs
     

@@ -201,8 +201,12 @@ printRaster_HRTF_Ver2_OverEl(C_OBJ)
 
 
 
-%%
+%% Other scripts for population analysis
 
+ combineAllDataIntoOneObj
+% Input:  PopulationDir = '/home/janie/Data/TUM/OTAnalysis/FinalPopulation_Janie/';
+% Output: AllDataDir = '/home/janie/Data/TUM/OTAnalysis/AllData/';
+% Filename:  saveName = [allDirNames{k} '-AllStims.mat'];
 
 
 %loadAudSpikeEpochsToSpikeSort

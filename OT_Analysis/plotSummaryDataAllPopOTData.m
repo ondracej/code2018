@@ -17,7 +17,7 @@ for j = 1:nDirs
     allDirNames{j} = dir_files(j).name;
 end
 
-for k = 23%:nDirs
+for k = 1:nDirs
     
     figH = figure(100);clf
     pause(.1)

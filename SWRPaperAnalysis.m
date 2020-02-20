@@ -279,6 +279,8 @@ pathToDat = 'D:\TUM\SWR-Project\ZF-71-76\20190915\18-46-58_acute\dat\18-46-58_ac
 
 
 %%
+dataDir = 'D:\TUM\SWR-Project\ZF-o3-b7\chronic_2020-01-25_18-01-36';
+
 dataRecordingObj = OERecordingMF(dataDir);
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
 
