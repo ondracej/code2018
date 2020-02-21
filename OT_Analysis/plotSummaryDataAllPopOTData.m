@@ -3,10 +3,10 @@ function [] = plotSummaryDataAllPopOTData()
 dbstop if error
 doPrint = 1;
 
-PopulationDir = '/home/janie/Data/TUM/OTAnalysis/AllData/';
+PopulationDir = 'E:\OT\OTProject\AllData-Feb2020\';
 dirD = '/';
 
-figSavePath = ['/home/janie/Data/TUM/OTAnalysis/AllData/Figs/'];
+figSavePath = ['E:\OT\OTProject\AllData-Feb2020\Figs\'];
 
 search_file = ['N*'];
 dir_files = dir(fullfile(PopulationDir, search_file));

@@ -2,7 +2,7 @@ function [] = combineAllDataIntoOneObj()
 
 
 %PopulationDir = '/home/janie/Data/TUM/OTAnalysis/FinalPopulation_Janie/';
-PopulationDir = 'E:\OT\OTProject\FinalPopulation_Janie\';
+PopulationDir = 'E:\OT\OTProject\FinalPopulation_Janie-Feb2020\';
 %dirD = '/';
 dirD = '\';
 
@@ -16,7 +16,7 @@ for j = 1:nDirs
 end
 
 %AllDataDir = '/home/janie/Data/TUM/OTAnalysis/AllData/';
-AllDataDir = 'E:\OT\OTProject\AllData-Feb2020\/';
+AllDataDir = 'E:\OT\OTProject\AllData-Feb2020\';
 
 
 for k = 1:nDirs
