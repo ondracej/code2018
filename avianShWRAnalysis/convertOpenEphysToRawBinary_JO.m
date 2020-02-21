@@ -39,12 +39,14 @@ for k = 1:nBlocks
     while 1
         samples = zeros(nSamples * 1000, Nchan, 'int16');
         for j = 1:Nchan
+            %disp([num2str(j) '/' num2str(Nchan)]);
             collectSamps    = zeros(nSamples * 1000, 1, 'int16');
             
             rawData         = fread(fid{j}, 1000 * (nSamples + 6), '1030*int16', 10, 'b');
             
             nbatches        = ceil(numel(rawData)/(nSamples+6));
             for s = 1:nbatches
+              %  disp([num2str(s) '/' num2str(nbatches)]);
                 rawSamps = rawData((s-1) * (nSamples + 6) +6+ [1:nSamples]);
                 collectSamps((s-1)*nSamples + [1:nSamples]) = rawSamps;
             end
@@ -70,6 +72,7 @@ for k = 1:nBlocks
     ops.nSamplesBlocks(k) = nsamps;
     
     for j = 1:Nchan
+         disp([num2str(j) '/' num2str(Nchan)]);
         fclose(fid{j});
     end
     

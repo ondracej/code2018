@@ -1230,6 +1230,196 @@ classdef avianSWRAnalysis_OBJ < handle
         end   
         
         
+        function [] = calcCorrsForChans(obj, chanMap, doPlot)
+            
+            dataDir = obj.DIR.ephysDir;
+            
+            dataRecordingObj = OERecordingMF(dataDir);
+            dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
+            
+            Fs = dataRecordingObj.samplingFrequency;
+            recordingDur_ms = dataRecordingObj.recordingDuration_ms;
+            recordingDur_s = recordingDur_ms/1000;
+            
+            
+            Fs = dataRecordingObj.samplingFrequency;
+            
+            fObj = filterData(Fs);
+            
+            fobj.filt.F=filterData(Fs);
+            fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
+            fobj.filt.F=fobj.filt.F.designDownSample;
+            fobj.filt.F.padding=true;
+            fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
+            
+            %fobj.filt.FL=filterData(Fs);
+            %fobj.filt.FL.lowPassPassCutoff=4.5;
+            %fobj.filt.FL.lowPassStopCutoff=6;
+            %fobj.filt.FL.attenuationInLowpass=20;
+            %fobj.filt.FL=fobj.filt.FL.designLowPass;
+            %fobj.filt.FL.padding=true;
+            
+            fobj.filt.FL=filterData(Fs);
+            fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.FL.lowPassStopCutoff=40;
+            fobj.filt.FL.attenuationInLowpass=20;
+            fobj.filt.FL=fobj.filt.FL.designLowPass;
+            fobj.filt.FL.padding=true;
+            
+            fobj.filt.BP=filterData(Fs);
+            fobj.filt.BP.highPassCutoff=1;
+            fobj.filt.BP.lowPassCutoff=2000;
+            fobj.filt.BP.filterDesign='butter';
+            fobj.filt.BP=fobj.filt.BP.designBandPass;
+            fobj.filt.BP.padding=true;
+            
+            fobj.filt.FH2=filterData(Fs);
+            fobj.filt.FH2.highPassCutoff=100;
+            fobj.filt.FH2.lowPassCutoff=2000;
+            fobj.filt.FH2.filterDesign='butter';
+            fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+            fobj.filt.FH2.padding=true;
+            
+            fobj.filt.Ripple=filterData(Fs);
+            fobj.filt.Ripple.highPassCutoff=80;
+            fobj.filt.Ripple.lowPassCutoff=300;
+            fobj.filt.Ripple.filterDesign='butter';
+            fobj.filt.Ripple=fobj.filt.Ripple.designBandPass;
+            fobj.filt.Ripple.padding=true;
+            
+            fobj.filt.SW=filterData(Fs);
+            fobj.filt.SW.highPassCutoff=8;
+            fobj.filt.SW.lowPassCutoff=40;
+            fobj.filt.SW.filterDesign='butter';
+            fobj.filt.SW=fobj.filt.SW.designBandPass;
+            fobj.filt.SW.padding=true;
+            
+            fobj.filt.FN =filterData(Fs);
+            fobj.filt.FN.filterDesign='cheby1';
+            fobj.filt.FN.padding=true;
+            fobj.filt.FN=fobj.filt.FN.designNotch;
+            
+            
+            
+            
+            %% Get all SWRs for each channel
+            
+            
+            %chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2];
+            %chanMap = [7 10 2 15 3 14 4 13 1 16 5 12 6 11 8 9];
+            %chanMap = [13 1 16 5 12 6 11 8 9];
+            nChans = numel(chanMap);
+            
+            
+            seg_s= 10;
+            seg_ms = seg_s*1000;
+            TOn=1:seg_ms:(recordingDur_ms-seg_ms);
+            nCycles = numel(TOn);
+            
+            cnt = 1;
+            corrData = [];
+            
+            for k = 1:nCycles
+                
+                for j = 1:nChans
+                    ch = chanMap(j);
+                    [rawData,t_ms]=dataRecordingObj.getData(ch,TOn(k), seg_ms);
+                    
+                    
+                    DataSeg_BP = fobj.filt.BP.getFilteredData(rawData);
+                    DataSeg_BP_N = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
+                    
+                    allCorrData_bpn(j,:) = squeeze(DataSeg_BP_N);
+                    
+                end
+                
+                allRs = []; allPs = [];
+                for o = 1:nChans
+                    for s = 1:nChans
+                        
+                        
+                        [r, p] = corrcoef(allCorrData_bpn(o,:), allCorrData_bpn(s,:));
+                        
+                        allRs(o,s) = r(1, 2);
+                        allPs(o,s) = p(1, 2);
+                    end
+                end
+                
+                if doPlot
+                    figure(204); clf
+                    %bla = fliplr(allRs);
+                    %imagesc(allRs);
+                    %imagesc(bla);
+                    
+                    imagesc(allRs, [.8 1]);
+                    colorbar
+                    colormap('jet')
+                    
+                    plotDir = obj.DIR.plotDir;
+                    %%
+                    
+                    saveName = [plotDir 'corrMatrix_' sprintf('%03d', k)];
+                    plotpos = [0 0 12 10];
+                    
+                    print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                    print_in_A4(0, saveName, '-depsc', 0, plotpos);
+                end
+                
+                allRsOverSegs{k} = allRs;
+                allPsOverSegs{k} = allPs;
+                
+                allRsOverSegs_array(:,:,k) = allRs;
+                allPsOverSegs_array(:,:,k) = allPs;
+                
+                disp('')
+            end
+            
+            analysisDir = obj.DIR.analysisDir;
+            analysisSaveName = 'CorrVals.mat';
+            save([analysisDir analysisSaveName], 'allRsOverSegs', 'allPsOverSegs', 'allRsOverSegs_array', 'allPsOverSegs_array');
+            
+            disp(['Saved:' [analysisDir analysisSaveName]])
+            %%
+            %{
+                %https://stackoverflow.com/questions/12234145/find-groups-with-high-cross-correlation-matrix-in-matlab
+                corrMat = allRs;
+                
+                %# remove diagonal elements
+                corrMat = corrMat - eye(size(corrMat));
+                %# and convert to a vector (as pdist)
+                %dissimilarity = 1 - corrMat(find(corrMat))';
+                dissimilarity = 1 - corrMat;
+                
+                %# decide on a cutoff
+                %# remember that 0.4 corresponds to corr of 0.6!
+                cutoff = 0.4;
+                
+                %# perform complete linkage clustering
+                Z = linkage(dissimilarity,'complete');
+                
+                %# group the data into clusters
+                %# (cutoff is at a correlation of 0.5)
+                groups = cluster(Z,'cutoff',cutoff,'criterion','distance')
+%                 groups =
+%                 2
+%                 3
+%                 2
+%                 2
+%                 3
+%                 2
+%                 1
+%                 To confirm that everything is great, you can visualize the dendrogram
+                 figure;
+                dendrogram(Z,0,'colorthreshold',cutoff)
+
+            %}
+            
+            
+        end
+        
+         
+         
+        
         function [] = calcSWR_CSD(obj)
             
             dataDir = obj.DIR.ephysDir;

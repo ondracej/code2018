@@ -42,7 +42,7 @@ classdef chronoAnalysis_Obj < handle
         function [] = makeMultipleMoviesFromImages(obj, imageDir, movieName, saveDir, VideoFrameRate)
             
             
-            fileFormat = 2; % (1)- tif, (2) -.jpg
+            fileFormat = 3; % (1)- tif, (2) -.jpg
             
             %%
             switch fileFormat
@@ -51,7 +51,7 @@ classdef chronoAnalysis_Obj < handle
                 case 2
                     imgFormat = '*.jpg';
                 case 3
-                    imgFormat = '*';
+                    imgFormat = '*.jpg';
             end
             
             imageNames = dir(fullfile(imageDir{:},imgFormat));
@@ -78,7 +78,7 @@ classdef chronoAnalysis_Obj < handle
             
             FrameCut = 2*VideoFrameRate*60*60; % 2 hour
             
-            if nImags > FrameCut;
+            if nImags > FrameCut
                 tOn = 1:FrameCut:nImags;
                 nParts = numel(tOn);
             else
@@ -106,13 +106,29 @@ classdef chronoAnalysis_Obj < handle
                 tic
                 for f = FrameOn:FrameOff-1
                     img = imread([imageDir{:} resortedNames{f}]);
-                    
                     if fileFormat == 1
                         img2 = im2uint8(img); % need to convert for .tif files
                     elseif fileFormat ==2
                         img2 = img;
                     elseif fileFormat ==3
-                        img2 = img;
+                        
+                        grayImage = rgb2gray(img);
+                        %imshow(grayImage, []);
+                        %pout_imadjust = imadjust(grayImage );
+                        %pout_histeq = histeq(grayImage);
+                        pout_histeq = adapthisteq (grayImage);
+                        %figure; imshow(grayImage); title('original')
+                        %figure; imshow(pout_imadjust); title('contrast')
+                        %figure; imshow(pout_histeq); title('histeq')
+                        
+                        %J = filter2(fspecial('sobel'),grayImage);
+                        imshow(pout_histeq)
+                        ax = gca;
+                        ax.Units = 'pixels';
+                        img2 = getframe(ax);
+                        img2 = img2.cdata;
+                        
+                        %figure; imshow(img2)
                     end
                     writeVideo(outputVideo,img2)
                     disp(['Frame: ' num2str(f) '/' num2str(nImags)]);
@@ -501,15 +517,26 @@ classdef chronoAnalysis_Obj < handle
             fvN = fv./(max(max(fv))); % normalize between 1 and 0
             
             
-            figure; clf
+            
+            %outliers_inds = find(fvN >= 0.3);
+            outliers_inds = find(fvN >= 0.25);
+            fvN(outliers_inds) = nan;  
+            
+            figure(200); clf
+            plot(fvN)
+            %smoothWin_s = 30;
+            %smoothFv = smooth(fvN, smoothWin_s);
+            %smoothFv = smooth(fvN.^2, smoothWin_s);
+            
             plot(fvN)
             hold on
-            
-            %ROI1
+            %plot(smoothFv, 'k')
+            %% Nov 14
+%             %ROI1/Roi2/ROi3 contrast
 %             start1 = 1;
-%             stop1 = 61920; % need to make sure this is around number of 360
+%             stop1 = 39960; % need to make sure this is around number of 360
 %             
-%             start2 = 61921;
+%             start2 = 39961;
 %             stop2 = 83880;
 %             
 %             start3 = 83881;
@@ -527,21 +554,32 @@ classdef chronoAnalysis_Obj < handle
             
 
             %ROI 3
-            start1 = 1;
-            stop1 = 47160;
-            
-            start2 = 47161;
-            stop2 = 65520;
-            
-            start3 = 65521;
-            stop3 = 93776;
+%             start1 = 1;
+%             stop1 = 47160;
+%             
+%             start2 = 47161;
+%             stop2 = 65520;
+%             
+%             start3 = 65521;
+%             stop3 = 93776;
 
+%% Nov 19
+
+%ROI1, 2 3,
+            start1 = 1;
+            stop1 = 3600; % need to make sure this is around number of 360
+            
+            start2 = 3661;
+            stop2 = 46800;
+            
+            start3 = 46960;
+            stop3 = 86865;
 
             hold on
-            line([stop1 stop1], [0 1], 'color', 'b')
-            line([start2 start2], [0 1], 'color', 'b')
-            line([stop2 stop2], [0 1], 'color', 'b')
-            line([start3 start3], [0 1], 'color', 'b')
+            line([stop1 stop1], [0 .3], 'color', 'r')
+            line([start2 start2], [0 .3], 'color', 'r')
+            line([stop2 stop2], [0 .3], 'color', 'r')
+            line([start3 start3], [0 .3], 'color', 'r')
             
             %%
             
@@ -558,18 +596,46 @@ classdef chronoAnalysis_Obj < handle
                         part_fV = fvN(start1:stop1);
                            tOn = start1:timeWin_s:stop1;
                            stop = stop1;
+                           
+                           %Nov14
+                          % percentile4ScaleEstimation = 95; % roi1
+                           
+                           %Nov19
+                           %percentile4ScaleEstimation = 88; % roi1
+                           %percentile4ScaleEstimation = 92; % roi2
+                           percentile4ScaleEstimation = 90; % roi3
                     case 2
                         part_fV = fvN(start2:stop2);
                         tOn = start2:timeWin_s:stop2;
                         stop = stop2;
+                        %Nov14
+                        %   percentile4ScaleEstimation = 95; % roi1
+                           
+                           
+                           %Nov 19
+                           
+                        %percentile4ScaleEstimation = 95; % roi1
+                        %percentile4ScaleEstimation = 90; % roi2
+                        percentile4ScaleEstimation = 92; % roi3
+                        
                     case 3
                         part_fV = fvN(start3:stop3);
                         tOn = start3:timeWin_s:stop3;
                         stop = stop3;
+                        %Nov14
+                        %   percentile4ScaleEstimation = 95; % roi1
+                           
+                           
+                           %Nov 19
+                        %percentile4ScaleEstimation = 85; % roi1
+                        %percentile4ScaleEstimation = 88; % roi2
+                        percentile4ScaleEstimation = 90; % roi3
                 end
                 
                 sortedVals = sort(part_fV, 'ascend');
-                percentile4ScaleEstimation = 95; % we choose a threhsold of 95% of the sorted data
+                figure(242);clf; plot(sortedVals)
+                %percentile4ScaleEstimation = 92; % Nov 14
+                %percentile4ScaleEstimation = 90; % Nov 19
                 scaleEstimator_thresh =sortedVals(round(percentile4ScaleEstimation/100*numel(sortedVals)));
                 
                 
@@ -620,11 +686,14 @@ classdef chronoAnalysis_Obj < handle
             allDetections_6minBins = allDetections_6minBins(1:end-1); % remove last incomplete bin
             allDurations_s = allDurations_s(1:end-1);
    
-            figure
+            figure(240);clf
             imagesc(allDetections_6minBins)
             %%
-            textName = 'Detections-ROI3.txt';
-            fileToSave = ['/media/janie/DataRed1TB/chronoAnalysis/textFileDetections/' textName];
+            textName = 'Detections-ROI3_Nov19-002.txt';
+            %textName = 'Detections-ROI3_Nov14-001.txt';
+            
+            %fileToSave = ['E:\ChronoAnalysis\001_Vids_Nov14\contrastVids\OF_DS\textDetections\' textName];
+            fileToSave = ['E:\ChronoAnalysis\002_Vids_Nov19\ContrastVids\OF_Analysis\TextDetections\' textName];
                 
             fileID = fopen(fileToSave,'w');
             %fprintf(fileID,'%6s %12s\n','x','exp(x)');

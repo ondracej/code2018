@@ -201,7 +201,51 @@ printRaster_HRTF_Ver2_OverEl(C_OBJ)
 
 
 
+%% Other scripts for population analysis
+
+ combineAllDataIntoOneObj
+% Input:  PopulationDir = '/home/janie/Data/TUM/OTAnalysis/FinalPopulation_Janie/';
+% Output: AllDataDir = '/home/janie/Data/TUM/OTAnalysis/AllData/';
+% Filename:  saveName = [allDirNames{k} '-AllStims.mat'];
+
+%% 
+ combineAllSPKSIntoOneObj
+% Input:  PopulationDir = '/home/janie/Data/TUM/OTAnalysis/FinalPopulation_Janie/';
+% Output: AllDataDir = '/home/janie/Data/TUM/OTAnalysis/AllSPKData/';
+% Filename: saveName = [allDirNames{k} '-AllSPKS.mat'];
+
+%% 
+combineOTObjectDataSets % Old, do not use
+% For combining two sets of same stimuli with user interface, also makes rasters - 
+% Input:  DataToUseDir = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allWNsJanie/allObjs/';
+% Output: savePath = [[DataToUseDir 'Data/'] dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
+
+combineOTObjectDataSets_loadFromDir % used to combine WN, HRTfs
+% Does the same thing but from a directory
+% Input: DataToUseDir = '/home/janie/Data/OTAnalysis/allWNsJanie/allObjs/';
+% Output: savePath = [[DataToUseDir 'CombinedData/'] dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
+
+combineOTObjectDataSets_singleObjects % To use for objects that are not being combined
+% Input: DataToUseDir = '/home/janie/Data/TUM/OTAnalysis/allIIDJanie/allObjs/';
+% Output:   savePath = ['/home/janie/Data/TUM/OTAnalysis/allIIDJanie/allObjs/UncombinedData/' dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
+
+
 %%
+
+HRTFAnalaysisAudSpikeData % code for analyzing HRTFs?
+runJaniesAnalysis_batchProcess_JanieFinalAnalysis % ccode for batch processinng HRTF data
+
+%% 
+plotSummaryDataAllPopOTData
+%Goes over all the data and makes a single fig with raster plots of all
+% available data
+% Input: PopulationDir = '/home/janie/Data/TUM/OTAnalysis/AllData/';
+% Output:   figSavePath = ['/home/janie/Data/TUM/OTAnalysis/AllData/Figs/'];
+% saveName = [figSavePath allDirNames{k}(1:4)];
+
+
+
+
 
 
 
