@@ -7,7 +7,7 @@ addpath(genpath(pathToCodeRepository))
 pathToNSKToolbox = 'C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools\';
 addpath(genpath(pathToNSKToolbox)) 
 
-dataDir = 'D:\TUM\SliceTest\slice_2020-02-18_12-09-08';
+dataDir = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\Ephys';
 
 
 dataRecordingObj = OERecordingMF(dataDir);
@@ -72,8 +72,10 @@ ks.ops.NT                  = 12800; %64 must be multiple of 32 + ntbuff.
     
 %% Classic method
 
-
 master_kilosort_JO
+
+master_kilosort_JO_acute
+
 
 
 
@@ -89,7 +91,7 @@ addpath(genpath(pathToNumpy))
 
 %% Import Kilosort
 %jrc import-ksort /path/to/your/rez.mat sessionName
-jrc import-ksort 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\dat\KImportJRClust'  '2019-04-28_19-34-00.dat'
+jrc import-ksort 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\dat\KImportJRClust\'  '2019-04-28_19-34-00.dat'
 
 %% Manual clustering
 cnfg = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\dat\KImportJRClust\2019-04-28_19-34-00.prm';

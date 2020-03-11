@@ -287,10 +287,13 @@ dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecording
 timeSeriesViewer(dataRecordingObj); % loads all the channels
 %5, 4, 6, 3, 9, 16, 8, 1, 11, 14, 12, 13, 10, 15, 7, 2
 
+%% Filtered Bin Files
+
+pathToDat = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\bin\JRClustFil\';
 
 %%
 jrc bootstrap
-% use probe silico120_1col_1 - will give 2 peakFeature
+% use probe silico_feb8_1colA.prb - will give 2 peakFeature
 %nPeaksFeatures = 2; % (formerly nFet_use) Number of potential peaks to use when computing features
 % change nchanels to 16
 probePad = [23, 23]; % (formerly vrSiteHW) Recording contact pad size (in m) (Height x width)
@@ -301,7 +304,7 @@ siteMap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]; % (formerly v
 cnfg = [pathToDat(1:end-3) 'prm'];
 %%
 
-%cnfg = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\dat\2019-04-28_19-34-00.prm';
+cnfg = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\bin\JRClustFil\20190428.prm';
 
 %Check probe layout
 eval(['jrc probe ' cnfg]);

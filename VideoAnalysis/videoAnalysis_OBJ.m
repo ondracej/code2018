@@ -951,8 +951,8 @@ classdef videoAnalysis_OBJ < handle
             %%
             VideoObj = VideoReader(vidToLoad, 'Tag', 'CurrentVideo');
             
-            %nFrames = VideoObj.NumberOfFrames;
-            nFrames = 547923;
+            nFrames = VideoObj.NumberOfFrames;
+            %nFrames = 547923;
             VideoFrameRate = VideoObj.FrameRate;
             vidHeight = VideoObj.Height;
             vidWidth = VideoObj.Width;
@@ -960,7 +960,8 @@ classdef videoAnalysis_OBJ < handle
             
             %% if more than 10000 frames...
             
-            
+            FrameOn = 1;
+            FrameOff = nFrames;
             %%
             videoReader = vision.VideoFileReader(vidToLoad,'ImageColorSpace','Intensity','VideoOutputDataType','uint8'); % create required video objects
             converter = vision.ImageDataTypeConverter;
@@ -1036,8 +1037,8 @@ classdef videoAnalysis_OBJ < handle
             %%
             VideoObj = VideoReader(vidToLoad, 'Tag', 'CurrentVideo');
             
-            %nFrames = VideoObj.NumberOfFrames;
-            nFrames = 75551;
+            nFrames = VideoObj.NumberOfFrames;
+            %nFrames = 75551;
             if isempty(FrameRateOverride)
                 VideoFrameRate = VideoObj.FrameRate;
             else
@@ -1049,13 +1050,14 @@ classdef videoAnalysis_OBJ < handle
             vidFormat = VideoObj.VideoFormat;
             
             
-            frameSkip = VideoFrameRate/dsFrameRate;
+            %frameSkip = VideoFrameRate/dsFrameRate;
+            frameSkip = 15;
             
-            thisStart = 1;
-            thisStop = nFrames;
+            %thisStart = 1;
+            %thisStop = nFrames;
             
-            movieLengthFull = thisStop-thisStart;
-            newNFrames = floor(movieLengthFull/frameSkip);
+            %movieLengthFull = thisStop-thisStart;
+            %newNFrames = floor(movieLengthFull/frameSkip);
             
             %             mov(1:newNFrames) = struct('cdata', zeros(vidHeight, vidWidth, 3, 'uint8'),'colormap', []);
             %
@@ -1070,7 +1072,8 @@ classdef videoAnalysis_OBJ < handle
             
             %% if more than 10000 frames...
             %FrameCut = VideoFrameRate*60*dsFrameRate; % 1 hour
-            FrameCut = 60*60*dsFrameRate; % 1 hour
+            %FrameCut = 60*60*dsFrameRate; % 1 hour
+            FrameCut = 3600; % 30 min
             
             if nFrames > FrameCut
                 tOn = 1:FrameCut:nFrames;
@@ -1088,7 +1091,8 @@ classdef videoAnalysis_OBJ < handle
             
             disp('Extracting frames and calculating the optic flow...')
             cnt = 1;
-            for p = 1:nParts
+            %for p = 1:nParts
+                for p = 1:5
                 
                 FrameOn = tOn(p);
                 FrameOff = tOn(p)+FrameCut;
@@ -2000,15 +2004,16 @@ classdef videoAnalysis_OBJ < handle
             
             %% Assumes a fps of 1 fps
             
-            smooth_s = 10*60; % 1 minute smooth
+            %smooth_s = 10*60; % 1 minute smooth
+            smooth_s = 30; % 1 minute smooth
             
             smoothWin = smooth_s*dsFrameRate;
             smoothedOF = smooth(fV1_norm, smoothWin);
             
             %%
             timepoints_x = 1:1:numel(fV1_norm);
-            timepoints_x = timepoints_x/10;
-            timepoints_hrs = timepoints_x/3600;
+            timepoints_x = timepoints_x/30;
+            timepoints_hrs = timepoints_x/5400*2;
             
             
             %timepoints_s = 1:1:numel(fV1_norm);

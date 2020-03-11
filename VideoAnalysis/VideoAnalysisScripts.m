@@ -78,7 +78,7 @@ addpath(genpath(pathToCodeRepository))
 
 %vidsToAnalyze = {'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Videos\ZF-71-76__17-51-54__547923_Zoom2_00011.avi'};
 
-vidsToAnalyze = {'E:\DataForSilke\faa1-001-cam1-2019-Nov-14.avi'};
+vidsToAnalyze = {'C:\Users\Janie\Documents\Data\Video\18_02_2020_ROI.avi'};
 
 videoDirectory=[];
 
@@ -282,9 +282,9 @@ videoName = '20191021134540696_9minStart.avi';
 % StartingClockTime = '17:03:00'; % Must be the next even time
 
 
-vidsToAnalyze = {'E:\DataForSilke\faa1-001-cam1-2019-Nov-14.avi'};
-detectionsDir = 'E:\DataForSilke\faa1_001_Video\Roi1\';
-StartingAlignmentTime  = '16:00:00'; % Must be the next even time
+vidsToAnalyze = {'C:\Users\Janie\Documents\Data\Video\18_02_2020_ROI.avi'};
+detectionsDir = 'C:\Users\Janie\Documents\Data\Video\editedVids\OF_DS-18_02_2020_ROI\';
+StartingAlignmentTime  = '04:00:00'; % Must be the next even time
 StartingClockTime = '15:34:50'; % Must be the next even time
 
 
