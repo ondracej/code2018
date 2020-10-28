@@ -11,8 +11,8 @@ close all
 
 %% Create Chicken Analysis Object
 
-experiment = 1; %efc
-recSession = 3; %sFigSaveNamec
+experiment = 3; %efc
+recSession = 2; %sFigSaveNamec
 
 C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 

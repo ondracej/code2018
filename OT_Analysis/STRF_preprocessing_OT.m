@@ -49,7 +49,7 @@ nSigs = numel(sigNames);
 
 %% Create Directories
 
-STRF_Dir = '/media/dlc/Data8TB/TUM/OT/STRF_Analysis/';
+STRF_Dir = '/media/dlc/Data8TB/TUM/OT/STRF_Analysis/20201020/';
 
 NeuronDir = [STRF_Dir NeuronName dirD];
 
@@ -126,6 +126,22 @@ for j = 1:nRows
         
         for ss = 1:nReps
             
+            switch ss % have to get rid of unimpotant numbers
+                case 1
+                    textend = '-a';
+                case 2
+                    textend = '-b';
+                case 3
+                    textend = '-c';
+                case 4
+                    textend = '-d';
+                case 5
+                    textend = '-e';
+                case 6
+                    textend = '-f';
+            end
+            
+                    
             these_spks_on_Chan = thisSpkResp{ss};
             
             validSpksInds = find(these_spks_on_Chan >= StimStartTime_samp & these_spks_on_Chan <= PostStimStartTime_samp); % need to add a buffer at the start
@@ -135,17 +151,22 @@ for j = 1:nRows
             
             nbr_spks = size(relValidSpks, 2);
             
+            if nbr_spks == 0
+               disp('')
+                continue
+            end
+            disp('')
             these_spks_in_ms = round(relValidSpks/Fs*1000);
             
-            SpkName = [STRF_Spks Stim '_' sprintf('%03d', cnt) '-' num2str(ss) '.txt'];
+            SpkName = [STRF_Spks Stim '_' sprintf('%03d', cnt) textend '.txt'];
             
             % For some reason, strfpak only seems to like spike times in text files...
             save(SpkName, 'these_spks_in_ms', '-ASCII')
             
             %% Wavwrite
             
-            wav_name_L = [STRF_Stim_L_Dir Stim '-L_' sprintf('%03d', cnt) '-' num2str(ss) '.wav'];
-            wav_name_R = [STRF_Stim_R_Dir Stim '-R_' sprintf('%03d', cnt) '-' num2str(ss) '.wav'];
+            wav_name_L = [STRF_Stim_L_Dir Stim '_' sprintf('%03d', cnt) textend '.wav']; % stims and resp should be named exactly the same
+            wav_name_R = [STRF_Stim_R_Dir Stim '_' sprintf('%03d', cnt) textend '.wav'];
             
             
             % make sure that the sampling rate matches that of the data file,

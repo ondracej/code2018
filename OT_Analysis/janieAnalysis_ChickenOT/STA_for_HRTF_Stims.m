@@ -19,7 +19,7 @@ disp(Stim);
 
 %audSelInd = 2; % SpikesThis is the index, spikesnot the stim number!!!
 
-FigSaveDir = '/media/dlc/Data8TB/TUM/OT/Figs/HRTF/';
+FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-HRTF/MLD-STA-New/';
 addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
@@ -39,7 +39,7 @@ objPath = [C_OBJ.PATHS.OT_Data_Path C_OBJ.INFO.expDir C_OBJ.PATHS.dirD audStimDi
 load(objPath);
 disp(['Loaded: ' objPath])
 
-SignalDir = '/media/dlc/Data8TB/TUM/OT/Signals/';
+SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/';
 
 sigFormat = '*.wav';
 
@@ -73,6 +73,9 @@ SpkResponses = C_OBJ.S_SPKS.SORT.allSpksMatrix;
 nRows = size(stimNames, 1);
 nCols = size(stimNames, 2);
 cnnt = 1;
+ALL_LStimWins = [];
+ALL_RStimWins = [];
+
 for j = 1:nRows
     for k = 1:nCols
         
@@ -139,77 +142,136 @@ for j = 1:nRows
 end
 disp('')
 
-%% Raw data
 
-LStimWins_mean = mean(ALL_LStimWins);
-RStimWins_mean = mean(ALL_RStimWins);
-timepoints_samp = 1:1:numel(LStimWins_mean);
-timepoints_ms = timepoints_samp/Fs*1000;
-
-figure (103); clf
-subplot(2, 2, 1)
-plot(timepoints_ms, LStimWins_mean); axis tight
-ylim([-.2 .2])
-title([NeuronName ': Left ' Stim ' STA'])
-
-%xticks = 0:2:40;
-xticks = 0:2:20;
-set(gca, 'xtick', xticks)
-xlim([-0 20])
-
-%line([20 20], [-.2 .2], 'Color' , 'k')
-%xtickabs = {'-20', '-18', '-16', '-14', '-12', '-10', '-8', '-6', '-4', '-2', '0' '2', '4', '6', '8', '-10', '-12', '14', '16', '18', '20',};
-xtickabs = {'-20', '-18', '-16', '-14', '-12', '-10', '-8', '-6', '-4', '-2', '0'};
-set(gca, 'xticklabel', xtickabs )
-
-subplot(2, 2, 2)
-plot(timepoints_ms, RStimWins_mean); axis tight
-ylim([-.2 .2])
-title([NeuronName ': Right ' Stim ' STA'])
-set(gca, 'xtick', xticks)
-set(gca, 'xticklabel', xtickabs )
-
-%% Wavelet
-
-clims = [0 5e-5];
-
-for  z = 1:2
-    if z == 1
-        %RawData = RStimWins_mean;
-        RawData = LStimWins_mean;
-        titleTxt = ['Left ' Stim ' STA - Wavelet'];
-    elseif z== 2
-        RawData = RStimWins_mean;
-        titleTxt = ['Right ' Stim ' STA - Wavelet'];
+if ~isempty (ALL_LStimWins)
+    
+    %% Raw data
+    
+    LStimWins_mean = mean(ALL_LStimWins, 1);
+    RStimWins_mean = mean(ALL_RStimWins, 1);
+    timepoints_samp = 1:1:numel(LStimWins_mean);
+    timepoints_ms = timepoints_samp/Fs*1000;
+    
+    figure (103); clf
+    subplot(3, 2, 1)
+    plot(timepoints_ms, LStimWins_mean); axis tight
+    ylim([-.2 .2])
+    title([NeuronName ': Left ' Stim ' STA'])
+    
+    %xticks = 0:2:40;
+    xticks = 0:2:20;
+    set(gca, 'xtick', xticks)
+    xlim([-0 20])
+    
+    %line([20 20], [-.2 .2], 'Color' , 'k')
+    %xtickabs = {'-20', '-18', '-16', '-14', '-12', '-10', '-8', '-6', '-4', '-2', '0' '2', '4', '6', '8', '-10', '-12', '14', '16', '18', '20',};
+    xtickabs = {'-20', '-18', '-16', '-14', '-12', '-10', '-8', '-6', '-4', '-2', '0'};
+    set(gca, 'xticklabel', xtickabs )
+    
+    subplot(3, 2, 2)
+    plot(timepoints_ms, RStimWins_mean); axis tight
+    ylim([-.2 .2])
+    title([NeuronName ': Right ' Stim ' STA'])
+    set(gca, 'xtick', xticks)
+    set(gca, 'xticklabel', xtickabs )
+    
+    %% Wavelet
+    
+    %clims = [0 5e-5];
+    
+    for  z = 1:2
+        if z == 1
+            %RawData = RStimWins_mean;
+            RawData = LStimWins_mean;
+            titleTxt = ['Left ' Stim ' STA - Wavelet'];
+        elseif z== 2
+            RawData = RStimWins_mean;
+            titleTxt = ['Right ' Stim ' STA - Wavelet'];
+        end
+        
+        
+        Dt = 1/44100;
+        t = 0:Dt:(numel(RawData)*Dt)-Dt;
+        
+        %normRawData = (RawData-min(RawData))/(max(RawData)-min(RawData));
+        
+        
+        %[cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',32);
+        [cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',48);
+        figure(103);
+        subplot(3, 2, z+2)
+        helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
+        ylim([.5 6])
+        title(titleTxt)
+        
+        
+        colorbar 'off'
+        xlim([0 20])
+        set(gca, 'xtick', xticks)
+        set(gca, 'xticklabel', xtickabs )
+        
+        
+        if z == 1
+            css = get(gca, 'clim');
+        end
+        
+        caxis(css);
+        
+        subplot(3, 2, z+4); cla
+        
+        [pxx,fF,pxxc] = pmtm(RawData,2,length(RawData),Fs,'ConfidenceLevel',0.95);
+        
+        plot(fF,10*log10(pxx))
+        hold on
+        plot(fF,10*log10(pxxc),'-', 'color', [.5 .5 .5])
+        %xlim([85 175])
+        xlabel('kHz')
+        ylabel('dB')
+        title('Multitaper PSD Estimate with 95%-Confidence Bounds')
+        xlim([0 6000])
+        ylim([-150 -60])
+        set(gca, 'xtick', 0:1000:6000)
+        
+        set(gca, 'xticklabel', {'0', '1', '2', '3', '4', '5', '6'})
+        %     t = 0:1/fs:2-1/fs;
+        %     x = cos(2*pi*100*t)+randn(size(t));
+        %     [pxx,f] = pmtm(RawData,3,length(RawData),Fs);
+        %     pmtm(RawData,3,length(RawData),Fs)
+        %     xlim([0 6])
+        %     pmtm(RawData, 2);
+        %     pxx = pmtm(RawData, 2);
+        %
+        
+        %     figure(100); clf
+        %     spec_scale = 0.001;
+        %     specgram1(double(RawData)/spec_scale,512,Fs,40,36);
+        %     ylim([0 8000])
+        
+        
+        STA.cfs{z} = cfs;
+        STA.f{z} = f;
+        
+        STA.RawData{z} = RawData;
+        
+        STA.pxx{z} = pxx;
+        STA.fF{z} = fF;
+        STA.pxxc{z} = pxxc;
+        
+        
     end
     
     
-    Dt = 1/44100;
-    t = 0:Dt:(numel(RawData)*Dt)-Dt;
+    %%
+    saveName = [FigSaveDir NeuronName '-STA-' Stim];
+    plotpos = [0 0 20 15];
     
-    %[cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',32);
-    [cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',48);
-    figure(103);
-    subplot(2, 2, z+2)
-    helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
-    ylim([.5 6])
-    title(titleTxt)
+    print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+    %print_in_A4(0, saveName, '-depsc', 0, plotpos);
     
-    colorbar 'off'
-    xlim([0 20])
-    set(gca, 'xtick', xticks)
-    set(gca, 'xticklabel', xtickabs )
-    caxis(clims);
+    saveName = [FigSaveDir NeuronName '-STA-Data' Stim '.mat'];
+    
+    save(saveName, 'STA', '-v7.3')
 end
-
-
-%%
-saveName = [FigSaveDir NeuronName '-STA-' Stim];
-plotpos = [0 0 20 15];
-
-print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-%print_in_A4(0, saveName, '-depsc', 0, plotpos);
-
 
 %%
 

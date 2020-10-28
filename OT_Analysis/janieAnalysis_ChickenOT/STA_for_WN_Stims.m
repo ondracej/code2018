@@ -38,7 +38,7 @@ objPath = [C_OBJ.PATHS.OT_Data_Path C_OBJ.INFO.expDir C_OBJ.PATHS.dirD audStimDi
 load(objPath);
 disp(['Loaded: ' objPath])
 
-SignalDir = '/media/dlc/Data8TB/TUM/OT/Signals/';
+SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/';
 
 sigFormat = '*.wav';
 

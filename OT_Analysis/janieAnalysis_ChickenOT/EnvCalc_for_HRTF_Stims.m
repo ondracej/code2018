@@ -21,7 +21,7 @@ disp(Stim);
 
 %audSelInd = 2; % SpikesThis is the index, spikesnot the stim number!!!
 
-FigSaveDir = '/media/dlc/Data8TB/TUM/OT/Figs/EnvAnalysis-HRTF/';
+FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/EnvAnalysis-HRTF/MLD/';
 addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
@@ -41,7 +41,7 @@ objPath = [C_OBJ.PATHS.OT_Data_Path C_OBJ.INFO.expDir C_OBJ.PATHS.dirD audStimDi
 load(objPath);
 disp(['Loaded: ' objPath])
 
-SignalDir = '/media/dlc/Data8TB/TUM/OT/Signals/';
+SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/';
 
 sigFormat = '*.wav';
 
@@ -100,7 +100,7 @@ for j = 1:nRows
         smooth_yupperL = smooth(yupperL, smoothWin_samps);
         smooth_yupperR = smooth(yupperR, smoothWin_samps);
         
-        if k == 1 && j == 1
+        if k == 9 && j == 7
             
             figure(406)
             subplot(5, 2, 1)
@@ -163,15 +163,16 @@ for j = 1:nRows
         smooth_thisUniqStimFR = smooth(thisUniqStimFR, smoothWin_samps);
         %plot(smooth_thisUniqStimFR)
         
-        if k == 1 && j == 1
+        if k == 9 && j == 7 % -90 and 0 elev
             
             figure(406)
             subplot(5, 2, 1)
             
-            plot(xtimepoints_ms, smooth_thisUniqStimFR +.6, 'b', 'linewidth', 1); % +.6 as plot offset
+            plot(xtimepoints_ms, smooth_thisUniqStimFR*5 +.6, 'b', 'linewidth', 1); % +.6 as plot offset
             
             subplot(5, 2, 2)
-            plot(xtimepoints_ms, smooth_thisUniqStimFR +.6, 'b', 'linewidth', 1);
+            plot(xtimepoints_ms, smooth_thisUniqStimFR*5 +.6, 'b', 'linewidth', 1);
+            disp('')
         end
         
         
@@ -187,6 +188,7 @@ for j = 1:nRows
         ccR_r(cnnt) = r_R(1 ,2);
         ccR_p(cnnt) = p_R(1 ,2);
         
+        AllstimNames{cnnt} = thisSigName;
         
         allCorrsL_matrix_r(j,k) = r_L(1 ,2);
         allCorrsL_matrix_p(j,k) = p_L(1 ,2);
@@ -240,6 +242,19 @@ ccL_r_sig(nSigs_L) = ccL_r(nSigs_L);
 ccR_r_sig  = nan(1, numel(ccR_r));
 ccR_r_sig(nSigs_R) = ccR_r(nSigs_R);
 
+CCL.ccL_r = ccL_r;
+CCL.ccL_p = ccL_p;
+CCL.allCorrsL_matrix_r = allCorrsL_matrix_r;
+CCL.allCorrsL_matrix_p = allCorrsL_matrix_p;
+
+CCL.AllstimNames = AllstimNames;
+
+CCR.ccR_p = ccR_p;
+CCR.ccR_r = ccR_r;
+CCR.allCorrsR_matrix_r = allCorrsR_matrix_r;
+CCR.allCorrsR_matrix_p = allCorrsR_matrix_p;
+CCR.AllstimNames = AllstimNames;
+
 %subplot(5, 2, [5 6])
 %boxplot([ccL_r_sig ; ccR_r_sig]', 'whisker', 0, 'symbol', 'k.', 'outliersize', 4,  'jitter', 0.3, 'colors', [0 0 0], 'labels', {'Left', 'Right'})
 %title('Significant correlation between stimulus envelope and PSTH')
@@ -263,6 +278,13 @@ xcorr_mean_L = mean(allCorrsL, 1);
 xcorr_mean_R = mean(allCorrsR, 1);
 timepoints_samp = 1:1:numel(xcov_L);
 timepoints_ms = timepoints_samp/Fs*1000;
+
+
+CCL.allCorrsL = allCorrsL;
+CCL.xcorr_mean_L = xcorr_mean_L;
+CCR.allCorrsR = allCorrsR;
+CCR.xcorr_mean_R = xcorr_mean_R;
+
 
 subplot(5, 2, 3)
 plot(timepoints_ms, xcorr_mean_L, 'k', 'linewidth', 2)
@@ -398,7 +420,7 @@ plotpos = [0 0 25 20];
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 %print_in_A4(0, saveName, '-depsc', 0, plotpos);
 
-
+save([saveName '-EnvData.mat'], 'CCL', 'CCR', '-v7.3')
 
 
 %

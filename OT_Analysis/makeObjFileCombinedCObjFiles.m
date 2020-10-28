@@ -3,16 +3,20 @@ function [] = makeObjFileCombinedCObjFiles()
 dbstop if error
 close all
 
-dataDir1 = 'E:\OT\OTData\Results\_data_20171212\01-HRTF_20171212_142541_0001\__Spikes\C_OBJ.mat';
-dataDir2 = 'E:\OT\OTData\Results\_data_20171212\01-HRTF_20171212_152053_0001\__Spikes\C_OBJ.mat';
+DataType = 1; % HRTF
+%DataType = 2; % WN
+
+
+dataDir1 = '/media/dlc/Data8TB/TUM/OT/OTData/Results/_data_20171212/01-HRTF_20171212_194136_0001/__Spikes/C_OBJ.mat';
+dataDir2 = '/media/dlc/Data8TB/TUM/OT/OTData/Results/_data_20171212/01-HRTF_20171212_203543_0001/__Spikes/C_OBJ.mat';
 
 dbstop if error
 
 experiment = 3; %efc
-recSession = 4; %sc
+recSession = 6; %sc
 
-audSelInd_1 = 1; % This is the index, not the stim number!!!
-audSelInd_2 = 7; % This is the index, not the stim number!!!
+%audSelInd_1 = 2; % This is the index, not the stim number!!!
+%audSelInd_2 = 6; % This is the index, not the stim number!!!
 
 expTxt = ['--E' num2str(experiment) '-Rs' num2str(recSession)];
 
@@ -114,7 +118,7 @@ annotation(figH,'textbox',...
 disp('Printing Plot')
 set(0, 'CurrentFigure', figH)
 plotpos = [0 0 20 15];
-FigSavePath = ['E:\OT\OTProject\FinalPopulation_Janie-Feb2020\N023_C3\' dataSet1.C_OBJ.PATHS.audStimDir expTxt 'Spikes'];
+FigSavePath = ['/media/dlc/Data8TB/TUM/OT/OTProject/FinalPopulation_Janie-Feb2020/N027_C3/' dataSet1.C_OBJ.PATHS.audStimDir expTxt 'Spikes'];
 print_in_A4(0, FigSavePath, '-djpeg', 0, plotpos);
 disp(['Saved Figure: '  FigSavePath ])
 
@@ -125,7 +129,7 @@ for q = 1:2
     
     thisObj = [];
     if q == 1
-        thisObj= dataSet1.C_OBJ;    
+        thisObj= dataSet1.C_OBJ;
     elseif q == 2
         thisObj= dataSet2.C_OBJ;
     end
@@ -170,47 +174,49 @@ figH = figure (201); clf
 
 %% HRTFs
 
-
-plotRasterHRTF(dataSet1, 1) % this is for HRTFs
-annotation(figH,'textbox',...
-    [0.05 0.9 0.50 0.1],...
-    'String',{sigText},...
-    'LineStyle','none',...
-    'FitBoxToText','off');
-
-plotRasterHRTF(dataSet2, 2)
-
-plotRasterWN(dataSet1, 1) % this is for WN
-
-annotation(figH,'textbox',...
-    [0.05 0.9 0.50 0.1],...
-    'String',{sigText},...
-    'LineStyle','none',...
-    'FitBoxToText','off');
-
-plotRasterWN(dataSet2, 2)
-
-
-
+if DataType == 1
+    
+    plotRasterHRTF(dataSet1, 1) % this is for HRTFs
+    annotation(figH,'textbox',...
+        [0.05 0.9 0.50 0.1],...
+        'String',{sigText},...
+        'LineStyle','none',...
+        'FitBoxToText','off');
+    
+    plotRasterHRTF(dataSet2, 2)
+    
+elseif DataType ==2
+    plotRasterWN(dataSet1, 1) % this is for WN
+    
+    annotation(figH,'textbox',...
+        [0.05 0.9 0.50 0.1],...
+        'String',{sigText},...
+        'LineStyle','none',...
+        'FitBoxToText','off');
+    
+    plotRasterWN(dataSet2, 2)
+    
+    
+end
 %% Combining spikes
 
-    sortedSpikes1 = dataSet1.C_OBJ.S_SPKS.SORT.allSpksMatrix;
-    sortedSpikes2 = dataSet2.C_OBJ.S_SPKS.SORT.allSpksMatrix;
-    
-    combinedSPKS = [];
-    for k = 1: size(sortedSpikes1, 1)
-        for j = 1: size(sortedSpikes1, 2)
-            combinedSPKS{k, j} = [sortedSpikes1{k, j} sortedSpikes2{k, j}];
-        end
+sortedSpikes1 = dataSet1.C_OBJ.S_SPKS.SORT.allSpksMatrix;
+sortedSpikes2 = dataSet2.C_OBJ.S_SPKS.SORT.allSpksMatrix;
+
+combinedSPKS = [];
+for k = 1: size(sortedSpikes1, 1)
+    for j = 1: size(sortedSpikes1, 2)
+        combinedSPKS{k, j} = [sortedSpikes1{k, j} sortedSpikes2{k, j}];
     end
-    
+end
+
 TAGEND = '-Combined';
 OBJS.dataSet1 = dataSet1;
 OBJS.dataSet2 = dataSet2;
 
 disp('Data combined')
 
-savePath = [['E:\OT\OTAnalysis\CombinedHRTFDataSets_JanieFeb\Data\'] dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
+savePath = [['/media/dlc/Data8TB/TUM/OT/OTAnalysis/CombinedHRTFDataSets_JanieFeb/'] dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
 
 disp('Saving Objects...')
 tic
@@ -221,10 +227,10 @@ disp(['Saved: '  savePath])
 disp('Printing Plot')
 set(0, 'CurrentFigure', figH)
 plotpos = [0 0 20 15];
-FigSavePath = ['E:\OT\OTProject\FinalPopulation_Janie-Feb2020\N023_C3\' dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
+FigSavePath = ['/media/dlc/Data8TB/TUM/OT/OTProject/FinalPopulation_Janie-Feb2020/N027_C3/' dataSet1.C_OBJ.PATHS.audStimDir expTxt TAGEND];
 print_in_A4(0, FigSavePath, '-djpeg', 0, plotpos);
 disp(['Saved Figure: '  FigSavePath ])
-    
+
 %%
 
 

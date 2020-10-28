@@ -1,6 +1,6 @@
 function [] = runJaniesAnalysis_batchProcess_JanieFinalAnalysis()
 
-close all;
+close all
 dbstop if error
 %%
 
@@ -13,6 +13,9 @@ switch gethostname
         
         dataDir = '/home/janie/Data/TUM/OTAnalysis/CombinedDataSets_JanieFeb/Data/';
         saveDir = '/home/janie/Data/TUM/OTAnalysis/CombinedDataSets_JanieFeb/Data/Figs/';
+    case 'PLUTO'
+        dataDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/MLDNeurons-CombinedHRTF/';
+        saveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/PopulationAnalysisFigs/';
         
     case {'TURTLE'}
         dataDir = ['/home/janie/Dropbox/00_Conferences/2018_FENS/HansaData/DataToUse/passt/'];
@@ -28,11 +31,18 @@ for j = 1:nTrials
 end
 
 %%
-Expset = [1:8 34];
+%Expset = [1:8 34];
+
 for s = 1:nTrials
     
     filToLoad = trialNames{s};
-    saveName = filToLoad(1:23);
+    saveName = filToLoad(1:28);
+    underscore = '_';
+    bla = find(saveName == underscore);
+    titelName = saveName;
+    titelName(bla) = ' ';
+    
+    NeuronName = filToLoad(1:4);
     D.INFO.saveName{s} = saveName;
     data=load([dataDir filToLoad]);
     
@@ -49,26 +59,35 @@ for s = 1:nTrials
     
     n_stims = n_elev*n_azim;  % Number of stims minus the silent stim (199) %gibt die Stimulusanzahl an. Bei (data,2) ist die Anzahl der Stimuli hinterlegt: (9 Elevation* 22 Azimuth) + den Nullstimulus
     n_reps = numel(combinedSPKS{1}); % 11th positions gives number of repetitions
-    sweepLengths_ms = 1000* data.OBJS.dataSet1.C_OBJ.SETTINGS.EpocheLength;
+    %sweepLengths_ms = 1000* data.OBJS.dataSet1.C_OBJ.SETTINGS.EpocheLength;
+    sweepLengths_ms = 300;
     fs = data.OBJS.dataSet1.C_OBJ.SETTINGS.SampleRate;
     
     D.INFO.saveName{s} = saveName;
     D.INFO.n_stims(s) = n_stims;
     D.INFO.n_reps(s) = n_reps;
     D.INFO.sweepLengths_ms(s) = sweepLengths_ms;
+    D.INFO.sweepLengths_ms(s) = sweepLengths_ms;
     D.INFO.n_elev(s) = n_elev;
     D.INFO.n_azim(s) = n_azim;
     
+    
+    
+    
+    
     %% HardCoded Response Windows for Hansa's data
     
-    spkWin_ms = 50;
+    %spkWin_ms = 50;
+    spkWin_ms = 20;
+    
+    stimInds = [6 7 8 9 10]; % 20 ms
+    spontInds_Pre = [1 2 3 4 5]; % 20 ms
+    spontInds_Post = [11 12 13 14 15]; % 20 ms
     
     tOn = 1:spkWin_ms:sweepLengths_ms;
     nSkpWins = numel(tOn);
     
     D.INFO.spkWin_ms(s) = spkWin_ms;
-    
-    
     
     %% aSRFs
     
@@ -82,6 +101,9 @@ for s = 1:nTrials
     
     spkCnt_reps = [];
     spkWinsOverReps = [];
+    spkCntsAllStim = [];
+    spkCntsAllSpont = [];
+    spkCntsAllSpont_post = [];
     
     for elev = 1:n_elev
         for azim = 1:n_azim
@@ -101,6 +123,11 @@ for s = 1:nTrials
                 
             end
             
+            %spkCntsAllStim = sum(spkWinsOverReps(:,stimInds), 2);
+            
+            spkCntsAllStim = [spkCntsAllStim; sum(spkWinsOverReps(:,stimInds), 2)];
+            spkCntsAllSpont = [spkCntsAllSpont; sum(spkWinsOverReps(:,spontInds_Pre), 2)];
+            spkCntsAllSpont_post = [spkCntsAllSpont_post; sum(spkWinsOverReps(:,spontInds_Post), 2)];
             
             spkCnt_stims{elev, azim} = spkWinsOverReps;
             perWin_stims_mean{elev, azim} = nanmean(spkWinsOverReps, 1);
@@ -114,10 +141,80 @@ for s = 1:nTrials
         
     end
     
+    
+    %% Z score Calc
+    FR_Stim = spkCntsAllStim/0.1; % 100 ms
+    FR_Spont = spkCntsAllSpont/0.1; % 100 ms
+    FR_Spont_post = spkCntsAllSpont_post/0.1; % 100 ms
+    
+    
+    meanStim = nanmean(FR_Stim);
+    meanSpont = nanmean(FR_Spont);
+    meanSpont_post = nanmean(FR_Spont_post);
+    
+    stdStim = nanstd(FR_Stim);
+    stdSpont = nanstd(FR_Spont);
+    stdSpont_post = nanstd(meanSpont_post);
+    
+    semStim = stdStim / (sqrt(numel(FR_Stim)));
+    semSpont = stdSpont / (sqrt(numel(FR_Spont)));
+    semSpont_post = stdSpont_post / (sqrt(numel(FR_Spont_post)));
+    
+    covar = cov(FR_Stim, FR_Spont);
+    z_score_cov = (meanStim - meanSpont) / sqrt((stdStim^2 + stdSpont^2) - 2*covar(1, 2));
+    
+    figure(104); clf
+    bar(1,meanSpont, 'FaceColor',[1 1 1])
+    hold on
+    er = errorbar(1,meanSpont,semSpont, semSpont);
+    er.Color = [0 0 0];
+    er.LineStyle = 'none';
+    
+    hold on
+    bar(2,meanStim, 'FaceColor',[0 .0 0])
+    er = errorbar(2,meanStim,semStim, semStim);
+    er.Color = [0 0 0];
+    er.LineStyle = 'none';
+    
+    bar(3,meanSpont_post, 'FaceColor',[.5 .5 .5])
+    er = errorbar(3,meanSpont_post,semSpont_post, semSpont_post);
+    er.Color = [0 0 0];
+    er.LineStyle = 'none';
+    
+    set(gca, 'xtick', [1 2 3]);
+    set(gca, 'xticklabel', {'Baseline' ; 'Stimulus' ; 'Post'});
+    ylabel('Firing  Rate [Hz]')
+    ylim ([0 110])
+    
+    title([titelName ' | Z-score = ' num2str(z_score_cov)])
+    
+    if doPrint == 0
+        
+        disp('Printing Plot')
+        figure(104)
+        
+        dropBoxSavePath = [saveDir saveName '-FR_Zscore'];
+        
+        %plotpos = [0 0 12 40];
+        plotpos = [0 0 12 8];
+        print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+        
+        disp('')
+        
+    end
+    
+    %%
+    
+    D.DATA.ZScore{s} = z_score_cov;
+    D.DATA.FR_Stim{s} = FR_Stim;
+    D.DATA.FR_Spont{s} = FR_Spont;
+    
     D.DATA.spkCnt_stims{s} = spkCnt_stims;
     D.DATA.perWin_stims_mean{s} = perWin_stims_mean;
     D.DATA.perWin_stims_sum{s} = perWin_stims_sum;
     D.DATA.perWin_stims_std{s} = perWin_stims_std;
+    
+    %%
     
     %%
     allSpkWinSums_raw = [];
@@ -182,8 +279,9 @@ for s = 1:nTrials
         
         
         dataToPlot_smooth =  allSpkWinSums_rot_Smooth{o};
-        dataToPlot_smooth_norm = (dataToPlot_smooth-MIN_smooth) / (MAX_smooth - MIN_smooth);
-        
+        dataToPlot_smooth_norm = (dataToPlot_smooth-MIN_smooth) / (MAX_smooth - MIN_smooth); % min max normalizization, can plot from 0 to 1
+        % https://towardsdatascience.com/everything-you-need-to-know-about-min-max-normalization-in-python-b79592732b79
+        % susceptible to outliers
         
         max(dataToPlot_smooth_norm);
         surf(dataToPlot_smooth_norm);
@@ -195,11 +293,11 @@ for s = 1:nTrials
         set(gca,'ytick',[])
         set(gca,'xtick',[])
         xlabel('Azimuth')
-        ylabel('Elevation')
+        ylabel('Elev.')
         
         colorbar
         if o ==1
-            title(saveName)
+            title(titelName)
         end
         
         
@@ -213,7 +311,8 @@ for s = 1:nTrials
         
         dropBoxSavePath = [saveDir saveName '-vertASRFs'];
         
-        plotpos = [0 0 12 40];
+        %plotpos = [0 0 12 40];
+        plotpos = [0 0 7 35];
         print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
         
         disp('')
@@ -222,8 +321,10 @@ for s = 1:nTrials
     
     %%
     
-    stimInds = [3 4];
-    spontInds = [1 2 5 6];
+    % Depends on win size
+    %stimInds = [3 4]; % 50 ms
+    %spontInds = [1 2 5 6]; % 50 ms
+    
     
     
     azPlots = n_azim;
@@ -238,10 +339,22 @@ for s = 1:nTrials
     left_button_start = .02;
     
     %%
+    
+    
+    nStimWindowsToUseForRaster = numel(stimInds);
+    
+    AllSpkSums = zeros(n_elev, n_azim);
+    
+    for oo = 1:nStimWindowsToUseForRaster
+        StimWinSpikesSums = allSpkWinSums_rot{stimInds(oo)};
+        
+        AllSpkSums = AllSpkSums + StimWinSpikesSums;
+    end
+    
+    %StimWinSpikesSums = allSpkWinSums_rot{stimInds(1)}; % first stim window
+    StimWinSpikesSums = AllSpkSums;
+    
     figH1 = figure(124);clf
-    
-    StimWinSpikesSums = allSpkWinSums_rot{stimInds(1)};
-    
     for azim = 1:n_azim
         for elev = 1:n_elev
             
@@ -251,7 +364,7 @@ for s = 1:nTrials
                 y_start = top_button_height;
             else
                 %y_start = 1-(TopBuff+row*plot_height+(row-1)*spacer_buffer);
-                y_start = (top_button_height-(elev-1)*button_height) - (elev-1)*buff_size; % minus becuse values decreasing
+                y_start = (top_button_height-(elev-1)*button_height) - (elev-1)*buff_size; % minus because values decreasing
                 %y_start = top_button_height-(elev-1)*button_height;
             end
             
@@ -276,11 +389,19 @@ for s = 1:nTrials
             set(gca, 'Xticklabel', '')
             
             if azim ==1 && elev == 13
-                xlabel('-180 az')
+                xlabel({'-180 az'; 'Behind'})
             end
             
             if azim ==33 && elev == 13
-                xlabel('+180 az')
+                xlabel({'+180 az'; 'Behind'})
+            end
+            
+            if azim == 9 && elev == 13
+                xlabel({'-90 az'; 'Left'})
+            end
+            
+            if azim == 25 && elev == 13
+                xlabel({'+90 az';'Right'})
             end
             
             if azim ==1 && elev == 1
@@ -292,7 +413,7 @@ for s = 1:nTrials
             end
             
             if azim ==17 && elev == 13
-                xlabel('0 az')
+                xlabel({'0 az' ; 'Front'})
             end
             
             if azim ==1 && elev == 7
@@ -306,7 +427,7 @@ for s = 1:nTrials
     % Create textbox
     annotation(figH1,'textbox',...
         [0.020 0.96 0.43 0.03],...
-        'String',saveName,...
+        'String',titelName,...
         'LineStyle','none',...
         'FitBoxToText','off');
     
@@ -329,7 +450,9 @@ for s = 1:nTrials
     %%
     
     D.INFO.stimInds{s} = stimInds;
-    D.INFO.spontInds{s} = spontInds;
+    D.INFO.spontInds_Pre{s} = spontInds_Pre;
+    D.INFO.spontInds_Post{s} = spontInds_Post;
+    
     
     figH = figure(200); clf
     ColorSet = varycolor(nSkpWins);
@@ -338,9 +461,11 @@ for s = 1:nTrials
     for o = 1:nSkpWins
         
         if ismember(o, stimInds)
-            col = 'b';
-        else
+            col = 'g';
+        elseif ismember(o, spontInds_Pre)
             col = 'k';
+        elseif ismember(o, spontInds_Post)
+            col = 'b';
         end
         
         
@@ -430,11 +555,15 @@ for s = 1:nTrials
     D.DATA.allSummedEL{s} = allSummedEL;
     D.DATA.allSummedAz{s} = allSummedAz;
     
+    %%
+    
+    
     
     %% EL
     
     EL_stimTrials = flipud(allSummedEL(:, stimInds));
-    EL_spontTrials = flipud(allSummedEL(:, spontInds));
+    EL_spontTrials = flipud(allSummedEL(:, spontInds_Pre)); % Only using first spont windows
+    %EL_spontTrials = flipud(allSummedEL(:, spontInds_Post)); % Only using first spont windows
     
     mean_EL_stimTrials = mean(EL_stimTrials, 2);
     std_EL_stimTrials = nanstd(EL_stimTrials');
@@ -454,7 +583,22 @@ for s = 1:nTrials
     ValsEL = [mean_EL_stimTrials mean_EL_spontTrials]';
     ValsEL_err = [sem_EL_stimTrials' sem_EL_spontTrials']';
     
-    barweb(ValsEL', ValsEL_err', 1, [], [], [], [], bone, [], []);
+    %barweb(ValsEL', ValsEL_err', 1, [], [], [], [], bone, [], []); % %crashes
+    
+    
+    xes = 1:size(ValsEL, 2);
+    bar(xes, ValsEL(1,:)');
+    hold on
+    er = errorbar(xes,ValsEL(1,:),ValsEL_err(1,:),ValsEL_err(1,:));
+    er.Color = [0 0 0];
+    er.LineStyle = 'none';
+    
+    hold on
+    bar(xes, ValsEL(2,:)');
+    er = errorbar(xes,ValsEL(2,:),ValsEL_err(2,:),ValsEL_err(2,:));
+    er.Color = [0 0 0];
+    er.LineStyle = 'none';
+    
     %barweb(barplotZ, barplotZsem, .8, [], [], [], [], bone, [], [])
     view([90 90])
     title('Elevation | Stim and Spont')
@@ -462,7 +606,8 @@ for s = 1:nTrials
     %% AZ
     
     AZ_stimTrials = allSummedAz(:, stimInds);
-    AZ_spontTrials = allSummedAz(:, spontInds);
+    %AZ_spontTrials = allSummedAz(:, spontInds);
+    AZ_spontTrials = allSummedAz(:, spontInds_Pre);
     
     mean_AZ_stimTrials = mean(AZ_stimTrials, 2);
     std_AZ_stimTrials = nanstd(AZ_stimTrials');
@@ -482,12 +627,33 @@ for s = 1:nTrials
     ValsAZ = [mean_AZ_stimTrials mean_AZ_spontTrials]';
     ValsAZ_err = [sem_AZ_stimTrials' sem_AZ_spontTrials']';
     
-    barweb(ValsAZ', ValsAZ_err', 1, [], [], [], [], bone, [], []);
+    
+    xes = 1:size(ValsAZ, 2);
+    bar(xes, ValsAZ(1,:)');
+    hold on
+    er = errorbar(xes,ValsAZ(1,:),ValsAZ_err(1,:),ValsAZ_err(1,:));
+    er.Color = [0 0 0];
+    er.LineStyle = 'none';
+    
+    hold on
+    bar(xes, ValsAZ(2,:)');
+    er = errorbar(xes,ValsAZ(2,:),ValsAZ_err(2,:),ValsAZ_err(2,:));
+    er.Color = [0 0 0];
+    er.LineStyle = 'none';
+    
+    
+    %barweb(ValsAZ', ValsAZ_err', 1, [], [], [], [], bone, [], []);
     title('Mean spike count | Stim and Spont')
     ylabel('Mean Spike Count')
     %barweb(barplotZ, barplotZsem, .8, [], [], [], [], bone, [], [])
     
     %xTICKS = get(gca, 'xticks');
+    
+    annotation(figH,'textbox',...
+        [0.020 0.96 0.43 0.03],...
+        'String',titelName,...
+        'LineStyle','none',...
+        'FitBoxToText','off');
     
     %%
     if doPrint
@@ -517,8 +683,8 @@ for s = 1:nTrials
     plot(timepoints, smoothedMean_stim, 'b-', 'linewidth', 2)
     plot(timepoints, smoothedMean_spont, 'k-', 'linewidth', 2)
     
-    errorbar(timepoints, smoothedMean_stim, sem_AZ_stimTrials, 'b-', 'linewidth', 1)
-    errorbar(timepoints, smoothedMean_spont, sem_AZ_spontTrials, 'k-', 'linewidth', 1)
+    % errorbar(timepoints, smoothedMean_stim, sem_AZ_stimTrials, 'b-', 'linewidth', 1)
+    % errorbar(timepoints, smoothedMean_spont, sem_AZ_spontTrials, 'k-', 'linewidth', 1)
     
     
     [pks,locs,w,p] = findpeaks(smoothedMean_stim, 'MinPeakProminence',1);
@@ -588,7 +754,7 @@ for s = 1:nTrials
     legend('boxoff')
     %ylim([0 30])
     
-    title([ saveName ' | Peak Azimuth'])
+    title([ titelName ' | Peak Azimuth'])
     
     if doPrint
         disp('Printing Plot')
@@ -609,7 +775,7 @@ for s = 1:nTrials
     hold on
     
     plot(D.DATA.maxLocStim_AZ(s), D.DATA.maxWidthStim_AZ(s), 'b*')
-    plot(D.DATA.maxLocSpont_AZ(s), D.DATA.maxWidthSpont_AZ(s), 'ko')
+    % plot(D.DATA.maxLocSpont_AZ(s), D.DATA.maxWidthSpont_AZ(s), 'ko')
     title('Azimuth')
     ylabel('Width')
     
@@ -630,8 +796,8 @@ for s = 1:nTrials
     plot(timepoints, smoothedMean_stim, 'b-', 'linewidth', 2)
     plot(timepoints, smoothedMean_spont, 'k-', 'linewidth', 2)
     
-    errorbar(timepoints, smoothedMean_stim, mean_EL_stimTrials, 'b-', 'linewidth', 1)
-    errorbar(timepoints, smoothedMean_spont, mean_EL_spontTrials, 'k-', 'linewidth', 1)
+    %   errorbar(timepoints, smoothedMean_stim, mean_EL_stimTrials, 'b-', 'linewidth', 1)
+    %   errorbar(timepoints, smoothedMean_spont, mean_EL_spontTrials, 'k-', 'linewidth', 1)
     
     
     [pks,locs,w,p] = findpeaks(smoothedMean_stim, 'MinPeakProminence',1);
@@ -703,7 +869,7 @@ for s = 1:nTrials
     legend('boxoff')
     %    ylim([0 30])
     
-    title([ saveName ' | Peak Elevation'])
+    title([ titelName ' | Peak Elevation'])
     
     if doPrint
         disp('Printing Plot')
@@ -723,7 +889,7 @@ for s = 1:nTrials
     subplot(2, 1, 2)
     hold on
     plot(D.DATA.maxLocStim_EL(s), D.DATA.maxWidthStim_EL(s), 'b*')
-    plot(D.DATA.maxLocSpont_EL(s), D.DATA.maxWidthSpont_EL(s), 'ko')
+    % plot(D.DATA.maxLocSpont_EL(s), D.DATA.maxWidthSpont_EL(s), 'ko')
     title('Elevation')
     ylabel('Width')
     
@@ -735,8 +901,8 @@ for s = 1:nTrials
     
     
     %% D Prime calculation
-    AzContra = [1:16]; % 33 total, 17 is 0;
-    AzIpsi = [18:33]; % 33 total, 17 is 0;
+    AzContra = [1:16]; % 33 total, 17 is 0; Back to front left
+    AzIpsi = [18:33]; % 33 total, 17 is 0; front right to Back
     ELTop = [1:6]; % 13 total, 7 is 0;
     ELDown = [7:13]; % 13 total, 7 is 0;
     
@@ -759,6 +925,8 @@ for s = 1:nTrials
     
     D_Az_Stim = 2* (AZ_Stim_inds_contra_mean - AZ_Stim_inds_ispi_mean) / sqrt(AZ_Stim_inds_contra_std^2 + AZ_Stim_inds_ispi_std^2);
     
+    pooled_D_Az_Stim(s) =  D_Az_Stim;
+    
     % During Spont Trials
     AZ_Spont_inds_contra = AZ_spontTrials(AzContra,:);
     AZ_Spont_inds_ispi = AZ_spontTrials(AzIpsi,:);
@@ -771,18 +939,32 @@ for s = 1:nTrials
     
     D_Az_Spont = 2* (AZ_Spont_inds_contra_mean - AZ_Spont_inds_ispi_mean) / sqrt(AZ_Spont_inds_contra_std^2 + AZ_Spont_inds_ispi_std^2);
     
+    pooled_D_Az_Spont(s) =  D_Az_Spont;
+    
     % Pooled Trials
-    AZ_All_inds_contra = allSummedAz(AzContra,:);
-    AZ_All_inds_ispi = allSummedAz(AzIpsi,:);
+    %     AZ_All_inds_contra = allSummedAz(AzContra,:);
+    %     AZ_All_inds_ispi = allSummedAz(AzIpsi,:);
+    %
+    %     AZ_All_inds_contra_mean = nanmean(nanmean(AZ_All_inds_contra));
+    %     AZ_All_inds_ispi_mean = nanmean(nanmean(AZ_All_inds_ispi));
+    %
+    %     AZ_All_inds_contra_std = nanstd(nanstd(AZ_All_inds_contra));
+    %     AZ_All_inds_ispi_std = nanstd(nanstd(AZ_All_inds_ispi));
+    %
+    %     D_Az_All = 2* (AZ_All_inds_contra_mean - AZ_All_inds_ispi_mean) / sqrt(AZ_All_inds_contra_std^2 + AZ_All_inds_ispi_std^2);
     
-    AZ_All_inds_contra_mean = nanmean(nanmean(AZ_All_inds_contra));
-    AZ_All_inds_ispi_mean = nanmean(nanmean(AZ_All_inds_ispi));
+    AZ_All_stim = AZ_stimTrials;
+    AZ_All_spont = AZ_spontTrials;
     
-    AZ_All_inds_contra_std = nanstd(nanstd(AZ_All_inds_contra));
-    AZ_All_inds_ispi_std = nanstd(nanstd(AZ_All_inds_ispi));
+    AZ_All_inds_stim_mean = nanmean(nanmean(AZ_All_stim));
+    AZ_All_inds_spont_mean = nanmean(nanmean(AZ_All_spont));
     
-    D_Az_All = 2* (AZ_All_inds_contra_mean - AZ_All_inds_ispi_mean) / sqrt(AZ_All_inds_contra_std^2 + AZ_All_inds_ispi_std^2);
+    AZ_All_inds_stim_std = nanstd(nanstd(AZ_All_stim));
+    AZ_All_inds_spont_std = nanstd(nanstd(AZ_All_spont));
     
+    D_Az_All = 2* (AZ_All_inds_stim_mean - AZ_All_inds_spont_mean) / sqrt(AZ_All_inds_stim_std^2 + AZ_All_inds_spont_std^2);
+    
+    pooled_D_Az_All(s) =  D_Az_All;
     %% Elevation
     
     % During Stim Trials
@@ -814,22 +996,33 @@ for s = 1:nTrials
     pooled_D_EL_Spont(s) =  D_EL_Spont;
     
     % Pooled Trials
-    EL_All_inds_contra = allSummedAz(ELTop,:);
-    EL_All_inds_ispi = allSummedAz(ELDown,:);
+    %     EL_All_inds_contra = allSummedAz(ELTop,:);
+    %     EL_All_inds_ispi = allSummedAz(ELDown,:);
+    %
+    %     EL_All_inds_contra_mean = nanmean(nanmean(EL_All_inds_contra));
+    %     EL_All_inds_ispi_mean = nanmean(nanmean(EL_All_inds_ispi));
+    %
+    %     EL_All_inds_contra_std = nanstd(nanstd(EL_All_inds_contra));
+    %     EL_All_inds_ispi_std = nanstd(nanstd(EL_All_inds_ispi));
+    %
+    %     D_EL_All = 2* (EL_All_inds_contra_mean - EL_All_inds_ispi_mean) / sqrt(EL_All_inds_contra_std^2 + EL_All_inds_ispi_std^2);
+    %
+    %     pooled_D_EL_All(s) =  D_EL_All;
     
-    EL_All_inds_contra_mean = nanmean(nanmean(EL_All_inds_contra));
-    EL_All_inds_ispi_mean = nanmean(nanmean(EL_All_inds_ispi));
     
-    EL_All_inds_contra_std = nanstd(nanstd(EL_All_inds_contra));
-    EL_All_inds_ispi_std = nanstd(nanstd(EL_All_inds_ispi));
+    EL_All_stim = EL_stimTrials;
+    EL_All_spont = EL_spontTrials;
     
-    D_EL_All = 2* (EL_All_inds_contra_mean - EL_All_inds_ispi_mean) / sqrt(EL_All_inds_contra_std^2 + EL_All_inds_ispi_std^2);
+    EL_All_inds_stim_mean = nanmean(nanmean(EL_All_stim));
+    EL_All_inds_spont_mean = nanmean(nanmean(EL_All_spont));
+    
+    EL_All_inds_stim_std = nanstd(nanstd(EL_All_stim));
+    EL_All_inds_spont_std = nanstd(nanstd(EL_All_spont));
+    
+    D_EL_All = 2* (EL_All_inds_stim_mean - EL_All_inds_spont_mean) / sqrt(EL_All_inds_stim_std^2 + EL_All_inds_spont_std^2);
     
     pooled_D_EL_All(s) =  D_EL_All;
     
-    D.DATA.pooled_D_EL_Stim{s} = pooled_D_EL_Stim;
-    D.DATA.pooled_D_EL_Spont{s} = pooled_D_EL_Spont;
-    D.DATA.pooled_D_EL_All{s} = pooled_D_EL_All;
     
     %%
     figure(120);
@@ -850,32 +1043,49 @@ for s = 1:nTrials
     disp('')
 end
 
+D.DATA.pooled_D_AZ_Stim = pooled_D_Az_Stim;
+D.DATA.pooled_D_AZ_Spont = pooled_D_Az_Spont;
+D.DATA.pooled_D_AZ_All = pooled_D_Az_All;
+
+D.DATA.pooled_D_EL_Stim = pooled_D_EL_Stim;
+D.DATA.pooled_D_EL_Spont = pooled_D_EL_Spont;
+D.DATA.pooled_D_EL_All = pooled_D_EL_All;
 
 disp('')
 
+%%
 figure(120);
 
 subplot(3, 1, 1)
-ylim([-20 20])
-xlim([-20 20])
-title('Stim D-Prime')
+xlim([-30 30])
+ylim([-10 10])
+hold on
+line([0 0], [-10 10], 'color', 'k')
+line([-30 30], [0 0], 'color', 'k')
+title('Population: Stim D-Prime | AZ: Contra vs Ipsi (Left vs Right)')
 
 subplot(3, 1, 2)
-ylim([-20 20])
-xlim([-20 20])
-title('Spont D-Prime')
+xlim([-30 30])
+ylim([-10 10])
+hold on
+line([0 0], [-10 10], 'color', 'k')
+line([-30 30], [0 0], 'color', 'k')
+title('Population: Spont D-Prime | AZ: Contra vs Ipsi (Left vs Right)')
 
 subplot(3, 1, 3)
-ylim([-20 20])
-xlim([-20 20])
-title('Pooled D-Prime')
+xlim([-300 300])
+ylim([-450 450])
+title('Pooled D-Prime | Stim vs Spont')
+hold on
+line([0 0], [-450 450], 'color', 'k')
+line([-300 300], [0 0], 'color', 'k')
 
 %%
 if doPrint
     disp('Printing Plot')
-    set(0, 'CurrentFigure', figH)
+    figure(120);
     
-    dropBoxSavePath = [saveDir saveName '-SummaryDPrime'];
+    dropBoxSavePath = [saveDir '-SummaryDPrime'];
     
     plotpos = [0 0 40 20];
     print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
@@ -884,7 +1094,7 @@ if doPrint
 end
 
 %%
-figH = figure(294);
+figure(294);
 
 subplot(2, 1, 1)
 xlim([1 22])
@@ -898,9 +1108,9 @@ set(gca,'XTickLabel',{'67.5';'';'33.75';'';'0';'';'-33.75';'';'-67.5';});
 
 if doPrint
     disp('Printing Plot')
-    set(0, 'CurrentFigure', figH)
+    figure(294);
     
-    dropBoxSavePath = [saveDir saveName '-SummaryMaxAZEL'];
+    dropBoxSavePath = [saveDir '-SummaryMaxAZEL'];
     
     plotpos = [0 0 40 20];
     print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);

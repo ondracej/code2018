@@ -49,7 +49,7 @@ classdef chicken_OT_analysis_OBJ < handle
                     addpath(genpath('/home/janie/Dropbox/codetocopy/janieAnalysis_ChickenOT/'));
                     addpath(genpath('/home/janie/Dropbox/codetocopy/UMS2K-master/'));
                     
-                    OT_Data_Path = '/media/janie/Data64GB/OTData/OT/Results/';
+                    OT_Data_Path = '/media/dlc/Data8TB/TUM/OT/OTProject/OTData/Results/';
                     
                     
                 case 'PLUTO'
@@ -60,7 +60,7 @@ classdef chicken_OT_analysis_OBJ < handle
                     addpath(genpath('/home/dlc/code/GitHub/code2018/OT_Analysis/'));
                     addpath(genpath('/home/dlc/code/GitHub/UMS2K-master/'));
                     
-                    OT_Data_Path = '/media/dlc/Data8TB/TUM/OT/OTData/Results/';
+                    OT_Data_Path = '/media/dlc/Data8TB/TUM/OT/OTProject/OTData/Results/';
                     
             end
             
