@@ -1,12 +1,12 @@
 function [] = plotMLDNeurons()
 dbstop if error
 
-figDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/';
+figDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/ForPaper/';
 
 ot18 = [2772; 2308; 1819; 2020; 2362; 2706; 2838; 2613; 2438; 2577; 2888; 3221; 3206];
 ot17 = [2438; 2577; 2888; 3221; 3206; 2771; 3377; 3377];
-ot16 = [3227; 3324; 3545; 3273; 3575];
-ot15 = [2766; 3073; 3334; 2251; 2319];
+ot16 = [3227; 3545; 3575];
+ot15 = [2766; 3073; 3334; 2251];
 ot14 = [2743; 2807; 2479; 3086];
 ot13 = [2976; 2663; 2163; 2726];
 ot12 = [2086; 2515; 2576; 2969];
@@ -50,7 +50,7 @@ end
 
 set(gca, 'YDir','reverse')
 
-xlim([-50 50])
+xlim([-30 30])
 ylim([1500 4000])
 set(gca,'xtick',[])
 

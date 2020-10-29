@@ -125,7 +125,7 @@ for s = 1:nTrials
             
             %spkCntsAllStim = sum(spkWinsOverReps(:,stimInds), 2);
             
-            spkCntsAllStim = [spkCntsAllStim; sum(spkWinsOverReps(:,stimInds), 2)];
+            spkCntsAllStim = [spkCntsAllStim; sum(spkWinsOverReps(:,stimInds), 2)]; % sum of spikes in the 100 ms window
             spkCntsAllSpont = [spkCntsAllSpont; sum(spkWinsOverReps(:,spontInds_Pre), 2)];
             spkCntsAllSpont_post = [spkCntsAllSpont_post; sum(spkWinsOverReps(:,spontInds_Post), 2)];
             
@@ -188,7 +188,7 @@ for s = 1:nTrials
     
     title([titelName ' | Z-score = ' num2str(z_score_cov)])
     
-    if doPrint == 0
+    if doPrint == 1
         
         disp('Printing Plot')
         figure(104)
@@ -208,6 +208,8 @@ for s = 1:nTrials
     D.DATA.ZScore{s} = z_score_cov;
     D.DATA.FR_Stim{s} = FR_Stim;
     D.DATA.FR_Spont{s} = FR_Spont;
+    D.DATA.FR_Spont_post{s} = FR_Spont_post;
+   
     
     D.DATA.spkCnt_stims{s} = spkCnt_stims;
     D.DATA.perWin_stims_mean{s} = perWin_stims_mean;
@@ -901,8 +903,8 @@ for s = 1:nTrials
     
     
     %% D Prime calculation
-    AzContra = [1:16]; % 33 total, 17 is 0; Back to front left
-    AzIpsi = [18:33]; % 33 total, 17 is 0; front right to Back
+    AzContra = [5:13]; % -90 +/- up to 45 / 135
+    AzIpsi = [21:29]; % % +90 +/- up to 45 / 135
     ELTop = [1:6]; % 13 total, 7 is 0;
     ELDown = [7:13]; % 13 total, 7 is 0;
     
