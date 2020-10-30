@@ -65,6 +65,7 @@ PostStimStartTime_samp = PostStimStartTime_s* SamplingRate;
 
 TimeWindow_ms = 20;
 TimeWindow_samp =TimeWindow_ms /1000*SamplingRate;
+
 %%
 
 stimNames = C_OBJ.S_SPKS.SORT.allSpksStimNames;
@@ -76,6 +77,90 @@ cnnt = 1;
 ALL_LStimWins = [];
 ALL_RStimWins = [];
 
+smoothWin_ms = 1;
+ smoothWin_samps = round(smoothWin_ms/1000*SamplingRate);
+ 
+ knt = 1;
+ maxL = []; minL = [];
+ maxR = []; minR = [];
+ allLStims = [];
+ allRStims = [];
+ for j = 1:nRows
+     for k = 1:nCols
+         
+         thisSigName = stimNames{j, k};
+         
+         [thisSigData,Fs] = audioread([SignalDir thisSigName '.wav']);
+         
+         thisSigData_L = thisSigData(:, 1);
+         thisSigData_R = thisSigData(:, 2);
+         
+         allLStims(knt,:) = thisSigData_L;
+         allRStims(knt,:) = thisSigData_R;
+         
+         
+         knt = knt+1;
+     end
+ end
+ 
+ 
+ %%
+ 
+ maxL= max(max(allLStims));
+ minL= min(min(allLStims));
+ 
+ maxR= max(max(allRStims));
+ minR = min(min(allRStims));
+   
+ cnt = 1;
+ AllnormL= [];
+ AllnormR = [];
+ allNormsL = [];
+ allNormsR = [];
+ for j = 1:nRows
+     for k = 1:nCols
+         
+         thisSigName = stimNames{j, k};
+         
+         [thisSigData,Fs] = audioread([SignalDir thisSigName '.wav']);
+         
+         thisSigData_L = thisSigData(:, 1);
+         thisSigData_R = thisSigData(:, 2);
+         
+         normL = (meanSubL - minL) / (maxL - minL);
+         normR = (meanSubR - minR) / (maxR - minR);
+         
+         
+         %figure; plot(normL); hold on; plot(normR);
+         
+         meanSubL = normL - mean(normL);
+         meanSubR = normR - mean(normR);
+         
+         %figure; plot(meanSubL); hold on; plot(meanSubR);
+         
+         
+         AllnormL{j, k} = meanSubL;
+         AllnormR{j, k} = meanSubR;
+         
+         
+         allNormsL(cnt,:) =  meanSubL;
+         allNormsR(cnt,:) =  meanSubR;
+         cnt =cnt +1;
+         
+     end
+ end
+ 
+ 
+ meanL = mean(allNormsL);
+ meanR = mean(allNormsR);
+ 
+ meanLL = meanL - mean(meanL);
+ meanRR = meanR - mean(meanR);
+ 
+figure; plot(meanL); hold on
+plot(meanR); 
+
+
 for j = 1:nRows
     for k = 1:nCols
         
@@ -85,6 +170,16 @@ for j = 1:nRows
         
         thisSigData_L = thisSigData(:, 1);
         thisSigData_R = thisSigData(:, 2);
+        
+        thisSigData_L_norm =  (thisSigData_L - minL) / (maxL - minL); % we need to normalize because R is on average louder then L
+        thisSigData_R_norm =  (thisSigData_R - minR) / (maxR - minR);
+       
+        %%
+        [yupperL,~] = envelope(thisSigData_L_norm);
+        [yupperR,~] = envelope(thisSigData_R_norm);
+        
+        smooth_yupperL = smooth(yupperL, smoothWin_samps);
+        smooth_yupperR = smooth(yupperR, smoothWin_samps);
         
         xtimepoints =1:1:size(thisSigData, 1);
         xtimepoints_s = xtimepoints/Fs;
@@ -123,10 +218,16 @@ for j = 1:nRows
                     LStimWins(cnt,:) = thisSigData_L(roi);
                     RStimWins(cnt,:) = thisSigData_R(roi);
                     
+                    LStimWins_Env(cnt,:) = smooth_yupperL(roi);
+                    RStimWins_Env(cnt,:) = smooth_yupperR(roi);
+                    
                     cnt = cnt +1;
                     
                     ALL_LStimWins(cnnt,:) = thisSigData_L(roi);
                     ALL_RStimWins(cnnt,:) = thisSigData_R(roi);
+                    
+                    All_LStimWins_Env(cnnt,:) = smooth_yupperL(roi);
+                    All_RStimWins_Env(cnnt,:) = smooth_yupperR(roi);
                     
                     cnnt = cnnt +1;
                 end
@@ -135,15 +236,23 @@ for j = 1:nRows
         allWins_L{j, k} = LStimWins;
         allWins_R{j, k} = RStimWins;
         
+        allWins_L_env{j, k} = LStimWins_Env;
+        allWins_R_env{j, k} = RStimWins_Env;
     end
     
+    Lmeans = ALL_LStimWins;
     
     
 end
 disp('')
 
+%dB = 20 * log10(amplitude)
 
 if ~isempty (ALL_LStimWins)
+    
+    %% Envs
+    
+    
     
     %% Raw data
     
@@ -151,6 +260,11 @@ if ~isempty (ALL_LStimWins)
     RStimWins_mean = mean(ALL_RStimWins, 1);
     timepoints_samp = 1:1:numel(LStimWins_mean);
     timepoints_ms = timepoints_samp/Fs*1000;
+    
+    LStimWins_meanEnv = mean(All_LStimWins_Env, 1);
+    RStimWins_meanEnv = mean(All_RStimWins_Env, 1);
+    
+  
     
     figure (103); clf
     subplot(3, 2, 1)
@@ -184,9 +298,13 @@ if ~isempty (ALL_LStimWins)
             %RawData = RStimWins_mean;
             RawData = LStimWins_mean;
             titleTxt = ['Left ' Stim ' STA - Wavelet'];
+            envData1 = LStimWins_meanEnv;
+            envData2 = RStimWins_meanEnv;
         elseif z== 2
             RawData = RStimWins_mean;
             titleTxt = ['Right ' Stim ' STA - Wavelet'];
+            envData1 = RStimWins_meanEnv;
+            envData2 = LStimWins_meanEnv;
         end
         
         
@@ -217,14 +335,21 @@ if ~isempty (ALL_LStimWins)
         
         caxis(css);
         
-        subplot(3, 2, z+4); cla
+        subplot(3, 2, z+4);
+        plot(timepoints_ms, envData1, 'k');
+        hold on
+        plot(timepoints_ms, envData2, 'color', [.5 .5 .5]);
+        axis tight
+        %ylim([0.4 0.55]) 
+        
         
         [pxx,fF,pxxc] = pmtm(RawData,2,length(RawData),Fs,'ConfidenceLevel',0.95);
         
+        %{
         plot(fF,10*log10(pxx))
         hold on
         plot(fF,10*log10(pxxc),'-', 'color', [.5 .5 .5])
-        %xlim([85 175])
+        
         xlabel('kHz')
         ylabel('dB')
         title('Multitaper PSD Estimate with 95%-Confidence Bounds')
@@ -233,6 +358,8 @@ if ~isempty (ALL_LStimWins)
         set(gca, 'xtick', 0:1000:6000)
         
         set(gca, 'xticklabel', {'0', '1', '2', '3', '4', '5', '6'})
+        %}
+        
         %     t = 0:1/fs:2-1/fs;
         %     x = cos(2*pi*100*t)+randn(size(t));
         %     [pxx,f] = pmtm(RawData,3,length(RawData),Fs);

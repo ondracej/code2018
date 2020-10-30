@@ -14,25 +14,25 @@ ExpInds = [3 8 10 12 13 16 17 19 21 23 24 25 26 27 28 29 31 32 33 34 36 37 38 39
 %AllExpInds = [3 8 10 12 13 16 17 19 21 22 23 24 25 26 27 28 29 31 32 33 34 36 37 38 39 40 41 42 43 44 45 46 48 49 52 53 56 58 ]; %HRTF, 12 16 17 21 37 42 43 are inhibited by sound
 
 %nInds = numel(AllExpInds);
-WNRasterInd = [ 10  28 42 23 33 27 29  25 44 34  40 39 31  3   17 43 21  ]; %WN, 2, 4 12 16 17 20 21 37 42 43 are inhibited by sound
-WNRasterInd = fliplr(WNRasterInd);
+%WNRasterInd = [ 10  28 42 23 33 27 29  25 44 34  40 39 31  3   17 43 21  ]; %WN, 2, 4 12 16 17 20 21 37 42 43 are inhibited by sound
+%WNRasterInd = fliplr(WNRasterInd);
 
 %HRTFExpInds = [27 40 3 39 31]; %Stims
 %HRTFExpInds = [23 29 28 36 10]; %Onset
 %HRTFExpInds = [28 16 17 42 43 ]; %Other
 
-nInds = numel(WNRasterInd);
+nInds = numel(ExpInds);
 figure(406); clf
 for j = 1:nInds
     
-    thisInd = WNRasterInd(j);
+    thisInd = ExpInds(j);
     thisInd
    
     experiment = exps(thisInd);
     recSession = recs(thisInd);
     NeuronName = ['N-' num2str(Neurons(thisInd))];
     
-    %STA_for_HRTF_Stims(experiment, recSession, NeuronName)
+    STA_for_HRTF_Stims(experiment, recSession, NeuronName)
     %EnvCalc_for_HRTF_Stims(experiment, recSession, NeuronName)
     
     %AnalysiWindowDefinition_HRTF(experiment, recSession, NeuronName)
@@ -40,7 +40,7 @@ for j = 1:nInds
     
     %STRF_preprocessing_OT(experiment, recSession, NeuronName)
     
-    RastersForAmplitudeEnvelopHRTF(experiment, recSession, NeuronName, j)
+    %RastersForAmplitudeEnvelopHRTF(experiment, recSession, NeuronName, j)
     
 end
 %%
