@@ -23,6 +23,7 @@ ExpInds = [3 8 10 12 13 16 17 19 21 23 24 25 26 27 28 29 31 32 33 34 36 37 38 39
 
 nInds = numel(ExpInds);
 figure(406); clf
+disp('Running...');
 for j = 1:nInds
     
     thisInd = ExpInds(j);
@@ -43,6 +44,8 @@ for j = 1:nInds
     %RastersForAmplitudeEnvelopHRTF(experiment, recSession, NeuronName, j)
     
 end
+
+disp('Finished...');
 %%
 
 %% WN

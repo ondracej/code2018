@@ -1,9 +1,13 @@
 function [] = STA_for_HRTF_Stims(experiment, recSession, NeuronName)
 dbstop if error
 
-%NeuronName = 'N-28';
-%experiment = 10; %efc
-%recSession = 1; %sFigSaveNamec
+if nargin < 3
+    
+    NeuronName = 'N-28';
+    experiment = 10; %efc
+    recSession = 1; %sFigSaveNamec
+    
+end
 
 C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 
@@ -14,8 +18,6 @@ tf = find(strcmpi(allStims,'HRTF'));
 audSelInd = tf(1); % SpikesThis is the index, spikesnot the stim number!!!
 Stim = C_OBJ.RS_INFO.StimProtocol_name{audSelInd};
 disp(Stim);
-
-
 
 %audSelInd = 2; % SpikesThis is the index, spikesnot the stim number!!!
 
@@ -29,7 +31,6 @@ disp(selection)
 
 %% RE Loading Object 0 ONLY USE IF analyzed before!!!
 %%
-
 
 disp('Loading Saved Object...')
 
@@ -45,8 +46,6 @@ sigFormat = '*.wav';
 
 
 sigNames = dir(fullfile(SignalDir,sigFormat));
-%imageNames(1) = [];
-%imageNames(1) = [];
 sigNames = {sigNames.name}';
 
 nSigs = numel(sigNames);
@@ -78,89 +77,12 @@ ALL_LStimWins = [];
 ALL_RStimWins = [];
 
 smoothWin_ms = 1;
- smoothWin_samps = round(smoothWin_ms/1000*SamplingRate);
- 
- knt = 1;
- maxL = []; minL = [];
- maxR = []; minR = [];
- allLStims = [];
- allRStims = [];
- for j = 1:nRows
-     for k = 1:nCols
-         
-         thisSigName = stimNames{j, k};
-         
-         [thisSigData,Fs] = audioread([SignalDir thisSigName '.wav']);
-         
-         thisSigData_L = thisSigData(:, 1);
-         thisSigData_R = thisSigData(:, 2);
-         
-         allLStims(knt,:) = thisSigData_L;
-         allRStims(knt,:) = thisSigData_R;
-         
-         
-         knt = knt+1;
-     end
- end
- 
- 
- %%
- 
- maxL= max(max(allLStims));
- minL= min(min(allLStims));
- 
- maxR= max(max(allRStims));
- minR = min(min(allRStims));
-   
- cnt = 1;
- AllnormL= [];
- AllnormR = [];
- allNormsL = [];
- allNormsR = [];
- for j = 1:nRows
-     for k = 1:nCols
-         
-         thisSigName = stimNames{j, k};
-         
-         [thisSigData,Fs] = audioread([SignalDir thisSigName '.wav']);
-         
-         thisSigData_L = thisSigData(:, 1);
-         thisSigData_R = thisSigData(:, 2);
-         
-         normL = (meanSubL - minL) / (maxL - minL);
-         normR = (meanSubR - minR) / (maxR - minR);
-         
-         
-         %figure; plot(normL); hold on; plot(normR);
-         
-         meanSubL = normL - mean(normL);
-         meanSubR = normR - mean(normR);
-         
-         %figure; plot(meanSubL); hold on; plot(meanSubR);
-         
-         
-         AllnormL{j, k} = meanSubL;
-         AllnormR{j, k} = meanSubR;
-         
-         
-         allNormsL(cnt,:) =  meanSubL;
-         allNormsR(cnt,:) =  meanSubR;
-         cnt =cnt +1;
-         
-     end
- end
- 
- 
- meanL = mean(allNormsL);
- meanR = mean(allNormsR);
- 
- meanLL = meanL - mean(meanL);
- meanRR = meanR - mean(meanR);
- 
-figure; plot(meanL); hold on
-plot(meanR); 
+smoothWin_samps = round(smoothWin_ms/1000*SamplingRate);
 
-
+%%
+knt = 1;
+allLStims = [];
+allRStims = [];
 for j = 1:nRows
     for k = 1:nCols
         
@@ -171,20 +93,76 @@ for j = 1:nRows
         thisSigData_L = thisSigData(:, 1);
         thisSigData_R = thisSigData(:, 2);
         
-        thisSigData_L_norm =  (thisSigData_L - minL) / (maxL - minL); % we need to normalize because R is on average louder then L
-        thisSigData_R_norm =  (thisSigData_R - minR) / (maxR - minR);
-       
+        %         thisSigData_L_smooth = smooth(thisSigData_L, smoothWin_samps);
+        %         thisSigData_R_smooth = smooth(thisSigData_R, smoothWin_samps);
+        
+        AllStimsL{j, k} = thisSigData_L;
+        AllStimsR{j, k} = thisSigData_R;
+        
+        allLStims(knt,:) = thisSigData_L;
+        allRStims(knt,:) = thisSigData_R;
+        
+        knt = knt+1;
+    end
+end
+
+
+%%
+
+maxL= max(max(allLStims));
+minL= min(min(allLStims));
+
+maxR= max(max(allRStims));
+minR = min(min(allRStims));
+
+cnt = 1;
+AllnormL= [];
+AllnormR = [];
+allNormsL = [];
+allNormsR = [];
+
+for j = 1:nRows
+    for k = 1:nCols
+        
+        thisSigName = stimNames{j, k};
+        
+        thisSigData_L = AllStimsL{j, k};
+        thisSigData_R = AllStimsR{j, k};
+        
+        normL = (thisSigData_L - minL) / (maxL - minL);
+        normR = (thisSigData_R - minR) / (maxR - minR);
+  
+        AllnormL{j, k} = normL;
+        AllnormR{j, k} = normR;
+        
+        allNormsL(cnt,:) =  normL;
+        allNormsR(cnt,:) =  normR;
+        
+        cnt =cnt +1;
+        
+    end
+end
+
+for j = 1:nRows
+    for k = 1:nCols
+        
+        thisSigData_L_norm = AllnormL{j, k};
+        thisSigData_R_norm = AllnormR{j, k};
+        
+        %figure; plot(thisSigData_L_norm); hold on; plot(thisSigData_R_norm);
+        
+        thisSigData_L_norm_meanSub = thisSigData_L_norm - mean(thisSigData_L_norm); % here we mean-sbitrack to get rid of offset
+        thisSigData_R_norm_meanSub = thisSigData_R_norm - mean(thisSigData_R_norm);
+        
+        %figure; plot(thisSigData_L_norm_meanSub); hold on; plot(thisSigData_R_norm_meanSub);
         %%
-        [yupperL,~] = envelope(thisSigData_L_norm);
-        [yupperR,~] = envelope(thisSigData_R_norm);
+        [yupperL,~] = envelope(thisSigData_L_norm_meanSub);
+        [yupperR,~] = envelope(thisSigData_R_norm_meanSub);
         
-        smooth_yupperL = smooth(yupperL, smoothWin_samps);
-        smooth_yupperR = smooth(yupperR, smoothWin_samps);
+        %figure; plot(yupperL); hold on; plot(yupperR);
         
-        xtimepoints =1:1:size(thisSigData, 1);
+        xtimepoints =1:1:size(yupperL, 1);
         xtimepoints_s = xtimepoints/Fs;
-        
-        %figure; plot(xtimepoints_s, thisSigData); axis tight
         
         thisSpkResp = SpkResponses{j,k};
         
@@ -215,33 +193,26 @@ for j = 1:nRows
                     continue
                 else
                     
-                    LStimWins(cnt,:) = thisSigData_L(roi);
-                    RStimWins(cnt,:) = thisSigData_R(roi);
+                    LStimWins(cnt,:) = thisSigData_L_norm_meanSub(roi);
+                    RStimWins(cnt,:) = thisSigData_R_norm_meanSub(roi);
                     
-                    LStimWins_Env(cnt,:) = smooth_yupperL(roi);
-                    RStimWins_Env(cnt,:) = smooth_yupperR(roi);
+                    LStimWins_Env(cnt,:) = yupperL(roi);
+                    RStimWins_Env(cnt,:) = yupperR(roi);
                     
                     cnt = cnt +1;
                     
-                    ALL_LStimWins(cnnt,:) = thisSigData_L(roi);
-                    ALL_RStimWins(cnnt,:) = thisSigData_R(roi);
+                    ALL_LStimWins(cnnt,:) = thisSigData_L_norm_meanSub(roi);
+                    ALL_RStimWins(cnnt,:) = thisSigData_R_norm_meanSub(roi);
                     
-                    All_LStimWins_Env(cnnt,:) = smooth_yupperL(roi);
-                    All_RStimWins_Env(cnnt,:) = smooth_yupperR(roi);
+                    All_LStimWins_Env(cnnt,:) = yupperL(roi);
+                    All_RStimWins_Env(cnnt,:) = yupperR(roi);
                     
                     cnnt = cnnt +1;
                 end
             end
         end
-        allWins_L{j, k} = LStimWins;
-        allWins_R{j, k} = RStimWins;
-        
-        allWins_L_env{j, k} = LStimWins_Env;
-        allWins_R_env{j, k} = RStimWins_Env;
+       
     end
-    
-    Lmeans = ALL_LStimWins;
-    
     
 end
 disp('')
@@ -256,7 +227,7 @@ if ~isempty (ALL_LStimWins)
     
     %% Raw data
     
-    LStimWins_mean = mean(ALL_LStimWins, 1);
+    LStimWins_mean = mean(ALL_LStimWins, 1); % this is 
     RStimWins_mean = mean(ALL_RStimWins, 1);
     timepoints_samp = 1:1:numel(LStimWins_mean);
     timepoints_ms = timepoints_samp/Fs*1000;
@@ -264,12 +235,12 @@ if ~isempty (ALL_LStimWins)
     LStimWins_meanEnv = mean(All_LStimWins_Env, 1);
     RStimWins_meanEnv = mean(All_RStimWins_Env, 1);
     
-  
+    
     
     figure (103); clf
     subplot(3, 2, 1)
     plot(timepoints_ms, LStimWins_mean); axis tight
-    ylim([-.2 .2])
+    ylim([-.05 .05])
     title([NeuronName ': Left ' Stim ' STA'])
     
     %xticks = 0:2:40;
@@ -284,7 +255,7 @@ if ~isempty (ALL_LStimWins)
     
     subplot(3, 2, 2)
     plot(timepoints_ms, RStimWins_mean); axis tight
-    ylim([-.2 .2])
+    ylim([-.05 .05])
     title([NeuronName ': Right ' Stim ' STA'])
     set(gca, 'xtick', xticks)
     set(gca, 'xticklabel', xtickabs )
@@ -324,6 +295,7 @@ if ~isempty (ALL_LStimWins)
         
         
         colorbar 'off'
+        %colorbar('location', 'northoutside')
         xlim([0 20])
         set(gca, 'xtick', xticks)
         set(gca, 'xticklabel', xtickabs )
@@ -340,7 +312,7 @@ if ~isempty (ALL_LStimWins)
         hold on
         plot(timepoints_ms, envData2, 'color', [.5 .5 .5]);
         axis tight
-        %ylim([0.4 0.55]) 
+        ylim([.1 .15])
         
         
         [pxx,fF,pxxc] = pmtm(RawData,2,length(RawData),Fs,'ConfidenceLevel',0.95);
@@ -384,9 +356,15 @@ if ~isempty (ALL_LStimWins)
         STA.fF{z} = fF;
         STA.pxxc{z} = pxxc;
         
+        STA.Env_mean{z} = envData1;
+        
         
     end
     
+    STA.ALL_LStimWins = ALL_LStimWins;
+    STA.All_LStimWins_Env = All_LStimWins_Env;
+    STA.ALL_RStimWins = ALL_RStimWins;
+    STA.All_RStimWins_Env = All_RStimWins_Env;
     
     %%
     saveName = [FigSaveDir NeuronName '-STA-' Stim];
