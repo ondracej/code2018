@@ -19,6 +19,7 @@ plotRawDataExample
 plotMLDNeurons
 plotSpectrogramHRTFData
 makePlotHRTFEnvs
+calcFRZScores_WN
 
 
 %% Population analaysis

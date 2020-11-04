@@ -17,12 +17,10 @@ audSelInd = tf(1); % SpikesThis is the index, spikesnot the stim number!!!
 Stim = C_OBJ.RS_INFO.StimProtocol_name{audSelInd};
 disp(Stim);
 
-
-
 %audSelInd = 2; % SpikesThis is the index, spikesnot the stim number!!!
 
 FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/EnvAnalysis-HRTF/MLD/';
-addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
+
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
 
@@ -51,7 +49,6 @@ sigNames = dir(fullfile(SignalDir,sigFormat));
 %imageNames(1) = [];
 sigNames = {sigNames.name}';
 
-nSigs = numel(sigNames);
 
 %% Settings
 
@@ -71,28 +68,92 @@ SpkResponses = C_OBJ.S_SPKS.SORT.allSpksMatrix;
 
 nRows = size(stimNames, 1);
 nCols = size(stimNames, 2);
-cnnt = 1;
 
-smoothWin_ms = 2;
-
+smoothWin_ms = 1;
 cnnt = 1;
 
 figure(406); clf
+
+
+knt = 1;
+allLStims = [];
+allRStims = [];
+for j = 1:nRows
+    for k = 1:nCols
+        
+        thisSigName = stimNames{j, k};
+        
+        [thisSigData,Fs] = audioread([SignalDir thisSigName '.wav']);
+        
+        thisSigData_L = thisSigData(:, 1);
+        thisSigData_R = thisSigData(:, 2);
+        
+        %         thisSigData_L_smooth = smooth(thisSigData_L, smoothWin_samps);
+        %         thisSigData_R_smooth = smooth(thisSigData_R, smoothWin_samps);
+        
+        AllStimsL{j, k} = thisSigData_L;
+        AllStimsR{j, k} = thisSigData_R;
+        
+        allLStims(knt,:) = thisSigData_L;
+        allRStims(knt,:) = thisSigData_R;
+        
+        knt = knt+1;
+    end
+end
+
+
+%%
+
+maxL= max(max(allLStims));
+minL= min(min(allLStims));
+
+maxR= max(max(allRStims));
+minR = min(min(allRStims));
+
+cnt = 1;
+AllnormL= [];
+AllnormR = [];
+allNormsL = [];
+allNormsR = [];
 
 for j = 1:nRows
     for k = 1:nCols
         
         thisSigName = stimNames{j, k};
         
-        [thisSigData,Fs] = audioread([SignalDir thisSigName '.wav']); % for some reason, the HRTF signal is a bit longer than the 100 ms stim period
+        thisSigData_L = AllStimsL{j, k};
+        thisSigData_R = AllStimsR{j, k};
         
-        cutSigData = thisSigData(1: StimStartTime_samp,:);
+        normL = (thisSigData_L - minL) / (maxL - minL);
+        normR = (thisSigData_R - minR) / (maxR - minR);
+  
+        AllnormL{j, k} = normL;
+        AllnormR{j, k} = normR;
         
-        smoothWin_samps = round(smoothWin_ms/1000*Fs);
+        allNormsL(cnt,:) =  normL;
+        allNormsR(cnt,:) =  normR;
         
+        cnt =cnt +1;
         
-        thisSigData_L = cutSigData(:, 1);
-        thisSigData_R = cutSigData(:, 2);
+    end
+end
+
+%%
+smoothWin_samps = round(smoothWin_ms/1000*Fs);
+
+for j = 1:nRows
+    for k = 1:nCols
+        
+        thisSigName = stimNames{j, k};
+        
+      %  [thisSigData,Fs] = audioread([SignalDir thisSigName '.wav']); % for some reason, the HRTF signal is a bit longer than the 100 ms stim period
+        %cutSigData = thisSigData(1: StimStartTime_samp,:);
+        
+        thisSigData_L = AllnormL{j, k};
+        thisSigData_R = AllnormR{j, k};
+        
+        thisSigData_L = thisSigData_L(1: StimStartTime_samp,:);
+        thisSigData_R = thisSigData_R(1: StimStartTime_samp,:);
         
         [yupperL,~] = envelope(thisSigData_L);
         [yupperR,~] = envelope(thisSigData_R);
@@ -100,25 +161,33 @@ for j = 1:nRows
         smooth_yupperL = smooth(yupperL, smoothWin_samps);
         smooth_yupperR = smooth(yupperR, smoothWin_samps);
         
-        if k == 9 && j == 7
+        %smooth_yupperL = yupperL;
+        %smooth_yupperR = yupperR;
+        
+        if k == 9 && j == 7 % -90 azimuth
             
             figure(406)
-            subplot(5, 2, 1)
+            subplot(6, 2, 1)
             
-            xtimepoints =1:1:size(cutSigData, 1);
+            xtimepoints =1:1:size(smooth_yupperL, 1);
             xtimepoints_ms = xtimepoints/Fs*1000;
             
             plot(xtimepoints_ms, yupperL, 'color', [.5 .5 .5]);
+            %plot(xtimepoints_ms, yupperL-mean(yupperL), 'color', [.5 .5 .5]);
             hold on
             plot(xtimepoints_ms, smooth_yupperL, 'k', 'linewidth', 2)
-            ylim([0 1])
+            %plot(xtimepoints_ms, smooth_yupperL-mean(smooth_yupperL), 'k', 'linewidth', 2)
+            ylim([.5 1])
             title([NeuronName ': Left HRTF Signal Envelope and PSTH | smooth = ' num2str(smoothWin_ms) ' ms'])
             xlabel ('Time [ms]')
-            subplot(5, 2, 2)
+            
+            subplot(6, 2, 2)
             plot(xtimepoints_ms, yupperR, 'color', [.5 .5 .5]);
+            %plot(xtimepoints_ms, yupperR-mean(yupperR), 'color', [.5 .5 .5]);
             hold on
             plot(xtimepoints_ms, smooth_yupperR, 'k', 'linewidth', 2)
-            ylim([0 1])
+            %plot(xtimepoints_ms, smooth_yupperR-mean(smooth_yupperR), 'k', 'linewidth', 2)
+            ylim([.5 1])
             title([NeuronName ': Right HRTF Signal Envelope and PSTH | smooth = ' num2str(smoothWin_ms) ' ms'])
             xlabel ('Time [ms]')
         end
@@ -130,9 +199,7 @@ for j = 1:nRows
         
         nReps = numel(thisSpkResp);
         
-        
         thisUniqStimFR  = zeros(1,StimStartTime_samp); % we define a vector for integrated FR
-        %allSpksFR = zeros(StimStartTime_samp,1);
         
         for ss = 1:nReps
             
@@ -151,35 +218,51 @@ for j = 1:nRows
                 if relValidSpks(ind) == 0
                     continue
                 else
-                    
                     thisUniqStimFR(relValidSpks(ind)) = thisUniqStimFR(relValidSpks(ind)) +1;
-                    % allSpksFR(relValidSpks(ind)) = allSpksFR(relValidSpks(ind)) +1;
                 end
             end
             
         end
         
-        
         smooth_thisUniqStimFR = smooth(thisUniqStimFR, smoothWin_samps);
-        %plot(smooth_thisUniqStimFR)
+        %smooth_thisUniqStimFR = thisUniqStimFR;
         
         if k == 9 && j == 7 % -90 and 0 elev
             
             figure(406)
-            subplot(5, 2, 1)
+            subplot(6, 2, 3)
+            plot(xtimepoints_ms, smooth_thisUniqStimFR, 'color', [.5 .5 .5], 'linewidth', 1); % +.6 as plot offset
             
-            plot(xtimepoints_ms, smooth_thisUniqStimFR*5 +.6, 'b', 'linewidth', 1); % +.6 as plot offset
-            
-            subplot(5, 2, 2)
-            plot(xtimepoints_ms, smooth_thisUniqStimFR*5 +.6, 'b', 'linewidth', 1);
-            disp('')
+%             subplot(6, 2, 4)
+%             plot(xtimepoints_ms, smooth_thisUniqStimFR, 'b', 'linewidth', 1);
+%             disp('')
         end
         
         
+        %% Cross corrs, autocorrs
         xcov_L = xcorr(smooth_yupperL, smooth_thisUniqStimFR);
         xcov_R = xcorr(smooth_yupperR, smooth_thisUniqStimFR);
         
-        [r_L, p_L] = corrcoef(smooth_yupperL, smooth_thisUniqStimFR);
+        AutocorrSig_L = xcorr(smooth_yupperL, smooth_yupperL);
+        AutocorrSig_R = xcorr(smooth_yupperR, smooth_yupperR);
+        AutocorrSpikes= xcorr(smooth_thisUniqStimFR, smooth_thisUniqStimFR);
+        
+        allCorrsL(cnnt, :) = xcov_L;
+        allCorrsR(cnnt, :) = xcov_R;
+        
+        allAutoCorrsL(cnnt, :) = AutocorrSig_L;
+        allAutoCorrsR(cnnt, :) = AutocorrSig_R;
+        allAutoCorrsSpks(cnnt, :) = AutocorrSpikes;
+        
+        all_smooth_thisUniqStimFR(cnnt, :) = smooth_thisUniqStimFR;
+        
+        %figure; plot(AutocorrSig_L); hold on; plot(AutocorrSig_R);
+        %figure; plot(AutocorrSpikes, 'k');
+        
+        
+        %% corr coefs
+        
+        [r_L, p_L] = corrcoef(smooth_yupperL, smooth_thisUniqStimFR); % 0 lag corr coef
         [r_R, p_R] = corrcoef(smooth_yupperR, smooth_thisUniqStimFR);
         
         ccL_r(cnnt) = r_L(1 ,2);
@@ -195,6 +278,10 @@ for j = 1:nRows
         
         allCorrsR_matrix_r(j,k) = r_R(1 ,2);
         allCorrsR_matrix_p(j,k) = p_R(1 ,2);
+        
+        
+        cnnt= cnnt +1;
+        
         
         %{
         timepoints_samp = 1:1:numel(xcov_L);
@@ -216,11 +303,7 @@ for j = 1:nRows
                     set(gca, 'xticklabel', xtickabs )
         %}
         
-        allCorrsL(cnnt, :) = xcov_L;
-        allCorrsR(cnnt, :) = xcov_R;
-        
-        cnnt= cnnt +1;
-        
+  
         %         figure(300);
         %         for j = 1:15
         %
@@ -232,6 +315,11 @@ for j = 1:nRows
     end
 end
 disp('')
+subplot(6, 2, 3)
+hold on
+mean_all_smooth_thisUniqStimFR = mean(all_smooth_thisUniqStimFR);
+plot(xtimepoints_ms, mean_all_smooth_thisUniqStimFR, 'k', 'linewidth', 1); % +.6 as plot offset
+           
 
 nSigs_L = find(ccL_p <0.001);
 nSigs_R = find(ccR_p <0.001);
@@ -260,7 +348,8 @@ CCR.AllstimNames = AllstimNames;
 %title('Significant correlation between stimulus envelope and PSTH')
 %ylim([-.5 .5])
 
-subplot(5, 2, [5 6])
+%{
+subplot(6, 2, [7 8])
 boxplot([ccL_r_sig ; ccR_r_sig]', 'whisker', 0, 'symbol', 'k.', 'outliersize', 4,  'jitter', 0, 'colors', [0 0 0], 'labels', {'Left', 'Right'})
 title('Significant correlation between stimulus envelope and PSTH')
 
@@ -272,32 +361,45 @@ xes = ones(1, numel(ccL_r_sig))*2;
 %plot(xes, ccL_r_sig, 'k.', 'linestyle', 'none')
 scatter(xes, ccR_r_sig, 'k.', 'jitter','on', 'jitterAmount', 0.08);
 ylim([-.6 .6])
-
+%}
 %%
 xcorr_mean_L = mean(allCorrsL, 1);
 xcorr_mean_R = mean(allCorrsR, 1);
+
+autoCorr_mean_L = mean(allAutoCorrsL, 1);
+autoCorr_mean_R = mean(allAutoCorrsR, 1);
+
+autoCorr_mean_spks = mean(allAutoCorrsSpks, 1);
+        
 timepoints_samp = 1:1:numel(xcov_L);
 timepoints_ms = timepoints_samp/Fs*1000;
 
-
 CCL.allCorrsL = allCorrsL;
 CCL.xcorr_mean_L = xcorr_mean_L;
+CCL.autoCorr_mean_L = autoCorr_mean_L;
+CCL.allAutoCorr_L = allAutoCorrsL;
+
 CCR.allCorrsR = allCorrsR;
 CCR.xcorr_mean_R = xcorr_mean_R;
+CCR.autoCorr_mean_R = autoCorr_mean_R;
+CCR.allAutoCorr_R = allAutoCorrsR;
+
+CCL.autoCorr_mean_spks = autoCorr_mean_spks;
+CCL.allAutoCorrsSpks = allAutoCorrsSpks;
 
 
-subplot(5, 2, 3)
+subplot(6, 2, 5)
 plot(timepoints_ms, xcorr_mean_L, 'k', 'linewidth', 2)
 hold on
 plot(timepoints_ms, allCorrsL(1, :), 'color', [.5 .5 .5]);
 
 xticks = 0:50:200;
 set(gca, 'xtick', xticks)
-
+axis tight
 xlim([0 200])
-ylim([0 30])
+yss = get(gca, 'ylim');
 
-line([100 100], [0 30], 'Color' , 'k')
+line([100 100], yss, 'Color' , 'k')
 %xtickabs = {'-20', '-18', '-16', '-14', '-12', '-10', '-8', '-6', '-4', '-2', '0' '2', '4', '6', '8', '-10', '-12', '14', '16', '18', '20',};
 %xtickabs = {'-100', '-80', '-60', '-40', '-20', '0', '20', '40', '60', '80', '100'};
 xtickabs = {'-100', '-50', '0', '50','100'};
@@ -305,19 +407,69 @@ set(gca, 'xticklabel', xtickabs )
 title('Mean cross-correlation: Left stim envelope and PSTH')
 xlabel('Lag [ms]')
 
-subplot(5, 2, 4)
+subplot(6, 2, 6)
 plot(timepoints_ms, xcorr_mean_R, 'k', 'linewidth', 2)
 hold on
 plot(timepoints_ms, allCorrsR(1, :), 'color', [.5 .5 .5]);
 set(gca, 'xtick', xticks)
 
 xlim([0 200])
-ylim([0 30])
+set(gca, 'xticklabel', xtickabs )
+ylim(yss)
 
-line([100 100], [0 30], 'Color' , 'k')
+line([100 100], yss, 'Color' , 'k')
 set(gca, 'xticklabel', xtickabs )
 title('Mean cross-correlation: Right stim envelope and PSTH')
 xlabel('Lag [ms]')
+
+%% Auto corrs signals
+subplot(6, 2, 7)
+plot(timepoints_ms, autoCorr_mean_L, 'k', 'linewidth', 2)
+hold on
+plot(timepoints_ms, allAutoCorrsL(1, :), 'color', [.5 .5 .5]);
+
+axis tight
+xlim([100 150])
+xticks_10 = 100:10:150;
+set(gca, 'xtick', xticks_10)
+xtickabs_10 = {'0' '10', '20', '30', '40', '50'};
+set(gca, 'xticklabel', xtickabs_10)
+yss = get(gca, 'ylim');
+ylim(yss)
+
+
+hold on
+subplot(6, 2, 8)
+plot(timepoints_ms, autoCorr_mean_R, 'k', 'linewidth', 2)
+hold on
+plot(timepoints_ms, allAutoCorrsR(1, :), 'color', [.5 .5 .5]);
+
+axis tight
+xlim([100 150])
+xticks_10 = 100:10:150;
+set(gca, 'xtick', xticks_10)
+xtickabs_10 = {'0' '10', '20', '30', '40', '50'};
+set(gca, 'xticklabel', xtickabs_10)
+ylim(yss)
+
+
+%% spike autocorr
+
+subplot(6, 2, 4)
+plot(timepoints_ms, autoCorr_mean_spks, 'k', 'linewidth', 2)
+hold on
+plot(timepoints_ms, allAutoCorrsSpks(1,:), 'color', [.5 .5 .5], 'linewidth', 2)
+
+axis tight
+xlim([100 150])
+xticks_10 = 100:10:150;
+set(gca, 'xtick', xticks_10)
+xtickabs_10 = {'0' '10', '20', '30', '40', '50'};
+set(gca, 'xticklabel', xtickabs_10)
+yss = get(gca, 'ylim');
+ylim(yss)
+
+
 %% Across Column (Azimuth)
 
 allAz = [-180 -168.75 -157.5 -146.25 -135 -123.75 -112.5 -101.25 -90 -78.75 -67.5 -56.25 -45 -33.75 -22.5 -11.25 0 11.25 22.5 33.75 45 56.25 67.5 78.75 90 101.25 112.5 123.75 135 146.25 157.5 168.75 180];
@@ -345,24 +497,24 @@ for o = 1:33 % Diff n of azimuths
     
     xesR = ones(1, numel(sigAZ_R)) * thisAz;
     
-    subplot(5, 2, 7); 
+    subplot(6, 2, 9); 
     plot(xesL, sigAZ_L, 'k.', 'linestyle', 'none')
     %scatter(xesL, sigAZ_L, 'k.', 'jitter','on', 'jitterAmount', 0.1); %doesnt work
     hold on
     
-    subplot(5, 2, 8)
+    subplot(6, 2, 10)
     plot(xesR, sigAZ_R, 'k.', 'linestyle', 'none')
     %scatter(xesR, sigAZ_R, 'k.', 'jitter','on', 'jitterAmount', 0.05);
     hold on
 end
 
-subplot(5, 2, 7)
+subplot(6, 2, 9)
 ylim([-.6 .6])
 title('Left: Significant correlations across Azimuth')
 set(gca, 'xtick', allAz_forTicks)
 xlabel('Azimuth')
 
-subplot(5, 2, 8)
+subplot(6, 2, 10)
 ylim([-.6 .6])
 title('Right: Significant correlations across Azimuth')
 set(gca, 'xtick', allAz_forTicks)
@@ -390,32 +542,32 @@ for o = 1:13 % Diff n of azimuths
     
     xesR = ones(1, numel(sigEl_R)) * thisEl;
     
-    subplot(5, 2, 9)
+    subplot(6, 2, 11)
     plot(xesL, sigEl_L, 'k.', 'linestyle', 'none')
     %scatter(xesL, sigEl_L, 'k.', 'jitter','on', 'jitterAmount', 0.05);
     hold on
     
-    subplot(5, 2, 10)
+    subplot(6, 2, 12)
     plot(xesR, sigEl_R, 'k.', 'linestyle', 'none')
     %scatter(xesR, sigEl_R, 'k.', 'jitter','on', 'jitterAmount', 0.05);
     hold on
 end
 disp('')
 
-subplot(5, 2, 9)
+subplot(6, 2, 11)
 ylim([-.6 .6])
 xlabel('Elevation')
 title('Left: Significant Correlations across Elevation')
 set(gca, 'xtick', allEl)
 
-subplot(5, 2, 10)
+subplot(6, 2, 12)
 ylim([-.6 .6])
 title('Right: Significant Correlations across Elevation')
 xlabel('Elevation')
 set(gca, 'xtick', allEl)
 
 saveName = [FigSaveDir NeuronName '-EnvAnalysis-' Stim];
-plotpos = [0 0 25 20];
+plotpos = [0 0 30 20];
 
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 %print_in_A4(0, saveName, '-depsc', 0, plotpos);
@@ -449,4 +601,5 @@ save([saveName '-EnvData.mat'], 'CCL', 'CCR', '-v7.3')
 
 
 end
+
 

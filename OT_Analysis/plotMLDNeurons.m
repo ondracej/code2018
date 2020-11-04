@@ -3,8 +3,8 @@ dbstop if error
 
 figDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/ForPaper/';
 
-ot18 = [2772; 2308; 1819; 2020; 2362; 2706; 2838; 2613; 2438; 2577; 2888; 3221; 3206];
-ot17 = [2438; 2577; 2888; 3221; 3206; 2771; 3377; 3377];
+ot18 = [2772; 2308; 1819; 2020; 2362; 2706; 2838; 2613; 2438; 2577; 2888; 3221; 3206]; %13
+ot17 = [2438; 2577; 2888; 3221; 3206; 2771; 3377; 3377]; %
 ot16 = [3227; 3545; 3575];
 ot15 = [2766; 3073; 3334; 2251];
 ot14 = [2743; 2807; 2479; 3086];
@@ -43,7 +43,7 @@ for j = 1:8
     xes = ones(1, numel(thisData))*j;
     hold on
     thisCol = cols{j};
-    plot(xes, thisData, '.', 'color', thisCol, 'linestyle', 'none', 'MarkerSize', 8)
+    plot(xes, thisData, 'ko',  'MarkerFaceColor', 'k', 'linestyle', 'none')
     
     
 end

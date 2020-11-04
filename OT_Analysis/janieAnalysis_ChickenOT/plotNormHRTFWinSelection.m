@@ -168,9 +168,10 @@ for w = 1:numWins
     hold on
     
     plot_aSRF(dataToPlot_smooth_norm , 5, 8, cnt)
+    
     caxis(clims)
-    set(gca,'ytick',[])
-    set(gca,'xtick',[])
+    %set(gca,'ytick',[])
+    %set(gca,'xtick',[])
     
     if cnt == 1
         title('Spont: -20-0 ms')
@@ -184,7 +185,7 @@ for w = 1:numWins
     elseif cnt == 5
         title('Stim: 60-80 ms')
     elseif cnt == 6
-        title('Post: 80-100 ms')
+        title('Stim: 80-100 ms')
     elseif cnt == 7
         title('Post: 100-120 ms')
     elseif cnt == 8
@@ -221,17 +222,18 @@ end
 
 %%
 
-%%
+%%s
 if oo == nNeuronsInSet
     
     
     disp('Printing Plot')
     figure(406)
-    saveName = [FigSaveDir 'HRTF-aSRF-Stim'];
+    saveName = [FigSaveDir 'HRTF-aSRF-Stim-0'];
     
     plotpos = [0 0 50 30];
     print_in_A4(0, saveName, '-djpeg', 0, plotpos);
     print_in_A4(0, saveName, '-depsc', 0, plotpos);
+  %  print_in_A4(0, saveName, '-dsvg', 1, plotpos);
 end
 
 

@@ -564,7 +564,8 @@ for s = 1:nTrials
     %% EL
     
     EL_stimTrials = flipud(allSummedEL(:, stimInds));
-    EL_spontTrials = flipud(allSummedEL(:, spontInds_Pre)); % Only using first spont windows
+    %EL_spontTrials = flipud(allSummedEL(:, spontInds_Pre)); % Only using first spont windows
+    EL_spontTrials = flipud(allSummedEL(:, spontInds_Post)); % Only using first spont windows
     %EL_spontTrials = flipud(allSummedEL(:, spontInds_Post)); % Only using first spont windows
     
     mean_EL_stimTrials = mean(EL_stimTrials, 2);
@@ -609,7 +610,8 @@ for s = 1:nTrials
     
     AZ_stimTrials = allSummedAz(:, stimInds);
     %AZ_spontTrials = allSummedAz(:, spontInds);
-    AZ_spontTrials = allSummedAz(:, spontInds_Pre);
+    %AZ_spontTrials = allSummedAz(:, spontInds_Pre);
+    AZ_spontTrials = allSummedAz(:, spontInds_Post);
     
     mean_AZ_stimTrials = mean(AZ_stimTrials, 2);
     std_AZ_stimTrials = nanstd(AZ_stimTrials');
@@ -903,10 +905,18 @@ for s = 1:nTrials
     
     
     %% D Prime calculation
-    AzContra = [5:13]; % -90 +/- up to 45 / 135
-    AzIpsi = [21:29]; % % +90 +/- up to 45 / 135
+    AzContra = [5:13]; % -135 +/- up to -45 
+    AzIpsi = [21:29]; % % +45 +/- up to 135 
     ELTop = [1:6]; % 13 total, 7 is 0;
     ELDown = [7:13]; % 13 total, 7 is 0;
+    
+    
+    % Doesnt work for d primes
+%     AzContra = [9]; % -90 +/- up to 45 / 135
+%     AzIpsi = [25]; % % +90 +/- up to 45 / 135
+%     ELTop = [1]; % 13 total, 7 is 0;
+%     ELDown = [13]; % 13 total, 7 is 0;
+    
     
     D.INFO.AzContra{s} = AzContra;
     D.INFO.AzIpsi{s} = AzIpsi;
@@ -1122,7 +1132,7 @@ end
 
 %% Save D
 
-Data_SaveName = [saveDir '_0_AllData_Janie.mat'];
+Data_SaveName = [saveDir '_0_AllData_Janie_DPrimePost.mat'];
 save(Data_SaveName, 'D');
 
 end
