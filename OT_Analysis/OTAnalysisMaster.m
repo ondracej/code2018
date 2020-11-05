@@ -20,7 +20,7 @@ plotMLDNeurons
 plotSpectrogramHRTFData
 makePlotHRTFEnvs
 calcFRZScores_WN
-
+analyzeWN_FR_responses
 
 %% Population analaysis
 

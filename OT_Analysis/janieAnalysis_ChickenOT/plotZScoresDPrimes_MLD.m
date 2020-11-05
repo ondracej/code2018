@@ -1,6 +1,6 @@
 function [] = plotZScoresDPrimes_MLD()
 
-d = load('/media/dlc/Data8TB/TUM/OT/OTProject/MLD/MLD_AllData_Janie.mat');
+d = load('/media/dlc/Data8TB/TUM/OT/OTProject/MLD/_0_AllData_Janie_DPrimePost.mat');
 
 FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/ForPaper/';
 disp('')
@@ -53,22 +53,62 @@ ylabel('Firing  Rate [Hz]')
 ylim ([0 30])
 
 
+saveName = [FigSaveDir 'AuditoryPlots-HRTF-FR'];
+
+  plotpos = [0 0 15 12];
+print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+disp('')
+print_in_A4(0, saveName, '-depsc', 0, plotpos);
+
+disp('')
+
+
+
 %% Zscores for HRTF
 
 zscores= cell2mat(d.D.DATA.ZScore);
 xes = ones(1, numel(zscores));
+% 
+% subplot(3, 2, 2)
+% scatter(xes, zscores, 'o', 'filled', 'jitter','on', 'jitterAmount',0.1);
+% ylim([-5 11])
+% xlim([.5 1.5])
+% hold on
+% line([.5 1.5], [0,0], 'color', 'k')
+% line([.5 1.5], [.5,.5], 'color', 'k', 'linestyle', ':')
+% line([.5 1.5], [-.5,-.5], 'color', 'k', 'linestyle', ':')
+% set(gca,'xtick',[])
+% ylabel('Z-Score')
 
-subplot(3, 2, 2)
-scatter(xes, zscores, 'o', 'filled', 'jitter','on', 'jitterAmount',0.1);
-ylim([-5 11])
-xlim([.5 1.5])
-hold on
-line([.5 1.5], [0,0], 'color', 'k')
-line([.5 1.5], [.5,.5], 'color', 'k', 'linestyle', ':')
-line([.5 1.5], [-.5,-.5], 'color', 'k', 'linestyle', ':')
-set(gca,'xtick',[])
-ylabel('Z-Score')
 
+
+    jitterAmount = 0.1;
+    jitterValuesX = 2*(rand(size(zscores))-0.5)*jitterAmount;   % +
+    
+    cols = cell2mat({[0 0 0]; [.5 .5 .5]});
+    %cols = cell2mat({[0.6350, 0.0780, 0.1840]; [0.8500, 0.3250, 0.0980]; [0.9290, 0.6940, 0.1250]; [0, 0, 0]; [0.4940, 0.1840, 0.5560]});
+    
+    figure(102); clf
+    h = scatterhist(zscores,jitterValuesX, 'Kernel','on', 'Location','NorthEast',...
+        'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'Markersize', 20, 'color', cols);
+    
+    yss = ylim;
+    xss = xlim;
+    
+    hold on
+    line([.5 .5], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
+    line([-.5 -.5], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
+    
+    
+saveName = [FigSaveDir 'AuditoryPlots-HRTF-Z-score'];
+
+  plotpos = [0 0 15 12];
+print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+disp('')
+print_in_A4(0, saveName, '-depsc', 0, plotpos);
+
+disp('')
+    
 %% Dprime
 % 
 % group2 = ones(1, size(rates, 2))*2;
@@ -88,11 +128,11 @@ group1 = ones(1, size(d.D.DATA.pooled_D_AZ_Stim, 2))*1;
 group2 = ones(1, size(d.D.DATA.pooled_D_AZ_Spont, 2))*2;
 groups = [group1 group2];
 
-xes = [d.D.DATA.pooled_D_AZ_Stim d.D.DATA.pooled_D_AZ_Spont];
-yes = [d.D.DATA.pooled_D_EL_Stim d.D.DATA.pooled_D_EL_Spont];
+xes = [ d.D.DATA.pooled_D_AZ_Spont d.D.DATA.pooled_D_AZ_Stim] *-1;
+yes = [ d.D.DATA.pooled_D_EL_Spont d.D.DATA.pooled_D_EL_Stim] ;
 
 
-cols = cell2mat({[0 0 0]; [.5 .5 .5]});
+cols = cell2mat({[.5 .5 .5]; [0 0 0]});
 %cols = cell2mat({[0.6350, 0.0780, 0.1840]; [0.8500, 0.3250, 0.0980]; [0.9290, 0.6940, 0.1250]; [0, 0, 0]; [0.4940, 0.1840, 0.5560]});
 
  h = scatterhist(xes,yes,'Group',groups,'Kernel','on', 'Location','SouthEast',...
@@ -102,8 +142,26 @@ cols = cell2mat({[0 0 0]; [.5 .5 .5]});
  xss = xlim;
  
 hold on
-line([0 0], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
-line([xss(1) xss(2)], [0 0], 'color', 'k', 'linestyle', ':')
+line([0 0], [yss(1) yss(2)], 'color', 'k', 'linestyle', '-')
+line([xss(1) xss(2)], [0 0], 'color', 'k', 'linestyle', '-')
+
+line([1 1], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
+line([-1 -1], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
+line([xss(1) xss(2)], [1 1], 'color', 'k', 'linestyle', ':')
+line([xss(1) xss(2)], [-1 -1], 'color', 'k', 'linestyle', ':')
+
+
+
+
+saveName = [FigSaveDir 'AuditoryPlots-DPrime'];
+
+  plotpos = [0 0 15 12];
+print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+disp('')
+print_in_A4(0, saveName, '-depsc', 0, plotpos);
+
+disp('')
+
 
 
 
