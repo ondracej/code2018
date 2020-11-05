@@ -42,14 +42,14 @@ classdef chicken_OT_analysis_OBJ < handle
                     OT_Data_Path = '/home/janie/LRZ Sync+Share/OT_Analysis/OTAnalysis/allWNsJanie/allObjs/';
                     
                     
-                case 'DEADPOOL'
+                case 'SALAMANDER'
                     dirD = '/';
                     
-                    addpath(genpath('/home/janie/Dropbox/codetocopy/AudioSpike/'));
-                    addpath(genpath('/home/janie/Dropbox/codetocopy/janieAnalysis_ChickenOT/'));
-                    addpath(genpath('/home/janie/Dropbox/codetocopy/UMS2K-master/'));
+                    addpath(genpath('/home/janie/Documents/Code/code2018/OT_Analysis/AudioSpikeTools/'));
+                    addpath(genpath('/home/janie/Documents/Code/code2018/OT_Analysis/'));
+                    addpath(genpath('/home/janie/Documents/Code/UMS2K-master/'));
                     
-                    OT_Data_Path = '/media/dlc/Data8TB/TUM/OT/OTProject/OTData/Results/';
+                    OT_Data_Path = '/media/janie/300GBPassport/OTProject/OTData/Results/';
                     
                     
                 case 'PLUTO'

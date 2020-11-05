@@ -1,6 +1,6 @@
 function  [] = analyzeWN_FR_responses()
 
-d = load('/media/dlc/Data8TB/TUM/OT/OTProject/MLD/WN_FR-Zscores.mat');
+d = load('/media/janie/300GBPassport/OTProject/MLD/WN_FR-Zscores.mat');
 
 allZscore = d.WN.z_score_cov;
 

@@ -1,6 +1,6 @@
 function [] = plotZScoresDPrimes_MLD()
 
-d = load('/media/dlc/Data8TB/TUM/OT/OTProject/MLD/_0_AllData_Janie_DPrimePost.mat');
+d = load('/media/janie/300GBPassport/OTProject/MLD/_0_AllData_Janie_DPrimePost.mat');
 
 FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/ForPaper/';
 disp('')
@@ -68,6 +68,13 @@ disp('')
 
 zscores= cell2mat(d.D.DATA.ZScore);
 xes = ones(1, numel(zscores));
+
+posZscores = numel(find(zscores > 0.5));
+negZscores = numel(find(zscores < -0.5));
+
+posZscoresPercent = posZscores/numel(zscores)*100;
+negZscoresPercent = negZscores/numel(zscores)*100;
+
 % 
 % subplot(3, 2, 2)
 % scatter(xes, zscores, 'o', 'filled', 'jitter','on', 'jitterAmount',0.1);
