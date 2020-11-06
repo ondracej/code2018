@@ -132,9 +132,59 @@ disp('')
 %     'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'color', cols);
 
 
+test = dazStim.*dAzSpont;
+
 
 dazStim = d.D.DATA.pooled_D_AZ_Stim;
 dAzSpont = d.D.DATA.pooled_D_AZ_Spont; 
+
+posDs = find(dazStim > 2);
+negDs = find(dazStim < -2);
+indsToUseStim = [posDs negDs];
+
+posDs = find(dAzSpont > 2);
+negDs = find(dAzSpont < -2);
+otherindsTUse = [posDs negDs]; 
+
+bla = ismember(otherindsTUse, indsToUseStim);
+
+bothIndsTouse = otherindsTUse(bla);
+indsToUseStim = [indsToUseStim posDs negDs ];
+
+toPLot = [dazStim(indsToUseStim) ; dAzSpont(indsToUseStim)]';
+toPLot2 = [dazStim(bothIndsTouse) ; dAzSpont(bothIndsTouse)]';
+
+figure(104); clf
+subplot(1, 2, 1)
+plot(toPLot', 'ko', 'linestyle', '-')
+xlim([0 3])
+ylim([-5 45])
+hold on
+line([0 3], [0 0], 'linestyle', '-')
+line([0 3], [2 2], 'linestyle', ':')
+line([0 3], [-2 -2], 'linestyle', ':')
+
+figure(104);
+subplot(1, 2, 2)
+plot(toPLot2', 'ko', 'linestyle', '-')
+xlim([0 3])
+ylim([-5 45])
+hold on
+line([0 3], [0 0], 'linestyle', '-')
+line([0 3], [2 2], 'linestyle', ':')
+line([0 3], [-2 -2], 'linestyle', ':')
+
+
+
+   
+saveName = [FigSaveDir 'd-primeswitch'];
+
+  plotpos = [0 0 15 20];
+print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+disp('')
+print_in_A4(0, saveName, '-depsc', 0, plotpos);
+
+
 
 %dazStim = d.D.DATA.pooled_D_AZ_Stim;
 %delStim = d.D.DATA.pooled_D_EL_Stim;
