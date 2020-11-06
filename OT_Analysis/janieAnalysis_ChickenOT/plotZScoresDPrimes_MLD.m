@@ -1,6 +1,6 @@
 function [] = plotZScoresDPrimes_MLD()
 
-d = load('/media/janie/300GBPassport/OTProject/MLD/_0_AllData_Janie_DPrimePost.mat');
+d = load('/media/dlc/Data8TB/TUM/OT/OTProject/MLD/_0_AllData_Janie_DPrimePost.mat');
 
 FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/ForPaper/';
 disp('')
@@ -131,12 +131,45 @@ disp('')
 % h = scatterhist(xes,yes,'Group',groups,'Kernel','on', 'Location','SouthEast',...
 %     'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'color', cols);
 
+
+
+dazStim = d.D.DATA.pooled_D_AZ_Stim;
+dAzSpont = d.D.DATA.pooled_D_AZ_Spont; 
+
+%dazStim = d.D.DATA.pooled_D_AZ_Stim;
+%delStim = d.D.DATA.pooled_D_EL_Stim;
+
+dazStim = d.D.DATA.pooled_D_AZ_Spont;
+delStim = d.D.DATA.pooled_D_EL_Spont;
+
+bla = find(isnan(dazStim));
+dazStim(bla) = [];
+delStim(bla) = [];
+
+%dazStim = d.D.DATA.pooled_D_AZ_Stim;
+%dazStim = d.D.DATA.pooled_D_EL_Stim;
+%dazStim = d.D.DATA.pooled_D_AZ_Spont;
+dazStim = d.D.DATA.pooled_D_EL_Spont;
+
+
+posDs = numel(find(dazStim > 1));
+negDs = numel(find(dazStim < -1));
+
+pePosDs = posDs/numel(dazStim)*100;
+penegDs = negDs /numel(dazStim)*100;
+
 group1 = ones(1, size(d.D.DATA.pooled_D_AZ_Stim, 2))*1;
 group2 = ones(1, size(d.D.DATA.pooled_D_AZ_Spont, 2))*2;
 groups = [group1 group2];
 
 xes = [ d.D.DATA.pooled_D_AZ_Spont d.D.DATA.pooled_D_AZ_Stim] *-1;
 yes = [ d.D.DATA.pooled_D_EL_Spont d.D.DATA.pooled_D_EL_Stim] ;
+
+%%
+
+[r, p] = corrcoef(dazStim, delStim)
+
+
 
 
 cols = cell2mat({[.5 .5 .5]; [0 0 0]});

@@ -70,7 +70,6 @@ SpkResponses = C_OBJ.S_SPKS.SORT.allSpksMatrix;
 
 nRows = size(stimNames, 1);
 nCols = size(stimNames, 2);
-cnnt = 1;
 
 smoothWin_ms = 2;
 

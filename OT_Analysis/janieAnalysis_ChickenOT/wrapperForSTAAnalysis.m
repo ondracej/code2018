@@ -16,10 +16,10 @@ ExpInds = [3 8 10 12 13 16 17 19 21 23 25 27 28 29 31 33 34 36 37 38 39 40 41 42
 %WNRasterInd = [ 10  28 42 23 33 27 29  25 44 34  40 39 31  3   17 43 21  ]; %WN, 2, 4 12 16 17 20 21 37 42 43 are inhibited by sound
 %WNRasterInd = fliplr(WNRasterInd);
 
-HRTFExpInds = [27 40 3 39 31]; %Stims
+%HRTFExpInds = [27 40 3 39 31]; %Stims
 %HRTFExpInds = [23 29 28 36 10]; %Onset
+HRTFExpInds = [16 28 17 42 43 ]; %Other
 %HRTFExpInds = [28 16 17 42 43 ]; %Other
-
 nInds = numel(HRTFExpInds);
 figure(406); clf
 disp('Running...');

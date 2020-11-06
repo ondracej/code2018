@@ -15,12 +15,19 @@ HRTFAnalaysisAudSpikeData.m
 
 %% For paper
 
-plotRawDataExample
 plotMLDNeurons
+plotRawDataExample
+
 plotSpectrogramHRTFData
 makePlotHRTFEnvs
+
+% HRTF
+plotZScoresDPrimes_MLD
+
+%WN Analysis
 calcFRZScores_WN
 analyzeWN_FR_responses
+
 
 %% Population analaysis
 
@@ -32,15 +39,22 @@ runJaniesAnalysis_batchProcess_JanieFinalAnalysis
 %
 wrapperForSTAAnalysis.m
 % This calls the following programs:
+%ExpInds = [3 8 10 12 13 16 17 19 21 23 25 27 28 29 31 33 34 36 37 38 39 40 41 42 43 44 45 46]; %HRTF
+%AllWN_ExpInds = [3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 19 20 21 23 25 27 28 29 30 31 33 34 35 36 37 38 39 40 42 43 44 ]; %WN
 
 % requires a directory of the unsorted original signals, e.g., SignalDir
     STA_for_HRTF_Stims
-    STA_for_WN_Stims
-
     EnvCalc_for_HRTF_Stims
-    EnvCalc_for_WN_Stims
-
+    RastersForAmplitudeEnvelopHRTF
+    plotNormHRTFWinSelection
+    AnalysiWindowDefinition_HRTF
+    
     STRF_preprocessing_OT
+    
+    EnvCalc_for_WN_Stims
+    STA_for_WN_Stims
+    calcFRZScores_WN
+    RastersForAmplitudeEnvelopWN
 
 % These programs call 
 % C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);

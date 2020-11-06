@@ -97,10 +97,10 @@ maxR = max(RData);
 minR = min(RData);
 
 normL = (LData - minL) / (maxL-minL);
-normR = (RData - minR) / (maxR-minR);
 
-[yupperL,~] = envelope(normL);
-[yupperR,~] = envelope(normR);
+
+[yupperL,~] = envelope(LData);
+[yupperR,~] = envelope(RData);
 
 smooth_yupperL = smooth(yupperL, smoothWin_samps);
 smooth_yupperR = smooth(yupperR, smoothWin_samps);
@@ -110,14 +110,14 @@ xtimepoints =1:1:size(smooth_yupperR, 1);
 xtimepoints_ms = xtimepoints/Fs*1000;
 
 plot(xtimepoints_ms, smooth_yupperL, 'k');
-ylim([.5 1])
+ylim([0 1])
 subplot(3, 3, [7])
 hold on
 plot(xtimepoints_ms, smooth_yupperR, 'color', [.5 .5 .5]);
 
 subplot(3, 3, [8])
 plot(xtimepoints_ms, smooth_yupperR, 'k');
-ylim([.5 1])
+ylim([0 1])
 subplot(3, 3, [8])
 hold on
 plot(xtimepoints_ms, smooth_yupperL, 'color', [.5 .5 .5]);
@@ -130,14 +130,14 @@ plot(xtimepoints_ms, smooth_yupperWN, 'k');
 ylim([0 .5])
 
 FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/';
-saveName = [FigSaveDir 'StimFigure-2'];
+saveName = [FigSaveDir 'StimFigure'];
 plotpos = [0 0 30 12];
 
 %plot2svg
 %plot2svg(saveName, figH)
 
-%print_in_A4(0, saveName, '-djpeg', 0, plotpos); % res type needs to be 1 or it takes forever
-print_in_A4(0, saveName, '-depsc', 0, plotpos);
+print_in_A4(0, saveName, '-djpeg', 1, plotpos); % res type needs to be 1 or it takes forever
+print_in_A4(0, saveName, '-depsc', 1, plotpos);
 
 disp('')
 

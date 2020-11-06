@@ -21,7 +21,8 @@ disp(Stim);
 
 %audSelInd = 2; % SpikesThis is the index, spikesnot the stim number!!!
 
-FigSaveDir = '/media/janie/300GBPassport/OTProject/MLD/';
+%FigSaveDir = '/media/janie/300GBPassport/OTProject/MLD/';
+FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/';
 
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
@@ -151,7 +152,7 @@ if oo == maxNum
     allSemFRSpontPost = allStdFRSpontPost / (sqrt(numel(WN.meanPostStimFR)));
     
     
-    WN.allWNSpontMeans = allWNSpontMeans;
+    WN.allWNSpontMeans = allWNSpontMeans;OT_Analysis/analyzeWN_FR_responses.m
     WN.allWNStimMeans = allWNStimMeans;
     WN.allmeanPostStimFR = allmeanPostStimFR;
     
