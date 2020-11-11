@@ -173,9 +173,9 @@ if oo == 17
     axes('position',[0.05 .9 0.9 0.1]);
     
     
-    pre = zeros(1, numel(smooth_yupper));
-    post = zeros(1, numel(smooth_yupper));
-    WNStim = [pre smooth_yupper' post];
+    pre = zeros(1, numel(thisSigData));
+    post = zeros(1, numel(thisSigData));
+    WNStim = [pre thisSigData' post];
     
     timepoints_samp = 1:1:numel(WNStim);
     timepoints_ms = timepoints_samp/ Fs*1000;

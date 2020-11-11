@@ -180,10 +180,10 @@ if oo == 17
     axes('position',[0.05 .9 0.9 0.1]);
     
     maxTime = .3*Fs;
-    postTime = maxTime - numel(smooth_yupper) - .1*Fs;
+    postTime = maxTime - numel(thisSigData(:, 1)) - .1*Fs;
     pre = zeros(1, .1*Fs);
     post = zeros(1, postTime);
-    HRTFStim = [pre smooth_yupper' post];
+    HRTFStim = [pre thisSigData(:, 1)' post];
     
     timepoints_samp = 1:1:numel(HRTFStim);
     timepoints_ms = timepoints_samp/ Fs*1000;

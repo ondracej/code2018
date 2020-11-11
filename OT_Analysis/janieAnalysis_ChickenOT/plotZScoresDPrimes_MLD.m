@@ -132,6 +132,7 @@ disp('')
 %     'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'color', cols);
 
 
+
 test = dazStim.*dAzSpont;
 
 
@@ -146,29 +147,32 @@ posDs = find(dAzSpont > 2);
 negDs = find(dAzSpont < -2);
 otherindsTUse = [posDs negDs]; 
 
+indsToUseEitherOR = [indsToUseStim posDs negDs ];
+
+
 bla = ismember(otherindsTUse, indsToUseStim);
 
 bothIndsTouse = otherindsTUse(bla);
-indsToUseStim = [indsToUseStim posDs negDs ];
 
-toPLot = [dazStim(indsToUseStim) ; dAzSpont(indsToUseStim)]';
-toPLot2 = [dazStim(bothIndsTouse) ; dAzSpont(bothIndsTouse)]';
+
+toPLot = [dazStim(indsToUseEitherOR) ; dAzSpont(indsToUseEitherOR)]'*-1;
+toPLot2 = [dazStim(bothIndsTouse) ; dAzSpont(bothIndsTouse)]'*-1;
 
 figure(104); clf
 subplot(1, 2, 1)
-plot(toPLot', 'ko', 'linestyle', '-')
+plot(toPLot', 'ko', 'linestyle', '-', 'MarkerFaceColor', 'k')
 xlim([0 3])
-ylim([-5 45])
+ylim([-40 5])
 hold on
 line([0 3], [0 0], 'linestyle', '-')
 line([0 3], [2 2], 'linestyle', ':')
 line([0 3], [-2 -2], 'linestyle', ':')
 
 figure(104);
-subplot(1, 2, 2)
-plot(toPLot2', 'ko', 'linestyle', '-')
+subplot(1, 2, 1)
+plot(toPLot2', 'ro', 'linestyle', '-', 'MarkerFaceColor', 'r')
 xlim([0 3])
-ylim([-5 45])
+ylim([-40 5])
 hold on
 line([0 3], [0 0], 'linestyle', '-')
 line([0 3], [2 2], 'linestyle', ':')
@@ -208,6 +212,9 @@ negDs = numel(find(dazStim < -1));
 pePosDs = posDs/numel(dazStim)*100;
 penegDs = negDs /numel(dazStim)*100;
 
+
+
+%}
 group1 = ones(1, size(d.D.DATA.pooled_D_AZ_Stim, 2))*1;
 group2 = ones(1, size(d.D.DATA.pooled_D_AZ_Spont, 2))*2;
 groups = [group1 group2];
@@ -220,13 +227,42 @@ yes = [ d.D.DATA.pooled_D_EL_Spont d.D.DATA.pooled_D_EL_Stim] ;
 [r, p] = corrcoef(dazStim, delStim)
 
 
-
-
 cols = cell2mat({[.5 .5 .5]; [0 0 0]});
 %cols = cell2mat({[0.6350, 0.0780, 0.1840]; [0.8500, 0.3250, 0.0980]; [0.9290, 0.6940, 0.1250]; [0, 0, 0]; [0.4940, 0.1840, 0.5560]});
 
  h = scatterhist(xes,yes,'Group',groups,'Kernel','on', 'Location','SouthEast',...
      'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'Markersize', 20, 'color', cols);
+
+boxplot(h(2),xes,groups,'orientation','horizontal',...
+    'label',{'',''},'color',cols, 'plotstyle', 'compact', 'Whisker', 15);
+boxplot(h(3),yes,groups,'orientation','vertical',...
+    'label', {'',''},'color',cols, 'plotstyle', 'compact', 'Whisker', 15);
+
+
+axis(h(1),'auto');  % Sync axes
+axis(h(3),'auto');  % Sync axes
+hold off;
+
+
+% groups = [group2 group3 group4 group5 group6];
+% yes = [rates(1,:) rates(2,:) rates(3,:) rates(4,:) rates(5,:)];
+% xes = [amps(1,:) amps(2,:) amps(3,:) amps(4,:) amps(5,:)];
+% h = scatterhist(xes,yes,'Group',groups,'Kernel','on', 'Location','SouthEast',...
+% 'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'color', cols);
+% 
+% 
+% hold on;
+% %clr = get(h(1),'colororder');
+% boxplot(h(2),xes,groups,'orientation','horizontal',...
+%     'label',{'','','','',''},'color',cols, 'plotstyle', 'compact', 'Whisker', 15);
+% boxplot(h(3),yes,groups,'orientation','horizontal',...
+%     'label', {'','','','',''},'color',cols, 'plotstyle', 'compact', 'Whisker', 15);
+% %set(h(2:3),'XTickLabel','');
+% view(h(3),[270,90]);  % Rotate the Y plot
+% axis(h(1),'auto');  % Sync axes
+% hold off;
+
+
 
  yss = ylim;
  xss = xlim;
@@ -243,7 +279,7 @@ line([xss(1) xss(2)], [-1 -1], 'color', 'k', 'linestyle', ':')
 
 
 
-saveName = [FigSaveDir 'AuditoryPlots-DPrime'];
+saveName = [FigSaveDir 'AuditoryPlots-DPrime_v2'];
 
   plotpos = [0 0 15 12];
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);

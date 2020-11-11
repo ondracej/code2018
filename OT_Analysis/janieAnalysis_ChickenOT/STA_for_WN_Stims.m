@@ -9,7 +9,7 @@ dbstop if error
 
 C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 %%
-
+ALL_LStimWins = [];
 allStims = C_OBJ.RS_INFO.StimProtocol_name;
 tf = find(strcmpi(allStims,'WhiteNoise'));
 
@@ -18,7 +18,7 @@ audSelInd = tf(1); % SpikesThis is the index, spikesnot the stim number!!!
 Stim = C_OBJ.RS_INFO.StimProtocol_name{audSelInd};
 disp(Stim);
 
-FigSaveDir = '/media/dlc/Data8TB/TUM/OT/Figs/WN/';
+FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN/RasterSTA/';
 addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
@@ -140,7 +140,8 @@ end
 disp('')
 
 %% Raw data
-
+if ~isempty(ALL_LStimWins)
+    
 LStimWins_mean = mean(ALL_LStimWins);
 %RStimWins_mean = mean(ALL_RStimWins);
 timepoints_samp = 1:1:numel(LStimWins_mean);
@@ -170,7 +171,7 @@ set(gca, 'xticklabel', xtickabs )
 
 %% Wavelet
 
-clims = [0 5e-5];
+%clims = [0 5e-5];
 
 %RawData = RStimWins_mean;
 RawData = LStimWins_mean;
@@ -191,15 +192,32 @@ colorbar 'off'
 xlim([0 20])
 set(gca, 'xtick', xticks)
 set(gca, 'xticklabel', xtickabs )
-caxis(clims);
+%caxis(clims);
 
 %%
 saveName = [FigSaveDir NeuronName '-STA-' Stim];
 plotpos = [0 0 10 15];
 
-print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+%print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 %print_in_A4(0, saveName, '-depsc', 0, plotpos);
 
+
+figure(102); clf
+
+%[cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',32);
+[cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',48);
+helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
+ylim([.5 8])
+title(titleTxt)
+
+plotpos = [0 0 12 10];
+xlim([0 20])
+set(gca, 'xtick', xticks)
+set(gca, 'xticklabel', xtickabs )
+
+print_in_A4(0, [saveName 'colbar'], '-depsc', 0, plotpos);
+
+end
 
 %%
 
