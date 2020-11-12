@@ -219,11 +219,9 @@ disp('')
 
 %dB = 20 * log10(amplitude)
 
-if ~isempty (ALL_LStimWins)
+if size(ALL_LStimWins, 1) > 2 % must have atleast 20 spikes
     
     %% Envs
-    
-    
     
     %% Raw data
     
@@ -232,10 +230,14 @@ if ~isempty (ALL_LStimWins)
     timepoints_samp = 1:1:numel(LStimWins_mean);
     timepoints_ms = timepoints_samp/Fs*1000;
     
+    STA.ALL_LStimWins = ALL_LStimWins;
+    STA.ALL_RStimWins = ALL_RStimWins;
+    
+    STA.LStimWins_mean = LStimWins_mean;
+    STA.RStimWins_mean = RStimWins_mean;
+
     LStimWins_meanEnv = mean(All_LStimWins_Env, 1);
     RStimWins_meanEnv = mean(All_RStimWins_Env, 1);
-    
-    
     
     figure (103); clf
     subplot(3, 2, 1)
@@ -282,9 +284,6 @@ if ~isempty (ALL_LStimWins)
         Dt = 1/44100;
         t = 0:Dt:(numel(RawData)*Dt)-Dt;
         
-        %normRawData = (RawData-min(RawData))/(max(RawData)-min(RawData));
-        
-        
         %[cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',32);
         [cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',48);
         figure(103);
@@ -315,7 +314,87 @@ if ~isempty (ALL_LStimWins)
         ylim([.1 .15])
         
         
-        [pxx,fF,pxxc] = pmtm(RawData,2,length(RawData),Fs,'ConfidenceLevel',0.95);
+        %% Frequency
+figure(302)
+
+        subplot(2, 4,5)
+        helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
+        ylim([.5 6])
+        
+meanf = mean(abs(cfs).^2, 2);
+%medianf = median(abs(cfs).^2, 2);
+stdf = std(abs(cfs').^2, 1)';
+semF = stdf/sqrt(883);
+
+posF = meanf + semF;
+negF = meanf - semF;
+
+STA.meanf = meanf;
+STA.semF = semF;
+        subplot(2, 4,6)
+plot(posF, f./1e3, 'color', [0.5 0.5 0.5])
+hold on
+plot(negF, f./1e3, 'color', [0.5 0.5 0.5])
+plot(meanf, f./1e3, 'k', 'linewidth', 1)
+axis tight
+
+sortedMeanF = sort(meanf);
+scaleEstimator=sortedMeanF(round(95/100*numel(sortedMeanF)));
+
+STA.scaleEstimatorF = scaleEstimator;
+
+yss = ylim;
+line([scaleEstimator scaleEstimator], [yss(1) yss(2)], 'color', 'r', 'linestyle', ':')
+
+[pks,locs,w,p] = findpeaks(meanf, 'MinPeakHeight',scaleEstimator);
+
+STA.FDetections_kHz = f(locs)./1e3;
+
+ylim([.5 8])
+xlabel('Power')
+
+%% Time
+subplot(2, 2, 1); 
+
+meant = mean(abs(cfs).^2, 1);
+%mediant = median(abs(cfs).^2, 1);
+stdt = std(abs(cfs).^2, 1);
+semt = stdt/sqrt(261);
+
+posT = meant + semt;
+negT = meant - semt;
+
+plot(t*1e3, posT, 'color', [0.5 0.5 0.5])
+hold on
+plot(t*1e3, negT, 'color', [0.5 0.5 0.5])
+plot(t*1e3, meant, 'k', 'linewidth', 2)
+axis tight
+
+STA.meant = meant;
+STA.semt = semt;
+
+%sortedMtest=sort(Mtest);
+%scaleEstimator=sortedMtest(round(percentile4ScaleEstimation/100*numel(sortedMtest)));
+
+sortedMeanT = sort(meant);
+scaleEstimator=sortedMeanT(round(95/100*numel(sortedMeanT)));
+
+STA.scaleEstimatorT = scaleEstimator;
+
+[pks,locs,w,p] = findpeaks(meant, 'MinPeakHeight',scaleEstimator);
+
+STA.TDetections_ms = t(locs)*1e3;
+
+xss = xlim;
+line([xss(1) xss(2)], [scaleEstimator scaleEstimator] , 'color', 'r', 'linestyle', ':')
+
+ylabel('Power')
+set(gca, 'xtick', xticks)
+set(gca, 'xticklabel', xtickabs )
+
+
+        
+        %[pxx,fF,pxxc] = pmtm(RawData,2,length(RawData),Fs,'ConfidenceLevel',0.95);
         
         %{
         plot(fF,10*log10(pxx))
