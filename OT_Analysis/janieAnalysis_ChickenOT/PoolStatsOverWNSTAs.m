@@ -1,7 +1,15 @@
 function [] = PoolStatsOverWNSTAs()
 
-
-STADir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN/RasterSTA/WNSTAs/';
+switch gethostname
+    case 'dlc'
+        
+        STADir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN/RasterSTA/WNSTAs/';
+        
+    case 'SALAMANDER'
+        
+        STADir = '/home/janie/Data/OTProject/MLD/Figs/STA-WN/RasterSTA/WNSTAs/';
+        
+end
 
 trialSeach = ['*.mat*'];
 
@@ -24,6 +32,7 @@ for s = 1:nTrials
         
    allFDetections = d.STA.FDetections_kHz;
    ndets= numel(allFDetections);
+   allFDets{s} = allFDetections;
    
    for j = 1:ndets
        alldetsF(cnt) = allFDetections(j);
@@ -33,7 +42,7 @@ for s = 1:nTrials
    
  allTDetections = 20-d.STA.TDetections_ms;
    ndets= numel(allTDetections);
-   
+   allTDets{s} = allTDetections;
    for j = 1:ndets
        alldetsT(cnnt) = allTDetections(j);
        cnnt = cnnt+1;

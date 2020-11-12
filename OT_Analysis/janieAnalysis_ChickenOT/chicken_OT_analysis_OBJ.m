@@ -49,7 +49,7 @@ classdef chicken_OT_analysis_OBJ < handle
                     addpath(genpath('/home/janie/Documents/Code/code2018/OT_Analysis/'));
                     addpath(genpath('/home/janie/Documents/Code/UMS2K-master/'));
                     
-                    OT_Data_Path = '/media/janie/300GBPassport/OTProject/OTData/Results/';
+                    OT_Data_Path = '/home/janie/Data/OTProject/OTData/Results/';
                     
                     
                 case 'PLUTO'

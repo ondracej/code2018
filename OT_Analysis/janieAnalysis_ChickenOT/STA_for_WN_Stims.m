@@ -18,8 +18,17 @@ audSelInd = tf(1); % SpikesThis is the index, spikesnot the stim number!!!
 Stim = C_OBJ.RS_INFO.StimProtocol_name{audSelInd};
 disp(Stim);
 
-FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN/RasterSTA/';
-addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
+switch gethostname
+    case 'SALAMANDER'
+        SignalDir = '/home/janie/Data/OTProject/AllSignals/Signals/';
+        addpath '/home/janie/Matlab/MatlabR2019b/examples/wavelet/'
+        FigSaveDir = '/home/janie/Data/OTProject/MLD/Figs/STA-WN/RasterSTA/';
+    case 'DLC'
+        SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/';
+        addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
+        FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-HRTF/MLD-STA-New/';
+end
+
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
 
@@ -37,8 +46,6 @@ objFile = 'C_OBJ.mat';
 objPath = [C_OBJ.PATHS.OT_Data_Path C_OBJ.INFO.expDir C_OBJ.PATHS.dirD audStimDir C_OBJ.PATHS.dirD '__Spikes' C_OBJ.PATHS.dirD objFile];
 load(objPath);
 disp(['Loaded: ' objPath])
-
-SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/';
 
 sigFormat = '*.wav';
 
@@ -264,13 +271,12 @@ sortedMeanT = sort(meant);
 scaleEstimator=sortedMeanT(round(95/100*numel(sortedMeanT)));
 
 STA.scaleEstimatorT = scaleEstimator;
+xss = xlim;
+line([xss(1) xss(2)], [scaleEstimator scaleEstimator] , 'color', 'r', 'linestyle', ':')
 
 [pks,locs,w,p] = findpeaks(meant, 'MinPeakHeight',scaleEstimator);
 
-STA.TDetections_ms = t(locs)*1e3;
-
-xss = xlim;
-line([xss(1) xss(2)], [scaleEstimator scaleEstimator] , 'color', 'r', 'linestyle', ':')
+STA.TDetections_ms = 20-t(locs)*1e3;
 
 ylabel('Power')
 set(gca, 'xtick', xticks)

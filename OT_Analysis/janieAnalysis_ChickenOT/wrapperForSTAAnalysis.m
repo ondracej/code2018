@@ -32,7 +32,8 @@ for j = 1:nInds
     recSession = recs(thisInd);
     NeuronName = ['N-' num2str(Neurons(thisInd))];
     
-    STA_for_HRTF_Stims(experiment, recSession, NeuronName)
+    %STA_for_HRTF_Stims(experiment, recSession, NeuronName)
+    STA_for_HRTF_Stims_FreqTime(experiment, recSession, NeuronName)
     %EnvCalc_for_HRTF_Stims(experiment, recSession, NeuronName)
     
     %AnalysiWindowDefinition_HRTF(experiment, recSession, NeuronName)
