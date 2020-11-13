@@ -152,7 +152,7 @@ if oo == maxNum
     allSemFRSpontPost = allStdFRSpontPost / (sqrt(numel(WN.meanPostStimFR)));
     
     
-    WN.allWNSpontMeans = allWNSpontMeans;OT_Analysis/analyzeWN_FR_responses.m
+    WN.allWNSpontMeans = allWNSpontMeans;
     WN.allWNStimMeans = allWNStimMeans;
     WN.allmeanPostStimFR = allmeanPostStimFR;
     
@@ -205,12 +205,22 @@ if oo == maxNum
     jitterAmount = 0.1;
     jitterValuesX = 2*(rand(size(zscores))-0.5)*jitterAmount;   % +
     
-    cols = cell2mat({[0 0 0]; [.5 .5 .5]});
+    cols = cell2mat({[0 0 0]});
     %cols = cell2mat({[0.6350, 0.0780, 0.1840]; [0.8500, 0.3250, 0.0980]; [0.9290, 0.6940, 0.1250]; [0, 0, 0]; [0.4940, 0.1840, 0.5560]});
     
     figure(102); clf
     h = scatterhist(zscores,jitterValuesX, 'Kernel','on', 'Location','NorthEast',...
-        'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'Markersize', 20, 'color', cols);
+        'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'Markersize', 20, 'color', 'k');
+    
+   
+    boxplot(h(2),zscores,'orientation','horizontal',...
+        'label',{''},'color', 'k', 'plotstyle', 'compact', 'Whisker', 10);
+    
+    
+    
+    axis(h(2),'auto');  % Sync axes
+    
+    
     
     yss = ylim;
     xss = xlim;

@@ -6,11 +6,10 @@ dbstop if error
 exps = [ones(1, 12) ones(1, 9)*2 ones(1, 6)*3 ones(1, 5)*4 ones(1, 4)*5 ones(1, 4)*6 ones(1, 4)*7 ones(1, 2)*8 ones(1, 1)*9 ones(1, 1)*10 ones(1, 2)*12 ones(1, 1)*13 ones(1, 4)*14 ones(1, 3)*15];
 recs = [1:1:12 1:1:9 1:1:6 1:1:5 1:1:4 1:1:4 1:1:4 1:1:2 1 1 1:1:2 1 1:1:4 1:1:3];
 Neurons = 1:1:58;
-
+%AllExpInds = [3 8 10 12 13 16 17 19 21 22 23 25 27 28 29 31 33 34 36 37 38 39 40 41 42 43 44 45 46 48 49 52 53 56 58 ]; %HRTF, 12 16 17 21 37 42 43 are inhibited by sound
 %% HRTF
-AllExpInds = [3 8 10 12 13 16 17 19 21 22 23 25 27 28 29 31 33 34 36 37 38 39 40 41 42 43 44 45 46 48 49 52 53 56 58 ]; %HRTF, 12 16 17 21 37 42 43 are inhibited by sound
 
-%ExpInds = [3 8 10 12 13 16 17 19 21 23 25 27 28 29 31 33 34 36 37 38 39 40 41 42 43 44 45 46]; %HRTF, 12 16 17 21 37 42 43 are inhibited by sound
+ExpInds = [3 8 10 12 13 16 17 19 21 23 25 27 28 29 31 33 34 36 37 38 39 40 41 42 43 44 45 46]; %HRTF, 12 16 17 21 37 42 43 are inhibited by sound
 
 %nInds = numel(AllExpInds);
 %WNRasterInd = [ 10  28 42 23 33 27 29  25 44 34  40 39 31  3   17 43 21  ]; %WN, 2, 4 12 16 17 20 21 37 42 43 are inhibited by sound
@@ -20,12 +19,12 @@ AllExpInds = [3 8 10 12 13 16 17 19 21 22 23 25 27 28 29 31 33 34 36 37 38 39 40
 %HRTFExpInds = [23 29 28 36 10]; %Onset
 %HRTFExpInds = [16 28 17 42 43 ]; %Other
 %HRTFExpInds = [28 16 17 42 43 ]; %Other
-nInds = numel(AllExpInds);
+nInds = numel(ExpInds);
 figure(406); clf
 disp('Running...');
 for j = 1:nInds
     
-    thisInd = AllExpInds(j);
+    thisInd = ExpInds(j);
     thisInd
    
     experiment = exps(thisInd);
@@ -33,8 +32,9 @@ for j = 1:nInds
     NeuronName = ['N-' num2str(Neurons(thisInd))];
     
     %STA_for_HRTF_Stims(experiment, recSession, NeuronName)
-    STA_for_HRTF_Stims_FreqTime(experiment, recSession, NeuronName)
-    %EnvCalc_for_HRTF_Stims(experiment, recSession, NeuronName)
+    %STA_for_HRTF_Stims_FreqTime(experiment, recSession, NeuronName)
+    %STA_for_HRTF_Stims_FreqTime_V2(experiment, recSession, NeuronName)
+    EnvCalc_for_HRTF_Stims(experiment, recSession, NeuronName)
     
     %AnalysiWindowDefinition_HRTF(experiment, recSession, NeuronName)
     %plotNormHRTFWinSelection(experiment, recSession, NeuronName, j, 5)
@@ -77,9 +77,10 @@ for j = 1:nInds
     NeuronName = ['N-' num2str(Neurons(thisInd))];
     
     
-    %WN = calcFRZScores_WN(experiment, recSession, NeuronName, j, 36, WN);
+   % WN = calcFRZScores_WN(experiment, recSession, NeuronName, j, 36, WN);
     
-   STA_for_WN_Stims(experiment, recSession, NeuronName)
+   %STA_for_WN_Stims(experiment, recSession, NeuronName)
+   STA_for_WN_Stims_V2(experiment, recSession, NeuronName)
    %STA_for_WN_Stims_Envs(experiment, recSession, NeuronName)
     
    %RastersForAmplitudeEnvelopWN(experiment, recSession, NeuronName, j)

@@ -27,7 +27,7 @@ plotZScoresDPrimes_MLD
 %WN Analysis
 calcFRZScores_WN
 analyzeWN_FR_responses
-
+PoolStatsOverWNSTAs
 
 %% Population analaysis
 
@@ -48,6 +48,7 @@ wrapperForSTAAnalysis.m
     RastersForAmplitudeEnvelopHRTF
     plotNormHRTFWinSelection
     AnalysiWindowDefinition_HRTF
+    STA_for_HRTF_Stims_FreqTime
     
     STRF_preprocessing_OT
     
@@ -56,6 +57,11 @@ wrapperForSTAAnalysis.m
     calcFRZScores_WN
     RastersForAmplitudeEnvelopWN
 
+    doAnalysisOnIIDs
+    
+    doAnalysisOnITDs
+    doAnalysisOnITDs_v2
+    
 % These programs call 
 % C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 %And so requires the following info defined in the wrapper (matches the info in the database
@@ -120,6 +126,7 @@ getAxPos
 InitMPI
 InitVarsConfigClass
 redblue
+helperCWTTimeFreqPlot
 
 %% Analysis of Hansa's data set
 

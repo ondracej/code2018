@@ -19,7 +19,7 @@ disp(Stim);
 
 %audSelInd = 2; % SpikesThis is the index, spikesnot the stim number!!!
 
-FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/EnvAnalysis-HRTF/MLD/';
+FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/EnvAnalysis-HRTF/newMLD/';
 
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN

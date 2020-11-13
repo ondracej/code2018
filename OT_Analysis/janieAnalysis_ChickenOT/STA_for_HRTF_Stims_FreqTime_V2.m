@@ -71,6 +71,10 @@ StimStartTime_samp = StimStartTime_s* SamplingRate;
 PostStimStartTime_samp = PostStimStartTime_s* SamplingRate;
 
 
+pre = zeros(1, StimStartTime_samp);
+post = zeros(1, StimStartTime_samp);
+
+
 TimeWindow_ms = 20;
 TimeWindow_samp =TimeWindow_ms /1000*SamplingRate;
 
@@ -163,10 +167,13 @@ for j = 1:nRows
         thisSigData_L_norm_meanSub = thisSigData_L_norm - mean(thisSigData_L_norm); % here we mean-sbitrack to get rid of offset
         thisSigData_R_norm_meanSub = thisSigData_R_norm - mean(thisSigData_R_norm);
         
+        thisStimL  = [pre thisSigData_L_norm_meanSub' post];
+        thisStimR  = [pre thisSigData_R_norm_meanSub' post];
+        
         %figure; plot(thisSigData_L_norm_meanSub); hold on; plot(thisSigData_R_norm_meanSub);
         %%
-        [yupperL,~] = envelope(thisSigData_L_norm_meanSub);
-        [yupperR,~] = envelope(thisSigData_R_norm_meanSub);
+        [yupperL,~] = envelope(thisStimL);
+        [yupperR,~] = envelope(thisStimR);
         
         %figure; plot(yupperL); hold on; plot(yupperR);
         
@@ -181,12 +188,12 @@ for j = 1:nRows
         
         for o = 1:nReps
             thisRep = thisSpkResp{1, o};
-            validSpksInds = find(thisRep >= StimStartTime_samp + TimeWindow_samp + 1 & thisRep <= PostStimStartTime_samp); % need to add a buffer at the start
+            validSpksInds = find(thisRep >= StimStartTime_samp & thisRep <= PostStimStartTime_samp); % need to add a buffer at the start
             validSpks = thisRep(validSpksInds);
             
             nValidSpikes = numel(validSpks );
             
-            relValidSpks = validSpks - StimStartTime_samp; % relative to the onset of the stim
+            relValidSpks = validSpks; % relative to the onset of the stim
             
             LStimWins = [];
             RStimWins = [];
@@ -197,21 +204,21 @@ for j = 1:nRows
                 
                 roi = thisSpk - TimeWindow_samp : thisSpk; % for time window before spike
                 %roi = thisSpk - TimeWindow_samp : thisSpk + TimeWindow_samp; % for time window before and after spike
-                if roi(1) <= 0 || roi(end) >= numel(thisSigData_L)
+                if roi(1) <= 0 || roi(end) >= numel(thisStimL)
                     disp('')
                     continue
                 else
                     
-                    LStimWins(cnt,:) = thisSigData_L_norm_meanSub(roi);
-                    RStimWins(cnt,:) = thisSigData_R_norm_meanSub(roi);
+                    LStimWins(cnt,:) = thisStimL(roi);
+                    RStimWins(cnt,:) = thisStimR(roi);
                     
                     LStimWins_Env(cnt,:) = yupperL(roi);
                     RStimWins_Env(cnt,:) = yupperR(roi);
                     
                     cnt = cnt +1;
                     
-                    ALL_LStimWins(cnnt,:) = thisSigData_L_norm_meanSub(roi);
-                    ALL_RStimWins(cnnt,:) = thisSigData_R_norm_meanSub(roi);
+                    ALL_LStimWins(cnnt,:) = thisStimL(roi);
+                    ALL_RStimWins(cnnt,:) = thisStimR(roi);
                     
                     All_LStimWins_Env(cnnt,:) = yupperL(roi);
                     All_RStimWins_Env(cnnt,:) = yupperR(roi);
@@ -219,7 +226,7 @@ for j = 1:nRows
                     cnnt = cnnt +1;
                 end
             end
-        endSTA_for_HRTF_Stims_FreqTime
+        end
         
     end
     

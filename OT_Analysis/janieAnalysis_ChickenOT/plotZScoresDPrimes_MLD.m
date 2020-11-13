@@ -99,6 +99,15 @@ negZscoresPercent = negZscores/numel(zscores)*100;
     h = scatterhist(zscores,jitterValuesX, 'Kernel','on', 'Location','NorthEast',...
         'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'Markersize', 20, 'color', cols);
     
+     
+   
+    boxplot(h(2),zscores,'orientation','horizontal',...
+        'label',{''},'color', 'k', 'plotstyle', 'compact', 'Whisker', 10);
+    
+    
+    
+    axis(h(1),'auto');  % Sync axes
+    
     yss = ylim;
     xss = xlim;
     

@@ -1,4 +1,4 @@
-function [] = STA_for_WN_Stims(experiment, recSession, NeuronName)
+function [] = STA_for_WN_Stims_V2(experiment, recSession, NeuronName)
 dbstop if error
 
 %NeuronName = 'N-12';
@@ -26,7 +26,7 @@ switch gethostname
     case 'PLUTO'
         SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/';
         addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
-        FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-HRTF/MLD-STA-New/';
+        FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN/STA-TimeFreq/';
 end
 
 %% Stimulus Protocol
@@ -77,6 +77,12 @@ TimeWindow_samp =TimeWindow_ms /1000*SamplingRate;
 stimNames = C_OBJ.S_SPKS.SORT.allSpksStimNames;
 SpkResponses = C_OBJ.S_SPKS.SORT.allSpksMatrix;
 
+    
+    pre = zeros(1, StimStartTime_samp);
+    post = zeros(1, StimStartTime_samp);
+    
+    
+    
 nRows = size(stimNames, 1);
 nCols = size(stimNames, 2);
 cnnt = 1;
@@ -89,6 +95,8 @@ for j = 1:nRows
         
         thisSigData_L = thisSigData(:, 1);
         
+        
+        thisStim = [pre  thisSigData_L' post];
         xtimepoints =1:1:size(thisSigData, 1);
         
         thisSpkResp = SpkResponses{j,k};
@@ -99,12 +107,14 @@ for j = 1:nRows
         
         for o = 1:nReps
             thisRep = thisSpkResp{1, o};
-            validSpksInds = find(thisRep >= StimStartTime_samp + TimeWindow_samp + 1 & thisRep <= PostStimStartTime_samp); % need to add a buffer at the start
+         
+            
+            validSpksInds = find(thisRep >= StimStartTime_samp & thisRep <= PostStimStartTime_samp); % need to add a buffer at the start
             validSpks = thisRep(validSpksInds);
             
             nValidSpikes = numel(validSpks );
             
-            relValidSpks = validSpks - StimStartTime_samp; % relative to the onset of the stim
+            relValidSpks = validSpks ; % relative to the onset of the stim
             
             LStimWins = [];
             RStimWins = [];
@@ -115,16 +125,16 @@ for j = 1:nRows
                 
                 roi = thisSpk - TimeWindow_samp : thisSpk;  % for time window before spike
                 %roi = thisSpk - TimeWindow_samp : thisSpk + TimeWindow_samp; % for time window before and after spike
-                if roi(1) <= 0 || roi(end) >= numel(thisSigData_L)
+                if roi(1) <= 0 || roi(end) >= numel(thisStim)
                     disp('')
                     continue
                 else
-                    LStimWins(cnt,:) = thisSigData_L(roi);
+                    LStimWins(cnt,:) = thisStim(roi);
                     %RStimWins(cnt,:) = thisSigData_R(roi);
                     
                     cnt = cnt +1;
                     
-                    ALL_LStimWins(cnnt,:) = thisSigData_L(roi);
+                    ALL_LStimWins(cnnt,:) = thisStim(roi);
                     %ALL_RStimWins(cnnt,:) = thisSigData_R(roi);
                     
                     cnnt = cnnt +1;
