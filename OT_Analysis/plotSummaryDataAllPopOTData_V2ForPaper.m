@@ -1,4 +1,4 @@
-function [] = plotSummaryDataAllPopOTData()
+function [] = plotSummaryDataAllPopOTData_V2ForPaper()
 
 dbstop if error
 doPrint = 1;
@@ -50,7 +50,7 @@ for k = 1:nDirs
     end
     
     
-    if isfield(OBJ, 'ITD');
+    if isfield(OBJ, 'ITD')
         combinedSPKS = OBJ.ITD.combinedSPKS;
         stimNames = OBJ.ITD.stimNames;
         stimInfo = OBJ.ITD.stimInfo;
@@ -58,14 +58,14 @@ for k = 1:nDirs
         plotRasterIID(2, combinedSPKS, stimNames, stimInfo, allDirNames{k})
     end
     
-    if isfield(OBJ, 'WN');
-        combinedSPKS= OBJ.WN.combinedSPKS;
-        stimNames= OBJ.WN.stimNames;
-        stimInfo = OBJ.WN.stimInfo;
-        
-        plotRasterWN(combinedSPKS, stimNames, stimInfo, allDirNames{k})
-        
-    end
+%     if isfield(OBJ, 'WN')
+%         combinedSPKS= OBJ.WN.combinedSPKS;
+%         stimNames= OBJ.WN.stimNames;
+%         stimInfo = OBJ.WN.stimInfo;
+%         
+%         plotRasterWN(combinedSPKS, stimNames, stimInfo, allDirNames{k})
+%         
+%     end
     
     BIRDINFO = OBJ.BIRDINFO;
     
@@ -76,7 +76,7 @@ for k = 1:nDirs
         disp('Printing Plot')
         set(0, 'CurrentFigure', figH)
         
-        plotpos = [0 0 40 20];
+        plotpos = [0 0 10 15];
         tic
         %print_in_A4(0, saveName , '-djpeg', 0, plotpos);
         print_in_A4(0, saveName , '-depsc', 0, plotpos);
@@ -95,8 +95,10 @@ end
 function [] = plotRasterHRTF(dataSet, stimNames, stimInfo, dirName)
 
 
-pos = [.05 .7 .4 .25];
-axes('position',pos );cla
+% pos = [.05 .7 .4 .25];
+% axes('position',pos );cla
+
+subplot(3, 1, 1)
 
 blueCol = [0.2 0.7 0.8];
 
@@ -140,37 +142,47 @@ for azim = 1:n_azim
         end
     end
 end
-set(gca,'ytick',[])
-set(gca,'xtick',[])
+
+axis tight
+xlim([0 0.3*scanrate])
+
+xtick_ms = 0:0.1:0.3;
+
+xtick_samp = xtick_ms*scanrate;
+set(gca, 'xtick', xtick_samp)
+xticklabs = {'0', '100', '200', '300'};
+set(gca,'xticklabel', xticklabs)
+
+%set(gca,'ytick',[])
+%set(gca,'xtick',[])
 
 title (['HRTF | ' dirName(1:4)])
 ylabel('Reps | Azimuth')
-axis tight
-xlim([0 stimInfo.epochLength_samps])
+
 
 %% PSTH
-
-pos = [.05 .55 .4 .12];
-axes('position',pos );cla
-
-smoothiWin = round(stimInfo.Fs*.005);% 5 ms
-FRsmoothed = smooth(allSpksFR, smoothiWin)/stimInfo.nStims;
-timepoints = 1:1:numel(FRsmoothed);
-timepoints_ms = timepoints/stimInfo.Fs*1000;
-
-
-plot(timepoints_ms, FRsmoothed, 'color', 'k', 'LineWidth', 1)
-axis tight
-yss = ylim;
-%xlim([0 stimInfo.epochLength_samps])
-
-area([stimInfo.stimStart_samp/stimInfo.Fs*1000  stimInfo.stimStop_samp/stimInfo.Fs*1000], [yss(2)  yss(2)], 'FaceColor', blueCol, 'EdgeColor', blueCol)
-hold on
-plot(timepoints_ms, FRsmoothed, 'color', 'k', 'LineWidth', 1)
-
-ylim([yss])
-xlabel('Time [ms]')
-ylabel('FR [Hz]')
+% 
+% pos = [.05 .55 .4 .12];
+% axes('position',pos );cla
+% 
+% smoothiWin = round(stimInfo.Fs*.005);% 5 ms
+% FRsmoothed = smooth(allSpksFR, smoothiWin)/stimInfo.nStims;
+% timepoints = 1:1:numel(FRsmoothed);
+% timepoints_ms = timepoints/stimInfo.Fs*1000;
+% 
+% 
+% plot(timepoints_ms, FRsmoothed, 'color', 'k', 'LineWidth', 1)
+% axis tight
+% yss = ylim;
+% %xlim([0 stimInfo.epochLength_samps])
+% 
+% area([stimInfo.stimStart_samp/stimInfo.Fs*1000  stimInfo.stimStop_samp/stimInfo.Fs*1000], [yss(2)  yss(2)], 'FaceColor', blueCol, 'EdgeColor', blueCol)
+% hold on
+% plot(timepoints_ms, FRsmoothed, 'color', 'k', 'LineWidth', 1)
+% 
+% ylim([yss])
+% xlabel('Time [ms]')
+% ylabel('FR [Hz]')
 
 end
 
@@ -263,15 +275,16 @@ switch IID_ITD_switch
     case 1
         
         titlePart = 'IID';
-        
-        pos2 = [.05 .05 .2 .4];
-        pos1 = [.25 .05 .2 .4];
+        subplot(3, 1, 2)
+        %pos2 = [.05 .05 .2 .4];
+        %pos1 = [.25 .05 .2 .4];
         areaLim = 0.1;
         offsetCnt = .0075;
     case 2
+        subplot(3, 1, 3)
         titlePart = 'ITD';
-        pos2 = [.55 .05 .2 .4];
-        pos1 = [.75 .05 .2 .4];
+        %pos2 = [.55 .05 .2 .4];
+        %pos1 = [.75 .05 .2 .4];
         areaLim = 0.19;
         offsetCnt = .0076;
 end
@@ -333,7 +346,7 @@ end
 
 %%
 nAllReps = numel(conCatAll);
-axes('position',pos1); cla
+%axes('position',pos1); cla
 
 for s = 1 : nAllReps
     
@@ -350,46 +363,51 @@ for s = 1 : nAllReps
     
 end
 
-set(gca,'ytick',[])
-set(gca,'xtick',[])
+scanrate = stimInfo.Fs;
+axis tight
+xlim([0 0.3*scanrate])
 
+xtick_ms = 0:0.1:0.3;
+
+xtick_samp = xtick_ms*scanrate;
+set(gca, 'xtick', xtick_samp)
+xticklabs = {'0', '100', '200', '300'};
+set(gca,'xticklabel', xticklabs)
 
 ylabel('Reps')
-axis tight
-xlim([0 stimInfo.epochLength_samps])
 
 %% Firing Rate
-
-axes('position',pos2); cla
-smoothiWin = round(stimInfo.Fs*.005);% 5 ms
-
-offset = 0;
-
-area([stimStart_samp/stimInfo.Fs*1000  stimStop_samp/stimInfo.Fs*1000], [areaLim areaLim], 'FaceColor', blueCol, 'EdgeColor', blueCol)
-
-
-for p = 1:numel(allFR)
-    
-    thisFR = allFR{p};
-    
-    thisText = stimNames{p};
-    
-    FRsmoothed = smooth(thisFR, smoothiWin, 'lowess')/nRepsInStim;
-    timepoints = 1:1:numel(FRsmoothed);
-    timepoints_ms = timepoints/stimInfo.Fs*1000;
-    
-    hold on
-    plot(timepoints_ms, FRsmoothed+offset, 'color', repCols{p}, 'LineWidth', 1)
-    text(-50, [offset], thisText);
-    offset = offset + offsetCnt;
-    set(gca,'ytick',[])
-end
-yss = ylim;
-axis tight
-%xlim([0 stimInfo.epochLength_samps])
-title ([titlePart ' | ' dirName(1:4)])
-xlabel('Time [ms]')
-%ylabel('FR [Hz]')
+% 
+% axes('position',pos2); cla
+% smoothiWin = round(stimInfo.Fs*.005);% 5 ms
+% 
+% offset = 0;
+% 
+% area([stimStart_samp/stimInfo.Fs*1000  stimStop_samp/stimInfo.Fs*1000], [areaLim areaLim], 'FaceColor', blueCol, 'EdgeColor', blueCol)
+% 
+% 
+% for p = 1:numel(allFR)
+%     
+%     thisFR = allFR{p};
+%     
+%     thisText = stimNames{p};
+%     
+%     FRsmoothed = smooth(thisFR, smoothiWin, 'lowess')/nRepsInStim;
+%     timepoints = 1:1:numel(FRsmoothed);
+%     timepoints_ms = timepoints/stimInfo.Fs*1000;
+%     
+%     hold on
+%     plot(timepoints_ms, FRsmoothed+offset, 'color', repCols{p}, 'LineWidth', 1)
+%     text(-50, [offset], thisText);
+%     offset = offset + offsetCnt;
+%     set(gca,'ytick',[])
+% end
+% yss = ylim;
+% axis tight
+% %xlim([0 stimInfo.epochLength_samps])
+% title ([titlePart ' | ' dirName(1:4)])
+% xlabel('Time [ms]')
+% %ylabel('FR [Hz]')
 
 
 end

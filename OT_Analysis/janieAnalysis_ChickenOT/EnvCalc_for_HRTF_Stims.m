@@ -64,6 +64,7 @@ PostStimStartTime_samp = PostStimStartTime_s* SamplingRate;
 %%
 
 stimNames = C_OBJ.S_SPKS.SORT.allSpksStimNames;
+%test = flipud(stimNames);
 SpkResponses = C_OBJ.S_SPKS.SORT.allSpksMatrix;
 
 nRows = size(stimNames, 1);

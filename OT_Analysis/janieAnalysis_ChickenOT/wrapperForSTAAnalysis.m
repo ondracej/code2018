@@ -17,14 +17,13 @@ ExpInds = [3 8 10 12 13 16 17 19 21 23 25 27 28 29 31 33 34 36 37 38 39 40 41 42
 
 %HRTFExpInds = [27 40 3 39 31]; %Stims
 %HRTFExpInds = [23 29 28 36 10]; %Onset
-%HRTFExpInds = [16 28 17 42 43 ]; %Other
-%HRTFExpInds = [28 16 17 42 43 ]; %Other
-nInds = numel(ExpInds);
+HRTFExpInds = [28 16 17 42 43 ]; %Other sup figure
+nInds = numel(HRTFExpInds);
 figure(406); clf
 disp('Running...');
 for j = 1:nInds
     
-    thisInd = ExpInds(j);
+    thisInd = HRTFExpInds(j);
     thisInd
    
     experiment = exps(thisInd);
@@ -34,10 +33,10 @@ for j = 1:nInds
     %STA_for_HRTF_Stims(experiment, recSession, NeuronName)
     %STA_for_HRTF_Stims_FreqTime(experiment, recSession, NeuronName)
     %STA_for_HRTF_Stims_FreqTime_V2(experiment, recSession, NeuronName)
-    EnvCalc_for_HRTF_Stims(experiment, recSession, NeuronName)
+    %EnvCalc_for_HRTF_Stims(experiment, recSession, NeuronName)
     
     %AnalysiWindowDefinition_HRTF(experiment, recSession, NeuronName)
-    %plotNormHRTFWinSelection(experiment, recSession, NeuronName, j, 5)
+    plotNormHRTFWinSelection(experiment, recSession, NeuronName, j, 5)
     
     %STRF_preprocessing_OT(experiment, recSession, NeuronName)
     
