@@ -3,9 +3,9 @@ function [] = plotSummaryDataAllPopOTData_V2ForPaper()
 dbstop if error
 doPrint = 1;
 
-PopulationDir = '/home/janie/Data/OTProject/MLD/MLD-AllData/';
+PopulationDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/MLD-AllData/';
 
-figSavePath = ['/home/janie/Data/OTProject/MLD/Figs/MLDRastersEpsc/'];
+figSavePath = ['/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/MLDRastersEpsc/'];
 
 search_file = ['N*'];
 dir_files = dir(fullfile(PopulationDir, search_file));
@@ -15,8 +15,9 @@ allDirNames = cell(1, nDirs);
 for j = 1:nDirs
     allDirNames{j} = dir_files(j).name;
 end
+thisset = [35 36];
 
-for k = 1:nDirs
+for k = thisset
     
     figH = figure(100);clf
     pause(.1)
@@ -76,9 +77,9 @@ for k = 1:nDirs
         disp('Printing Plot')
         set(0, 'CurrentFigure', figH)
         
-        plotpos = [0 0 10 15];
+        plotpos = [0 0 7 20];
         tic
-        %print_in_A4(0, saveName , '-djpeg', 0, plotpos);
+       % print_in_A4(0, saveName , '-djpeg', 0, plotpos);
         print_in_A4(0, saveName , '-depsc', 0, plotpos);
         toc
     end
@@ -112,8 +113,9 @@ cnt = 1;
 %sortedDataNames = dataSet.C_OBJ.S_SPKS.SORT.allSpksStimNames;
 
 nReps = numel(dataSet{1,1});
-repsToPlot = 1:nReps;
+%repsToPlot = 1:nReps;
 
+repsToPlot = 1:2;
 allSpksFR = zeros(stimInfo.epochLength_samps,1);
 for azim = 1:n_azim
     for elev = 1:n_elev
@@ -137,7 +139,7 @@ for azim = 1:n_azim
             
         end
         if elev == n_elev
-            line([0 300], [cnt cnt], 'color', blueCol)
+            line([0 0.3*scanrate], [cnt cnt], 'color', blueCol)
             %text(-20, cnt-30, (sortedDataNames{elev, azim}(4:10)))
         end
     end
@@ -280,6 +282,8 @@ switch IID_ITD_switch
         %pos1 = [.25 .05 .2 .4];
         areaLim = 0.1;
         offsetCnt = .0075;
+        stimSet = [2 3 4 5 6 7 8 9 10 11 12];
+        %stimSet = [1 2 3 4 5 6 7 8 9 10 11];
     case 2
         subplot(3, 1, 3)
         titlePart = 'ITD';
@@ -287,6 +291,9 @@ switch IID_ITD_switch
         %pos1 = [.75 .05 .2 .4];
         areaLim = 0.19;
         offsetCnt = .0076;
+       stimSet = [ 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21];
+        %stimSet = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17];
+         
 end
 
 blueCol = [0.2 0.6 0.8];
@@ -305,9 +312,16 @@ nRepsInStim = numel(allSpksMatrix{1});
 
 conCatAll = [];
 cnt =1;
-for j = 1:nStimTypes
+%for j = 1:nStimTypes
+for j = stimSet
     nTheseReps = numel(allSpksMatrix{j});
-    for k = 1: nTheseReps
+    
+    if nTheseReps > 15
+        nTheseReps = 25;
+        nRepsInStim = 25;
+    end
+    
+     for k = 1: nTheseReps   
         conCatAll{cnt} = allSpksMatrix{1,j}{1,k};
         cnt = cnt +1;
     end
@@ -347,7 +361,7 @@ end
 %%
 nAllReps = numel(conCatAll);
 %axes('position',pos1); cla
-
+cnt = 1;
 for s = 1 : nAllReps
     
     these_spks_on_chan = conCatAll{s};
@@ -358,7 +372,7 @@ for s = 1 : nAllReps
     cnt = cnt +1;
     
     if mod(s, nRepsInStim) == 0
-        line([0 epochLength_samps], [cnt cnt], 'color', 'k')
+        line([0 epochLength_samps], [cnt cnt], 'color', blueCol)
     end
     
 end
@@ -375,7 +389,7 @@ xticklabs = {'0', '100', '200', '300'};
 set(gca,'xticklabel', xticklabs)
 
 ylabel('Reps')
-
+ylim([0 nAllReps])
 %% Firing Rate
 % 
 % axes('position',pos2); cla

@@ -283,6 +283,9 @@ for j = 1:nRows
         
         cnnt= cnnt +1;
         
+%         figure; 
+%         imagesc(allCorrsL_matrix_r)
+%         imagesc(allCorrsR_matrix_r)
         
         %{
         timepoints_samp = 1:1:numel(xcov_L);

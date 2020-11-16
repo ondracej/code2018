@@ -1,8 +1,8 @@
 function [] = plotCCsEnvelopPSTh()
 
 
-CCDir = '/home/janie/Data/OTProject/MLD/Figs/EnvAnalysis-HRTF/newMLD/CCs/';
-saveDir = ['/home/janie/Data/OTProject/MLD/Figs/EnvAnalysis-HRTF/newMLD/CCPlots/'];
+CCDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/EnvAnalysis-HRTF/newMLD/CCs/';
+saveDir = ['/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/EnvAnalysis-HRTF/newMLD/CCPlots/'];
 
 
 trialSeach = ['*.mat*'];
@@ -13,14 +13,19 @@ for j = 1:nTrials
     trialNames{j} = trialNamesStruct(j).name;
 end
 
+smoothwin = 3;
 
-for s = 25:nTrials
+
+for s = 1:nTrials
     
     d = load([CCDir trialNames{s}]);
     
-    
     allCorrsL_matrix_r = flipud(d.CCL.allCorrsL_matrix_r);
     %allCorrsL_matrix_p = flipud(d.CCL.allCorrsL_matrix_p);
+    
+    if sum(sum(isnan(allCorrsL_matrix_r))) == numel(allCorrsL_matrix_r)
+        continue
+    end
     
     allCorrsR_matrix_r = flipud(d.CCR.allCorrsR_matrix_r);
     %allCorrsR_matrix_p = flipud(d.CCR.allCorrsR_matrix_p);
@@ -38,8 +43,16 @@ for s = 25:nTrials
     allMax = max([lmax rmax]);
     allmin = min([lmin rmin]);
     
-     
+    rmean = smooth(nanmean(allCorrsR_matrix_r, 1), smoothwin);
+    lmean = smooth(nanmean(allCorrsL_matrix_r, 1), smoothwin);
     
+    %rmean = nanmean(allCorrsR_matrix_r, 1);
+    %lmean = nanmean(allCorrsL_matrix_r, 1);
+    
+    minCorr = min(min([rmean lmean]));
+    maxCorr = max(max([rmean lmean]));
+    
+    %%
     figure(121); clf
     
     xticks = [1 9 17 25 33];
@@ -48,7 +61,7 @@ for s = 25:nTrials
     yicklabs = {'67.5', '0', '-67.5'};
     colormap('parula')
     
-    subplot(4, 1, 1)
+    subplot(3, 2, 1)
     imagesc(allCorrsR_matrix_r)
     title(trialNames{s}(1:4))
     set(gca, 'xtick', xticks )
@@ -58,7 +71,17 @@ for s = 25:nTrials
     caxis([allmin allMax])
     %colorbar
     
-    subplot(4, 1, 2)
+    %%
+    subplot(3, 2, 2)
+    %azSum = nanmean(allCorrsR_matrix_r, 1);
+    plot(rmean, 'k')
+    axis tight
+    set(gca, 'xtick', xticks )
+    set(gca, 'xticklabel', xicklabs) 
+    ylim([minCorr maxCorr])
+    
+    %%
+    subplot(3, 2, 3)
     imagesc(allCorrsL_matrix_r)
     set(gca, 'xtick', xticks )
     set(gca, 'xticklabel', xicklabs)
@@ -66,8 +89,17 @@ for s = 25:nTrials
     set(gca, 'yticklabel', yicklabs)
     caxis([allmin allMax])
     %colorbar
+    %%
+    subplot(3, 2, 4)
+    %azSum = nanmean(allCorrsL_matrix_r, 1);
+    plot(lmean, 'k')
+    axis tight
+    set(gca, 'xtick', xticks )
+    set(gca, 'xticklabel', xicklabs)
+    ylim([minCorr maxCorr])
     
-    subplot(4, 1, 3)
+    %%
+    subplot(3, 2, 5)
     imagesc(CorrDiff)
     set(gca, 'xtick', xticks )
     set(gca, 'xticklabel', xicklabs)
@@ -76,11 +108,11 @@ for s = 25:nTrials
     %caxis([allmin allMax])
     %colorbar
     
-    azSum = sum(CorrDiff, 1);
+    azSum = nanmean(CorrDiff, 1);
     elsum = sum(CorrDiff, 2);
-    
+    %%
     %figure(102);
-    subplot(4, 1, 4)
+    subplot(3, 2, 6)
     plot(smooth(azSum), 'k')
     axis tight
     %subplot(2, 1, 2)
@@ -91,7 +123,7 @@ for s = 25:nTrials
     %set(gca, 'yticklabel', yicklabs)
     %%
     saveName = [saveDir trialNames{s}(1:4) '-EnvCC'];
-    plotpos = [0 0 12 18];
+    plotpos = [0 0 20 18];
     
     print_in_A4(0, saveName, '-djpeg', 0, plotpos);
     print_in_A4(0, saveName, '-depsc', 0, plotpos);
