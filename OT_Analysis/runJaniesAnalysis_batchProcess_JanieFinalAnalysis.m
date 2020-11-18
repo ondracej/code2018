@@ -31,9 +31,9 @@ for j = 1:nTrials
 end
 
 %%
-%Expset = [1:8 34];
+Expset = [1 10 11 13 15 16 18];
 
-for s = 1:nTrials
+for s = Expset
     
     filToLoad = trialNames{s};
     saveName = filToLoad(1:28);
@@ -433,15 +433,16 @@ for s = 1:nTrials
         'LineStyle','none',...
         'FitBoxToText','off');
     
-    if doPrint
+    if doPrint == 0
         
         disp('Printing Plot')
         set(0, 'CurrentFigure', figH1)
         
         dropBoxSavePath = [saveDir saveName '-rasterMatrix'];
         
-        plotpos = [0 0 30 20];
+        plotpos = [0 0 15 6];
         print_in_A4(0, dropBoxSavePath , '-djpeg', 0, plotpos);
+        print_in_A4(0, dropBoxSavePath , '-depsc', 0, plotpos);
         
         disp('')
         

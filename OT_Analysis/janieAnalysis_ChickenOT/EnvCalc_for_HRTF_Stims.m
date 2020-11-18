@@ -272,6 +272,16 @@ for j = 1:nRows
         ccR_r(cnnt) = r_R(1 ,2);
         ccR_p(cnnt) = p_R(1 ,2);
         
+        [cor_L, cor_Lp] = corr(smooth_yupperL, smooth_thisUniqStimFR); % 0 lag corr coef
+        [cor_R, cor_Rp] = corr(smooth_yupperR, smooth_thisUniqStimFR);
+        
+        corL_r(cnnt) = cor_L;
+        corL_p(cnnt) = cor_Lp;
+        
+        corR_r(cnnt) = cor_R;
+        corR_p(cnnt) = cor_Rp;
+        
+        
         AllstimNames{cnnt} = thisSigName;
         
         allCorrsL_matrix_r(j,k) = r_L(1 ,2);
@@ -279,6 +289,12 @@ for j = 1:nRows
         
         allCorrsR_matrix_r(j,k) = r_R(1 ,2);
         allCorrsR_matrix_p(j,k) = p_R(1 ,2);
+        
+        corallCorrsL_matrix_r(j,k) = cor_L;
+        corallCorrsL_matrix_p(j,k) = cor_Lp;
+        
+        corallCorrsR_matrix_r(j,k) = cor_R;
+        corallCorrsR_matrix_p(j,k) = cor_Rp;
         
         
         cnnt= cnnt +1;
