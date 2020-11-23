@@ -87,7 +87,8 @@ for j = 1:nInds
    %RastersForAmplitudeEnvelopWN(experiment, recSession, NeuronName, j)
     %EnvCalc_for_WN_Stims(experiment, recSession, NeuronName)
    %WnCCs =  EnvCalc_for_WN_Stims_V2(experiment, recSession, NeuronName, j, 36, WnCCs);
-   WnCCs =  EnvCalc_for_WN_Stims_V3(experiment, recSession, NeuronName, j, 36, WnCCs);
+   %WnCCs =  EnvCalc_for_WN_Stims_V3(experiment, recSession, NeuronName, j, 36, WnCCs);
+   WnCCs =  EnvCalc_for_WN_Stims_MI(experiment, recSession, NeuronName, j, 36, WnCCs);
    
 end
 

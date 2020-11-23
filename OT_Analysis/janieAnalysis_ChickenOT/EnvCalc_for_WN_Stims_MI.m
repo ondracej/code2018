@@ -1,4 +1,4 @@
-function [WnCCs] = EnvCalc_for_WN_Stims_V3(experiment, recSession, NeuronName, oo, totalReps, WnCCs)
+function [WnCCs] = EnvCalc_for_WN_Stims_MI(experiment, recSession, NeuronName, oo, totalReps, WnCCs)
 dbstop if error
 if nargin <3
     
@@ -101,7 +101,7 @@ for j = 1:nRows
         
         thisSigData_L = cutSigData(:, 1);
         [yupperL,~] = envelope(thisSigData_L);
-        doBigPlotsmooth_yupperL = smooth(yupperL, smoothWin_samps);
+        smooth_yupperL = smooth(yupperL, smoothWin_samps);
         
         %%
         
@@ -146,89 +146,6 @@ end
 
 %%
 %%
-if doBigPlot == 1
-    thisSigDataToUse = thisSigData;
-    
-    figure(105); clf
-    subplot(3, 2, 1)
-    
-    xtimepoints =1:1:size(thisSigDataToUse, 1);
-    xtimepoints_ms = xtimepoints/Fs*1000;
-    
-    subplot(3, 2, 1)
-    plot(xtimepoints_ms, thisSigDataToUse, 'k')
-    axis tight
-    title('Raw WN')
-    
-    
-    T = 1/Fs;                     % Sample time
-    L = numel(thisSigDataToUse);
-    NFFT = 2^nextpow2(L); % Next power of 2 from length of y
-    Y = fft(squeeze(thisSigDataToUse),NFFT)/L;
-    f = Fs/2*linspace(0,1,NFFT/2+1);
-    
-    % Plot single-sided amplitude spectrum.
-    subplot(3, 2, 2)
-    plot(f/1000,2*abs(Y(1:NFFT/2+1)))
-    hold on
-    smoothY = smooth(2*abs(Y(1:NFFT/2+1)));
-    plot(f/1000,smoothY, 'k')
-    
-    xlim([0 7.5])
-    title('FFT WN')
-    xlabel('Frequency (kHz)')
-    
-    
-    [yupperL,~] = envelope(thisSigDataToUse);
-    smooth_yupperL = smooth(yupperL, smoothWin_samps);
-    
-    subplot(3, 2, [3 4])
-    plot(xtimepoints_ms, yupperL)
-    axis tight
-    title('WN envelope')
-    hold on
-    plot(xtimepoints_ms, smooth_yupperL, 'k')
-    
-    %
-    
-    RawData = yupperL;
-    
-    Dt = 1/44100;
-    t = 0:Dt:(numel(RawData)*Dt)-Dt;
-    
-    [cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',48);
-    subplot(3, 2, 5)
-    helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
-    ylim([.5 8])
-    %title(titleTxt)
-    colorbar('off')
-    
-    %
-    meanf = mean(abs(cfs).^2, 2);
-    %medianf = median(abs(cfs).^2, 2);
-    stdf = std(abs(cfs').^2, 1)';
-    semF = stdf/sqrt(883);
-    
-    posF = meanf + semF;
-    negF = meanf - semF;
-    subplot(3, 2, 6)
-    plot(posF, f./1e3, 'color', [0.5 0.5 0.5])
-    hold on
-    plot(negF, f./1e3, 'color', [0.5 0.5 0.5])
-    plot(meanf, f./1e3, 'k', 'linewidth', 1)
-    axis tight
-    ylim([.5 7.5])
-    title('Freq. in WN Envelope')
-    
-    
-    %%
-    saveName = [FigSaveDir NeuronName 'Wn-SpectralEnvContent'];
-    plotpos = [0 0 10 9];
-    
-    %print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-    %print_in_A4(0, saveName, '-depsc', 0, plotpos);
-    
-end   
     %%
     
  
@@ -306,227 +223,40 @@ end
     
     %%
     
-    if doBigPlot
-    figure(107); clf
-    subplot(4, 2, 1)
-    
-    xtimepoints =1:1:size(filNoise_lo, 1);
-    xtimepoints_ms = xtimepoints/Fs*1000;
-    
-    subplot(4, 2, 1)
-    plot(xtimepoints_ms, filNoise_lo, 'k')
-    axis tight
-    ylim([-.3 .3])
-    title('Low Freq. WN Envelope')
-    
-    
-    T = 1/Fs;                     % Sample time
-    L = numel(filNoise_lo);
-    NFFT = 2^nextpow2(L); % Next power of 2 from length of y
-    Y = fft(squeeze(filNoise_lo),NFFT)/L;
-    f = Fs/2*linspace(0,1,NFFT/2+1);
-    
-    % Plot single-sided amplitude spectrum.
-    subplot(4, 2, 2)
-    plot(f/1000,2*abs(Y(1:NFFT/2+1)))
-    hold on
-    smoothY = smooth(2*abs(Y(1:NFFT/2+1)));
-    plot(f/1000,smoothY, 'k')
-    
-    xlim([0 7.5])
-    title('FFT Low Freq Envelope')
-    xlabel('Frequency (kHz)')
-    
-    %%
-    subplot(4, 2, 1)
-    
-    xtimepoints =1:1:size(filNoise_hi, 1);
-    xtimepoints_ms = xtimepoints/Fs*1000;
-    
-    subplot(4, 2, 3)
-    plot(xtimepoints_ms, filNoise_hi, 'k')
-    axis tight
-    title('High WN Envelope')
-    ylim([-.3 .3])
-    
-    T = 1/Fs;                     % Sample time
-    L = numel(filNoise_hi);
-    NFFT = 2^nextpow2(L); % Next power of 2 from length of y
-    Y = fft(squeeze(filNoise_hi),NFFT)/L;
-    f = Fs/2*linspace(0,1,NFFT/2+1);
-    
-    % Plot single-sided amplitude spectrum.
-    subplot(4, 2, 4)
-    plot(f/1000,2*abs(Y(1:NFFT/2+1)))
-    hold on
-    smoothY = smooth(2*abs(Y(1:NFFT/2+1)));
-    plot(f/1000,smoothY, 'k')
-    
-    xlim([0 7.5])
-    title('FFT High Freq Envelope')
-    xlabel('Frequency (kHz)')
-    
-    
-    %%
-    
-    
-    Dt = 1/44100;
-    t = 0:Dt:(numel(filNoise_lo)*Dt)-Dt;
-    
-    [cfs,f] = cwt(filNoise_lo,'bump',1/Dt,'VoicesPerOctave',48);
-    subplot(4, 2, 5)
-    helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
-    ylim([.5 8])
-    %title(titleTxt)
-    colorbar('off')
-    
-    %
-    meanf = mean(abs(cfs).^2, 2);
-    %medianf = median(abs(cfs).^2, 2);
-    stdf = std(abs(cfs').^2, 1)';
-    semF = stdf/sqrt(373);
-    
-    posF = meanf + semF;
-    negF = meanf - semF;
-    subplot(4, 2, 6)
-    plot(posF, f./1e3, 'color', [0.5 0.5 0.5])
-    hold on
-    plot(negF, f./1e3, 'color', [0.5 0.5 0.5])
-    plot(meanf, f./1e3, 'k', 'linewidth', 1)
-    axis tight
-    ylim([.5 7.5])
-    title('Freq. in Lo WN Envelope')
-    
-    %%
-    
-    
-    
-    Dt = 1/44100;
-    t = 0:Dt:(numel(filNoise_hi)*Dt)-Dt;
-    
-    [cfs,f] = cwt(filNoise_hi,'bump',1/Dt,'VoicesPerOctave',48);
-    subplot(4, 2, 7)
-    helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
-    ylim([.5 8])
-    %title(titleTxt)
-    colorbar('off')
-    
-    %
-    meanf = mean(abs(cfs).^2, 2);
-    %medianf = median(abs(cfs).^2, 2);
-    stdf = std(abs(cfs').^2, 1)';
-    semF = stdf/sqrt(373);
-    
-    posF = meanf + semF;
-    negF = meanf - semF;
-    subplot(4, 2, 8)
-    plot(posF, f./1e3, 'color', [0.5 0.5 0.5])
-    hold on
-    plot(negF, f./1e3, 'color', [0.5 0.5 0.5])
-    plot(meanf, f./1e3, 'k', 'linewidth', 1)
-    axis tight
-    ylim([.5 7.5])
-    title('Freq. in Hi WN Envelope')
-    
-    %%
-    
-    saveName = [FigSaveDir NeuronName 'Wn-FilterEnvContent'];
-    plotpos = [0 0 20 18];
-    
-    print_in_A4(0, saveName, '-djpeg', 1, plotpos);
-    print_in_A4(0, saveName, '-depsc', 1, plotpos);
-end
-
-
-
-%%
-smoothWin_samps = smoothWin_samps*2;
-
-  [yupperL,~] = envelope(thisSigData);
-  smooth_yupperL = smooth(yupperL, smoothWin_samps);
+    [yupperL,~] = envelope(thisSigData);
       
-smooth_thisUniqStimFR = smooth(thisUniqStimFR, smoothWin_samps);
 
-hiFreqEnvSmooth = smooth(filNoise_hi, smoothWin_samps);
-lowFreqEnvSmooth = smooth(filNoise_lo, smoothWin_samps);
-
-%%
-
-[r_L, p_L] = corr(smooth_yupperL, smooth_thisUniqStimFR); % spearmann
-[rlo_L, plo_L] = corr(lowFreqEnvSmooth, smooth_thisUniqStimFR); % spearmann
-[rhi_L, phi_L] = corr(hiFreqEnvSmooth, smooth_thisUniqStimFR); % spearmann
 
 %% MI
-bla = mutualinfo(smooth_yupperL,smooth_thisUniqStimFR);
 
-% [r_L, p_L] = corr(yupperL, smooth_thisUniqStimFR); % spearmann
-% [rlo_L, plo_L] = corr(filNoise_lo, smooth_thisUniqStimFR); % spearmann
-% [rhi_L, phi_L] = corr(filNoise_hi, smooth_thisUniqStimFR); % spearmann
+smooth_thisUniqStimFR = smooth(thisUniqStimFR, smoothWin_samps);
+ 
+ 
+raw_MI = mutualinfo(yupperL,thisUniqStimFR);
+Hi_MI = mutualinfo(filNoise_hi,thisUniqStimFR);
+Lo_MI = mutualinfo(filNoise_lo,thisUniqStimFR);
 
-%%
-
-
-xtimepoints =1:1:size(cutSigData, 1);
-xtimepoints_ms = xtimepoints/Fs*1000;
-
-%WnCCs.allRs(oo) = r_L(1, 2);
-%WnCCs.allps(oo) = p_L(1, 2);
-
-WnCCs.allRs(oo) = r_L;
-WnCCs.allps(oo) = p_L;
-
-%%
-%titletext = [NeuronName ' CC = ' num2str(r_L(1, 2)) ' p= ' num2str(p_L(1, 2))];
- xtimepoints =1:1:size(smooth_thisUniqStimFR, 1);
-    xtimepoints_ms = xtimepoints/Fs*1000;
-    
-figure (104);  clf
-subplot(4, 1, 1)
-plot(xtimepoints_ms, thisUniqStimFR)
-hold on
-plot(xtimepoints_ms, smooth_thisUniqStimFR, 'k')
-axis tight
-%ylim([0 4])
-%title(titletext)
-
-subplot(4, 1, 2)
-plot(xtimepoints_ms, yupperL)
-hold on
-plot(xtimepoints_ms, smooth_yupperL, 'k')
-titletext = [NeuronName ' Raw CC = ' num2str(r_L) ' p= ' num2str(p_L)];
-axis tight
-title(titletext)
-ylim([0 .65])
-
-
-subplot(4, 1, 3)
-plot(xtimepoints_ms, filNoise_lo)
-hold on
-plot(xtimepoints_ms, lowFreqEnvSmooth, 'k')
-
-titletext = [NeuronName ' Low CC = ' num2str(rlo_L) ' p= ' num2str(plo_L)];
-axis tight
-title(titletext)
-ylim([-.3 .3])
-
-subplot(4, 1, 4)
-plot(xtimepoints_ms, filNoise_hi)
-hold on
-plot(xtimepoints_ms, hiFreqEnvSmooth, 'k')
-titletext = [NeuronName ' High CC = ' num2str(rhi_L) ' p= ' num2str(phi_L)];
-axis tight
-title(titletext)
-ylim([-.3 .3])
+[r_raw, p_raw] = corr(yupperL, thisUniqStimFR'); % spearmann
+[r_low, p_low] = corr(filNoise_hi, thisUniqStimFR'); % spearmann
+[r_hi, p_hi] = corr(filNoise_lo, thisUniqStimFR'); % spearmann
 
 %%
 
-saveName = [FigSaveDir NeuronName '-EnvAnalysis-Corr_LoHi' Stim];
-plotpos = [0 0 15 12];
+WnCCs.raw_MI(oo) = raw_MI;
+WnCCs.Hi_MI(oo) = Hi_MI;
+WnCCs.Lo_MI(oo) = Lo_MI;
 
-print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-print_in_A4(0, saveName, '-depsc', 0, plotpos);
+WnCCs.raw_MI(oo) = raw_MI;
+WnCCs.Hi_MI(oo) = Hi_MI;
+WnCCs.Lo_MI(oo) = Lo_MI;
 
+%%
 if oo == totalReps
+    
+    all_raw_MI = WnCCs.raw_MI;
+    all_Hi_MI = WnCCs.Hi_MI;
+    all_Lo_MI = WnCCs.Lo_MI;
+    
     Allps = WnCCs.allps;
     AllRs = WnCCs.allRs;
     
