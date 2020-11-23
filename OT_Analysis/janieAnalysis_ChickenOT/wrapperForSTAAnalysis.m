@@ -62,7 +62,7 @@ figure(406); clf
 nInds = numel(AllWN_ExpInds);
 WN = [];
 WnCCs = [];
-for j = 1:nInds
+for j = 8:nInds
     
     %thisInd = WN_ExpInds(j);
     thisInd = AllWN_ExpInds(j);

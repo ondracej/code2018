@@ -25,7 +25,7 @@ switch gethostname
         FigSaveDir = '/home/janie/Data/OTProject/MLD/Figs/STA-WN/RasterSTA/';
     case 'PLUTO'
         SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/';
-        addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
+        addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/'
         FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN-Spectrogram/';
 end
 
@@ -70,7 +70,7 @@ StimStartTime_samp = StimStartTime_s* SamplingRate;
 PostStimStartTime_samp = PostStimStartTime_s* SamplingRate;
 
 
-TimeWindow_ms = 20;
+TimeWindow_ms = 100;
 TimeWindow_samp =TimeWindow_ms /1000*SamplingRate;
 %%
 
@@ -154,6 +154,62 @@ disp('')
 %% STA
 if size(ALL_LStimWins, 1) > 2 % must have atleast 2 spikes
     
+    
+    DT = 1/Fs;
+    
+    for j = 1:size(ALL_LStimWins, 1)
+        
+        thisData = ALL_LStimWins(j,:);
+        t = 0:DT:(numel(thisData)*DT)-DT;
+        [cfs,f] = cwt(thisData,'bump',1/DT,'VoicesPerOctave',32);
+        
+        all_cfs{j} = cfs;
+        all_f{j} = f;
+        
+        figure(105);clf
+        pcolor(t,f,abs(cfs));shading flat
+        %pause
+        
+        %figure
+        %helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
+    end
+    
+    allRows = [];
+    for k = 1:87
+        for j = 1:size(ALL_LStimWins, 1)
+       
+        allRows(j,:) = all_cfs{1,j}(k,:);
+        
+        end
+        
+        %test = abs(allRows);
+        
+        meanRow(k,:) = mean(allRows, 1);
+    end
+    
+    
+    [minf,maxf] = cwtfreqbounds(4411, Fs, 'wavelet', 'bump');
+        
+          figure(105);clf
+        pcolor( t*1e3,f./1e3,abs(cfs));shading flat 
+    ylim([.5 8]);
+      %pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
+    
+      nfreqs = 60;
+                min_freq = 200;
+                max_freq = 8000;
+            
+                min_scale = 1/max_freq*Fs;
+                max_scale = 1/min_freq*Fs;
+                wavetype = 'cmor1-1';
+                scales = logspace(log10(min_scale),log10(max_scale),nfreqs);
+                wfreqs = scal2frq(scales,wavetype,1/Fs);
+                
+       V_wave = cwt(thisData,scales,wavetype);
+    
+    
+    
+    
 LStimWins_mean = mean(ALL_LStimWins);
 timepoints_samp = 1:1:numel(LStimWins_mean);
 timepoints_ms = timepoints_samp/Fs*1000;
@@ -179,6 +235,21 @@ set(gca, 'xticklabel', xtickabs )
 
 %% Wavelet
 
+load batsignal
+t = 0:DT:(numel(batsignal)*DT)-DT;
+[cfs,f] = cwt(batsignal,'bump',1/DT,'VoicesPerOctave',32);
+helperCWTTimeFreqPlot(cfs,t.*1e6,f./1e3,'surf','Bat Echolocation (CWT)',...
+    'Microseconds','kHz')
+DT = 1/Fs;
+t = 0:DT:(numel(RawData)*DT)-DT;
+figure
+helperCWTTimeFreqPlot(cfs,t.*1e6,f./1e3,'surf','Bat Echolocation (CWT)',...
+    'Microseconds','kHz')
+
+
+[cfs,f] = cwt(RawData,'bump',1/DT,'VoicesPerOctave',32);
+
+
 RawData = LStimWins_mean;
 %pwelch(RawData)
 %[pxx,f] = pwelch(RawData,10,8,10,Fs);
@@ -203,10 +274,18 @@ subplot(3, 1, 2)
             xlim([0 7])
 title('FFT')
             
+bla = envelope(LStimWins_mean);
+figure; plot(timepoints_ms, smooth(bla));
 
-%Dt = 1/44100;
-%t = 0:Dt:(numel(RawData)*Dt)-Dt;
-%[cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',48);
+
+[cfs,frq] = cwt(LStimWins_mean,Fs, 'bump');
+tms = (0:numel(LStimWins_mean)-1)/Fs;
+figure
+surface(tms,frq,abs(cfs))
+axis tight
+shading flat
+ylim([100 7500])
+
 
 
 figure(103);
@@ -337,7 +416,7 @@ end
 %%
 
 %%
-%{
+
 spec_scale = .1;
 figure(104); clf;
 specgram1(double(RStimWins_mean)/spec_scale,512*2,Fs,40,36);
@@ -352,37 +431,42 @@ clims = [0 .5];
 %saveName = [PlotDir obj.Plotting.saveTxt '_SWR_wavelet_mean'];
 
 
-thisSegData_wav = Wavdata;
-[thisSegData_wav,nshifts] = shiftdim(thisSegData_wav',-1);
-
-%dsf = 20;
-dsf = 1;
-Fsd = Fs/dsf;
-hcf = 400;
-[n_ch,n_tr,N] = size(thisSegData_wav);
-
-[bb,aa] = butter(2,hcf/(Fs/2),'low');
-V_ds = reshape(permute(thisSegData_wav,[3 1 2]),[],n_ch*n_tr);
-V_ds = downsample(filtfilt(bb,aa,V_ds),dsf);
-V_ds = reshape(V_ds,[],n_ch,n_tr);
-
-%
-[N,n_chs,n_trials] = size(V_ds);
-nfreqs = 60;
-min_freq = 1.5;
-max_freq = 800;
-Fsd = Fs/dsf;
-min_scale = 1/max_freq*Fsd;
-max_scale = 1/min_freq*Fsd;
-wavetype = 'cmor1-1';
-scales = logspace(log10(min_scale),log10(max_scale),nfreqs);
-wfreqs = scal2frq(scales,wavetype,1/Fsd);
-
-use_ch = 1;
-cur_V = squeeze(V_ds(:,use_ch,:));
-V_wave = cwt(cur_V(:),scales,wavetype);
-V_wave = reshape(V_wave,nfreqs,[],n_trials);
-
+    thisSegData_wav = Wavdata;
+    
+                [thisSegData_wav,nshifts] = shiftdim(thisSegData_wav',-1);
+                
+                dsf = 20;
+                Fsd = Fs/dsf;
+                hcf = 8000;
+                [n_ch,n_tr,N] = size(thisSegData_wav);
+                
+                [bb,aa] = butter(2,hcf/(Fs/2),'low');
+                V_ds = reshape(permute(thisSegData_wav,[3 1 2]),[],n_ch*n_tr);
+                V_ds = downsample(filtfilt(bb,aa,V_ds),dsf);
+                V_ds = reshape(V_ds,[],n_ch,n_tr);
+                V_ds  = V_ds;
+                
+                %
+                [N,n_chs,n_trials] = size(V_ds);
+                nfreqs = 60;
+                min_freq = 1.5;
+                max_freq = 8000;
+                Fsd = Fs/dsf;
+                Fsd = Fs;
+                min_scale = 1/max_freq*Fsd;
+                max_scale = 1/min_freq*Fsd;
+                wavetype = 'cmor1-1';
+                scales = logspace(log10(min_scale),log10(max_scale),nfreqs);
+                wfreqs = scal2frq(scales,wavetype,1/Fsd);
+                
+                use_ch = 1;
+                cur_V = squeeze(V_ds(:,use_ch,:));
+                V_wave = cwt(cur_V(:),scales,wavetype);
+                V_wave = reshape(V_wave,nfreqs,[],n_trials);
+                
+                tr = 1;
+    ax3 = subplot(3,1,3);
+                pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
 %% Mean PLot
 
 
@@ -403,6 +487,7 @@ V_wave = reshape(V_wave,nfreqs,[],n_trials);
 %                 ax3 = subplot(3,1,3);
 tr =1;
 figure
+  V_wave = cwt(cur_V(:),scales,wavetype);
 pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
 %set(gca,'yscale','log');
 axis tight

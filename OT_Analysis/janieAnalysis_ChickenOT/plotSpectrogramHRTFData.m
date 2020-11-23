@@ -8,16 +8,34 @@ wavFile4 =  '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/SignalsForDefs/az_-1
 
 wavFile5 = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/SignalsForDefs/az_0__el_0.wav';
 
-
+test = '/media/janie/300GBPassport/OTProject/AllSignals/Signals/2000.wav';
 
 %%
-% spec_scale = 0.05;
-%
-% figure(100); clf
-% subplot(2, 2,1 )
-% specgram1(double(wavData1(:, 1))/spec_scale,512,Fs,400,360);
-% ylim([0 8000])
-% title('Chan 1')
+spec_scale = 0.05;
+[wavData1,Fs] = audioread(test); % for some reason, the HRTF signal is a bit longer than the 100 ms stim period
+
+figure(100); clf
+subplot(2, 2,1 )
+specgram1(double(wavData1(:, 1))/spec_scale,512,Fs,400,360);
+ylim([0 8000])
+title('Chan 1')
+
+  %Fs = Fs;                    % Sampling frequency
+            T = 1/Fs;                     % Sample time
+            L = numel(wavData1);
+            %Y = fft(squeeze(longLF));
+            NFFT = 2^nextpow2(L); % Next power of 2 from length of y
+            Y = fft(squeeze(wavData1),NFFT)/L;
+            f = Fs/2*linspace(0,1,NFFT/2+1);
+            
+            % Plot single-sided amplitude spectrum.
+            
+            bla = 2*abs(Y(1:NFFT/2+1));
+            %plot(f,2*abs(Y(1:NFFT/2+1)))
+            plot(f/1000,smooth(bla))
+            xlim([0 7])
+title('FFT')
+
 %
 % subplot(2, 2,2 )
 % specgram1(double(wavData1(:, 2))/spec_scale,512,Fs,400,360);
