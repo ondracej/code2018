@@ -11,15 +11,15 @@ close all
 
 %% Create Chicken Analysis Object
 
-experiment = 3; %efc
-recSession = 2; %sFigSaveNamec
+experiment = 1; %efc
+recSession = 10; %sFigSaveNamec
 
 C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
 
-audSelInd = 2; % SpikesThis is the index, spikesnot the stim number!!!
+audSelInd = 5; % SpikesThis is the index, spikesnot the stim number!!!
 selection = C_OBJ.RS_INFO.ResultDirName{audSelInd};
 disp(selection)
 
@@ -39,7 +39,7 @@ C_OBJ = getAudioSpikeResults(C_OBJ, audSelInd);
 C_OBJ = organizeStimRepetitions(C_OBJ, audSelInd);
 %%
 % Plot the results
-nReps = 300;
+nReps = 100;
 C_OBJ = plotEpochs(C_OBJ, nReps);
 set(gca, 'YMinorTick', 'on', 'YMinorGrid','on')
 axis tight
@@ -50,7 +50,7 @@ axis tight
 %% Define spike threhsold and save Figure
 
 %SpkThresh = 0.4;
-SpkThresh = -0.89;
+SpkThresh = 0.12;
 %setThreshAndPrintFig(C_OBJ, SpkThresh)
 
 % Print spikes7
@@ -64,7 +64,7 @@ FigSaveName = [C_OBJ.PATHS.spkSavePath '_spikesResp'];
 saveName = C_OBJ.PATHS.audStimDir;
 %mediaSavePath = ['/home/janie/Data/TUM/OTAnalysis/allITDJanie/' saveName '_spikesResp'];
 %mediaSavePath = ['/home/janie/Data/OTAnalysis/allWNsJanie/' saveName '_spikesResp'];
-mediaSavePath = ['/home/janie/LRZ Sync+Share/OT_Project/TuningJanie/' saveName '_spikesResp'];
+mediaSavePath = ['/media/dlc/Data8TB/TUM/OT/OTProject/MLD/TuningJanie/' saveName '_spikesResp'];
 %mediaSavePath = ['/home/janie/Data/TUM/OTAnalysis/allIIDJanie/' saveName '_spikesResp'];
 
 plotpos = [0 0 15 10];
@@ -73,7 +73,7 @@ plotpos = [0 0 15 10];
 %print_in_A4(0, FigSaveName, '-djpeg', 0, plotpos);
 print_in_A4(30, mediaSavePath, '-djpeg', 0, plotpos);
 
-% Run Spike Sort - Make sure UMS2K 5is on the path6
+%% Run Spike Sort - Make sure UMS2K 5is on the path6
 
 clear('spikes')
 spikes = ss_default_params(C_OBJ.Fs, 'thresh', SpkThresh );
@@ -96,13 +96,13 @@ outlier_tool(spikes)
 
 %% Define Cluster of Interest
 
-clustOfInterest = 22; 
+clustOfInterest = 8; 
 nSpikesInCluster = numel(find(spikes.assigns == clustOfInterest));
 disp(['nSpikes = ' num2str(nSpikesInCluster)]);
 
 % Save Spikes
 
-%C_OBJ.PATHS.spkSavePath = '/media/janie/Data64GB/OTData/OT/Results/_data_20171213/01-HRTF_20171213_132824_0001/__Spikes/';
+C_OBJ.PATHS.spkSavePath = '/media/dlc/Data8TB/TUM/OT/OTProject/OTData/Results/_data_20171214/02-Tuning_20171214_170403_0001/__Spikes/';
 
 spkSaveName = [C_OBJ.PATHS.spkSavePath 'AllSpks.mat'];
 save(spkSaveName, 'spikes', 'SpkThresh')
@@ -126,7 +126,7 @@ save(cobjSaveName , 'C_OBJ', '-v7.3')
 
 %objSaveName = ['/home/janie/Data/TUM/OTAnalysis/allITDJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
 %objSaveName = ['/home/janie/Data/OTAnalysis/allWNsJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
-objSaveName = ['/home/janie/LRZ Sync+Share/OT_Project/TuningJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
+objSaveName = ['/media/dlc/Data8TB/TUM/OT/OTProject/MLD/allTuningObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
 %objSaveName = ['/home/janie/Data/TUM/OTAnalysis/allIIDJanie/allObjs/' C_OBJ.PATHS.audStimDir '_C_OBJ.mat']; 
 
 save(objSaveName , 'C_OBJ', '-v7.3')

@@ -323,6 +323,7 @@ for j = stimSet
     
      for k = 1: nTheseReps   
         conCatAll{cnt} = allSpksMatrix{1,j}{1,k};
+         allnames{cnt} = stimNames{1,j};
         cnt = cnt +1;
     end
 end

@@ -82,13 +82,14 @@ for j = 1:nInds
     
    %STA_for_WN_Stims(experiment, recSession, NeuronName)
    %STA_for_WN_Stims_V2(experiment, recSession, NeuronName)
+   STA_for_WN_Stims_V3(experiment, recSession, NeuronName)
    %STA_for_WN_Stims_Envs(experiment, recSession, NeuronName)
     
    %RastersForAmplitudeEnvelopWN(experiment, recSession, NeuronName, j)
     %EnvCalc_for_WN_Stims(experiment, recSession, NeuronName)
    %WnCCs =  EnvCalc_for_WN_Stims_V2(experiment, recSession, NeuronName, j, 36, WnCCs);
    %WnCCs =  EnvCalc_for_WN_Stims_V3(experiment, recSession, NeuronName, j, 36, WnCCs);
-   WnCCs =  EnvCalc_for_WN_Stims_MI(experiment, recSession, NeuronName, j, 36, WnCCs);
+   %WnCCs =  EnvCalc_for_WN_Stims_MI(experiment, recSession, NeuronName, j, 36, WnCCs);
    
 end
 
@@ -118,8 +119,8 @@ end
 
 %% ITD
 dbstop if error
-AllITD_ExpInds = [3 10 12 16 17 19 21 23 25 27 28 29 31 33 34 36 37 39 40 41 42 43 44]; %ITDs 46 strange stim format
-
+%AllITD_ExpInds = [3 10 12 16 17 19 21 23 25 27 28 29 31 33 34 36 37 39 40 41 42 43 44]; %ITDs 46 strange stim format
+AllITD_ExpInds = [3 10 23 25 27 28 29 31 33 34 36 39 40]; %ITDs 46 strange stim format
 figure(406); clf
 nInds = numel(AllITD_ExpInds);
 ITDs = [];
@@ -132,7 +133,7 @@ for j = 1:nInds
     NeuronName = ['N-' num2str(Neurons(thisInd))];
     
     %ITDs = doAnalysisOnITDs(experiment, recSession, NeuronName, j, 23, ITDs);
-    ITDs = doAnalysisOnITDs_v2(experiment, recSession, NeuronName, j, 23, ITDs);
+    ITDs = doAnalysisOnITDs_v2(experiment, recSession, NeuronName, j, 13, ITDs);
 
 end
 

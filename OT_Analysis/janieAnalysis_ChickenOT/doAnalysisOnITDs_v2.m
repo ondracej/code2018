@@ -70,11 +70,12 @@ end
 
 stimNames = C_OBJ.S_SPKS.SORT.allSpksStimNames
 SpkResponses = C_OBJ.S_SPKS.SORT.allSpksMatrix;
-
+firstSpike = [];
 %%
 allStimSpksOverReps = [];
 allMeansStimSpksOverReps = [];
 allstdsStimSpksOverReps = [];
+meanFirstSpike_ms = [];
 for q = 1:2
     switch q
         case 1
@@ -106,31 +107,42 @@ for q = 1:2
             StimSpkCnts(o) = numel(find(thisRep > StimStartTime_samp & thisRep <= PostStimStartTime_samp));
             PostStimSpkCnts(o) = numel(find(thisRep > PostStimStartTime_samp & thisRep <= EndTime_samp));
             
+            spkTimes_ind = find(thisRep > StimStartTime_samp & thisRep <= PostStimStartTime_samp);
+           spkTimes_samp = thisRep(spkTimes_ind);
+            if ~isempty(spkTimes_samp)
+                firstSpike(cnnt) = spkTimes_samp(1);
+            end
             
             all_PreStimSpkCnts(cnnt) =  PreStimSpkCnts(o);
             all_StimSpkCnts(cnnt) =   StimSpkCnts(o);
             all_PostStimSpkCnts(cnnt) = PostStimSpkCnts(o);
             
+            
             cnnt = cnnt+1;
         end
         
+        
         [p, h] = ranksum(all_StimSpkCnts, all_PreStimSpkCnts);
-        
-        allPs{q, j} = p;
-        allHs{q, j} = h;
-        
-        allStimSpksOverReps{q, j} =  all_StimSpkCnts;
-        allMeansStimSpksOverReps{q, j} =  nanmean(all_StimSpkCnts);
-        allstdsStimSpksOverReps{q, j} =  nanstd(all_StimSpkCnts);
+       
+        allPs(q, j) = p;
+        allHs(q, j) = h;
         
         allStimSpksOverReps{q, j} =  all_StimSpkCnts;
         allMeansStimSpksOverReps{q, j} =  nanmean(all_StimSpkCnts);
         allstdsStimSpksOverReps{q, j} =  nanstd(all_StimSpkCnts);
         
-        
+        if ~isempty(firstSpike)
+            allFirstSpikes_ms{q, j} = firstSpike/SamplingRate*1000;
+            
+            meanFirstSpike_ms(q, j) = nanmean(firstSpike)/SamplingRate*1000;
+            stdFirstSpike_ms(q, j) = nanstd(firstSpike)/SamplingRate*1000;
+            semFirstSpike_ms(q, j) = nanstd(firstSpike)/SamplingRate*1000 / sqrt(numel(firstSpike));
+        end
     end
     
 end
+
+    
 
 % here we have the d primes for the 5 different decible differents
 for w = 1:8
@@ -139,8 +151,11 @@ for w = 1:8
     D_Stim(w) = thisDPrime;
 end
 
-%%
+%% D Prime
+   
 figure(406); clf
+
+subplot(2, 1, 1)
 xes = 1:1:8;
 plot(xes, D_Stim, 'ko-', 'linewidth', 1)
 hold on
@@ -149,8 +164,33 @@ xlim([0 9])
 ylim([-5 2])
 xticks = 1:1:8;
 set(gca, 'xtick', xticks)
-set(gca, 'xticklabel', {'2ms', '1.75ms', '1.5ms', '1.25ms','1ms', '0.75ms', '0.5ms', '0.25ms'})
+xticklabs = {'2ms', '1.75ms', '1.5ms', '1.25ms','1ms', '0.75ms', '0.5ms', '0.25ms'};
+set(gca, 'xticklabel', xticklabs);
 
+%% First spike
+
+cols = cell2mat({[0.6350, 0.0780, 0.1840]; [0.8500, 0.3250, 0.0980]; [0.9290, 0.6940, 0.1250]; [0, 0, 0]; [0.4940, 0.1840, 0.5560]});
+if ~isempty(meanFirstSpike_ms)
+    right = meanFirstSpike_ms(1,:);
+    right_sem = semFirstSpike_ms(1,:);
+    left = meanFirstSpike_ms(2,:);
+    left_sem = semFirstSpike_ms(2,:);
+    
+    xpoints = 1:1:8;
+    
+    subplot(2, 1, 2)
+    
+    errorbar(xpoints,right,right_sem,'-o', 'color', cols(1,:), 'MarkerSize',2,'MarkerEdgeColor',cols(1,:),'MarkerFaceColor',cols(1,:))
+    hold on
+    errorbar(xpoints,left,left_sem,'-o','color', cols(2,:),'MarkerSize',2,'MarkerEdgeColor',cols(2,:),'MarkerFaceColor',cols(2,:))
+    xlim([0 9])
+    set(gca, 'xtick', xticks)
+    set(gca, 'xticklabel', {'2ms', '1.75ms', '1.5ms', '1.25ms','1ms', '0.75ms', '0.5ms', '0.25ms'})
+    
+    ylabel('Time to first spike (ms)')
+    legText = {'Right leading', 'Left leading'};
+    legend(legText);
+end
 
 saveName = [FigSaveDir NeuronName '-ITD-DPrime'];
 
@@ -170,10 +210,23 @@ ITDs.allHs{oo} = allHs;
 ITDs.D_Stim{oo} = D_Stim;
 
 %%
+
+ITDs.R_allFirstSpikes_ms{oo} = allFirstSpikes_ms(1,:);
+ITDs.R_meanFirstSpike_ms{oo} = meanFirstSpike_ms(1,:);
+ITDs.R_stdFirstSpike_ms{oo} = stdFirstSpike_ms(1,:);
+ITDs.R_semFirstSpike_ms{oo} = semFirstSpike_ms(1,:);
+
+ITDs.L_allFirstSpikes_ms{oo} = allFirstSpikes_ms(2,:);
+ITDs.L_meanFirstSpike_ms{oo} = meanFirstSpike_ms(2,:);
+ITDs.L_stdFirstSpike_ms{oo} = stdFirstSpike_ms(2,:);
+ITDs.L_semFirstSpike_ms{oo} = semFirstSpike_ms(2,:);
+
+
+%%
 if oo == maxNum
     
     
-    for z = 1:23
+    for z = 1:13
         ITD_1(z) = ITDs.D_Stim{1,z}(1,1);
         ITD_2(z) = ITDs.D_Stim{1,z}(1,2);
         ITD_3(z) = ITDs.D_Stim{1,z}(1,3);
@@ -227,7 +280,7 @@ if oo == maxNum
     jitterValues8 = 2*(rand(size(ITD_8))-0.5)*jitterAmount;   % +
   
     yes = [jitterValues1 jitterValues2 jitterValues3 jitterValues4 jitterValues5 jitterValues6 jitterValues7 jitterValues8];
-    
+    allJitters = [jitterValues1 ; jitterValues2 ;jitterValues3 ;jitterValues4; jitterValues5 ;jitterValues6; jitterValues7 ;jitterValues8];
     %%
     
     figure(406); clf
@@ -302,8 +355,44 @@ if oo == maxNum
     saveName = [FigSaveDir 'ITD_DScore.mat'];
     
     save(saveName, 'ITDs')
+    
+    %%
+    
+    cols = cell2mat({[0 0.4470 0.7410]; [0.8500, 0.3250, 0.0980]; [0.9290, 0.6940, 0.1250]; [0, 0, 0]; [0.4940, 0.1840, 0.5560]; [0.4660 0.6740 0.1880]; [0.3010 0.7450 0.9330]; [0.6350 0.0780 0.1840]});
+    
+    for i = 1:8
+        
+        figure(102 +i); clf
+        
+        h = scatterhist(allITDs(i,:),allJitters(i,:),'Kernel','on', 'Location','NorthEast',...
+            'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'Markersize', 20, 'color', cols(i,:));
+        title(xticklabs{i})
+        %clr = get(h(1),'colororder');
+        boxplot(h(2),allITDs(i,:),'orientation','horizontal',...
+            'label',{''},'color',cols(i,:), 'plotstyle', 'compact', 'Whisker', 10);
+        
+        
+        %axis(h(1),'auto');  % Sync axes
+        xlim([-2.5 2.5])
+        hold on
+        yss = ylim;
+        line([0 0], [yss(1) yss(2)], 'color', 'k', 'linestyle', '-')
+        
+        %line([1 1], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
+        %line([-1 -1], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
+        
+        saveName = [FigSaveDir 'ITDIndBoxPlot_' xticklabs{i}];
+        
+        plotpos = [0 0 12 8];
+        print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+        disp('')
+        print_in_A4(0, saveName, '-depsc', 0, plotpos);
+        
+    end
+    
 end
 
 disp('')
 
 end
+

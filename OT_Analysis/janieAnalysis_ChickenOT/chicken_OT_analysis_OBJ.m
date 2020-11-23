@@ -119,7 +119,9 @@ classdef chicken_OT_analysis_OBJ < handle
             
             %dirToLoad = '/home/janie/Data/TUM/Data/OT/Results/_data_20171214/01-HRTF_20171214_163624_0001/';
             resultsPath = [obj.PATHS.OT_Data_Path obj.INFO.expDir obj.PATHS.dirD audStimDir obj.PATHS.dirD];
+            resultsPath = ['/media/dlc/Data8TB/TUM/OT/OTProject/OTData/Results/' obj.INFO.expDir obj.PATHS.dirD audStimDir obj.PATHS.dirD];
             fileToLoad = [resultsPath 'result_0001.xml'];
+            
             disp('loading results...')
             tic
             results = audiospike_loadresult(fileToLoad, 1);
@@ -170,6 +172,8 @@ classdef chicken_OT_analysis_OBJ < handle
                 
                 if audSel_ID ==3
                     stimName{s} = [num2str(AllStimuli(s).Level_1) '-' num2str(AllStimuli(s).Level_2)];
+                elseif audSel_ID ==2
+                    stimName{s} = [num2str(AllStimuli(s).Name) '-' num2str(AllStimuli(s).Level_1)];
                 else
                     stimName{s} = AllStimuli(s).Name;
                 end

@@ -1,4 +1,4 @@
-function [] = STA_for_WN_Stims_V2(experiment, recSession, NeuronName)
+function [] = STA_for_WN_Stims_V3(experiment, recSession, NeuronName)
 dbstop if error
 
 %NeuronName = 'N-12';
@@ -26,7 +26,7 @@ switch gethostname
     case 'PLUTO'
         SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/';
         addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
-        FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN/STA-TimeFreq/';
+        FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN-Spectrogram/';
 end
 
 %% Stimulus Protocol
@@ -163,7 +163,7 @@ STA.meanSTA = LStimWins_mean;
 
 %%
 figure (103); clf
-subplot(2, 1, 1)
+subplot(3, 1, 1)
 plot(timepoints_ms, LStimWins_mean); axis tight
 ylim([-.2 .2])
 title([NeuronName ': ' Stim ' STA'])
@@ -180,51 +180,85 @@ set(gca, 'xticklabel', xtickabs )
 %% Wavelet
 
 RawData = LStimWins_mean;
-titleTxt = [Stim ' STA - Wavelet'];
+%pwelch(RawData)
+%[pxx,f] = pwelch(RawData,10,8,10,Fs);
+%plot(f,10*log10(pxx))
+%pmtm(RawData,3,length(RawData),Fs)
+%xlim([0 7])
 
-Dt = 1/44100;
-t = 0:Dt:(numel(RawData)*Dt)-Dt;
+subplot(3, 1, 2)
+    %Fs = Fs;                    % Sampling frequency
+            T = 1/Fs;                     % Sample time
+            L = numel(RawData);
+            %Y = fft(squeeze(longLF));
+            NFFT = 2^nextpow2(L); % Next power of 2 from length of y
+            Y = fft(squeeze(RawData),NFFT)/L;
+            f = Fs/2*linspace(0,1,NFFT/2+1);
+            
+            % Plot single-sided amplitude spectrum.
+            
+            bla = 2*abs(Y(1:NFFT/2+1));
+            %plot(f,2*abs(Y(1:NFFT/2+1)))
+            plot(f/1000,smooth(bla))
+            xlim([0 7])
+title('FFT')
+            
 
-[cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',48);
+%Dt = 1/44100;
+%t = 0:Dt:(numel(RawData)*Dt)-Dt;
+%[cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',48);
+
+
 figure(103);
-subplot(2, 1, 2)
-helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
-ylim([.5 8])
-title(titleTxt)
+subplot(3, 1, 3)
+%helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
+spec_scale = .001;
+specgram1(double(RawData)/spec_scale,NFFT,Fs,40,36);
+ylim([0 8000])
+[yo,fo,to] = specgram1(double(RawData)/spec_scale,NFFT,Fs,40,36);
+% titleTxt = [Stim ' STA - Wavelet'];
+% title(titleTxt)
 
-STA.cfs = cfs;
-STA.f = f;
+STA.yo = yo;
+STA.fo = fo;
+STA.to = to;
 
-colorbar 'off'
-xlim([0 20])
-set(gca, 'xtick', xticks)
-set(gca, 'xticklabel', xtickabs )
+
+%xlim([0 20])
+%set(gca, 'xtick', xticks)
+%set(gca, 'xticklabel', xtickabs )
 
 %
 saveName = [FigSaveDir NeuronName '-STA-' Stim];
 plotpos = [0 0 10 15];
 
-%print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-%print_in_A4(0, saveName, '-depsc', 0, plotpos);
+print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+print_in_A4(0, saveName, '-depsc', 0, plotpos);
 
 %% STA
+%{
+
 figure(102); clf
 
-[cfs,f] = cwt(RawData,'bump',1/Dt,'VoicesPerOctave',48);
+
+
 
 subplot(2, 2,3)
-helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
-colorbar 'off'
-ylim([.5 8])
+specgram1(double(RawData)/spec_scale,NFFT,Fs,40,36);
 set(gca, 'xtick', xticks)
 set(gca, 'xticklabel', xtickabs )
-
+ylim([0 8000])
 
 %% Frequency
 subplot(2, 2,4)
-meanf = mean(abs(cfs).^2, 2);
+[yo,fo,to] = specgram1(double(RawData)/spec_scale,NFFT,Fs,40,36);
+
+meanf = mean(abs(yo).^2, 2);
+plot(meanf, fo./1e3, 'color', [0.5 0.5 0.5])
+ylim([0 8]) 
+
 %medianf = median(abs(cfs).^2, 2);
-stdf = std(abs(cfs').^2, 1)';
+stdf = std(abs(yo').^2, 1)';
 semF = stdf/sqrt(883);
 
 posF = meanf + semF;
@@ -297,7 +331,7 @@ plotpos = [0 0 15 10];
 print_in_A4(0, [saveName 'timeFreq'], '-depsc', 0, plotpos);
 
 save([saveName 'STA_timeFreq.mat'], 'STA');
-
+%}
 end
 
 %%

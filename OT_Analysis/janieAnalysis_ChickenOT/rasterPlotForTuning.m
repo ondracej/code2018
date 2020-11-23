@@ -1,9 +1,9 @@
 function [] = rasterPlotForTuning()
 
 
-ObjDir = '/home/janie/Data/OTProject/MLD/TuningJanie/allObjs/';
+ObjDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/allTuningObjs/';
 
-saveDir = '/home/janie/Data/OTProject/MLD/Figs/TuningRasters/';
+saveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/TuningRasters/';
 trialSeach = ['*.mat*'];
 
 trialNamesStruct = dir(fullfile(ObjDir, trialSeach));
@@ -15,13 +15,13 @@ end
 %%
 
 
-for s = 17:nTrials
+for s = 7:nTrials
     
     d = load([ObjDir trialNames{s}]);
     
     C_OBJ = d.C_OBJ;
     
-    
+    bla = C_OBJ.STIMS;
     
     allSpksMatrix = C_OBJ.S_SPKS.SORT.allSpksMatrix;
     epochLength_samps = C_OBJ.S_SPKS.INFO.epochLength_samps;
@@ -32,18 +32,22 @@ for s = 17:nTrials
     
     
     nStimTypes = numel(allSpksMatrix);
-    
+    lounessappend = [50 55 60 65 70 75 80 85 90 95 100 105 110];
     
     conCatAll = [];
+    allnames = [];
     cnt =1;
-    for j = 1:size(allSpksMatrix, 1) % 11, 13
-        for k = 1:size(allSpksMatrix, 2) %40
+    for k = 1:size(allSpksMatrix, 2) %40
+        for j = 1:size(allSpksMatrix, 1) % 11, 13
+  %      for j = loudnesses
+       
+   %         for k = freqs
             
             nTheseReps = numel(allSpksMatrix{j, k});
             for o = 1: nTheseReps
-                %    for k = 1: 15
+            
                 conCatAll{cnt} = allSpksMatrix{j,k}{1,o};
-                allnames{cnt} = stimNames{j,k};
+                allnames{cnt} = [stimNames{j,k} '-' num2str(lounessappend(j))];
                 cnt = cnt +1;
             end
             
@@ -59,23 +63,27 @@ for s = 17:nTrials
     %plotOrder = randperm(nAllReps);
     blueCol = [0.2 0.6 0.8];
     figure (104);  clf
+    cnt = 1;
+    blacnt  = 1;
     for q = 1 : nAllReps
     
         these_spks_on_chan = conCatAll{q};
         
-        ys = ones(1, numel(these_spks_on_chan))*q;
+        ys = ones(1, numel(these_spks_on_chan))*cnt;
         hold on
         plot(these_spks_on_chan, ys, '.', 'color', 'k', 'linestyle', 'none')
         
         nbr_spks = size(these_spks_on_chan, 2);
         
-        if mod(q, 6*13) == 0
-            line([0 epochLength_samps], [q q], 'color', blueCol)
+        if mod(cnt, nTheseReps*size(allSpksMatrix, 1)) == 0
+            line([0 epochLength_samps], [cnt cnt], 'color', blueCol)
+            text(0, cnt-30, allnames{q})
+            blacnt = blacnt +1;
         end
-        
+        cnt = cnt+1;
         
     end
-    
+    ylim([0 nAllReps])
     axis tight
     xlim([0 epochLength_samps])
     % ylabel(['Reps = ' num2str(nAllReps)])
@@ -100,4 +108,5 @@ end
 
 
 end
+
 
