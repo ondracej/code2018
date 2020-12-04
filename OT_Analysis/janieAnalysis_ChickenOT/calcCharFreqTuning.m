@@ -1,9 +1,9 @@
 function [] = calcCharFreqTuning()
 
 
-ObjDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/allTuningObjs/';
+ObjDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/allTuningObj-Janie/';
 
-saveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/TuningCurves/';
+saveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/Tuning/TuningCurves/';
 trialSeach = ['*.mat*'];
 
 trialNamesStruct = dir(fullfile(ObjDir, trialSeach));
@@ -67,6 +67,7 @@ nCols = size(stimNames, 2); % Freq
 
 hOverFeq =[];
 alLDbs = [];
+%allThesh = []; threhsOVerFreq = []; alLDbsThresh = [];
 for k = 1:nCols-1 % frequ, last one is silent
     for j = 1:nRows % loudness
         thisSpkResp = allSpksMatrix{j,k};
@@ -80,21 +81,36 @@ for k = 1:nCols-1 % frequ, last one is silent
             PostStimSpkCnts(o) = numel(find(thisRep > PostStimStartTime_samp & thisRep <= EndTime_samp));
             
             
-            all_PreStimSpkCnts(cnnt) =  PreStimSpkCnts(o);
-            all_StimSpkCnts(cnnt) =   StimSpkCnts(o);
-            all_PostStimSpkCnts(cnnt) = PostStimSpkCnts(o);
-            
-            cnnt = cnnt+1;
+%             all_PreStimSpkCnts(cnnt) =  PreStimSpkCnts(o);
+%             all_StimSpkCnts(cnnt) =   StimSpkCnts(o);
+%             all_PostStimSpkCnts(cnnt) = PostStimSpkCnts(o);
+%             
+%             cnnt = cnnt+1;
         end
         
         [p h] = ranksum(PreStimSpkCnts, StimSpkCnts);
-        [pp hh] = ttest(PreStimSpkCnts, StimSpkCnts);
+        [hh pp] = ttest(PreStimSpkCnts, StimSpkCnts);
         
+%         stdBaseline = std(PreStimSpkCnts);
+%         thresh = 2*stdBaseline;
+%         if mean(StimSpkCnts) > thresh
+%             allThesh(j) = true;
+%         else
+%             allThesh(j) = false;
+%         end
+%         
         allH(j) = h;
+     %   allHH(j) = hh;
         
     end
     hOverFeq(k,:) = allH;
+   % hhOverFeq(k,:) = allHH;
+    
+%     threhsOVerFreq(k,:) = logical(allThesh);
+    
     alLDbs{k} = lounessappend(allH);
+   % alLDbsHH{k} = lounessappend(allHH);
+%     alLDbsThresh{k} = lounessappend(threhsOVerFreq);
 end
 
 cnt = 1;

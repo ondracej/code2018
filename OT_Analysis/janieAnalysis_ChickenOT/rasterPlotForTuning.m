@@ -1,9 +1,9 @@
 function [] = rasterPlotForTuning()
 
 
-ObjDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/allTuningObjs/';
+ObjDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/allTuningObj-Janie/';
 
-saveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/TuningRasters/';
+saveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/Tuning/TuningRasters/';
 trialSeach = ['*.mat*'];
 
 trialNamesStruct = dir(fullfile(ObjDir, trialSeach));
@@ -15,7 +15,7 @@ end
 %%
 
 
-for s = 7:nTrials
+for s = 6:nTrials
     
     d = load([ObjDir trialNames{s}]);
     

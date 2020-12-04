@@ -57,4 +57,19 @@ filNoise = real(filNoise);
 errorbar(x,y,err,'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 %}
+%% Sound Amlpitude and phase Info
+
+%{
+phaseShiftedSignal = real(thisSigData_L.*exp(pi*1i));
+    
+
+X = hilbert(Xr);
+%The instantaneous amplitude envelope is the magnitude of the analytic signal:
+mag = abs(X);
+%The instantaneous phase information can be found using the "angle" and "unwrap" functions:
+phi = unwrap(angle(X));
+%Finally, the instantaneous frequency can be found from the derivative of the instantaneous phase:
+freq = 1/(2*pi) * diff(phi) * Fs;
+%}
+
    

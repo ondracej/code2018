@@ -25,7 +25,7 @@ switch gethostname
     case 'PLUTO'
         FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/EnvAnalysis-WN/Corrs/';
         addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
-        
+        SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/'; 
     case 'SALAMANDER'
         
         SignalDir = '/home/janie/Data/OTProject/AllSignals/Signals/';
@@ -229,9 +229,28 @@ end
 
 %% MI
 
-smooth_thisUniqStimFR = smooth(thisUniqStimFR, smoothWin_samps);
+
+phi = unwrap(angle(thisSigData_L));
+phaseShiftedSignal = real(thisSigData_L.*exp(pi*1i));
+
+figure
+plot(smooth(thisSigData_L, smoothWin_samps), 'k')
+hold on
+plot(smooth(phaseShiftedSignal, smoothWin_samps), 'r')
+
+figure; 
+plot(smooth(envelope(thisSigData_L), smoothWin_samps), 'k');
+hold on
+plot(smooth(envelope(phaseShiftedSignal), smoothWin_samps), 'r');
+
+%%
  
- 
+smoothiStim = smooth(thisUniqStimFR, smoothWin_samps);
+smoothEnvRaw = smooth(envelope(thisSigData_L), smoothWin_samps);
+smoothEnvPhaseShift = smooth(envelope(phaseShiftedSignal), smoothWin_samps);
+
+
+
 raw_MI = mutualinfo(yupperL,thisUniqStimFR);
 Hi_MI = mutualinfo(filNoise_hi,thisUniqStimFR);
 Lo_MI = mutualinfo(filNoise_lo,thisUniqStimFR);
