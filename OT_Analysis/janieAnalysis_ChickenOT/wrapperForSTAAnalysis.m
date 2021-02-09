@@ -34,7 +34,9 @@ for j = 1:nInds
     %STA_for_HRTF_Stims(experiment, recSession, NeuronName)
     %STA_for_HRTF_Stims_FreqTime(experiment, recSession, NeuronName)
     %STA_for_HRTF_Stims_FreqTime_V2(experiment, recSession, NeuronName)
-    EnvCalc_for_HRTF_Stims(experiment, recSession, NeuronName)
+    %EnvCalc_for_HRTF_Stims(experiment, recSession, NeuronName)
+    
+    CalcCorrsForAmbPairs(experiment, recSession, NeuronName)
     
     %AnalysiWindowDefinition_HRTF(experiment, recSession, NeuronName)
     %plotNormHRTFWinSelection(experiment, recSession, NeuronName, j, 5)
@@ -62,7 +64,7 @@ figure(406); clf
 nInds = numel(AllWN_ExpInds);
 WN = [];
 WnCCs = [];
-for j = 8:nInds
+for j = 1:nInds
     
     %thisInd = WN_ExpInds(j);
     thisInd = AllWN_ExpInds(j);
@@ -85,11 +87,12 @@ for j = 8:nInds
    %STA_for_WN_Stims_V3(experiment, recSession, NeuronName)
    %STA_for_WN_Stims_Envs(experiment, recSession, NeuronName)
     
+   binSpikeTimesAndAnalyze(experiment, recSession, NeuronName)
    %RastersForAmplitudeEnvelopWN(experiment, recSession, NeuronName, j)
     %EnvCalc_for_WN_Stims(experiment, recSession, NeuronName)
    %WnCCs =  EnvCalc_for_WN_Stims_V2(experiment, recSession, NeuronName, j, 36, WnCCs);
    %WnCCs =  EnvCalc_for_WN_Stims_V3(experiment, recSession, NeuronName, j, 36, WnCCs);
-   WnCCs =  EnvCalc_for_WN_Stims_MI(experiment, recSession, NeuronName, j, 36, WnCCs);
+   %WnCCs =  EnvCalc_for_WN_Stims_MI(experiment, recSession, NeuronName, j, 36, WnCCs);
    
 end
 
