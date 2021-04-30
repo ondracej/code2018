@@ -13,7 +13,6 @@ classdef chronoAnalysis_Obj < handle
         function obj = getVideoInfo(obj,vidPath)
             
             disp('Getting video info...')
-            
             obj.HOST.hostname = gethostname;
             
             if ispc
@@ -26,7 +25,7 @@ classdef chronoAnalysis_Obj < handle
             obj.PATH.VidPath = vidPath;
             [pathstr,name,ext] = fileparts(vidPath{:});
             
-            editedVidPath = [pathstr dirD 'editedVids' dirD];
+            editedVidPath = [pathstr dirD 'OF_Analysis' dirD];
             
             if exist(editedVidPath, 'dir') ==0
                 mkdir(editedVidPath);
@@ -41,7 +40,6 @@ classdef chronoAnalysis_Obj < handle
         %%
         function [] = makeMultipleMoviesFromImages(obj, imageDir, movieName, saveDir, VideoFrameRate)
             
-            
             fileFormat = 3; % (1)- tif, (2) -.jpg
             
             %%
@@ -55,16 +53,14 @@ classdef chronoAnalysis_Obj < handle
             end
             
             imageNames = dir(fullfile(imageDir{:},imgFormat));
-            %imageNames(1) = [];
-            %imageNames(1) = [];
             imageNames = {imageNames.name}';
             
             nImags = numel(imageNames);
             underscore = '_';
             period = '.';
             
-            
             endingTxt_dbl = [];
+            
             for o = 1:nImags
                 underscoreInd = find(imageNames{o} == underscore);
                 periodInd = find(imageNames{o} == period);
@@ -75,7 +71,6 @@ classdef chronoAnalysis_Obj < handle
             [bla, inds] = sort(endingTxt_dbl, 'ascend');
             
             resortedNames = imageNames(inds);
-            
             FrameCut = 2*VideoFrameRate*60*60; % 2 hour
             
             if nImags > FrameCut
@@ -142,9 +137,6 @@ classdef chronoAnalysis_Obj < handle
             end
         end
         
-        
-        
-        
         %%
         
         function [] = calcOFOnDefinedRegion_DS_multipleFilesInDir(obj, dsFrameRate, vidDir, vidFrameRate, saveTag)
@@ -154,7 +146,7 @@ classdef chronoAnalysis_Obj < handle
             vidNames = {vidNames.name}';
             
             nVids = numel(vidNames);
-            OFDir = [vidDir 'OF_DS' ];
+            OFDir = [vidDir saveTag(2:end) obj.HOST.dirD ];
             
             if exist(OFDir, 'dir') ==0
                 mkdir(OFDir);
@@ -174,32 +166,13 @@ classdef chronoAnalysis_Obj < handle
                 VideoObj = VideoReader(vidToLoad, 'Tag', 'CurrentVideo');
                 
                 nFrames = VideoObj.NumberOfFrames;
-                %VideoFrameRate = VideoObj.FrameRate;
                 VideoFrameRate = vidFrameRate;
                 vidHeight = VideoObj.Height;
                 vidWidth = VideoObj.Width;
                 vidFormat = VideoObj.VideoFormat;
                 
-                
                 frameSkip = VideoFrameRate/dsFrameRate;
                 
-                %thisStart = 1;
-                %thisStop = nFrames;
-                
-                %movieLengthFull = thisStop-thisStart;
-                %newNFrames = floor(movieLengthFull/frameSkip);
-                
-                
-                %% if more than 10000 frames...
-                %             FrameCut = VideoFrameRate*60*60; % 1 hour
-                
-                %             if nFrames > FrameCut
-                %                 tOn = 1:FrameCut:nFrames;
-                %                 nParts = numel(tOn);
-                %             else
-                %tOn = 1;
-                %nParts = numel(tOn);
-                %             end
                 %%
                 videoReader = vision.VideoFileReader(vidToLoad,'ImageColorSpace','Intensity','VideoOutputDataType','uint8'); % create required video objects
                 converter = vision.ImageDataTypeConverter;
@@ -210,11 +183,6 @@ classdef chronoAnalysis_Obj < handle
                 
                 FrameOn = 1;
                 FrameOff =nFrames;
-                
-                %                 if p== nParts
-                %                     FrameOff =nFrames;
-                %                 end
-                
                 mCnt = 1;
                 
                 mov = struct('cdata',[],'colormap',[]);
@@ -230,22 +198,15 @@ classdef chronoAnalysis_Obj < handle
                         
                         %% Define ROI
                         
-                        rectim1 = getrect; %choose right eye ROI
-                        %rectim1 = getline;
+                        rectim1 = getrect; %choose ROI
                         rectim1=ceil(rectim1);
-                        %[BW, xi, yi] = roipoly;
-                        
-                        %Hardcoded
-                        %disp('Using hardcoded ROI')
-                        %rectim1 =  [5 243 958 576];
                         
                     end
                     im1 = im(rectim1(2):rectim1(2)+rectim1(4),rectim1(1):rectim1(1)+rectim1(3)); %choose this ROI part of the frame to calculate the optic flow
-                    
-                    %imshow(im1);
+
                     of1 = step(opticalFlow1, im1);
-                    V1=abs(of1); % lenght of the velocity vector
-                    meanV1=mean(mean(V1)); %mean velocity for every pixel
+                    V1=abs(of1); % length of the velocity vector
+                    meanV1=mean(mean(V1)); % mean velocity for every pixel
                     fV1(mCnt)=meanV1;
                     mCnt = mCnt +1;
                     cnt = cnt + 1;
@@ -253,7 +214,6 @@ classdef chronoAnalysis_Obj < handle
                 end
                 
                 fV1(1)=0; % suppress the artifact at the first frame
-                %save([OFDir OFSaveName '_pt-' sprintf('%02d',o) '.mat'], 'fV1', 'rectim1', 'im');
                 save([OFDir OFSaveName '.mat'], 'fV1', 'rectim1', 'im');
                 disp(['Saved' [OFDir OFSaveName '.mat']])
                 clear('fV1');
@@ -261,11 +221,7 @@ classdef chronoAnalysis_Obj < handle
             
         end
         
-        
-        
-        
         function [] = loadOFDetectionsAndMakePlot(obj, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime, VidTag )
-            
             
             searchDir = '*OF*';
             
@@ -275,8 +231,7 @@ classdef chronoAnalysis_Obj < handle
             for j=1:nFilesinDir
                 fileNames{j} = filesInDir(j).name;
             end
-            
-            %VidNameShort = fileNames{1}(end-18:end-11);
+        
             VidNameShort = VidTag;
             %% Concatenate
             fV1 = [];
@@ -292,8 +247,6 @@ classdef chronoAnalysis_Obj < handle
             %               plot(fV1)
             %               subplot(1, 2, 2)
             %               plot(fV2)
-            
-            
             
             fV1_norm = fV1./(max(max(fV1)));
             
@@ -407,9 +360,10 @@ classdef chronoAnalysis_Obj < handle
             %FImg = getframe(figH);
             %hcat = horzcat([OFImg.cdata FImg.cdata]);
             %image(hcat)
-            ylim([0 0.25])
+            %ylim([0 0.25])
             
-            saveName = [obj.PATH.editedVidPath  VidNameShort '_OF_DSs1'];
+            [pathstr,name,ext] = fileparts(obj.PATH.VidPath{:}) 
+            saveName = [obj.PATH.editedVidPath name '_' VidNameShort '_OF_DSs1'];
             %plotpos = [0 0 25 12];
             plotpos = [0 0 30 12];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
@@ -428,7 +382,7 @@ classdef chronoAnalysis_Obj < handle
             axis off
             title(['Video: ' VidNameShort])
             
-            saveName = [obj.PATH.editedVidPath  VidNameShort '_ROI_img'];
+            saveName = [obj.PATH.editedVidPath  name '_' VidNameShort '_ROI_img'];
             plotpos = [0 0 15 12];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
@@ -437,7 +391,7 @@ classdef chronoAnalysis_Obj < handle
             
             rectim1 = OF.rectim1;
             im = OF.im;
-            save([obj.PATH.editedVidPath  VidNameShort '_OF_DSs1_fullFile.mat'], 'fV1', 'fV1_norm', 'img1', 'im', 'rectim1', 'dsFrameRate', 'Clock');
+            save([obj.PATH.editedVidPath name '_' VidNameShort '_OF_DSs1_fullFile.mat'], 'fV1', 'fV1_norm', 'img1', 'im', 'rectim1', 'dsFrameRate', 'Clock');
             clear('fV1');
             
             %%
@@ -506,21 +460,31 @@ classdef chronoAnalysis_Obj < handle
 
         
         
-        function [] = extractMvmtFromOF_separateParts(obj, OFPath)
+        function [] = extractMvmtFromOF_separateParts(obj, fileToLoad, figSaveDir)
             dbstop if error
-            fileToLoad = OFPath;
+            
+            
+            if exist(figSaveDir, 'dir') ==0
+                mkdir(figSaveDir);
+                disp(['Created directory: ' figSaveDir])
+            end
+            
+            
+            
+            
+            [pathstr,name,ext] = fileparts(fileToLoad); 
             
             d = load(fileToLoad);
-            
             
             fv = d.fV1;
             fvN = fv./(max(max(fv))); % normalize between 1 and 0
             
             
-            
             %outliers_inds = find(fvN >= 0.3);
-            outliers_inds = find(fvN >= 0.25);
-            fvN(outliers_inds) = nan;  
+            
+            
+            %outliers_inds = find(fvN >= 0.25);
+            %fvN(outliers_inds) = nan;  
             
             figure(200); clf
             plot(fvN)
@@ -531,56 +495,67 @@ classdef chronoAnalysis_Obj < handle
             plot(fvN)
             hold on
             %plot(smoothFv, 'k')
-            %% Nov 14
-%             %ROI1/Roi2/ROi3 contrast
-%             start1 = 1;
-%             stop1 = 39960; % need to make sure this is around number of 360
-%             
-%             start2 = 39961;
-%             stop2 = 83880;
-%             
-%             start3 = 83881;
-%             stop3 = 93776;
-%             
-            % ROI 2
-%             start1 = 1;
-%             stop1 = 39960;
-%             
-%             start2 = 39961;
-%             stop2 = 83880;
-%             
-%             start3 = 83881;
-%             stop3 = 93776;
-            
+           
 
-            %ROI 3
-%             start1 = 1;
-%             stop1 = 47160;
-%             
-%             start2 = 47161;
-%             stop2 = 65520;
-%             
-%             start3 = 65521;
-%             stop3 = 93776;
-
-%% Nov 19
-
-%ROI1, 2 3,
-            start1 = 1;
-            stop1 = 3600; % need to make sure this is around number of 360
+            prompt = {'Enter number of segments'};
+            dlgtitle = 'Input';
+            dims = [1 35];
+            definput = {'2'};
+            answer = inputdlg(prompt,dlgtitle,dims,definput);
             
-            start2 = 3661;
-            stop2 = 46800;
+            nSegs = str2double(answer{:});
+           
             
-            start3 = 46960;
-            stop3 = 86865;
+            [x,~] = ginput(nSegs-1);
+            
+            %%
+           
+            % These need to be in multiples of 360
+          
+            allStarts = [];
+            allStops = [];
+            
+            for j = 1:nSegs
+                
+                if j == 1;
+                    
+                    start = 1;
+                    stop_multiplier = round(x(1)/360);
+                    
+                    stop = stop_multiplier*360;
+                    
+                    
+                    
+                elseif j == nSegs
+                    
+                    start = stop +1;
+                    stop_multiplier = floor(numel(fvN) / 360);
+                    stop = stop_multiplier*360;
+                    
+                    
+                else
+                    
+                    start = stop +1;
+                    stop_multiplier = round(x(j)/360);
+                    
+                    stop = stop_multiplier*360;
+                    
+                end
+                line([stop stop], [0 1], 'color', 'r')
+                line([start start], [0 1], 'color', 'r')
+                axis tight
+                
+                
+                allStarts(j) = start;
+                allStops(j) = stop;
+                
+            end
+            
+             saveName = [figSaveDir name '_Detections_Raw-' ];
+                %plotpos = [0 0 25 12];
+                plotpos = [0 0 30 12];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 
-            hold on
-            line([stop1 stop1], [0 .3], 'color', 'r')
-            line([start2 start2], [0 .3], 'color', 'r')
-            line([stop2 stop2], [0 .3], 'color', 'r')
-            line([start3 start3], [0 .3], 'color', 'r')
-            
             %%
             
             timeWin_min = 6;
@@ -590,66 +565,49 @@ classdef chronoAnalysis_Obj < handle
             allPartsThreshCross_inds = [];
             allPartsTotalDataSize = [];
             
-            for o = 1:3
-                switch o
-                    case 1
-                        part_fV = fvN(start1:stop1);
-                           tOn = start1:timeWin_s:stop1;
-                           stop = stop1;
-                           
-                           %Nov14
-                          % percentile4ScaleEstimation = 95; % roi1
-                           
-                           %Nov19
-                           %percentile4ScaleEstimation = 88; % roi1
-                           %percentile4ScaleEstimation = 92; % roi2
-                           percentile4ScaleEstimation = 90; % roi3
-                    case 2
-                        part_fV = fvN(start2:stop2);
-                        tOn = start2:timeWin_s:stop2;
-                        stop = stop2;
-                        %Nov14
-                        %   percentile4ScaleEstimation = 95; % roi1
-                           
-                           
-                           %Nov 19
-                           
-                        %percentile4ScaleEstimation = 95; % roi1
-                        %percentile4ScaleEstimation = 90; % roi2
-                        percentile4ScaleEstimation = 92; % roi3
-                        
-                    case 3
-                        part_fV = fvN(start3:stop3);
-                        tOn = start3:timeWin_s:stop3;
-                        stop = stop3;
-                        %Nov14
-                        %   percentile4ScaleEstimation = 95; % roi1
-                           
-                           
-                           %Nov 19
-                        %percentile4ScaleEstimation = 85; % roi1
-                        %percentile4ScaleEstimation = 88; % roi2
-                        percentile4ScaleEstimation = 90; % roi3
-                end
+            percentile4ScaleEstimation = 95; % roi3
+            
+            
+            allPartsTheshCnts = [];
+            allPartsThreshCross_inds = [];
+            allPartsTotalDataSize = [];
+            for j = 1:nSegs
                 
-                sortedVals = sort(part_fV, 'ascend');
-                figure(242);clf; plot(sortedVals)
-                %percentile4ScaleEstimation = 92; % Nov 14
-                %percentile4ScaleEstimation = 90; % Nov 19
-                scaleEstimator_thresh =sortedVals(round(percentile4ScaleEstimation/100*numel(sortedVals)));
+                part_fV = fvN(allStarts(j):allStops(j));
+                tOn = allStarts(j):timeWin_s:allStops(j);
                 
-                
-                figure(100); clf
+                figure(240+j);clf;
+                %subplot(2, 1, 1)
                 plot(part_fV);
-                line([0 numel(part_fV)], [scaleEstimator_thresh scaleEstimator_thresh], 'color', 'r')
+                
+                 [~,y] = ginput(1);
+                
+                %sortedVals = sort(part_fV, 'ascend');
+                %scaleEstimator_thresh =sortedVals(round(percentile4ScaleEstimation/100*numel(sortedVals)));
+                %threshCrossing = find(sortedVals == scaleEstimator_thresh);
+                threshCrossing = y;
+                
+                hold on
+                line([0 numel(part_fV)], [threshCrossing threshCrossing], 'color', 'r')
                 axis tight
+                
+                %subplot(2, 1, 2)
+                
+               % plot(sortedVals)
+               % hold on
+               % line([threshCrossing threshCrossing], [0 1], 'color', 'r')
+               % axis tight
+                
+                
+                saveName = [figSaveDir name '_Detections_Raw-Seg-' num2str(j)];
+                %plotpos = [0 0 25 12];
+                plotpos = [0 0 30 12];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+                
+                
                 %%
                 
-                
-                
-                %bin all data into 6 min bins
-                
-             
                 nBatches = numel(tOn);
                 
                 allThreshCross_cnts = [];
@@ -658,12 +616,12 @@ classdef chronoAnalysis_Obj < handle
                 for i = 1:nBatches
                     
                     if i == nBatches
-                        thisData = fvN(tOn(i):stop);
+                        thisData = fvN(tOn(i):allStops(j));
                     else
                         thisData = fvN(tOn(i):tOn(i)+timeWin_s-1);
                     end
                     
-                    threshCrossInds = find(thisData >= scaleEstimator_thresh);
+                    threshCrossInds = find(thisData >= threshCrossing);
                     
                     allThreshCross_cnts(i) = numel(threshCrossInds);
                     allThreshCross_inds{i} = threshCrossInds;
@@ -671,12 +629,13 @@ classdef chronoAnalysis_Obj < handle
                 end
                 
                 
-                allPartsTheshCnts{o} = allThreshCross_cnts;
-                allPartsThreshCross_inds{o} = allThreshCross_inds;
-                allPartsTotalDataSize{o} = totalDataSize;
-                
+                allPartsTheshCnts{j} = allThreshCross_cnts;
+                allPartsThreshCross_inds{j} = allThreshCross_inds;
+                allPartsTotalDataSize{j} = totalDataSize;
                 
             end
+            
+                 
             disp('')
             
             allDetections_6minBins = cell2mat(allPartsTheshCnts);
@@ -688,12 +647,20 @@ classdef chronoAnalysis_Obj < handle
    
             figure(240);clf
             imagesc(allDetections_6minBins)
+            xlabel('Activity in 6 Min bins')
+            
+            saveName = [figSaveDir name '_Detections_Imgsc'];
+            %plotpos = [0 0 25 12];
+            plotpos = [0 0 30 12];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            
+            
             %%
-            textName = 'Detections-ROI3_Nov19-002.txt';
+            textName = ['Detections-' name '.txt'];
             %textName = 'Detections-ROI3_Nov14-001.txt';
             
             %fileToSave = ['E:\ChronoAnalysis\001_Vids_Nov14\contrastVids\OF_DS\textDetections\' textName];
-            fileToSave = ['E:\ChronoAnalysis\002_Vids_Nov19\ContrastVids\OF_Analysis\TextDetections\' textName];
+            fileToSave = [figSaveDir textName];
                 
             fileID = fopen(fileToSave,'w');
             %fprintf(fileID,'%6s %12s\n','x','exp(x)');

@@ -128,7 +128,8 @@ binSize_s = 15;
 
 %%
 
-pathToKiloSort = 'C:\Users\Administrator\Documents\code\GitHub\KiloSort2\';
+%pathToKiloSort = 'C:\Users\Administrator\Documents\code\GitHub\KiloSort2\';
+pathToKiloSort = 'C:\Users\Janie\Documents\GitHub\Kilosort-2.5\';
 pathToNumpy = 'C:\Users\Administrator\Documents\code\GitHub\npy-matlab\';
 
 addpath(genpath(pathToKiloSort))

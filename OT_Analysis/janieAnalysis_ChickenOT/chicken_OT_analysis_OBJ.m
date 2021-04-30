@@ -61,6 +61,15 @@ classdef chicken_OT_analysis_OBJ < handle
                     addpath(genpath('/home/dlc/code/GitHub/UMS2K-master/'));
                     
                     OT_Data_Path = '/media/dlc/Data8TB/TUM/OT/OTProject/OTData/Results/';
+            
+                case 'LAPTOP-NFGB49PH'
+                    dirD = '\';
+                    
+                    addpath(genpath('C:\Users\Janie\Documents\GitHub\code2018\'));
+                    %addpath(genpath('/home/dlc/code/GitHub/code2018/OT_Analysis/'));
+                    %addpath(genpath('/home/dlc/code/GitHub/UMS2K-master/'));
+                    
+                    OT_Data_Path = 'D:\MLD\OTData\Results\';
                     
             end
             
@@ -119,7 +128,7 @@ classdef chicken_OT_analysis_OBJ < handle
             
             %dirToLoad = '/home/janie/Data/TUM/Data/OT/Results/_data_20171214/01-HRTF_20171214_163624_0001/';
             resultsPath = [obj.PATHS.OT_Data_Path obj.INFO.expDir obj.PATHS.dirD audStimDir obj.PATHS.dirD];
-            resultsPath = ['/media/dlc/Data8TB/TUM/OT/OTProject/OTData/Results/' obj.INFO.expDir obj.PATHS.dirD audStimDir obj.PATHS.dirD];
+            %resultsPath = ['/media/dlc/Data8TB/TUM/OT/OTProject/OTData/Results/' obj.INFO.expDir obj.PATHS.dirD audStimDir obj.PATHS.dirD];
             fileToLoad = [resultsPath 'result_0001.xml'];
             
             disp('loading results...')

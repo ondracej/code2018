@@ -2,18 +2,12 @@ close all
 clear all
 
 pathToCodeRepository = 'C:\Users\Janie\Documents\GitHub\code2018\';
-%pathToCodeRepository = '/home/janie/Documents/code/code2018/';
+vidsToAnalyze = {'D:\AfterStarvation\faa3-001-cam1-2020-Jul-12.avi'};
 
+%%
 addpath(genpath(pathToCodeRepository)) 
-
-
-vidsToAnalyze = {'E:\chronoAnalysis\OrigVideos\faa1-001-cam1-2019-Nov-14.avi'};
-%vidsToAnalyze = {'/media/janie/DataRed1TB/chronoAnalysis/OrigVideos/faa1-001-cam1-2019-Nov-14.avi'};
-
 videoDirectory=[];
-
 C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
-
 
 %% FFMPEG
 
@@ -24,9 +18,9 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
 
 %% Make movies from images
 
- imageDir = {'E:\ChronoAnalysis\ffmpeg_001_nov14\'};
- movieName = 'faa1-001-Nov14_contrast';
- saveDir = {'E:\ChronoAnalysis\001_Vids_Nov14\'};
+ imageDir = {'D:\AfterStarvation\faa3-001-cam1-2020-Jul-12_ffmpeg\'};
+ movieName = 'faa3-001-cam1-2020-Jul-12_contrast';
+ saveDir = {'D:\AfterStarvation\Vids_faa3-001-cam1-2020-Jul-12\'};
 
  VideoFrameRate = 1;
  makeMultipleMoviesFromImages(C_OBJ, imageDir, movieName, saveDir, VideoFrameRate)

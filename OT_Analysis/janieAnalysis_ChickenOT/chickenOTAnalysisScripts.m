@@ -19,7 +19,7 @@ C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
 
-audSelInd = 5; % SpikesThis is the index, spikesnot the stim number!!!
+audSelInd = 1; % SpikesThis is the index, spikesnot the stim number!!!
 selection = C_OBJ.RS_INFO.ResultDirName{audSelInd};
 disp(selection)
 

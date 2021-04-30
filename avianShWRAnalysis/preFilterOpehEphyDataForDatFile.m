@@ -15,7 +15,7 @@ function [] = preFilterOpehEphyDataForDatFile()
 %%
 
 EphysDir = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\Ephys\';
-savePath = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\bin\20190428.bin';
+savePath = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\bin\20190428-Hi300.bin';
 
 chanMap = [2 7 15 10 13 12 14 11 1 8 16 9 3 6 4 5]; % deepes first, acute
 
@@ -31,7 +31,8 @@ Fs = 30000;
 fObj = filterData(Fs);
 
 fobj.filt.FH2=filterData(Fs);
-fobj.filt.FH2.highPassCutoff=100;
+%fobj.filt.FH2.highPassCutoff=100;
+fobj.filt.FH2.highPassCutoff=300;
 fobj.filt.FH2.lowPassCutoff=2000;
 fobj.filt.FH2.filterDesign='butter';
 fobj.filt.FH2=fobj.filt.FH2.designBandPass;
@@ -60,12 +61,18 @@ for s=chanSet
     
     [V_uV_data_full,nshifts] = shiftdim(data',-1);
     
-    %dataHF = squeeze(fobj.filt.FH2.getFilteredData(V_uV_data_full));
-    dataFH = squeeze(fobj.filt.FH.getFilteredData(V_uV_data_full));
+    dataFH = squeeze(fobj.filt.FH2.getFilteredData(V_uV_data_full));
+    %dataFH = squeeze(fobj.filt.FH.getFilteredData(V_uV_data_full));
     
-    %figure; plot(timestamps(1:10000), dataHF(1:10000), 'k')
-    %hold on
-    %plot(timestamps(1:10000), dataFH(1:10000), 'b')
+    %%
+%{
+    figure; 
+    hold on
+    subplot(2, 1, 1)
+    plot(timestamps(1:10000), data(1:10000), 'b')
+    subplot(2, 1, 2)
+    plot(timestamps(1:10000), dataFH(1:10000), 'k')
+  %}
     
     datI = int16(dataFH);
     

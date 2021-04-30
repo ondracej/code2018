@@ -2,6 +2,27 @@
 close all
 clear all
 
+
+
+%%
+
+vid=VideoReader('D:\faa3-001-cam1-2020-Jul-12_complete.avi');
+  numFrames = vid.NumberOfFrames;
+  n=numFrames;
+  
+Folder = 'D:\test2\';
+for iFrame = 1:nn
+  frames = read(vid, iFrame);
+  imwrite(frames, fullfile(Folder, sprintf('%06d.jpg', iFrame)));
+end 
+FileList = dir(fullfile(Folder, '*.jpg'));
+for iFile = 1:length(FileList)
+  aFile = fullfile(Folder, FileList(iFile).name);
+  img   = imread(aFile);
+end
+
+%%
+
 pathToCodeRepository = 'C:\Users\Janie\Documents\GitHub\code2018\';
 addpath(genpath(pathToCodeRepository)) 
 %%
@@ -78,12 +99,7 @@ addpath(genpath(pathToCodeRepository))
 
 %vidsToAnalyze = {'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Videos\ZF-71-76__17-51-54__547923_Zoom2_00011.avi'};
 
-vidsToAnalyze = {'C:\Users\Janie\Documents\Data\Video\18_02_2020_ROI.avi'};
 
-videoDirectory=[];
-
-%%
-V_OBJ = videoAnalysis_OBJ(vidsToAnalyze);
 %%
 V_OBJ = testVideos(V_OBJ);
  
@@ -97,16 +113,41 @@ renameFilesinDir(V_OBJ)
 
 
 %%
-%startFrame = 1;
-% endFrame = nan;
- startFrame = 17945;
- endFrame = 26854;
- FrameRateOverride = 30;
- 
-videoName = '20191021134540696_9minStart.avi';
 
- convertWMVToAVI(V_OBJ, startFrame, endFrame, videoName, FrameRateOverride )
- 
+close all
+clear all
+
+vidDir = 'C:\Users\Janie\Documents\Data\2box-hor\2012.06.22-E09\';
+
+vidsToAnalyze = {'Video 981.wmv', 'Video 982.wmv', 'Video 983.wmv', 'Video 984.wmv', 'Video 985.wmv', 'Video 986.wmv', 'Video 987.wmv', 'Video 988.wmv', 'Video 989.wmv', 'Video 990.wmv', 'Video 991.wmv'};
+
+allStartsStops = [62 1740; 94 2730; 50 3797;  68 4913; 110 1935; 66 5280; 37 3204; 44 4515; 66 1245; 64 7815; 52 33030];
+
+nVids = numel(vidsToAnalyze);
+period = '.';
+
+%
+for j = 11:nVids
+    V_OBJ = videoAnalysis_OBJ({[vidDir vidsToAnalyze{j}]});
+    
+    theseStartsStops = allStartsStops(j,:);
+    
+    startFrame = allStartsStops(j,1);
+    endFrame = allStartsStops(j,2);
+    FrameRateOverride = 30;
+    
+    bla = find(vidsToAnalyze{j} == period);
+    
+    videoNameNumber = vidsToAnalyze{j}(7:bla-1);
+    %videoName = 'Video984_cut.avi';
+    videoName = ['Video_' videoNameNumber '_cut.avi'];
+    
+    convertWMVToAVI(V_OBJ, startFrame, endFrame, videoName, FrameRateOverride )
+    %convertWMVToAVI(V_OBJ, startFrame, endFrame, videoName)
+    disp(['Finished' num2str(j) '/' num2str(nVids)])
+    
+end
+
  %% Loading and downsampling a movie
  
  doDS = 1;

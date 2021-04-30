@@ -43,15 +43,33 @@ chanMap = [9 8 11 6 12 5 16 1 13 4 14 3 15 2 10 7]; %chonic
 convertOpenEphysToRawBinary_JO(dataDir, chanMap);  % convert data, only for OpenEphys
 disp(['Finished: ' dataDir])
     
+%% Bin File
+preFilterOpehEphyDataForDatFile
+
+
+
 %% Use Kilosort2 GUI (need a dat file) - Do not add path to other code repositories!!
 % sosme reason cant find the UIextras gui info
+%This  work in Matlab 2019a
 
-kilsort2Path = 'C:\Users\Janie\Documents\GitHub\Kilosort2\';
+%kilsort2Path = 'C:\Users\Janie\Documents\GitHub\Kilosort2\';
+kilsort2Path = 'C:\Users\Janie\Documents\GitHub\Kilosort-2.5\';
 addpath(genpath(kilsort2Path))
 pathToNumpy = 'C:\Users\Janie\Documents\GitHub\npy-matlab\';
 addpath(genpath(pathToNumpy))
 
 kilosort
+
+% Thesh = 10,4
+%ops.nt0 = 25; % number of time samples for the templates (has to be <=81 due to GPU shared memory) %JO
+
+%Code changed in 
+%getKernels
+%preprocessDataSub
+%computeWhitening
+
+
+
 %%
 % Make sure to enter
 ks = get(gcf, 'UserData');

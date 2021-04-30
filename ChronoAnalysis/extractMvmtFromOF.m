@@ -1,8 +1,8 @@
 
 
-function [] = extractMvmtFromOF()
+function [] = extractMvmtFromOF(fileToLoad, figSaveDir)
 
-fileToLoad = '/home/janie/Data/VideosForSilke/OF-FullFile-AC22_02-04-2017__13-50-46__DSs-1__771039-Converted-1-771039.mat';
+[pathstr,name,ext] = fileparts(fileToLoad); 
 
 d = load(fileToLoad);
 
@@ -13,14 +13,28 @@ sortedVals = sort(fvN, 'ascend');
 
 percentile4ScaleEstimation = 95; % we choose a threhsold of 95% of the sorted data
 scaleEstimator_thresh =sortedVals(round(percentile4ScaleEstimation/100*numel(sortedVals)));
+threshCrossing = find(sortedVals == scaleEstimator_thresh);
 
-figure; clf
+figure(102); clf
+subplot (2, 1, 1)
 plot(fvN)
 hold on
 line([0 numel(fvN)], [scaleEstimator_thresh scaleEstimator_thresh], 'color', 'r') 
+axis tight
+title('Concatenated normalized OF')
 
+subplot (2, 1, 2)
+plot(sortedVals)
+hold on
+line([threshCrossing threshCrossing], [0 1], 'color', 'r') 
+axis tight
+title('Sorted values with 95 percentile')
 
-figure; plot(sortedVals)
+     saveName = [figSaveDir name '_Detections_Raw'];
+            %plotpos = [0 0 25 12];
+            plotpos = [0 0 30 12];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            %print_in_A4(0, saveName, '-depsc', 0, plotpos);
 
 fps = 1;
 
@@ -49,10 +63,15 @@ for i = 1:nBatches
     totalDataSize(i) = numel(thisData); % this last data entry will be smaller than 6 minutes
 end
 
-figure;
+figure(103); clf
 imagesc(allThreshCross_cnts)
+xlabel(' 6 min bins')
 
-
+saveName = [figSaveDir name '_Detections_Imgsc'];
+            %plotpos = [0 0 25 12];
+            plotpos = [0 0 30 12];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+     
 
 
 end

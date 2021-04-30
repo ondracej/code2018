@@ -30,10 +30,13 @@ switch hostName
 %% ZF
  fileName = '//media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/100_CH3.continuous'; %DV=1806 %DV=4042
         
+ fileName = 'E:\TUM\SWR-Project\Janie-o3b11\4x4_2021-02-23_14-11-12\170_CH12.continuous';
+ 
         saveDir = ['/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/ShwDetections/'];
         
         saveName = [saveDir 'ShWDetection_ZF-59-15_2019-04-28_18-48-02_Ch7_'];
        
+        %%
         
     case 'TURTLE'
         
@@ -48,14 +51,20 @@ switch hostName
         
         saveDir = ['/home/janie/Dropbox/00_Conferences/SFN_2018/figsForPoster/'];
         
+    case 'LAPTOP-NFGB49PH'
+        dirD = '/';
+        fileName = 'E:\TUM\SWR-Project\Janie-o3b11\4x4_2021-02-23_16-34-06\170_CH12.continuous';
+        saveDir = 'C:\Users\Janie\Dropbox\00_Grants\0_2020_erc\Latex\';
+        saveName = [saveDir '_Ch12-pos3'];
+        
 end
 
 
 %% Loading Data
 
-[pathstr,name,ext] = fileparts(fileName);
-bla = find(fileName == dirD);
-dataName = fileName(bla(end-1)+1:bla(end)-1);
+%[pathstr,name,ext] = fileparts(fileName);
+%bla = find(fileName == dirD);
+%dataName = fileName(bla(end-1)+1:bla(end)-1);
 %saveName = [pathstr dirD dataName '-fullData'];
 [data, timestamps, info] = load_open_ephys_data(fileName);
 Fs = info.header.sampleRate;
@@ -143,7 +152,7 @@ for i=1:nCycles-1
     %%
     
     absPeakTime_s =  SegData_s(peakTime_Fs);
-    asPeakTime_fs = peakTime_Fs+thisROI(1)-1;
+    absPeakTime_fs = peakTime_Fs+thisROI(1)-1;
     % relPeakTime_s  = peakTime_Fs;
     
     %%
@@ -236,7 +245,7 @@ for i=1:nCycles-1
             if numel(peakTime_Fs_LF) == 1
                 
                 templatePeaks.peakH(cnt) = peakH(q);
-                templatePeaks.asPeakTime_fs(cnt) = asPeakTime_fs(q);
+                templatePeaks.absPeakTime_fs(cnt) = absPeakTime_fs(q);
                 templatePeaks.absPeakTime_s(cnt) = absPeakTime_s(q);
                 templatePeaks.peakW(cnt) = peakW(q);
                 templatePeaks.peakP(cnt) = peakP(q);

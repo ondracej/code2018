@@ -31,20 +31,25 @@ switch hostName
         %% Use these
         %fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous'; %DV=2526, 30 min
         %fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous'; %DV=2998
-        fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
+        fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH5.continuous'; %good one %DV=3513
         %fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
         
         saveDir = ['/home/janie/Dropbox/00_Conferences/SFN_2018/figsForPoster/'];
         
-        
+         case 'LAPTOP-NFGB49PH'
+        dirD = '/';
+        fileName = 'E:\TUM\SWR-Project\Janie-o3b11\4x4_2021-02-23_15-28-53\170_CH15.continuous';
+        saveDir = 'C:\Users\Janie\Dropbox\00_Grants\0_2020_erc\Latex\';
+        %saveName = [saveDir '_Ch12'];
+        DetectionFileToLoad = 'C:\Users\Janie\Dropbox\00_Grants\0_2020_erc\Latex\PosP\_Ch12-pos2-Detections.mat';
 end
 
 
 %% Loading Data
 
-[pathstr,name,ext] = fileparts(fileName);
-bla = find(fileName == dirD);
-dataName = fileName(bla(end-1)+1:bla(end)-1);
+%[pathstr,name,ext] = fileparts(fileName);
+%bla = find(fileName == dirD);
+%dataName = fileName(bla(end-1)+1:bla(end)-1);
 %saveName = [pathstr dirD dataName '-fullData'];
 [data, timestamps, info] = load_open_ephys_data(fileName);
 Fs = info.header.sampleRate;
@@ -85,16 +90,16 @@ DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(thisSegData));
 
 %%
 d = load(DetectionFileToLoad);
-peakTimes_fs = d.PeakTimes;
+peakTimes_fs = d.templatePeaks.absPeakTime_fs;
 nPeaks = numel(peakTimes_fs);
 
-peakWinL = 0.1*Fs;
-peakWinR = 0.1*Fs;
+peakWinL = 0.08*Fs;
+peakWinR = 0.18*Fs;
 
 FNotch_roi = cell(1, nPeaks);
 HF_roi = cell(1, nPeaks);
 roi_s = cell(1, nPeaks);
-
+nPeaks = 200;
 for j = 1:nPeaks
     
     roi = peakTimes_fs(j)-peakWinL:peakTimes_fs(j)+peakWinR;
@@ -122,7 +127,7 @@ plot(roi_s, allNotch_mean, 'k', 'linewidth', 2);
 
 axis tight
 bla = get(gca, 'xtick');
-
+ylim([-200 50])
 %set(gca, 'xticklabels', xticklabs);
 
 %%
@@ -137,13 +142,14 @@ jbfill(roi_s,[allHF_mean'+sem_HF],[allHF_mean'-sem_HF],[.5,0.5,.5],[.5,0.5,.5],[
 hold on
 plot(roi_s, allHF_mean, 'k', 'linewidth', 2);
 axis tight
+ylim([-10 10])
 %bla = get(gca, 'xtick');
 %set(gca, 'xticklabels', xticklabs);
 
 %%
-saveName = [saveDir 'chick2-17-29-04_Average'];
+saveName = [saveDir '-ch15-posP'];
 
-plotpos = [0 0 15 20];
+plotpos = [0 0 5 15];
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 print_in_A4(0, saveName, '-depsc', 0, plotpos);
 
@@ -203,7 +209,8 @@ FNotch_roi = cell(1, nPeaks);
 HF_roi = cell(1, nPeaks);
 roi_s = cell(1, nPeaks);
 
-for j = 1:nPeaks
+%for j = 1:nPeaks
+for j = 1:100
     
     roi = peakTimes_fs(j)-peakWinL:peakTimes_fs(j)+peakWinR;
     FNotch_roi{j} = DataSeg_FNotch(roi);
@@ -214,7 +221,13 @@ end
 allHF = cell2mat(HF_roi);
 allHF_mean = nanmean(allHF, 2);
 allHF_median = nanmedian(allHF, 2);
+
+allData = cell2mat(FNotch_roi);
+allData_mean = nanmean(allData, 2);
+allData_median = nanmedian(allData, 2);
+
 plot(roi_s{1}, allHF_median, 'k', 'linewidth', 2);
+plot(roi_s{1}, allData_mean, 'k', 'linewidth', 2);
 %%
 
 params.tapers = [1 2];
@@ -231,3 +244,4 @@ ylim([-50 -10])
 
 
 end
+

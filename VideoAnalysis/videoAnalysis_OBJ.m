@@ -39,6 +39,57 @@ classdef videoAnalysis_OBJ < handle
         end
         
         function [] = convertWMVToAVI(obj, startFrame, endFrame, videoName, FrameRateOverride)
+            dbstop if error
+            
+            VidObj = VideoReader(obj.PATH.VidPath{:});
+            
+            vidHeight = VidObj.Height;
+            vidWidth = VidObj.Width;
+            totalFrames = VidObj.NumberOfFrames;
+            
+            if isempty(FrameRateOverride)
+                VidFrameRate = VidObj.FrameRate;
+            else
+                VidFrameRate = FrameRateOverride;
+            end
+            
+            if isnan(endFrame)
+                endFrame = totalFrames;
+            end
+            
+            FrameOn = startFrame;
+            FrameOff = endFrame;
+            
+            nFrames = numel(FrameOn:FrameOff);
+            framesToGrab = FrameOn:FrameOff;
+            disp('All Frames Video')
+            mov(1:nFrames) = struct('cdata', zeros(vidHeight, vidWidth, 3, 'uint8'),'colormap', []);
+            cnt = 1;
+            for k =framesToGrab
+                mov(cnt).cdata = read(VidObj, k);
+                fprintf('%d/%d\n', cnt, nFrames);
+                cnt = cnt+1;
+            end
+            
+            saveName = [obj.PATH.editedVidPath videoName ];
+            %V = VideoWriter(saveName, 'Uncompressed AVI'); % creates huge files ~20 GB, 'quality' is not an option
+            V = VideoWriter(saveName, 'Motion JPEG AVI');
+            V.Quality = 95;
+            V.FrameRate = VidFrameRate;
+            
+            mov = mov(1:end);
+            tic
+            open(V)
+            writeVideo(V, mov)
+            close(V)
+            toc
+            
+            disp(['Saved: ' saveName])
+            clear('mov');
+            
+        end
+        
+         function [] = convertAndChopVidToAVI(obj, startFrame, endFrame, videoName, FrameRateOverride)
             if nargin < 5
                 FrameRateOverride = [];
             end
@@ -107,8 +158,7 @@ classdef videoAnalysis_OBJ < handle
                 clear('mov');
             end
             
-        end
-        
+         end
         
         function [] = renameFilesinDir(obj)
             

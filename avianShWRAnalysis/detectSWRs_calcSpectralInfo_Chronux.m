@@ -1,67 +1,39 @@
-function []  = avianRippleDetection()
+function [] = detectSWRs_calcSpectralInfo_Chronux()
+
 dbstop if error
-close all
+pathTocode = 'C:\Users\Janie\Documents\GitHub\code2018\';
+addpath(genpath(pathTocode)) 
 
-hostName = gethostname;
+% pathToChronux = 'C:\Users\Janie\Documents\code\chronux_2_12\';
+% addpath(genpath(pathToChronux))
+
+pathToOpenEphys = 'C:\Users\Janie\Documents\GitHub\analysis-tools\';
+addpath(genpath(pathToOpenEphys))
+
+pathToNET = 'C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools\';
+addpath(genpath(pathToNET ))
+
+figSavePath = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\Figs';
+
 doPlot = 1;
-switch hostName
-    case 'DEADPOOL'
-        addpath(genpath('/home/janie/Code/code2018/'))
-        dirD = '/';
-        
-        %% Penetration 4
-        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_15-19-16/100_CH1.continuous'; %DV=1806
-        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-03-12/100_CH1.continuous'; %DV=2207
-        
-        
-        %% Use these
-        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous'; %DV=2526, 30 min
-        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous'; %DV=2998
-        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
-        %fileName = '/media/janie/Data64GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
-        
-        %% ZF
-        
-        %fileName = '/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_18-07-21/100_CH7.continuous'; %DV=1806 %DV=4042
-        %fileName = '/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_18-48-02/100_CH8.continuous'; %DV=1806 %DV=4042
-        fileName = '//media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/100_CH3.continuous'; %DV=1806 %DV=4042
-        
-        saveDir = ['/media/janie/Data64GB/ZF-59-15/exp1_2019-04-28_19-34-00/ShwDetections/'];
-        %saveName = [saveDir 'ShWDetection_Chick2_17-29-04_'];
-        %saveName = [saveDir 'ShWDetection_Chick2_17-05-32_'];
-        %saveName = [saveDir 'ShWDetection_Chick2_17-56-36_'];
-        %saveName = [saveDir 'ShWDetection_Chick2_16-30-56_'];
-        
-        saveName = [saveDir 'ShWDetection_ZF-59-15_2019-04-28_18-48-02_Ch7_'];
-        
-    case 'TURTLE'
-        
-        addpath(genpath('/home/janie/code/code2018/'))
-        dirD = '/';
-        
-        %% Use these
-        %fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_16-30-56/100_CH1.continuous'; %DV=2526, 30 min
-        %fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_17-05-32/100_CH1.continuous'; %DV=2998
-        fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_17-29-04/100_CH1.continuous'; %good one %DV=3513
-        %fileName = '/media/janie/TimeMachine_250GB/ShWRChicken/chick2_2018-04-30_17-56-36/100_CH1.continuous'; %DV=1806 %DV=4042
-        
-        saveDir = ['/home/janie/Dropbox/00_Conferences/SFN_2018/figsForPoster/'];
-        
-         case 'LAPTOP-NFGB49PH'
-        dirD = '/';
-        fileName = 'E:\TUM\SWR-Project\Janie-o3b11\4x4_2021-02-23_15-28-53\170_CH12.continuous';
-        saveDir = 'C:\Users\Janie\Dropbox\00_Grants\0_2020_erc\Latex\';
-        saveName = [saveDir '_Ch12-Pos2'];
-end
 
-
+%%
+EphysDir = 'D:\TUM\SWR-Project\ZF-59-15\20190428\19-34-00\Ephys\';
+chanSet = 2;
 %% Loading Data
 
-%[pathstr,name,ext] = fileparts(fileName);
-%bla = find(fileName == dirD);
-%dataName = fileName(bla(end-1)+1:bla(end)-1);
-%saveName = [pathstr dirD dataName '-fullData'];
-[data, timestamps, info] = load_open_ephys_data(fileName);
+extSearch ='*.continuous*';
+allOpenEphysFiles=dir(fullfile(EphysDir,extSearch));
+nFiles=numel(allOpenEphysFiles);
+
+for s=chanSet
+    
+    eval(['fileAppend = ''100_CH' num2str(s) '.continuous'';'])
+    fileName = [EphysDir fileAppend];    
+    [data, timestamps, info] = load_open_ephys_data(fileName);
+    
+end
+
 Fs = info.header.sampleRate;
 
 fObj = filterData(Fs);
@@ -141,7 +113,7 @@ for i=1:nCycles-1
     %%
     
     absPeakTime_s =  SegData_s(peakTime_Fs);
-    absPeakTime_fs = peakTime_Fs+thisROI(1)-1;
+    asPeakTime_fs = peakTime_Fs+thisROI(1)-1;
     % relPeakTime_s  = peakTime_Fs;
     
     %%
@@ -213,7 +185,7 @@ for i=1:nCycles-1
         %% Now we check a window around the peak to see if there is really a sharp wave
         
         templatePeaks.peakH(cnt) = peakH(q);
-        templatePeaks.absPeakTime_fs(cnt) = absPeakTime_fs(q);
+        templatePeaks.asPeakTime_fs(cnt) = asPeakTime_fs(q);
         templatePeaks.absPeakTime_s(cnt) = absPeakTime_s(q);
         templatePeaks.peakW(cnt) = peakW(q);
         templatePeaks.peakP(cnt) = peakP(q);
@@ -236,19 +208,8 @@ save(DetectionSaveName, 'templatePeaks');
 
 disp(['Saved:' DetectionSaveName ])
 
+
+
+
+
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
