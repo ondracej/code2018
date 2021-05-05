@@ -1,13 +1,35 @@
 %% SWR Analysis - Feb 2021
 
+%% AddPaths
+
+  filename = '/media/janie/4TB/ZF-59-15/20190428/18-07-21/Ephys/100_CH12.continuous';
+  
+  switch gethostname
+      
+      case 'TURTLE'
+          
+          addpath(genpath('/home/janie/Documents/code/Spike-Ripple-Detector-Method-master'));
+          addpath(genpath('/home/janie/Documents/code/analysis-tools-master'));
+          addpath(genpath('/home/janie/Documents/code/NET-master'))'
+          
+      otherwise
+          addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools'))
+          addpath(genpath('C:\Users\Janie\Documents\GitHub\analysis-tools'))
+          addpath(genpath('C:\Users\Janie\Documents\GitHub\Spike-Ripple-Detector-Method-master'))
+          
+          
+  end
+
+
+
 %% File Loading
 
 %dataDir = 'E:\TUM\SWR-Project\Janie-72-01\-ML_2021-02-25_14-52-03';
-dataDir = 'D:\Hamed\chronic_2020-05-01_20-43-18';
+%dataDir = 'D:\Hamed\chronic_2020-05-01_20-43-18';
 
 %% Time Series Viewer
 
-addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools')) 
+%addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools')) 
 
 dataRecordingObj = OERecordingMF(dataDir);
 
@@ -32,11 +54,11 @@ chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2]; %acute
  MLong=obj.currentDataObj.getData(ch,startTimes(i),movLongWin);
 %% Load Single Channel
 
-addpath(genpath('C:\Users\Janie\Documents\GitHub\analysis-tools')) 
+%addpath(genpath('C:\Users\Janie\Documents\GitHub\analysis-tools')) 
 
-filename = 'E:\TUM\SWR-Project\Janie-72-01\-ML_2021-02-25_14-52-03\176_CH8.continuous';
+%filename = 'E:\TUM\SWR-Project\Janie-72-01\-ML_2021-02-25_14-52-03\176_CH8.continuous';
 
-filename = 'E:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Ephys\106_CH10.continuous';
+%filename = 'E:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Ephys\106_CH10.continuous';
 
 [data, timestamps, info] = load_open_ephys_data(filename);
 thisSegData_s = timestamps(1:end) - timestamps(1);
@@ -61,16 +83,19 @@ recordingDuration_s = thisSegData_s(end);
    %% Ripple Detection?
    
    
-   addpath(genpath('C:\Users\Janie\Documents\GitHub\Spike-Ripple-Detector-Method-master')) 
-   
    
 %[res,diagnostics] = spike_ripple_detector(EEG,t);  %Call the function, and return the candidate spike-ripple events.
 %[expert_classify] = spike_ripple_visualizer(EEG,t,res,diagnostics)	% Visualize and classify the candidate spike-ripple events.
    
 
-ROI = 3*3600*Fs:3.1*3600*Fs;
+%ROI = .1*3600*Fs:.3*3600*Fs;
+ROI = 1*Fs:30*Fs;
 dataSnippet = data(ROI);
 dataSnippetT_s = thisSegData_s(ROI);
+
+dataSnippet = data;
+dataSnippetT_s = thisSegData_s;
+
 
 dataToUse = dataSnippet;
 timeToUse = dataSnippetT_s;
