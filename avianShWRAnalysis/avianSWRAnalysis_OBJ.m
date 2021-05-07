@@ -4119,7 +4119,8 @@ classdef avianSWRAnalysis_OBJ < handle
             chanToUse = obj.REC.bestChs(1);
             SessionDir = obj.DIR.ephysDir;
             
-            eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
+            eval(['fileAppend = ''114_CH' num2str(chanToUse) '.continuous'';'])
+            %eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
             %eval(['fileAppend = ''100_CH' num2str(chanToUse) '.continuous'';'])
             fileName = [SessionDir fileAppend];
             
@@ -4415,6 +4416,9 @@ classdef avianSWRAnalysis_OBJ < handle
             disp('Getting session info...')
             
             [avianSWR_DB] = avian_SWR_database(); % This is the database
+            
+            
+            
             
             obj.HOST = gethostname;
             obj.INFO = avianSWR_DB(rfc).INFO;

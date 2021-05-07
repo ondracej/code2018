@@ -1,8 +1,11 @@
 %% SWR Analysis - Feb 2021
 
-%% AddPaths
 
-  filename = '/media/janie/4TB/ZF-59-15/20190428/18-07-21/Ephys/100_CH12.continuous';
+%% File Loading
+  %filename = '/media/janie/4TB/ZF-59-15/20190428/18-07-21/Ephys/100_CH12.continuous';
+  
+
+  %% AddPaths
   
   switch gethostname
       
@@ -10,7 +13,8 @@
           
           addpath(genpath('/home/janie/Documents/code/Spike-Ripple-Detector-Method-master'));
           addpath(genpath('/home/janie/Documents/code/analysis-tools-master'));
-          addpath(genpath('/home/janie/Documents/code/NET-master'))'
+          %addpath(genpath('/home/janie/Documents/code/NET-master'));
+          addpath(genpath('/home/janie/Documents/code/NeuralElectrophysilogyTools'));
           
       otherwise
           addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools'))
@@ -22,12 +26,10 @@
 
 
 
-%% File Loading
-
-%dataDir = 'E:\TUM\SWR-Project\Janie-72-01\-ML_2021-02-25_14-52-03';
-%dataDir = 'D:\Hamed\chronic_2020-05-01_20-43-18';
-
 %% Time Series Viewer
+
+dataDir = '/media/janie/4TB/ZF-72-01/20210225/14-52-03/';
+
 
 %addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools')) 
 
@@ -39,6 +41,7 @@ dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecording
 
 timeSeriesViewer(dataRecordingObj); % loads all the channels
 
+%%
 chanMap = [10 12 7 11 9 6 8 5 3 16 4 1 13 15 14 2];
 chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2]; %acute
 

@@ -83,7 +83,7 @@ addpath(genpath(pathToJRCLUST))
 % (109) ZF-70-86 | 20.09.2019  - 18-37-00 - Overnight *** good
 % (110) ZF-70-86 | 23.09.2019  - 18-21-42 - Overnight ***
 
-%% o3b7
+%% o3b7 Chronic 16-ch silicone probe in DVR 
 
 % (111) ZF-o3b7 | 01.15.2020  - 12-49-06_acute
 % (112) ZF-o3b7 | 01.15.2020  - 13-34-00_acute
@@ -118,11 +118,11 @@ addpath(genpath(pathToJRCLUST))
 % (141) ZF-o3b7 | 02.10.2020  - 11-45-32 Morning
 % (142) ZF-o3b7 | 02.10.2020  - 19-10-58 Overnight
 
-%% 70-01
+%% 70-01 16-ch silicone probe in DVR - no SWRs
 % (143) ZF-70-01  | 01.09.2020 - 17-27-44 - no SWRs
 % (144) ZF-70-01  | 01.09.2020 - 17-33-32 - no SWRs
 % (144) ZF-70-01  | 01.09.2020 - 17-47-43 - no SWRs
-%% 71-56
+%% 71-56 4x4 AP 16-ch silicone probe in DVR
 
 % (148) ZF-71-56  | 11.27.2019 - 13-20-00 - DV 1000
 % (149) ZF-71-56  | 11.27.2019 - 13-56-42  - DV 1500
@@ -133,7 +133,7 @@ addpath(genpath(pathToJRCLUST))
 % (154) ZF-71-56  | 11.27.2019 - 16-43-33  - DV 2300
 
 
-%% 72-01
+%% 72-01 4x4 ML 16-ch silicone probe in DVR
 
 % (155) ZF-72-01  | 02.25.2021 - 14-52-03  - P1; DV 2000
 % (156) ZF-72-01  | 02.25.2021 - 15-05-52 - P1; DV 2000
@@ -148,14 +148,23 @@ addpath(genpath(pathToJRCLUST))
 % (165) ZF-72-01  | 02.25.2021 - 17-42-17 - P3; DV 2400
 
 
-%% 72-96
-
-%% o3b11
-
-
-
+%% 72-96 4x4 ML 16-ch silicone probe in DVR
+% (166) ZF-72-96  | 01.08.2020 - 13-57-02 - P1; DV 2000
+% (167) ZF-72-96  | 01.08.2020 - 14-03-08 - P1; DV 2000
+% (168) ZF-72-96  | 01.08.2020 - 15-02-07 - P2; DV 2000 - Broken Probe
 
 
+%% o3b11 4x4 AP 16-ch silicone probe in DVR
+% (169) ZF-o3b11  | 02.23.2021 - 13-57-02 - P1; DV 2000
+% (170) ZF-o3b11  | 02.23.2021 - 14-11-12 - P1; DV 2000
+% (171) ZF-o3b11  | 02.23.2021 - 14-39-42 - P1; DV 3000
+% (172) ZF-o3b11  | 02.23.2021 - 15-00-06 - P1; DV 3000
+% (173) ZF-o3b11  | 02.23.2021 - 15-28-53 - P2; DV 2000
+% (174) ZF-o3b11  | 02.23.2021 - 15-53-20 - P2; DV 3000
+% (175) ZF-o3b11  | 02.23.2021 - 16-18-43 - P3; DV 2000
+% (176) ZF-o3b11  | 02.23.2021 - 16-34-06 - P4; DV 2000
+% (177) ZF-o3b11  | 02.23.2021 - 16-57-21 - P4; DV 3000
+% (178) ZF-o3b11  | 02.23.2021 - 17-04-31 - P4; DV 3000
 
 
 
@@ -214,7 +223,7 @@ addpath(genpath(pathToJRCLUST))
 %%
 %(81) ZF-72-81 | 16.05.2019 - 21-26-59 - Overnight
 %recSession =  81;
-recSession =  98;
+recSession =  113;
 
 D_OBJ = avianSWRAnalysis_OBJ(recSession);
 
