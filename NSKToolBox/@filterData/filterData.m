@@ -18,7 +18,8 @@ classdef filterData
         currentDesignedFilter=[];
         filteredSamplingFrequency=[];
         padding=false;
-        padWithMirrorTraces=true;
+        %padWithMirrorTraces=true;
+        padWithMirrorTraces=false;
         SOS_b=[];
         G_a=[];
         vars=[];

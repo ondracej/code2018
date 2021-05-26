@@ -53,7 +53,7 @@ switch hostName
         
     case 'LAPTOP-NFGB49PH'
         dirD = '/';
-        fileName = 'E:\TUM\SWR-Project\Janie-o3b11\4x4_2021-02-23_16-34-06\170_CH12.continuous';
+        fileName = 'D:\ZF-o3b11\20210223\16-34-06\170_CH12.continuous';
         saveDir = 'C:\Users\Janie\Dropbox\00_Grants\0_2020_erc\Latex\';
         saveName = [saveDir '_Ch12-pos3'];
         

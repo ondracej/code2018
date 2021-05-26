@@ -116,7 +116,7 @@ addpath(genpath(pathToJRCLUST))
 % (139) ZF-o3b7 | 02.09.2020  - 11-10-19 Morning
 % (140) ZF-o3b7 | 02.09.2020  - 19-18-42 Overnight
 % (141) ZF-o3b7 | 02.10.2020  - 11-45-32 Morning
-% (142) ZF-o3b7 | 02.10.2020  - 19-10-58 Overnight
+% (142) ZF-o3b7 | 02.10.2020  - 19-10-58 Overnight - not all the chans recorded
 
 %% 70-01 16-ch silicone probe in DVR - no SWRs
 % (143) ZF-70-01  | 01.09.2020 - 17-27-44 - no SWRs
@@ -223,9 +223,16 @@ addpath(genpath(pathToJRCLUST))
 %%
 %(81) ZF-72-81 | 16.05.2019 - 21-26-59 - Overnight
 %recSession =  81;
-recSession =  113;
+set = 119:142;
 
-D_OBJ = avianSWRAnalysis_OBJ(recSession);
+for j = 12:numel(set)
+    
+    recSession =  set(j);
+    
+    D_OBJ = avianSWRAnalysis_OBJ(recSession);
+    
+    plotDBRatioMatrix(D_OBJ)
+end
 
 %%
 recSet = [64:74]; %55
