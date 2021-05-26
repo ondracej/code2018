@@ -1,9 +1,9 @@
 function [] = loadingMCSData_filterAndDetectSWRs(INFO)
 dbstop if error
 
-fileToLoad = 'E:\JohannaData\20210329\Output\20210329-1407.h5';
-saveDir = ['E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1407\'];
-plotDir = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1407\';
+fileToLoad = 'E:\JohannaData\20210329\Output\20210329-1431.h5';
+saveDir = ['E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1431\'];
+plotDir = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1431\';
 
 %fileToLoad = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\ RippleData.mat';
 %load(fileToLoad)
@@ -23,7 +23,9 @@ dataTmp= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
 %plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 15 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
 
 %Not including ch 15 = reference
-plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
+%plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
+% no 14
+plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 24 34 44 54 64 74 84 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
 
 ChanLabelInds = str2double(dataTmp.Info.Label(:));
 
@@ -255,7 +257,12 @@ testData = data_rect_rippleBP;
     for q =1:numel(peakTime_Fs)
         
         
+        
         winROI = peakTime_Fs(q)-WinSizeL:peakTime_Fs(q)+WinSizeR;
+        if winROI(1) <0 || winROI(end) > numel(data_rect_rippleBP)
+            continue
+        end
+        
         test = max(diff(data_rect_rippleBP(winROI)));
         
         if test < 0.1 %derivative of the signal shoudl be small for normal data
@@ -330,6 +337,9 @@ for runs = 1:15
         [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
         %peakTimes_fs = detections;
     else
+        if isempty(extrachannelDetections)
+            continue
+        end
         nonempty = cell2mat(cellfun(@(x) ~isempty(x),extrachannelDetections,'UniformOutput',false));
         peakTimes_fs  = extrachannelDetections(nonempty);
         [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
@@ -519,7 +529,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
             if k == 1
             counter = 0;
                 scnt = 2;
-                
+
             elseif k == 7
             scnt = 9;
             counter = 1;

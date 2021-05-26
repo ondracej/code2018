@@ -1,9 +1,9 @@
 function [] = loadingMCSData_filterAndDetectSWRs(INFO)
 dbstop if error
 
-fileToLoad = 'E:\JohannaData\20210329\Output\20210329-1407.h5';
-saveDir = ['E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1407\'];
-plotDir = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1407\';
+fileToLoad = 'E:\JohannaData\20210329\Output\20210329-1431.h5';
+saveDir = ['E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1431\'];
+plotDir = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1431\';
 
 %fileToLoad = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\ RippleData.mat';
 %load(fileToLoad)
@@ -102,6 +102,10 @@ for k = 1:numel(plottingOrder)
     disp(['Processing chan ' num2str((k)) '/' num2str(numel(plottingOrder))])
     
     thisChan = chanInds(k);
+    
+    if thisChan == 23 % Ch 14 is noisy
+        continue
+    end
     
     cfg.channel = [thisChan thisChan]; % channel index 5 to 15
     
@@ -255,7 +259,12 @@ testData = data_rect_rippleBP;
     for q =1:numel(peakTime_Fs)
         
         
+        
         winROI = peakTime_Fs(q)-WinSizeL:peakTime_Fs(q)+WinSizeR;
+        if winROI(1) <0 || winROI(end) > numel(data_rect_rippleBP)
+            continue
+        end
+        
         test = max(diff(data_rect_rippleBP(winROI)));
         
         if test < 0.1 %derivative of the signal shoudl be small for normal data
@@ -330,6 +339,9 @@ for runs = 1:15
         [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
         %peakTimes_fs = detections;
     else
+        if isempty(extrachannelDetections)
+            continue
+        end
         nonempty = cell2mat(cellfun(@(x) ~isempty(x),extrachannelDetections,'UniformOutput',false));
         peakTimes_fs  = extrachannelDetections(nonempty);
         [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
