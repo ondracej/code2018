@@ -1,14 +1,19 @@
 function [] = loadingMCSData_filterAndDetectSWRs(INFO)
 dbstop if error
 
-fileToLoad = 'E:\JohannaData\20210329\Output\20210329-1431.h5';
-saveDir = ['E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1431\'];
-plotDir = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1431\';
+%fileToLoad = 'E:\JohannaData\20210329\Output\20210329-1431.h5';
+%saveDir = ['E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1431\'];
+%plotDir = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1431\';
+
+fileToLoad = '/media/janie/2TBData/JohannaData/20210329/Output/20210329-1431.h5';
+saveDir = '/media/janie/2TBData/JohannasDataFigs/SWRs-202103-29/NewPlots/1431/';
+plotDir = '/media/janie/2TBData/JohannasDataFigs/SWRs-202103-29/NewPlots/1431/';
+
 
 %fileToLoad = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\ RippleData.mat';
 %load(fileToLoad)
 
-data = McsHDF5.McsData(fileToLoad );
+data = McsHDF5.McsData(fileToLoad);
 [filepath,name,ext] = fileparts(fileToLoad);
 
 
@@ -103,7 +108,8 @@ for k = 1:numel(plottingOrder)
     
     thisChan = chanInds(k);
     
-    if thisChan == 23 % Ch 14 is noisy
+    if k == 7 || k == 23% Ch 12 and 14 is noisy
+        disp('')
         continue
     end
     
