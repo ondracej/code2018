@@ -8,6 +8,11 @@ switch gethostname
     case 'TURTLE'
     DataDir = '/media/janie/4TB/';
     dirD = '/';
+    
+    case 'CSIGA'
+    DataDir = '/media/janie/4TB/';
+    dirD = '/';
+        
 end
     
    

@@ -16,6 +16,14 @@
           %addpath(genpath('/home/janie/Documents/code/NET-master'));
           addpath(genpath('/home/janie/Documents/code/NeuralElectrophysilogyTools'));
           
+      case 'CSIGA'
+          
+          addpath(genpath('/home/janie/Documents/code/Spike-Ripple-Detector-Method-master'));
+          addpath(genpath('/home/janie/Documents/code/analysis-tools-master'));
+          %addpath(genpath('/home/janie/Documents/code/NET-master'));
+          addpath(genpath('/home/janie/Documents/code/NeuralElectrophysilogyTools'));
+          
+          
       otherwise
           addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools'))
           addpath(genpath('C:\Users\Janie\Documents\GitHub\analysis-tools'))
