@@ -1,10 +1,9 @@
 function [] = loadingMCSData_filterAndDetectSWRs(INFO)
 dbstop if error
 
-fileToLoad = 'E:\JohannaData\20210329\Output\20210329-1406.h5';
-saveDir = ['E:\JohannasDataFigs\SWRs-202103-29\NewPlots\'];
-plotDir = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\';
-
+fileToLoad = 'E:\JohannaData\20210329\Output\20210329-1407.h5';
+saveDir = ['E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1407\'];
+plotDir = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1407\';
 
 %fileToLoad = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\ RippleData.mat';
 %load(fileToLoad)
@@ -319,15 +318,22 @@ end
 
 
 %allChan_peakTime_Fs = INFO.allChan_peakTime_Fs;
-[detections] = cell2mat(cellfun(@(x) numel(x),allChan_peakTime_Fs,'UniformOutput',false));
+
 
 AllDetections = [];
+ extrachannelDetections = [];
 for runs = 1:15
     
     if runs == 1
-        peakTimes_fs = allChan_peakTime_Fs;
+        nonempty = cell2mat(cellfun(@(x) ~isempty(x),allChan_peakTime_Fs,'UniformOutput',false));
+        peakTimes_fs = allChan_peakTime_Fs(nonempty);
+        [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
+        %peakTimes_fs = detections;
     else
-        peakTimes_fs  = extrachannelDetections;    
+        nonempty = cell2mat(cellfun(@(x) ~isempty(x),extrachannelDetections,'UniformOutput',false));
+        peakTimes_fs  = extrachannelDetections(nonempty);
+        [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
+        extrachannelDetections = [];
     end
     
     detSum = sum(detections);
@@ -335,6 +341,9 @@ for runs = 1:15
     if detSum == 0
         continue
         keyboard
+    elseif detSum == 1
+           AllDetections{runs} = detChan_peakTimes_fs;
+        continue
     else
         
         [maxval, minds] = max(detections);
@@ -360,12 +369,14 @@ end
             ROI_fs{o} = thisDet-WinSizeL:thisDet+WinSizeR;
         end
         
-        extrachannelDetections = [];
+        
         
         for q = 1:numel(peakTimes_fs)
             
             
             thisChanDets = peakTimes_fs{q};
+            
+            
             
             for o = 1:numel(thisChanDets)
                 thisChanDet = thisChanDets(o);
@@ -377,6 +388,7 @@ end
                     
                 end
             end
+            
             
             testCase = sum(match, 1);
             
@@ -392,7 +404,6 @@ end
             end
         end
         
-        [detections] = cell2mat(cellfun(@(x) numel(x),extrachannelDetections,'UniformOutput',false));
         %% All Detections
         AllDetections{runs} = detChan_peakTimes_fs;
     end
@@ -591,7 +602,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
     
 end
 
-
+close all
 
 
 
