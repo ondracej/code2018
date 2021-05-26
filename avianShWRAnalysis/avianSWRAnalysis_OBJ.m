@@ -3007,11 +3007,11 @@ classdef avianSWRAnalysis_OBJ < handle
                 SegData = V_uV_data_full(:,:, thisROI);
                 
                 %DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP));
-                DataSeg_BP = fobj.filt.BP.getFilteredData(SegData);
-                DataSeg_BPFL = fobj.filt.FL.getFilteredData(DataSeg_BP);
+                DataSeg_BP = fobj.filt.BP.getFilteredData(SegData); %1-2000Hz
+                DataSeg_BPFL = fobj.filt.FL.getFilteredData(DataSeg_BP); %30-40
                 
                 DataSeg_ripple = squeeze(fobj.filt.Ripple.getFilteredData(SegData));
-                DataSeg_SW = fobj.filt.SW.getFilteredData(DataSeg_BPFL);
+                DataSeg_SW = fobj.filt.SW.getFilteredData(DataSeg_BPFL); %8-40
                 DataSeg_BPFL = squeeze(DataSeg_BPFL);
                 %%
                 %smoothWin = 0.05*Fs;
@@ -4119,7 +4119,8 @@ classdef avianSWRAnalysis_OBJ < handle
             chanToUse = obj.REC.bestChs(1);
             SessionDir = obj.DIR.ephysDir;
             
-            eval(['fileAppend = ''114_CH' num2str(chanToUse) '.continuous'';'])
+            eval(['fileAppend = ''120_CH' num2str(chanToUse) '.continuous'';'])
+            %eval(['fileAppend = ''114_CH' num2str(chanToUse) '.continuous'';'])
             %eval(['fileAppend = ''106_CH' num2str(chanToUse) '.continuous'';'])
             %eval(['fileAppend = ''100_CH' num2str(chanToUse) '.continuous'';'])
             fileName = [SessionDir fileAppend];
@@ -4355,7 +4356,8 @@ classdef avianSWRAnalysis_OBJ < handle
                 %%
                 fig500 = figure(500);clf
                 
-                imagesc(dataToPlot, [0 1200])
+                imagesc(dataToPlot, [0 2500]) %o3b11
+                 %  imagesc(dataToPlot, [0 1200])
                 %imagesc(dataToPlot, [0 300])
                % imagesc(dataToPlot(2:29, :), [0 1200])
                 %imagesc(dataToPlot(2:29, :))

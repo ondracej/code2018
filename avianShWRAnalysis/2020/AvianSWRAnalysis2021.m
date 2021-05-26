@@ -19,17 +19,17 @@
       otherwise
           addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools'))
           addpath(genpath('C:\Users\Janie\Documents\GitHub\analysis-tools'))
-          addpath(genpath('C:\Users\Janie\Documents\GitHub\Spike-Ripple-Detector-Method-master'))
+          %addpath(genpath('C:\Users\Janie\Documents\GitHub\Spike-Ripple-Detector-Method-master'))
           
           
   end
 
 
 
-%% Time Series Viewer
+%% Time Series Viewer works in matlab 2014b
 
-dataDir = '/media/janie/4TB/ZF-72-01/20210225/14-52-03/';
-
+dataDir = 'D:\ZF-o3b11\20210223\17-04-31\';
+% 10 9 3 13 12 6 16 15 7 8 4 14 11 5 1 2
 
 %addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools')) 
 
@@ -48,12 +48,14 @@ chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2]; %acute
 % 10 12 7 11 9 3 6 16 5 15 13 8 4 14 1 2
 
 % Keep Only Channels
+
 % 10 12 7 11 9 6 8 5 3 16 4 1 13 15 14 2 % tetrode shanks, by columns,medial to lateral
 % 10 9 3 13 12 6 16 15 7 8 4 14 11 5 1 2 % by rows, top to bottom
+
 %chanMap = [7 10 2 15 3 14 4 13 1 16 5 12 6 11 8 9]; %chronic
 %LFP scale = 500
 %Spike scale = 150
-%timeWin = 40000
+%timeWin = 20000
  MLong=obj.currentDataObj.getData(ch,startTimes(i),movLongWin);
 %% Load Single Channel
 

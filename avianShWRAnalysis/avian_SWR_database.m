@@ -1,9 +1,9 @@
 function [avianSWR_DB] = avian_SWR_database()
 
 switch gethostname
-    case ispc
+    case 'LAPTOP-NFGB49PH'
     %DataDir = 'C:\Users\Janie\Documents\Data\SWR-Project\';
-    DataDir = 'D:\TUM\SWR-Project\';
+    DataDir = 'D:\';
     dirD = '\';
     case 'TURTLE'
     DataDir = '/media/janie/4TB/';
