@@ -41,6 +41,7 @@ classdef chronoAnalysis_Obj < handle
         function [] = makeMultipleMoviesFromImages(obj, imageDir, movieName, saveDir, VideoFrameRate)
             
             fileFormat = 3; % (1)- tif, (2) -.jpg
+            doRotate = 1;
             
             %%
             switch fileFormat
@@ -101,6 +102,13 @@ classdef chronoAnalysis_Obj < handle
                 tic
                 for f = FrameOn:FrameOff-1
                     img = imread([imageDir{:} resortedNames{f}]);
+                  
+                    if doRotate
+                        
+                        img = imrotate(img,7, 'bilinear');
+                        imshow(img)
+                    end
+                    
                     if fileFormat == 1
                         img2 = im2uint8(img); % need to convert for .tif files
                     elseif fileFormat ==2
@@ -193,7 +201,12 @@ classdef chronoAnalysis_Obj < handle
                     im = step(converter, frame);
                     if cnt == 1
                         figure
-                        figH = imshow(im); %open the first frame
+                        
+                        movROI.cdata = read(VideoObj,20);
+                        roi_frame = movROI.cdata;
+                        im_roi = step(converter, roi_frame);
+                        
+                        figH = imshow(im_roi); %open the first frame
                         %disp('Select 1st ROI')
                         
                         %% Define ROI
@@ -460,17 +473,10 @@ classdef chronoAnalysis_Obj < handle
 
         
         
-        function [] = extractMvmtFromOF_separateParts(obj, fileToLoad, figSaveDir)
+        function [] = extractMvmtFromOF_separateParts(obj, fileToLoad, SaveTag)
             dbstop if error
             
-            
-            if exist(figSaveDir, 'dir') ==0
-                mkdir(figSaveDir);
-                disp(['Created directory: ' figSaveDir])
-            end
-            
-            
-            
+            figSaveDir = [obj.PATH.editedVidPath SaveTag '\'];
             
             [pathstr,name,ext] = fileparts(fileToLoad); 
             
@@ -544,7 +550,7 @@ classdef chronoAnalysis_Obj < handle
                 line([stop stop], [0 1], 'color', 'r')
                 line([start start], [0 1], 'color', 'r')
                 axis tight
-                
+                title(SaveTag)
                 
                 allStarts(j) = start;
                 allStops(j) = stop;
@@ -590,7 +596,7 @@ classdef chronoAnalysis_Obj < handle
                 hold on
                 line([0 numel(part_fV)], [threshCrossing threshCrossing], 'color', 'r')
                 axis tight
-                
+                title(SaveTag)
                 %subplot(2, 1, 2)
                 
                % plot(sortedVals)
@@ -647,7 +653,18 @@ classdef chronoAnalysis_Obj < handle
    
             figure(240);clf
             imagesc(allDetections_6minBins)
-            xlabel('Activity in 6 Min bins')
+            
+            xticks = get(gca, 'xtick');
+            xticks_in_hr = xticks*6/60;
+             xlabs = [];
+                for j = 1:numel(xticks_in_hr)
+                    xlabs{j} = num2str(xticks_in_hr(j));
+                end
+                
+            set(gca, 'xticklabel', xlabs)
+            
+            xlabel('Activity in 6 Min bins (hours)')
+            title(SaveTag)
             
             saveName = [figSaveDir name '_Detections_Imgsc'];
             %plotpos = [0 0 25 12];

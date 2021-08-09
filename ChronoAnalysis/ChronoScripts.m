@@ -2,7 +2,7 @@ close all
 clear all
 
 pathToCodeRepository = 'C:\Users\Janie\Documents\GitHub\code2018\';
-vidsToAnalyze = {'D:\AfterStarvation\faa3-001-cam1-2020-Jul-12.avi'};
+vidsToAnalyze = {'D:\SilkesData\VideosSPF\2021-Jul-29RFstillandafter6stavationPART2\faa2-001-cam2-2021-Jul-29.avi'};
 
 %%
 addpath(genpath(pathToCodeRepository)) 
@@ -18,9 +18,9 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
 
 %% Make movies from images
 
- imageDir = {'D:\AfterStarvation\faa3-001-cam1-2020-Jul-12_ffmpeg\'};
- movieName = 'faa3-001-cam1-2020-Jul-12_contrast';
- saveDir = {'D:\AfterStarvation\Vids_faa3-001-cam1-2020-Jul-12\'};
+ imageDir = {'D:\SilkesData\VideosSPF\2021-Jul-06adlib\FFMPEG_faa3-001-cam1-2021-Jul-08adlibgood\'};
+ movieName = 'faa3-001-cam1-2021-Jul-08adlibgood';
+ saveDir = {'D:\SilkesData\VideosSPF\2021-Jul-06adlib\editedVids\'};
 
  VideoFrameRate = 1;
  makeMultipleMoviesFromImages(C_OBJ, imageDir, movieName, saveDir, VideoFrameRate)
@@ -38,23 +38,23 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
 %             end
  %% calc OF on multiple vidoes
  
- vidDir = 'E:\ChronoAnalysis\001_Vids_Nov14\contrastVids\';
+ vidDir = 'D:\SilkesData\VideosSPF\2021-Jul-06adlib\editedVids\cam1\';
  dsFrameRate = 1;
  vidFrameRate = 1;
- saveTag = '_ROI-3';
+ saveTag = '_mouse340';
  
  calcOFOnDefinedRegion_DS_multipleFilesInDir(C_OBJ, dsFrameRate, vidDir, vidFrameRate, saveTag)
  
  %%
  
-StartingAlignmentTime  = '18:00:00'; % Must be the next even time
-StartingClockTime = '17:47:50'; % Must be the next even time
+StartingAlignmentTime  = '13:00:00'; % Must be the next even time
+StartingClockTime = '12:06:35'; % Must be the next even time
 
 % StartingAlignmentTime  = '16:00:00'; % Must be the next even time
 % StartingClockTime = '15:49:49'; % Must be the next even time
 
-detectionsDir = 'E:\ChronoAnalysis\001_Vids_Nov14\contrastVids\ROI-3\';
-VidTag  = 'ROI-3';
+detectionsDir = 'D:\SilkesData\VideosSPF\2021-Jul-29RFstillandafter6stavationPART2\editedVideos\cam2\mouse339\';
+VidTag  = 'Mouse-339';
 dsFrameRate = 1;
 loadOFDetectionsAndMakePlot(C_OBJ, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime, VidTag)
  
@@ -71,8 +71,9 @@ extractMvmtFromOF(C_OBJ, OFPath)
 
 %OFPath = ['E:\ChronoAnalysis\002_Vids_Nov19\ContrastVids\OF_Analysis\ROI-1_OF_DSs1_fullFile.mat'];
 %OFPath = ['E:\ChronoAnalysis\002_Vids_Nov19\ContrastVids\OF_Analysis\ROI-2_OF_DSs1_fullFile.mat'];
-OFPath = ['E:\ChronoAnalysis\002_Vids_Nov19\ContrastVids\OF_Analysis\ROI-3_OF_DSs1_fullFile.mat'];
-extractMvmtFromOF_separateParts(C_OBJ, OFPath)
+OFPath = ['D:\SilkesData\VideosSPF\2021-Jul-29RFstillandafter6stavationPART2\OF_Analysis\faa2-001-cam2-2021-Jul-29_Mouse-338_OF_DSs1_fullFile.mat'];
+SaveTag = 'Mouse-338';
+extractMvmtFromOF_separateParts(C_OBJ, OFPath, SaveTag)
 
-
+%close all
  
