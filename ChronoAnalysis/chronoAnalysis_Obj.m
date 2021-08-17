@@ -380,7 +380,7 @@ classdef chronoAnalysis_Obj < handle
             %plotpos = [0 0 25 12];
             plotpos = [0 0 30 12];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-            print_in_A4(0, saveName, '-depsc', 0, plotpos);
+            %print_in_A4(0, saveName, '-depsc', 0, plotpos);
             
             
             
@@ -477,6 +477,11 @@ classdef chronoAnalysis_Obj < handle
             dbstop if error
             
             figSaveDir = [obj.PATH.editedVidPath SaveTag '\'];
+            
+             if exist(figSaveDir, 'dir') ==0
+                mkdir(figSaveDir);
+                disp(['Created directory: ' figSaveDir])
+             end
             
             [pathstr,name,ext] = fileparts(fileToLoad); 
             

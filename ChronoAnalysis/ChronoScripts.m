@@ -2,7 +2,7 @@ close all
 clear all
 
 pathToCodeRepository = 'C:\Users\Janie\Documents\GitHub\code2018\';
-vidsToAnalyze = {'D:\SilkesData\VideosSPF\2021-Jul-29RFstillandafter6stavationPART2\faa2-001-cam2-2021-Jul-29.avi'};
+vidsToAnalyze = {'F:\SilkesData\VideosSPF\2021-Jul-19RFtwodays\faa2-001-cam1-2021-Jul-19.avi'};
 
 %%
 addpath(genpath(pathToCodeRepository)) 
@@ -38,22 +38,22 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
 %             end
  %% calc OF on multiple vidoes
  
- vidDir = 'D:\SilkesData\VideosSPF\2021-Jul-06adlib\editedVids\cam1\';
+ vidDir = 'F:\SilkesData\VideosSPF\2021-Jul-19RFtwodays\editedVids\cam2\';
  dsFrameRate = 1;
  vidFrameRate = 1;
- saveTag = '_mouse340';
+ saveTag = '_mouse339';
  
  calcOFOnDefinedRegion_DS_multipleFilesInDir(C_OBJ, dsFrameRate, vidDir, vidFrameRate, saveTag)
  
  %%
  
-StartingAlignmentTime  = '13:00:00'; % Must be the next even time
-StartingClockTime = '12:06:35'; % Must be the next even time
+StartingAlignmentTime  = '11:00:00'; % Must be the next even time
+StartingClockTime = '10:23:28'; % Must be the next even time
 
 % StartingAlignmentTime  = '16:00:00'; % Must be the next even time
 % StartingClockTime = '15:49:49'; % Must be the next even time
 
-detectionsDir = 'D:\SilkesData\VideosSPF\2021-Jul-29RFstillandafter6stavationPART2\editedVideos\cam2\mouse339\';
+detectionsDir = 'F:\SilkesData\VideosSPF\2021-Jul-19RFtwodays\editedVids\cam2\mouse339\';
 VidTag  = 'Mouse-339';
 dsFrameRate = 1;
 loadOFDetectionsAndMakePlot(C_OBJ, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime, VidTag)
@@ -71,9 +71,10 @@ extractMvmtFromOF(C_OBJ, OFPath)
 
 %OFPath = ['E:\ChronoAnalysis\002_Vids_Nov19\ContrastVids\OF_Analysis\ROI-1_OF_DSs1_fullFile.mat'];
 %OFPath = ['E:\ChronoAnalysis\002_Vids_Nov19\ContrastVids\OF_Analysis\ROI-2_OF_DSs1_fullFile.mat'];
-OFPath = ['D:\SilkesData\VideosSPF\2021-Jul-29RFstillandafter6stavationPART2\OF_Analysis\faa2-001-cam2-2021-Jul-29_Mouse-338_OF_DSs1_fullFile.mat'];
-SaveTag = 'Mouse-338';
+
+OFPath = ['F:\SilkesData\VideosSPF\2021-Jul-19RFtwodays\OF_Analysis\faa2-001-cam1-2021-Jul-19_Mouse-339_OF_DSs1_fullFile.mat'];
+SaveTag = 'Mouse-339';
 extractMvmtFromOF_separateParts(C_OBJ, OFPath, SaveTag)
 
-%close all
+close all
  

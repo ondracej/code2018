@@ -23,7 +23,10 @@
           %addpath(genpath('/home/janie/Documents/code/NET-master'));
           addpath(genpath('/home/janie/Documents/code/NeuralElectrophysilogyTools'));
           
-          
+      case 'NEUROPIXELS'
+          addpath(genpath('C:\Users\Neuropix\Documents\GitHub\NeuralElectrophysilogyTools'));
+          addpath(genpath('C:\Users\Neuropix\Documents\GitHub\analysis-tools'))
+      
       otherwise
           addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools'))
           addpath(genpath('C:\Users\Janie\Documents\GitHub\analysis-tools'))
@@ -36,9 +39,17 @@
 
 %% Time Series Viewer works in matlab 2014b
 
-dataDir = 'D:\ZF-o3b11\20210223\17-04-31\';
+dataDir = 'G:\Hamed\chronic_2021-07-23_22-43-29';
 % 10 9 3 13 12 6 16 15 7 8 4 14 11 5 1 2
 
+% Hameds Data
+% EEG1: 12, 13, 20, 21, 
+% LFP1: 10, 15, 16, 17, 18, 23, 24 
+%BestChan: 24
+
+% EEG2: 43, 44, 45, 52, 53
+% LFP2: 41, 42, 47, 48, 49, 50, 55, 56
+%BestChan: 56
 %addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools')) 
 
 dataRecordingObj = OERecordingMF(dataDir);
@@ -48,6 +59,16 @@ dataRecordingObj = OERecordingMF(dataDir);
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
 
 timeSeriesViewer(dataRecordingObj); % loads all the channels
+
+%% DB Matrix
+ 
+params.chanToUse =  '150_CH24_2.continuous';
+params.SessionDir = 'G:\Hamed\chronic_2021-07-23_22-43-29\';
+params.BirdName = 'test';
+params.DateTime = '2021-07-23_22-43-29';
+params.plotDir = 'G:\Hamed\Plots\';
+plotDBRatioMatrix_standalone(params)
+
 
 %%
 chanMap = [10 12 7 11 9 6 8 5 3 16 4 1 13 15 14 2];

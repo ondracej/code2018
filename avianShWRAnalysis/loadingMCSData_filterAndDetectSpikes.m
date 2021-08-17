@@ -1,14 +1,21 @@
-function [] = loadingMCSData_filterAndDetectSWRs(INFO)
+function [] = loadingMCSData_filterAndDetectSpikes(INFO)
 dbstop if error
 
-fileToLoad = 'E:\JohannaData\20210329\Output\20210329-1431.h5';
-saveDir = ['E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1431\'];
-plotDir = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\1431\';
+fileToLoad = 'F:\MEAData\JanieMea\20210612\Output\20210612-1603.h5';
+saveDir = 'F:\MEAData\JanieMea\20210612\Output\Spikes\';
+plotDir = 'F:\MEAData\JanieMea\20210612\Output\Spikes\';
+
+doPlot = 1;
+
+% fileToLoad = '/media/janie/2TBData/JohannaData/20210329/Output/20210329-1431.h5';
+% saveDir = '/media/janie/2TBData/JohannasDataFigs/SWRs-202103-29/NewPlots/1431/';
+% plotDir = '/media/janie/2TBData/JohannasDataFigs/SWRs-202103-29/NewPlots/1431/';
+
 
 %fileToLoad = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\ RippleData.mat';
 %load(fileToLoad)
 
-data = McsHDF5.McsData(fileToLoad );
+data = McsHDF5.McsData(fileToLoad);
 [filepath,name,ext] = fileparts(fileToLoad);
 
 
@@ -23,9 +30,10 @@ dataTmp= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
 %plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 15 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
 
 %Not including ch 15 = reference
-%plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
-% no 14
-plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 24 34 44 54 64 74 84 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
+plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
+
+%ChannelsToNoTIncludeInDetections = [12 14 16 65];
+ChannelsToNotIncludeInDetections = [];
 
 ChanLabelInds = str2double(dataTmp.Info.Label(:));
 
@@ -37,11 +45,11 @@ end
 Fs = 32000;
 fObj = filterData(Fs);
 
-fobj.filt.F=filterData(Fs);
-fobj.filt.F.downSamplingFactor=128; % original is 128 for 32k; use 120 for 30k
-fobj.filt.F=fobj.filt.F.designDownSample;
-fobj.filt.F.padding=true;
-fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
+% fobj.filt.F=filterData(Fs);
+% fobj.filt.F.downSamplingFactor=128; % original is 128 for 32k; use 120 for 30k
+% fobj.filt.F=fobj.filt.F.designDownSample;
+% fobj.filt.F.padding=true;
+% fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
 
 %fobj.filt.FL=filterData(Fs);
 %fobj.filt.FL.lowPassPassCutoff=4.5;
@@ -49,13 +57,13 @@ fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
 %fobj.filt.FL.attenuationInLowpass=20;
 %fobj.filt.FL=fobj.filt.FL.designLowPass;
 %fobj.filt.FL.padding=true;
-
-fobj.filt.FL=filterData(Fs);
-fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
-fobj.filt.FL.lowPassStopCutoff=40;
-fobj.filt.FL.attenuationInLowpass=20;
-fobj.filt.FL=fobj.filt.FL.designLowPass;
-fobj.filt.FL.padding=true;
+% 
+% fobj.filt.FL=filterData(Fs);
+% fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+% fobj.filt.FL.lowPassStopCutoff=40;
+% fobj.filt.FL.attenuationInLowpass=20;
+% fobj.filt.FL=fobj.filt.FL.designLowPass;
+% fobj.filt.FL.padding=true;
 
 fobj.filt.BP=filterData(Fs);
 fobj.filt.BP.highPassCutoff=1;
@@ -65,30 +73,30 @@ fobj.filt.BP=fobj.filt.BP.designBandPass;
 fobj.filt.BP.padding=true;
 
 fobj.filt.FH2=filterData(Fs);
-fobj.filt.FH2.highPassCutoff=100;
-fobj.filt.FH2.lowPassCutoff=2000;
+fobj.filt.FH2.highPassCutoff=300;
+fobj.filt.FH2.lowPassCutoff=3000;
 fobj.filt.FH2.filterDesign='butter';
 fobj.filt.FH2=fobj.filt.FH2.designBandPass;
 fobj.filt.FH2.padding=true;
-
-fobj.filt.Ripple=filterData(Fs);
-fobj.filt.Ripple.highPassCutoff=80;
-fobj.filt.Ripple.lowPassCutoff=300;
-fobj.filt.Ripple.filterDesign='butter';
-fobj.filt.Ripple=fobj.filt.Ripple.designBandPass;
-fobj.filt.Ripple.padding=true;
-
-fobj.filt.SW=filterData(Fs);
-fobj.filt.SW.highPassCutoff=8;
-fobj.filt.SW.lowPassCutoff=40;
-fobj.filt.SW.filterDesign='butter';
-fobj.filt.SW=fobj.filt.SW.designBandPass;
-fobj.filt.SW.padding=true;
-
-fobj.filt.FN =filterData(Fs);
-fobj.filt.FN.filterDesign='cheby1';
-fobj.filt.FN.padding=true;
-fobj.filt.FN=fobj.filt.FN.designNotch;
+% 
+% fobj.filt.Ripple=filterData(Fs);
+% fobj.filt.Ripple.highPassCutoff=80;
+% fobj.filt.Ripple.lowPassCutoff=300;
+% fobj.filt.Ripple.filterDesign='butter';
+% fobj.filt.Ripple=fobj.filt.Ripple.designBandPass;
+% fobj.filt.Ripple.padding=true;
+% 
+% fobj.filt.SW=filterData(Fs);
+% fobj.filt.SW.highPassCutoff=8;
+% fobj.filt.SW.lowPassCutoff=40;
+% fobj.filt.SW.filterDesign='butter';
+% fobj.filt.SW=fobj.filt.SW.designBandPass;
+% fobj.filt.SW.padding=true;
+% 
+% fobj.filt.FN =filterData(Fs);
+% fobj.filt.FN.filterDesign='cheby1';
+% fobj.filt.FN.padding=true;
+% fobj.filt.FN=fobj.filt.FN.designNotch;
 
 
 %% Load full channel data
@@ -99,11 +107,16 @@ cfg = [];
 cfg.window = [0 recordingDuration_s]; % time
 smoothWin = 0.10*Fs;
 
-for k = 1:numel(plottingOrder)
+DetChanInds = ~ismember(plottingOrder, ChannelsToNotIncludeInDetections);
+ChansForDetection = plottingOrder(DetChanInds);
+ChanIndsForDetection = chanInds(DetChanInds);
+
+for k = 1:numel(ChansForDetection)
     
-    disp(['Processing chan ' num2str((k)) '/' num2str(numel(plottingOrder))])
+    disp(['Processing chan ' num2str((k)) '/' num2str(numel(ChansForDetection))])
+    disp(['Chan: ' num2str(ChansForDetection(k))])
     
-    thisChan = chanInds(k);
+    thisChan = ChanIndsForDetection(k);
     
     cfg.channel = [thisChan thisChan]; % channel index 5 to 15
     
@@ -158,13 +171,12 @@ for k = 1:numel(plottingOrder)
     
     % Sharp wave
     data_BP = (fobj.filt.BP.getFilteredData(data_shift));% 1-2000 BP
-    data_FLBP = squeeze(fobj.filt.FL.getFilteredData(data_BP)); %30-40 LP
+    data_FH = squeeze(fobj.filt.FH2.getFilteredData(data_BP)); %30-40 LP
     
-    data_rippleBP = squeeze(fobj.filt.Ripple.getFilteredData(data_BP)); %80-300 BP
-    data_rect_rippleBP = smooth(data_rippleBP.^2, smoothWin);
+  
     
     
-    %           figure; plot(time_s(1:Fs*10), data_rect_rippleBP(1:Fs*10))
+    %           figure; plot(time_s(1:Fs*10), data_FH(1:Fs*10))
     %           figure; plot(time_s(1:Fs*10), data_BP(1:Fs*10))
     %           figure; plot(time_s(1:Fs*10), -data_FLBP(1:Fs*10))
     
@@ -198,8 +210,13 @@ testData = data_rect_rippleBP;
     nTestSegments = round(numel(TOn));
     
     nCycles = 20;
-    pCycle = randperm(nTestSegments);
-    pCycle = sort(pCycle(1:nCycles));
+    pCycle = randperm(nTestSegments-1);
+    if numel(pCycle) >= nCycles
+        
+        pCycle = sort(pCycle(1:nCycles));
+    else
+        pCycle = sort(pCycle(1:numel(pCycle)-1));
+    end
     
     Mtest_ripple=cell(nCycles,1);
     Mtest_SW=cell(nCycles,1);
@@ -234,13 +251,21 @@ testData = data_rect_rippleBP;
     minPeakWidth = 0.1*Fs;
     minPeakHeight =scaleEstimator_ripple;
     minPeakProm = 8;
+    %minPeakProm = 5;
     
     [peakH,peakTime_Fs, peakW, peakP]=findpeaks(data_rect_rippleBP,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth,'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom', 'MinPeakProminence',minPeakProm); %For HF
+    
+    %     figure;
+    %     dataP = data_rect_rippleBP(20*Fs:40*Fs);
+    %     time_fs = 1:1:numel(dataP);
+    %     time_s = time_fs/Fs;
+    %     plot(time_s , dataP ); axis tight
+    
+    %[peakH,peakTime_Fs, peakW, peakP]=findpeaks(dataP,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth,'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom', 'MinPeakProminence',minPeakProm); %For HF
     
     if isempty(peakH)
         disp(['No ripples detected on ch ' num2str(plottingOrder(k))])
     end
-    
     
     peakTimes_s = peakTime_Fs/Fs;
     
@@ -255,8 +280,6 @@ testData = data_rect_rippleBP;
     chan_peakTime_Fs = []; chan_peakTime_s = [];
     chan_peakH = []; chan_peakW_Fs = []; chan_peakW_s = []; chan_peakP = [];
     for q =1:numel(peakTime_Fs)
-        
-        
         
         winROI = peakTime_Fs(q)-WinSizeL:peakTime_Fs(q)+WinSizeR;
         if winROI(1) <0 || winROI(end) > numel(data_rect_rippleBP)
@@ -279,29 +302,31 @@ testData = data_rect_rippleBP;
             chan_peakW_s(cnt) = peakW(q)/Fs;
             chan_peakP(cnt) = peakP(q);
             
-            %{
-            figure(100);clf
-            subplot(3, 1, 1)
-            plot(time_s(winROI), data_rect_rippleBP(winROI));
-            axis tight
-            ylim([0 20])
-            subplot(3, 1, 2)
-            %plot(time_s(winROI), ChanData_cond(winROI));
-            hold on
-            plot(time_s(winROI), ChanData(winROI), 'k');
-            axis tight
-            ylim([-100 100])
+            if doPlot
+                figure(100);clf
+                subplot(3, 1, 1)
+                plot(time_s(winROI), data_rect_rippleBP(winROI));
+                axis tight
+                ylim([0 20])
+                
+                subplot(3, 1, 2)
+                % plot(time_s(winROI), ChanData_cond(winROI));
+                hold on
+                plot(time_s(winROI), ChanData(winROI), 'k');
+                axis tight
+                ylim([-50 50])
+                
+                subplot(3, 1, 3)
+                %   plot(time_s(winROI), ChanData_cond(winROI));
+                hold on
+                test = diff(data_rect_rippleBP(winROI));
+                
+                plot(time_s(winROI(1:end-1)), diff(data_rect_rippleBP(winROI)), 'k');
+                axis tight
+                ylim([-50 50])
+                pause
+            end
             
-            subplot(3, 1, 3)
-            %plot(time_s(winROI), ChanData_cond(winROI));
-            hold on
-            % test = diff(data_rect_rippleBP(winROI));
-            
-            plot(time_s(winROI(1:end-1)), diff(data_rect_rippleBP(winROI)), 'k');
-            axis tight
-            %ylim([-100 100])
-            pause
-            %}
             cnt = cnt+1;
         end
         
@@ -320,6 +345,8 @@ testData = data_rect_rippleBP;
     allChan_peakW_s{k} = chan_peakW_s;
     allChan_peakP{k} = chan_peakP;
     
+    allChanName{k} = ChansForDetection(k);
+    allChanInd{k} = ChanIndsForDetection(k);
     
 end
 
@@ -328,7 +355,7 @@ end
 
 
 AllDetections = [];
- extrachannelDetections = [];
+extrachannelDetections = [];
 for runs = 1:15
     
     if runs == 1
@@ -352,7 +379,7 @@ for runs = 1:15
         continue
         keyboard
     elseif detSum == 1
-           AllDetections{runs} = detChan_peakTimes_fs;
+        AllDetections{runs} = detChan_peakTimes_fs;
         continue
     else
         
@@ -419,7 +446,7 @@ end
     end
 end
 AllUniqueDetections  = sort(cell2mat(AllDetections));
-    
+
 INFO.AllUniqueDetections = AllUniqueDetections;
 
 INFO.allChanDataROI = allChanDataROI;
@@ -451,19 +478,19 @@ SWR_Detection_fs = [];
 SWR_Detection_s = [];
 for k = 1:numel(plottingOrder)
     
-    disp(['Collecting SWRs ' num2str((k)) '/' num2str(numel(plottingOrder))])    
+    disp(['Collecting SWRs ' num2str((k)) '/' num2str(numel(plottingOrder))])
     thisChan = chanInds(k);
     cfg.channel = [thisChan thisChan]; % channel index 5 to 15
     
     chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
     ChanData = chanDataParital.ChannelData/1e6; %loads all data info
-
-        for j = 1:numel(ROI_fs);
-            thisROI = ROI_fs{j};
-            AllSWRDataOnChans{k,j} = ChanData(thisROI);
-           SWR_Detection_fs(k,j) = AllUniqueDetections(j);
-           SWR_Detection_s(k,j) = AllUniqueDetections(j)/Fs;
-        end
+    
+    for j = 1:numel(ROI_fs);
+        thisROI = ROI_fs{j};
+        AllSWRDataOnChans{k,j} = ChanData(thisROI);
+        SWR_Detection_fs(k,j) = AllUniqueDetections(j);
+        SWR_Detection_s(k,j) = AllUniqueDetections(j)/Fs;
+    end
 end
 
 D.AllSWRDataOnChans = AllSWRDataOnChans;
@@ -494,7 +521,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
         
         toPlot = AllSWRDataOnChans{k,j};
         
-         figure(figH)
+        figure(figH)
         subplot(1, 3, 1)
         hold on
         plot(timepoints_s, toPlot+offset, 'k');
@@ -523,33 +550,33 @@ for j = 1: size(AllSWRDataOnChans, 2)
         offsetFil = offsetFil+30;
         
         %%
-      
-    figure(figHH)
-            
-            if k == 1
+        
+        figure(figHH)
+        
+        if k == 1
             counter = 0;
-                scnt = 2;
-
-            elseif k == 7
+            scnt = 2;
+            
+        elseif k == 7
             scnt = 9;
             counter = 1;
-            elseif k == 31
+        elseif k == 31
             scnt = 34;
             counter = 2;
-            elseif k == 54
+        elseif k == 54
             scnt = 58;
             counter = 3;
-            else
-                scnt = k+1+counter;
-            end
-            %scnt
-               subplot(8, 8, scnt)
-            
-             %plot(timepoints_s, toPlot, 'k');
-             plot(timepoints_s, data_FLBP, 'k');
-             %plot(timepoints_s, squeeze(data_rippleBP), 'k');
-             
-             
+        else
+            scnt = k+1+counter;
+        end
+        %scnt
+        subplot(8, 8, scnt)
+        
+        %plot(timepoints_s, toPlot, 'k');
+        plot(timepoints_s, data_FLBP, 'k');
+        %plot(timepoints_s, squeeze(data_rippleBP), 'k');
+        
+        
         thisChan = num2str(plottingOrder(k));
         title(thisChan)
         grid('on')
@@ -560,7 +587,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
         
         
     end
-     figure(figH)
+    figure(figH)
     subplot(1, 3, 1)
     title('Raw')
     axis tight
@@ -596,11 +623,11 @@ for j = 1: size(AllSWRDataOnChans, 2)
     figure(figH)
     plotpos = [0 0 50 50];
     
-     print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-     
-     figure(figHH)
-     
-     textAnnotation = ['File: ' name ' | SWR Detection: ' num2str(roundn(SWR_Detection_s(k,j), -2)) 's' ];
+    print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+    
+    figure(figHH)
+    
+    textAnnotation = ['File: ' name ' | SWR Detection: ' num2str(roundn(SWR_Detection_s(k,j), -2)) 's' ];
     % Create textbox
     annotation(figHH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
     
