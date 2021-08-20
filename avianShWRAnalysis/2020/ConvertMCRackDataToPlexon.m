@@ -1,16 +1,11 @@
-function [] = ConvertMCRackDataToPlexon()
+function [] = ConvertMCRackDataToPlexon(ChannelsToLoad, fileToLoad, SpikeOutputDir)
 dbstop if error
 
 %plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 15 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
-ChannelsToLoad = [44 53 63 57 82];
-
-fileToLoad = 'F:\MEAData\JanieMea\20210612\Output\20210612-1743.h5';
-SpikeOutputDir= 'F:\MEAData\JanieMea\20210612\Output\Spikes\';
-
 
 %%
 
-addpath(genpath('C:\Users\Neuropix\Documents\GitHub\McsMatlabDataTools'));
+addpath(genpath('C:\Users\dlc\Documents\GitHub\McsMatlabDataTools'));
 
 
 data = McsHDF5.McsData(fileToLoad);
