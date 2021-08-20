@@ -1,18 +1,13 @@
 function[] = wav_browser()
-% This programs allows you to browse the spectrograms of the wav files
-% located in the inputed directory. It allows you to:
-%- (s) re-save selected files into a 'BOS' directory located within the wav_file_dir
-%- (g) flag the wav file as a 'good' file (> 3 motifs + introductory notes) and move it to a "For_playback" directory
-%- (b) flag the wav file as a 'bad' file (< 3 motifs, few introductory notes) and move it to a "Not_for_playback" directory
-%- (d) switch the wav file directory
-%- (escape) save (or appends) the lists of good files and bad files, clear the data, and close the window
+
+%% Enter the directory path
+
+wav_file_dir = 'Z:\Hamed\65-69\Data\2021-06-30\';
+
 
 
 %%
-
 dbstop if error
-
-wav_file_dir = '/home/janie/Data/Songs/Finished/71-75/Data/2021-05-05/';
 
 if ispc
     dirD = '\';
@@ -21,10 +16,10 @@ elseif isunix
 end
 
 good_wavs_dir = [wav_file_dir 'Edited' dirD];
-
-if exist(good_wavs_dir , 'dir') == 0
-    mkdir(good_wavs_dir );
-end
+% 
+% if exist(good_wavs_dir , 'dir') == 0
+%     mkdir(good_wavs_dir );
+% end
 
 %DirD = directoryDelimiter;
 
