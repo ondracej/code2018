@@ -98,8 +98,14 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
         
         YY = resample(newWav, 44100, fs);
         
+       prompt = 'Please enter save name:';
+       dlgtitle = 'Saving';
+       
+        answer = inputdlg(prompt,dlgtitle);
       
-        newWavName = [wavName(1:end-4) '-Cut.wav'];
+        endingtxt = cell2mat(answer);
+        
+        newWavName = [wavName(1:end-4) '--' endingtxt '.wav'];
         
         wavwrite(YY,44100, [wav_file_dir newWavName])
         
