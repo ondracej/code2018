@@ -10,12 +10,12 @@
 % 2.1 convert .h5 files to plexon format
 
 
-ChannelsToLoad = [25 32 36 53 55 65 67 75 83 86]; % channels of interest
-fileToLoad = 'E:\Jessica-Data\20210812\Output\20210812-1133.h5'; % .h5 file to load
-SpikeOutputDir= 'E:\Jessica-Data\20210812\Spike Output\'; % spike output driectory (end with \ )
+ChannelsToLoad = [57 65]; % channels of interest
+fileToLoad = 'Z:\20210816\Output\20210816-1352.h5'; % .h5 file to load
+SpikeOutputDir= 'Z:\20210816\Spike Output\'; % spike output driectory (end with \ )
 
 
-addpath(genpath('C:\Users\dlc\Documents\GitHub\code2018\avianShWRAnalysis'));
+addpath(genpath('C:\Users\dlc\Documents\GitHub\code2018\'));
 
 ConvertMCRackDataToPlexon(ChannelsToLoad, fileToLoad, SpikeOutputDir)
 
@@ -25,11 +25,12 @@ ConvertMCRackDataToPlexon(ChannelsToLoad, fileToLoad, SpikeOutputDir)
 
 dbstop if error
 
-fileToLoad = 'E:\Jessica-Data\20210811\Output\20210811-1338.h5'; % .h5 file to load
-saveDir = 'E:\Jessica-Data\20210811\SWR_Detections\';
-ChannelsToNoTIncludeInDetections = [12 22 13 23 64];
+fileToLoad = 'Z:\20210810\Output\20210810-1631.h5'; % .h5 file to load
+saveDir = 'Z:\20210810\SWR Detection\';              
+             
+ChannelsToNoTIncludeInDetections = [ 21 12 22 13 23];   
 
-addpath(genpath('C:\Users\dlc\Documents\GitHub\NeuralElectrophysilogyTools'));
+%addpath(genpath('C:\Users\dlc\Documents\GitHub\NeuralElectrophysilogyTools'));
 
 loadingMCSData_filterAndDetectSWRs_Jessica(fileToLoad, saveDir, ChannelsToNoTIncludeInDetections)
 

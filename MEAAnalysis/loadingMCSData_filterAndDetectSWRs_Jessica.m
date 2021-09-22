@@ -613,7 +613,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
     line([1 1], [-30 1750], 'color', 'k', 'linestyle', ':')
     xlabel('Time (s)')
     
-    textAnnotation = ['File: ' name ' | SWR Detection: ' num2str(roundn(SWR_Detection_s(k,j), -2)) 's' ];
+    textAnnotation = ['File: ' name ' | SWR Detection: ' num2str(round(SWR_Detection_s(k,j), 2)) 's' ];
     % Create textbox
     annotation(figH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
     
