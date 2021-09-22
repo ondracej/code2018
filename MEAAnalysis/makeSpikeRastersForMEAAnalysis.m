@@ -43,9 +43,9 @@ for j = 1:nChansToLoad
     fields = fieldnames(d);
     
     %eval(['dataLength = size(d.' cell2mat(fields) ',2)'])
-    eval(['units = d.' cell2mat(fields) '(:,2)'])
-    eval(['timestamps_s = d.' cell2mat(fields) '(:,3)'])
-    eval(['spikeWaveforms = d.' cell2mat(fields) '(:,4:end)'])
+    eval(['units = d.' cell2mat(fields) '(:,2);']);
+    eval(['timestamps_s = d.' cell2mat(fields) '(:,3);']);
+    eval(['spikeWaveforms = d.' cell2mat(fields) '(:,4:end);']);
     uniqueUnits = unique(units);
     nUnits = numel(uniqueUnits);
     
@@ -55,7 +55,7 @@ for j = 1:nChansToLoad
         allTimestamps_inds = find(units == thisUnit);
         allTimestamps_s{o} = timestamps_s(allTimestamps_inds);
         allSpikeWaveforms{o} = spikeWaveforms(allTimestamps_inds,:);
-        meanWaveform{o} = nanmedian(spikeWaveforms(allTimestamps_inds,:), 1);
+     %   meanWaveform{o} = nanmedian(spikeWaveforms(allTimestamps_inds,:), 1);
     end
     
     if j ==1
