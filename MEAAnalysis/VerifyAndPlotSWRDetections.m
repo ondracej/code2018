@@ -4,7 +4,7 @@ if nargin <1
     detectionFile = 'Z:\20210809\SWR-Detection\Detections.mat';
 end
 
-d = load(detectionFile);
+load(detectionFile);
 
 
 
