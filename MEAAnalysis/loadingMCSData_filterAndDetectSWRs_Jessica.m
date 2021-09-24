@@ -248,16 +248,16 @@ testData = data_rect_rippleBP;
     interPeakDistance = 0.1*Fs;
     minPeakWidth = 0.1*Fs;
     minPeakHeight =scaleEstimator_ripple;
-    minPeakProm = 8;
-    %minPeakProm = 5;
+    %minPeakProm = 8;
+    minPeakProm = 5;
     
     [peakH,peakTime_Fs, peakW, peakP]=findpeaks(data_rect_rippleBP,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth,'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom', 'MinPeakProminence',minPeakProm); %For HF
     
-    %     figure;
-    %     dataP = data_rect_rippleBP(20*Fs:40*Fs);
-    %     time_fs = 1:1:numel(dataP);
-    %     time_s = time_fs/Fs;
-    %     plot(time_s , dataP ); axis tight
+%         figure;
+%         dataP = data_rect_rippleBP(20*Fs:40*Fs);
+%         time_fs = 1:1:numel(dataP);
+%         time_s = time_fs/Fs;
+%         plot(time_s , dataP ); axis tight
     
     %[peakH,peakTime_Fs, peakW, peakP]=findpeaks(dataP,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth,'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom', 'MinPeakProminence',minPeakProm); %For HF
     
@@ -508,6 +508,8 @@ for j = 1:numel(xticklabs)
     xlabs{j} = num2str(xticklabs(j));
 end
 
+
+%{
 for j = 1: size(AllSWRDataOnChans, 2)
     
     offset = 0;
@@ -625,7 +627,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
     
     figure(figHH)
     
-    textAnnotation = ['File: ' name ' | SWR Detection: ' num2str(roundn(SWR_Detection_s(k,j), -2)) 's' ];
+    textAnnotation = ['File: ' name ' | SWR Detection: ' num2str(round(SWR_Detection_s(k,j), 2)) 's' ];
     % Create textbox
     annotation(figHH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
     
@@ -638,7 +640,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
 end
 
 close all
-
+%}
 
 
 

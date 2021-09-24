@@ -38,12 +38,14 @@ makeSpikeRastersForMEAAnalysis
 
 %% 3) SWR analysis % cntrl + enter
 
+addpath(genpath('C:\Users\dlc\Documents\GitHub\code2018\'));
+
 dbstop if error
 
-fileToLoad = 'Z:\20210810\Output\20210810-1631.h5'; % .h5 file to load
-saveDir = 'Z:\20210810\SWR Detection\';              
+fileToLoad = 'Z:\20210809\Output\20210809-16-03.h5'; % .h5 file to load
+saveDir = 'Z:\20210809\SWR-Detection\';              
              
-ChannelsToNoTIncludeInDetections = [ 21 12 22 13 23];   
+ChannelsToNoTIncludeInDetections = [21 12 13 22 23 64];   
 
 %addpath(genpath('C:\Users\dlc\Documents\GitHub\NeuralElectrophysilogyTools'));
 
