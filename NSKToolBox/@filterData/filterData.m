@@ -183,7 +183,7 @@ classdef filterData
             if obj.padding
                 paddSamp=obj.getNumberOfRequiredPaddingSamples;
                 if paddSamp>nSamples
-                    disp('Trace is too short for padding, will padd with available samples, try also padding with zeros');
+                    %disp('Trace is too short for padding, will padd with available samples, try also padding with zeros');
                     paddSamp=nSamples;
                 end
                 if obj.padWithMirrorTraces

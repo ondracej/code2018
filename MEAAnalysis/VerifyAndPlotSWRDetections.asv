@@ -4,13 +4,8 @@ if nargin <1
     detectionFile = 'Z:\JanieData\JessicaMeaData\20210809\SWR-Detection\Detections.mat';
 end
 
-disp('Loading detection file...')
-
-tic
 load(detectionFile);
-toc
 
-Fs = 32000;
 
 WinSizeL = 1*Fs;
 

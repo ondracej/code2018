@@ -90,10 +90,10 @@ fobj.filt.SW.filterDesign='butter';
 fobj.filt.SW=fobj.filt.SW.designBandPass;
 fobj.filt.SW.padding=true;
 
-fobj.filt.FN =filterData(Fs);
-fobj.filt.FN.filterDesign='cheby1';
-fobj.filt.FN.padding=true;
-fobj.filt.FN=fobj.filt.FN.designNotch;
+% fobj.filt.FN =filterData(Fs);
+% fobj.filt.FN.filterDesign='cheby1';
+% fobj.filt.FN.padding=true;
+% fobj.filt.FN=fobj.filt.FN.designNotch;
 
 
 %% Load full channel data
@@ -248,8 +248,8 @@ testData = data_rect_rippleBP;
     interPeakDistance = 0.1*Fs;
     minPeakWidth = 0.1*Fs;
     minPeakHeight =scaleEstimator_ripple;
-    %minPeakProm = 8;
-    minPeakProm = 5;
+    minPeakProm = 8;
+    %minPeakProm = 5;
     
     [peakH,peakTime_Fs, peakW, peakP]=findpeaks(data_rect_rippleBP,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth,'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom', 'MinPeakProminence',minPeakProm); %For HF
     
@@ -509,13 +509,12 @@ for j = 1:numel(xticklabs)
 end
 
 
-%{
 for j = 1: size(AllSWRDataOnChans, 2)
     
     offset = 0;
     offsetFil = 0;
-    figH = figure (100 +j);clf
-    figHH = figure (200 +j);clf
+    figH = figure (100);clf
+    figHH = figure (200);clf
     hold on
     for k = 1:   size(AllSWRDataOnChans, 1)
         
@@ -584,7 +583,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
         ylim([-40 20])
         %text(0, toPlot(1)+offset, thisChan)
         
-        
+        all_data_FLBP{k,j} = data_FLBP;
         
     end
     figure(figH)
@@ -638,6 +637,8 @@ for j = 1: size(AllSWRDataOnChans, 2)
     print_in_A4(0, saveName, '-djpeg', 0, plotpos);
     
 end
+
+save([saveDir 'DetectionsToSort.mat'], 'all_data_FLBP', 'INFO', '-v7.3')
 
 close all
 %}
