@@ -42,13 +42,8 @@ addpath(genpath('C:\Users\dlc\Documents\GitHub\code2018\'));
 
 dbstop if error
 
-<<<<<<< Updated upstream
-fileToLoad = 'Z:\JanieData\JessicaMeaData\20210809\Output\20210809-16-33-bicuculine10mM.h5'; % .h5 file to load
-saveDir = 'Z:\JanieData\JessicaMeaData\20210809\SWR-Detections-2\';              
-=======
 fileToLoad = 'Z:\20210809\Output\20210809-16-17.h5'; % .h5 file to load
 saveDir = 'Z:\20210809\SWR-Detection\';              
->>>>>>> Stashed changes
              
 ChannelsToNoTIncludeInDetections = [21 12 22 13 23 33 34 64 66];   
 
