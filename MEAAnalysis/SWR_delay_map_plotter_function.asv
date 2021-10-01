@@ -249,8 +249,7 @@ for j = 1:nSWRCounts
     
     % threshold for ripple detection
     %tr=median(up)+3.0*iqr(up);
-    
-    tr=median(up)+2*iqr(up);
+    tr=median(up)+2*iqr(up(1,:));
     t0=ones(1,length(chnls));
     
     hold on
