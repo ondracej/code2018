@@ -24,9 +24,10 @@
           addpath(genpath('/home/janie/Documents/code/NeuralElectrophysilogyTools'));
           
       case 'NEUROPIXELS'
+         addpath(genpath('C:\Users\Neuropix\Documents\GitHub\code2018'))
           addpath(genpath('C:\Users\Neuropix\Documents\GitHub\NeuralElectrophysilogyTools'));
           addpath(genpath('C:\Users\Neuropix\Documents\GitHub\analysis-tools'))
-      
+          
       otherwise
           addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools'))
           addpath(genpath('C:\Users\Janie\Documents\GitHub\analysis-tools'))
@@ -37,9 +38,9 @@
 
 
 
-%% Time Series Viewer works in matlab 2014b
+%% Time Series Viewer works in matlab 2014b and also 2018a
 
-dataDir = 'G:\Hamed\chronic_2021-07-23_22-43-29';
+dataDir = 'G:\SWR\ZF-o3b11\20210223\14-11-12';
 % 10 9 3 13 12 6 16 15 7 8 4 14 11 5 1 2
 
 % Hameds Data
