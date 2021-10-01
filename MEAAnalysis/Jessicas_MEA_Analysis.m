@@ -10,9 +10,9 @@
 % 2.1 convert .h5 files to plexon format
 
 
-ChannelsToLoad = [17 21 24 74 77 87]; % channels of interest
-fileToLoad = 'Z:\20210826\Output\20210826-1459.h5'; % .h5 file to load
-SpikeOutputDir= 'Z:\20210826\Spike_Output\'; % spike output driectory (end with \ )
+ChannelsToLoad = [16 23 24 33 34 43 44 54 61 66 67 ]; % channels of interest
+fileToLoad = 'Z:\20210831\Output\20210831-1134.h5'; % .h5 file to load
+SpikeOutputDir= 'Z:\20210831\Spike_Output\'; % spike output driectory (end with \ )
 
 
 addpath(genpath('C:\Users\dlc\Documents\GitHub\code2018\'));
@@ -43,10 +43,10 @@ addpath(genpath('C:\Users\dlc\Documents\GitHub\McsMatlabDataTools\'));
 
 dbstop if error
 
-fileToLoad = 'Z:\20210809\Output\20210809-16-17.h5'; % .h5 file to load
-saveDir = 'Z:\20210809\SWR-Detections\';              
+fileToLoad = 'Z:\20210819\Output\20210819-1207.h5'; % .h5 file to load
+saveDir = 'Z:\20210819\SWR_Detection\';              
              
-ChannelsToNoTIncludeInDetections = [21 12 22 13 23 33 34 64 66];   
+ChannelsToNoTIncludeInDetections = [12 22 71];   
 
 %addpath(genpath('C:\Users\dlc\Documents\GitHub\NeuralElectrophysilogyTools'));
 
@@ -56,7 +56,7 @@ loadingMCSData_filterAndDetectSWRs_Jessica(fileToLoad, saveDir, ChannelsToNoTInc
 
 addpath(genpath('C:\Users\dlc\Documents\GitHub\code2018\'));
 
-DetectionFileToAnalyze = 'Z:\20210809\SWR-Detections\20210809-16-03\20210809-16-03-Detections.mat';
+DetectionFileToAnalyze = 'Z:\20210809\SWR-Detections\20210809-16-17\20210809-16-17-Detections.mat';
 DetectionNumberToAnalyze = [1 2 6 7 8 9];
 
 SWR_delay_map_plotter_function(DetectionFileToAnalyze, DetectionNumberToAnalyze)
