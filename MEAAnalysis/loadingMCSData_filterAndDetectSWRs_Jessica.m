@@ -1,7 +1,6 @@
 function [] = loadingMCSData_filterAndDetectSWRs_Jessica(fileToLoad, saveDir, ChannelsToNoTIncludeInDetections)
 dbstop if error
 
-plotDir = saveDir;
 
 doPlot = 0; % will pause the analysis
 
@@ -16,6 +15,13 @@ doPlot = 0; % will pause the analysis
 data = McsHDF5.McsData(fileToLoad);
 [filepath,name,ext] = fileparts(fileToLoad);
 
+plotDir = [saveDir name '\'];
+
+
+if exist(plotDir, 'dir') == 0
+    mkdir(plotDir);
+    disp(['Created: '  plotDir])
+end
 
 %% For getting the correct channel order
 

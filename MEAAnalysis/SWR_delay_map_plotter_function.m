@@ -54,7 +54,7 @@ NoDetChanInds = ismember(plottingOrder, chansNotToPlot);
 
 %% reorganizing the data in matrices and SWR trough detection
 
-% designing a filter for extraction of low frequenc ý component of each
+% designing a filter for extraction of low frequenc ? component of each
 % SWR, the sharp wave (e.g. 20-40 Hz)
 %fs = 32000;
 fs=data.D.Fs; % sampling rate
@@ -308,7 +308,8 @@ for j = 1:nSWRCounts
     
     AllDiffsFromMedian = medianTime - sorted_t00;
     
-    TInd = find(AllDiffsFromMedian < 0.17); % look for the first ind where the diff between median is < 110 ms
+    %TInd = find(AllDiffsFromMedian < 0.17); % look for the first ind where the diff between median is < 110 ms
+    TInd = find(AllDiffsFromMedian < 0.15); % look for the first ind where the diff between median is < 110 ms
     
     t00_min=sorted_t00(TInd(1));
    

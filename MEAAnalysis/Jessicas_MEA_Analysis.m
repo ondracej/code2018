@@ -39,11 +39,12 @@ makeSpikeRastersForMEAAnalysis
 %% 3) SWR analysis % cntrl + enter
 
 addpath(genpath('C:\Users\dlc\Documents\GitHub\code2018\'));
+addpath(genpath('C:\Users\dlc\Documents\GitHub\McsMatlabDataTools\'));
 
 dbstop if error
 
-fileToLoad = 'Z:\JanieData\JessicaMeaData\20210809\Output\20210809-16-03.h5'; % .h5 file to load
-saveDir = 'Z:\JanieData\JessicaMeaData\20210809\SWR-Detections-2\20210809-16-03\';              
+fileToLoad = 'Z:\20210809\Output\20210809-16-17.h5'; % .h5 file to load
+saveDir = 'Z:\20210809\SWR-Detections\';              
              
 ChannelsToNoTIncludeInDetections = [21 12 22 13 23 33 34 64 66];   
 
