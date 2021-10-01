@@ -42,8 +42,8 @@ addpath(genpath('C:\Users\dlc\Documents\GitHub\code2018\'));
 
 dbstop if error
 
-fileToLoad = 'Z:\20210809\Output\20210809-16-17.h5'; % .h5 file to load
-saveDir = 'Z:\20210809\SWR-Detection\';              
+fileToLoad = 'Z:\JanieData\JessicaMeaData\20210809\Output\20210809-16-03.h5'; % .h5 file to load
+saveDir = 'Z:\JanieData\JessicaMeaData\20210809\SWR-Detections-2\20210809-16-03\';              
              
 ChannelsToNoTIncludeInDetections = [21 12 22 13 23 33 34 64 66];   
 
@@ -51,5 +51,16 @@ ChannelsToNoTIncludeInDetections = [21 12 22 13 23 33 34 64 66];
 
 loadingMCSData_filterAndDetectSWRs_Jessica(fileToLoad, saveDir, ChannelsToNoTIncludeInDetections)
 
+%% 4) Hamed's SWR plotter analysis % Must run in Matlab2018a
+
+addpath(genpath('C:\Users\dlc\Documents\GitHub\code2018\'));
+
+DetectionFileToAnalyze = 'Z:\JanieData\JanieSliceSWRDetections\1406\Detections.mat';
+DetectionNumberToAnalyze = [8 11 15 16 17 21 22 25 27 29 32 34 35];
+
+SWR_delay_map_plotter_function(DetectionFileToAnalyze, DetectionNumberToAnalyze)
+
+%SWR_delay_map_plotter_function(DetectionFileToAnalyze, DetectionNumberToAnalyze, [])
 
 
+%%

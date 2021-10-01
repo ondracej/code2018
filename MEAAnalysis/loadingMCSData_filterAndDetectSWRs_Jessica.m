@@ -461,7 +461,7 @@ INFO.Fs = Fs;
 INFO.plottingOrder = plottingOrder;
 INFO.fobj = fobj;
 
-save([saveDir 'RippleData.mat'], 'INFO', '-v7.3')
+save([saveDir name '-RippleData.mat'], 'INFO', '-v7.3')
 
 %% collect all SWR times for all channels:
 nUniqueDetections = numel(AllUniqueDetections);
@@ -483,7 +483,7 @@ for k = 1:numel(plottingOrder)
     chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
     ChanData = chanDataParital.ChannelData/1e6; %loads all data info
     
-    for j = 1:numel(ROI_fs);
+    for j = 1:numel(ROI_fs)
         thisROI = ROI_fs{j};
         AllSWRDataOnChans{k,j} = ChanData(thisROI);
         SWR_Detection_fs(k,j) = AllUniqueDetections(j);
@@ -491,17 +491,19 @@ for k = 1:numel(plottingOrder)
     end
 end
 
+timepoints_s = (1:1:WinSizeL*2+1)/Fs;
+xticks = 0:0.2:2;
+xticklabs = -1:0.2:1;
+
 D.AllSWRDataOnChans = AllSWRDataOnChans;
 D.SWR_Detection_fs = SWR_Detection_fs;
 D.SWR_Detection_s = SWR_Detection_s;
 D.plottingOrder = plottingOrder;
+D.channelsNotToInclude = ChannelsToNoTIncludeInDetections;
+D.Fs = Fs;
+D.timepoints_s = timepoints_s;
 
-save([saveDir 'Detections.mat'], 'D', '-v7.3')
-
-
-timepoints_s = (1:1:WinSizeL*2+1)/Fs;
-xticks = 0:0.2:2;
-xticklabs = -1:0.2:1;
+save([saveDir name '-Detections.mat'], 'D', '-v7.3')
 
 xlabs = [];
 for j = 1:numel(xticklabs)
@@ -583,7 +585,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
         ylim([-40 20])
         %text(0, toPlot(1)+offset, thisChan)
         
-        all_data_FLBP{k,j} = data_FLBP;
+     %   all_data_FLBP{k,j} = data_FLBP;
         
     end
     figure(figH)
@@ -618,7 +620,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
     % Create textbox
     annotation(figH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
     
-    saveName = [plotDir name 'SWR-stack' sprintf('%03d',j)];
+    saveName = [plotDir name '_SWR-stack' sprintf('%03d',j)];
     figure(figH)
     plotpos = [0 0 50 50];
     
@@ -630,7 +632,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
     % Create textbox
     annotation(figHH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
     
-    saveName = [plotDir name 'SWR-grid' sprintf('%03d',j)];
+    saveName = [plotDir name '_SWR-grid' sprintf('%03d',j)];
     figure(figHH)
     plotpos = [0 0 50 50];
     
@@ -638,7 +640,7 @@ for j = 1: size(AllSWRDataOnChans, 2)
     
 end
 
-save([saveDir 'DetectionsToSort.mat'], 'all_data_FLBP', 'INFO', '-v7.3')
+%save([saveDir 'DetectionsToSort.mat'], 'all_data_FLBP', 'INFO', '-v7.3')
 
 close all
 %}
