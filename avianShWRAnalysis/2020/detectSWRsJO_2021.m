@@ -29,7 +29,7 @@
             rippleFilter = [80 300];
             sharpWaveFilter = [1 6];
             bandPassFilter = [1 2000];
-            
+            DS_Factor = 20;
             %% Hameds approach
             %[b1,a1] = butter(2,[150 400]/(fs/2)); % ripple burst spectral range
             %[b2,a2] = butter(2,[.2 20]/(fs/2)); % sharp wave range
@@ -37,6 +37,17 @@
             %sharp_wave=filtfilt(b2,a2,SWR);
             
             %%
+            
+            %%
+            %https://elifesciences.org/articles/64505#s4
+            %Sharp wave ripples were detected using the same method as in Kay et al., 2016. Each CA1 LFP was obtained by downsampling the original
+            %30 kHz electrical potential to 1.5 kHz and bandpass filtering between 0.5 Hz and 400 Hz. This was further bandpass filtered for the ripple 
+            %band (150–250 Hz), squared, and then summed across tetrodes—forming a single population trace over time. This trace was smoothed with a 
+            %Gaussian with a 4 ms standard deviation and the square root of this trace was taken to get an estimate of the population ripple band power. 
+            %Candidate SWR times were found by z-scoring the population power trace of an entire recording session and finding times when the z-score 
+            %exceeded two standard deviations for a minimum of 15 ms and the speed of the animal was less than 4 cm/s. The SWR times were then extended before 
+            %and after the threshold crossings to include the time until the population trace returned to the mean value. The code used for ripple detection 
+            %can be found at https://github.com/Eden-Kramer-Lab/ripple_detection (Denovellis, 2021b). We only analyzed SWRs with spikes from at least two tetrodes.
             
             
             fObj = filterData(Fs);
@@ -47,6 +58,13 @@
             fobj.filt.F=fobj.filt.F.designDownSample;
             fobj.filt.F.padding=true;
             fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
+            
+            fobj.filt.F2=filterData(Fs);
+            fobj.filt.F2.downSamplingFactor=DS_Factor; % original is 128 for 32k for sampling rate of 250
+            fobj.filt.F2=fobj.filt.F2.designDownSample;
+            fobj.filt.F2.padding=true;
+            fobj.filt.FFs=fobj.filt.F2.filteredSamplingFrequency;
+            
 
             % Sharp Wave
             fobj.filt.SW=filterData(Fs);
@@ -132,7 +150,8 @@
               median_th_ripple = median(th_ripple);
             
             
-            %%
+            
+            
             seg_s=20;
             TOn=1:seg_s*Fs:(recordingDuration_s*Fs-seg_s*Fs);
             overlapWin = 2*Fs;
