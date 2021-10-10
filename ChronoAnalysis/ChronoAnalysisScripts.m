@@ -3,8 +3,8 @@
 
 %% 1. Initialize the analysis code
 
-pathToCodeRepository = 'C:\Users\Janie\Documents\GitHub\code2018\';
-vidsToAnalyze = {'D:\BeforeStarvation\Jul2\faa1-002-cam1-2020-Jul-02.avi'};
+pathToCodeRepository = 'C:\Users\Janie\Documents\GitHub\code2018\'; %Enter the code directory
+vidsToAnalyze = {'E:\SilkesData\VideosSPF\2021-Jul-06adlib\faa3-001-cam1-2021-Jul-08adlibgood.avi'}; % Video to analyze
 
 addpath(genpath(pathToCodeRepository)) 
 videoDirectory=[];
@@ -12,33 +12,35 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
 
 %% 2. Make several contrast-adjusted videos from images
 
-imageDir = {'D:\BeforeStarvation\Jul2\faa1-002-cam1-2020-Jul-02_ffmpeg\'};
-movieName = 'faa1-002-cam1-2020-Jul-02_contrast';
-saveDir = {'D:\BeforeStarvation\Jul2\Vids_faa1-002-cam1-2020-Jul-02\'};
+imageDir = {'E:\SilkesData\VideosSPF\2021-Jul-06adlib\FFMPEG_faa3-001-cam1-2021-Jul-08adlibgood\'}; % The image directory
+movieName = 'faa3-001-cam1-2021-Jul-08adlibgood_contrast-rotated'; % name of the video file to be made
+saveDir = {'E:\SilkesData\testVideos\'}; %where I save the videos
 
- VideoFrameRate = 1;
+%
+ VideoFrameRate = 1; % 1 frame per second
  makeMultipleMoviesFromImages(C_OBJ, imageDir, movieName, saveDir, VideoFrameRate)
  
  disp('Finished making movies...')
 
  %% 3. Calculate Optic Flow on multiple videos
  
- vidDir = 'D:\BeforeStarvation\Jul2\Vids_faa1-002-cam1-2020-Jul-02\';
-
- saveTag = '_ROI-6';
+ vidDir = 'E:\SilkesData\VideosSPF\2021-Jul-19RFtwodays\editedVids\cam1\test\'; % Directory where the contrast-adjusteds are, see step 2
+ saveTag = '_mouse-topleft'; % then name of the mouse or ROI
  
  dsFrameRate = 1;
  vidFrameRate = 1;
  calcOFOnDefinedRegion_DS_multipleFilesInDir(C_OBJ, dsFrameRate, vidDir, vidFrameRate, saveTag)
+ %calcOFOnDefinedRegion_DS_multipleFilesInDir(C_OBJ, dsFrameRate, vidDir, vidFrameRate, saveTag)
  
  %% 4. Calculate the real starting time of the video
  
- origCamStart = '12:09:22';
- frameStart = 1;
- 
-StartingClockTime = calcStartTimeFrommFrameNumber(origCamStart, frameStart);
+StartingAlignmentTime  = '11:00:00'; % Must be the next even time
+StartingClockTime = '10:23:28'; % Must be the next even time
 
-StartingClockTime  
+detectionsDir = 'E:\SilkesData\VideosSPF\2021-Jul-19RFtwodays\editedVids\cam1\mouse340\'; % Detection for the particular ROI
+VidTag  = 'Mouse-339';
+dsFrameRate = 1;
+loadOFDetectionsAndMakePlot(C_OBJ, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime, VidTag)
 
  %% 5. Make the plots for each of the combined OF calculations
  
@@ -52,8 +54,8 @@ loadOFDetectionsAndMakePlot(C_OBJ, detectionsDir, dsFrameRate, StartingClockTime
  
 %% 6: Extract the movement detections from the OF flow in 6 min bins
 
-OFPath = ['D:\BeforeStarvation\Jul2\OF_Analysis\faa1-002-cam1-2020-Jul-02_ROI-6_OF_DSs1_fullFile.mat'];
-figSaveDir = ['D:\BeforeStarvation\Jul2\OF_Analysis\DetectionFigs\'];
+OFPath = ['E:\SilkesData\VideosSPF\2021-Jul-19RFtwodays\OF_Analysis\faa2-001-cam1-2021-Jul-19_Mouse-336_OF_DSs1_fullFile.mat'];
+figSaveDir = ['E:\SilkesData\VideosSPF\2021-Jul-19RFtwodays\OF_Analysis\tempFolder\'];
 
 %extractMvmtFromOF(OFPath, figSaveDir)
             
