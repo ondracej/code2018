@@ -24,6 +24,9 @@
             recordingDuration_s = thisSegData_s(end);
             
             
+            
+            
+            
             %% Create Filters
             
             rippleFilter = [80 300];

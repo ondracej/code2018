@@ -143,7 +143,8 @@ recSession =  98;
 D_OBJ = avianSWRAnalysis_OBJ(recSession);
 
 %%
-recSet = [64:74]; %55
+%recSet = [64:74]; %55
+recSet = [64]; %55
 nrecs = numel(recSet);
 doPlot = 0;
    chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2]; %acute

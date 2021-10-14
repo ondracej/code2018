@@ -3,16 +3,16 @@ function [] = examineSWRDataForPassbands()
 
 %SessionDir = 'G:\SWR\ZF-60-88\20190429\15-48-05\Ephys\'; % need dirdelim at end
 %SessionDir = 'G:\SWR\ZF-72-96\20200108\14-03-08\Ephys\';
-%SessionDir = 'G:\SWR\ZF-71-76\20190916\18-05-58\Ephys\';
+SessionDir = 'G:\SWR\ZF-71-76\20190916\18-05-58\Ephys\';
 
 %chanMap = [7 10 2 15 3 14 4 13 1 16 5 12 6 11 8 9];
 %chanMap = [13 1 16 5 12 6 11 8 9];
 
 %chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2];
-rippleChans = [2 5 7 13 16];
+%rippleChans = [2 5 7 13 16];
 %chanMap = [10 12 7 11 9 6 8 5 3 16 4 1 13 15 14 2];
 %chanMap = [10 12 7 11 9 6 8 5 3 16 4 13 15 14 2];%remove chan 1 broken
-ch = rippleChans;
+ch = 7;
 
 %%
 [filepath,name,ext] = fileparts(SessionDir);
@@ -31,466 +31,143 @@ doPlot = 1;
 dataRecordingObj = OERecordingMF(SessionDir);
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
 
-Fs_orig = dataRecordingObj.samplingFrequency;
+Fs = dataRecordingObj.samplingFrequency;
 recordingDur_ms = dataRecordingObj.recordingDuration_ms;
 recordingDur_s = recordingDur_ms/1000;
 
 
-%%
-%https://elifesciences.org/articles/64505#s4
-%Sharp wave ripples were detected using the same method as in Kay et al., 2016. Each CA1 LFP was obtained by downsampling the original
-%30 kHz electrical potential to 1.5 kHz and bandpass filtering between 0.5 Hz and 400 Hz. This was further bandpass filtered for the ripple
-%band (150–250 Hz), squared, and then summed across tetrodes—forming a single population trace over time. This trace was smoothed with a
-%Gaussian with a 4 ms standard deviation and the square root of this trace was taken to get an estimate of the population ripple band power.
-%Candidate SWR times were found by z-scoring the population power trace of an entire recording session and finding times when the z-score
-%exceeded two standard deviations for a minimum of 15 ms and the speed of the animal was less than 4 cm/s. The SWR times were then extended before
-%and after the threshold crossings to include the time until the population trace returned to the mean value. The code used for ripple detection
-%can be found at https://github.com/Eden-Kramer-Lab/ripple_detection (Denovellis, 2021b). We only analyzed SWRs with spikes from at least two tetrodes.
-
-
+bandPassFilter1 = [1 400];
 DS_Factor = 20;
-bandPassFilter1 = [.5 400];
-Ripple = [150 250];
-SWFil = [.5 8];
 
-fObj = filterData(Fs_orig);
-
-fobj.filt.F2=filterData(Fs_orig);
-fobj.filt.F2.downSamplingFactor=DS_Factor; % original is 128 for 32k for sampling rate of 250
-fobj.filt.F2=fobj.filt.F2.designDownSample;
-fobj.filt.F2.padding=true;
-fobj.filt.F2Fs=fobj.filt.F2.filteredSamplingFrequency;
-
-Fss = fobj.filt.F2Fs;
+fObj = filterData(Fs);
 
 %BandPass 1
-fobj.filt.BP1=filterData(Fss);
+fobj.filt.BP1=filterData(Fs);
 fobj.filt.BP1.highPassCutoff=bandPassFilter1(1);
 fobj.filt.BP1.lowPassCutoff=bandPassFilter1(2);
 fobj.filt.BP1.filterDesign='butter';
 fobj.filt.BP1=fobj.filt.BP1.designBandPass;
 fobj.filt.BP1.padding=true;
 
-%BandPass 1
-fobj.filt.Rip1=filterData(Fss);
-fobj.filt.Rip1.highPassCutoff=Ripple(1);
-fobj.filt.Rip1.lowPassCutoff=Ripple(2);
-fobj.filt.Rip1.filterDesign='butter';
-fobj.filt.Rip1=fobj.filt.Rip1.designBandPass;
-fobj.filt.Rip1.padding=true;
-
-fobj.filt.SW1=filterData(Fss);
-fobj.filt.SW1.highPassCutoff=SWFil(1);
-fobj.filt.SW1.lowPassCutoff=SWFil(2);
-fobj.filt.SW1.filterDesign='butter';
-fobj.filt.SW1=fobj.filt.SW1.designBandPass;
-fobj.filt.SW1.padding=true;
+fobj.filt.F2=filterData(Fs);
+fobj.filt.F2.downSamplingFactor=DS_Factor; % original is 128 for 32k for sampling rate of 250
+fobj.filt.F2=fobj.filt.F2.designDownSample;
+fobj.filt.F2.padding=true;
+fobj.filt.F2Fs=fobj.filt.F2.filteredSamplingFrequency;
 
 % fobj.filt.FL=filterData(Fs);
+% %fobj.filt.FL.lowPassPassCutoff=4.5;
+% %fobj.filt.FL.lowPassPassCutoff=20;
+% %fobj.filt.FL.lowPassStopCutoff=30;
 % fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
 % fobj.filt.FL.lowPassStopCutoff=40;
 % fobj.filt.FL.attenuationInLowpass=20;
 % fobj.filt.FL=fobj.filt.FL.designLowPass;
 % fobj.filt.FL.padding=true;
+% 
+% fobj.filt.FH2=filterData(Fs);
+% fobj.filt.FH2.highPassCutoff=100;
+% fobj.filt.FH2.lowPassCutoff=2000;
+% fobj.filt.FH2.filterDesign='butter';
+% fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+% fobj.filt.FH2.padding=true;
+
+fobj.filt.FN =filterData(Fs);
+fobj.filt.FN.filterDesign='cheby1';
+fobj.filt.FN.padding=true;
+fobj.filt.FN=fobj.filt.FN.designNotch;
 
 
-%% Get a sample size for the population z score calculation
 
-smoothWin_ms = 50;
-smoothWin_sampls = round((smoothWin_ms/1000)*Fss);
-
-
-seg_s= 20;
-seg_ms = seg_s*1000;
-TOn=1:seg_s*1000:(recordingDur_s*1000);
-
-nCycles = numel(TOn);
-if nCycles >20
-    nTestSegments  = round(nCycles*.33);
-end
-
-rng(1); % for reproducibiity
-pCycle=sort(randperm(nCycles,nTestSegments));
-
-
-powerTrace_rip = []; sqrt_SW = [];
-for i=1:numel(pCycle)
-    
-    
-    [rawData,t_ms]=dataRecordingObj.getData(ch,TOn(pCycle(i)), seg_ms);
-    
-    DataSeg_DS = fobj.filt.F2.getFilteredData(rawData);
-    
-    sumData = (sum(squeeze(DataSeg_DS)))/ numel(ch); % The sum will be huge numbers
-    
-    artifactPosCheck = sum(sumData > artifactThresh_pos);
-    artifactNegCheck = sum(sumData < artifactThresh_neg);
-    
-    if artifactPosCheck || artifactNegCheck
-        disp('Artifact Detected')
-        %keyboard
-        %figure(105); plot(sumData)
-        continue
-    end
-    
-    
-    DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS);
-    
-    DataSeg_SW = fobj.filt.SW1.getFilteredData(DataSeg_BP);
-    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP);
-    
-    squared_rip = squeeze(DataSeg_Ripp).^2;
-    summed_rip = sum(squared_rip);
-    smoothedSums2 = smoothdata(summed_rip, 'gaussian', smoothWin_sampls);
-    %smoothedSums2 = smooth(summed_rip, smoothWin_sampls);
-    
-    powerTrace_rip{i} = sqrt(smoothedSums2);
-    
-    %
-    %     figure; subplot(4, 1, 1)
-    %     plot(squeeze(DataSeg_Ripp(1,:,:))); axis tight
-    %     subplot(4, 1, 2)
-    %     plot(squared_rip(1,:)); axis tight
-    %     subplot(4, 1, 3)
-    %     plot(summed_rip); axis tight
-    %     subplot(4, 1, 4)
-    %     plot(powerTrace_rip{i}); axis tight
-    
-    
-    
-    squared_SW = squeeze(DataSeg_SW).^2;
-    summed_SW = sum(squared_SW);
-    sqrt_SW{i} = sqrt(summed_SW);
-    
-end
-
-powerTrace_rip_sample = cell2mat(powerTrace_rip);
-[Z_sample_rip,mean_sample_rip,std_sample_rip]= zscore(powerTrace_rip_sample);
-mean_zscore_powerTrace_sample = mean(Z_sample_rip);
-
-SW_sum_sample = cell2mat(sqrt_SW);
-[Z_sample_sw,mean_sample_sw,std_sample_sw]= zscore(SW_sum_sample);
-mean_zscore_sw_sample = mean(Z_sample_sw);
-
-
-%figure; plot(powerTrace_rip_sample(1:60*Fss))
-
-%% Now collect samples
-
-seg_s= 18; % 2 second overlap
-seg_ms= 20*1000;
+seg_s= 20; % 2 second overlap
+seg_ms= seg_s*1000;
 TOn = 1:seg_s*1000:recordingDur_s*1000; % Needs to be in ms
 
+
+% Random selection of time segments
+nCycles = numel(TOn);
+
+rng(1); % for reproducibiity
+pCycle=randperm(nCycles);
+
+
 for k=1:numel(TOn)-1
-    allArtInds  = [];
-    
-    % for j = 1:nChans
-    %   ch = chanMap(j);
-    %[rawData,t_ms]=dataRecordingObj.getData(ch,TOn(k), seg_ms);
-    
-    [rawData,t_ms]=dataRecordingObj.getData(ch,TOn(k), seg_ms);
-    
-    DataSeg_DS = fobj.filt.F2.getFilteredData(rawData);
-    
-    %Artifacts
-    sumData = (sum(squeeze(DataSeg_DS)))/ numel(ch); % The sum will be huge numbers
-    
-    artifactPosCheck = sum(sumData > artifactThresh_pos);
-    artifactNegCheck = sum(sumData < artifactThresh_neg);
-    
-    if artifactPosCheck || artifactNegCheck
-        disp('Artifact Detected')
-        %keyboard
-        % figure(130); plot(sumData)
-        
-        artsPos = find(sumData > artifactThresh_pos);
-        artsNeg = find(sumData < artifactThresh_neg);
-        allArtInds = sort([artsPos  artsNeg]);
-        
-    end
-    
-    DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS);
-    
-    DataSeg_SW = fobj.filt.SW1.getFilteredData(DataSeg_BP);
-    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP);
-    
-    squared_rip = squeeze(DataSeg_Ripp).^2;
-    summed_rip = sum(squared_rip);
-    smoothedSums2 = smoothdata(summed_rip, 'gaussian', smoothWin_sampls);
-    %smoothedSums2 = smooth(summed_rip, smoothWin_sampls);
-    
-    powerTrace_rip = sqrt(smoothedSums2);
-    
-    zscore_rip = (powerTrace_rip - mean_sample_rip) / std_sample_rip;
-    zscore_rip(allArtInds) = 1e-15;
-    
-    %zscore_ripOld = zscore(powerTrace_rip);
-    %mean_zscore_rip = mean(zscore_rip);
-    %median_zscore_rip = median(zscore_rip);
-    
-    squared_SW = squeeze(DataSeg_SW).^2;
-    summed_SW = sum(squared_SW);
-    sqrt_SW = sqrt(summed_SW);
-    
-    %zscore_SW = (summed_SW - mean_sample_sw) / std_sample_sw;
-    zscore_SW = (sqrt_SW - mean_sample_sw) / std_sample_sw;
-    zscore_SW(allArtInds) = 1e-15;
-    %%
-    figure(100); clf;
-    
-    subplot(5, 1, 1)
-    plot(squeeze(DataSeg_DS(1,:,:))); axis tight
-    hold on
-    yvals = zeros(1, numel(allArtInds));
-    plot(allArtInds, yvals, 'k.')
-    ylim([-700 400])
-    title('Raw Data')
-    
-    %     subplot(5, 1, 2)
-    %     plot(squeeze(DataSeg_Ripp(1,:,:))); axis tight
-    %     ylim([-25 25])
-    
-    subplot(5, 1, 2)
-    plot(summed_rip); axis tight
-    ylim([0 1500])
-    title('Summed Ripple Population')
-    %plot(hi)
-    %[hi, lo] = envelope(summed_rip);
-    
-    subplot(5, 1, 3)
-    plot(zscore_rip); axis tight
-    line([0 30000], [mean_zscore_powerTrace_sample mean_zscore_powerTrace_sample], 'color', 'k')
-    ylim([0 10])
-    title('Population Ripple Z-score')
-    
-    %     subplot(5, 1, 4)
-    %     plot(squeeze(DataSeg_SW(1,:,:))); axis tight
-    %     ylim([-600 300])
-    
-    subplot(5, 1, 4)
-    plot(summed_SW); axis tight
-    ylim([0 1.5e6])
-    title('Summed Population SW')
-    
-    subplot(5, 1, 5)
-    plot(zscore_SW); axis tight
-    ylim([0 10])
-    title('Population SW Z-Score')
-    %%  Ripple Detections
-    
-    minWidth_ms = 10;
-    midWidth_samples = round(minWidth_ms/1000*Fss);
-    thresh = 2;
-    
-    subplot(5, 1, 3)
-    line([0 30000], [thresh thresh], 'color', 'r')
-    
-    peakDistance_ms = 100;
-    peakDistance_sample = round(peakDistance_ms/1000*Fss);
-    
-    [pks_r,locs_r,w_r,p_r] = findpeaks(zscore_rip, 'MinPeakHeight', thresh, 'MinPeakWidth',  midWidth_samples, 'MinPeakDistance', peakDistance_sample );
-    subplot(5, 1, 3)
-    hold on
-    plot(locs_r,pks_r,'ko')
-    
-    %% Find onsets and offsets of ripples
-    nPeaks_rip = numel(locs_r);
-    
-    AllRippleDetections= [];
-    
-    if nPeaks_rip > 0
-        searchWin_ms =  1200;
-        searchWin_samples =  searchWin_ms/1000*Fss;
-        % MAKE SURE TO MAKE THESE POINTS RELATIVE TO THE TON AT THE END!!!
-        
-        for j = 1:nPeaks_rip
-            
-            thisPeak = locs_r(j);
-            
-            if thisPeak <= searchWin_samples
-                continue
-            else
-                ROI_l = zscore_rip(thisPeak-searchWin_samples: thisPeak);
-            end
-            
-            rip_l_inds = find(ROI_l <= mean_zscore_powerTrace_sample);
-            
-            if isempty(rip_l_inds) % probably a case where there is an artifact
-               % keyboard
-                continue
-            end
-            
-            maxVal = numel(ROI_l) - rip_l_inds(end); % the largest value will be the index closest to the peak detection (for l)
-            
-            RipLOnset = thisPeak-maxVal;
-            
-            if thisPeak+searchWin_samples >= numel(zscore_rip)
-                continue
-            else
-                ROI_r = zscore_rip(thisPeak:thisPeak+searchWin_samples);
-            end
-            
-            rip_r_inds = find(ROI_r <= mean_zscore_powerTrace_sample);
-            
-            if isempty(rip_r_inds) % probably a case where there is an artifact
-               % keyboard
-                continue
-            end
-            
-            minVal = rip_r_inds(1); % the smallest value will be the index closest to the peak detection (for l)
-            
-            RipROffset = thisPeak+minVal;
-            
-            subplot(5, 1, 2)
-            line([RipLOnset RipLOnset], [-15 15], 'color', 'r')
-            line([RipROffset RipROffset], [-15 15], 'color', 'r')
-            
-            subplot(5, 1, 3)
-            line([RipLOnset RipLOnset], [0 6], 'color', 'r')
-            line([RipROffset RipROffset], [0 6], 'color', 'r')
-            
-            subplot(5, 1, 1)
-            line([RipLOnset RipLOnset], [-400 200], 'color', 'r')
-            line([RipROffset RipROffset], [-400 200], 'color', 'r')
-            
-            AllRippleDetections(j,1) = RipLOnset;
-            AllRippleDetections(j,2) = thisPeak;
-            AllRippleDetections(j,3) = RipROffset;
-        end
-        
-        AllRippleDetections_abs{k} = AllRippleDetections+TOn(k)/1000*Fss;
-        %  AllRippleDetections_rel{k} = AllRippleDetections(:,:);
-        %   RippleDurations{k} = (AllRippleDetections(:,3) - AllRippleDetections(:,1))/Fss;
-    else
-        AllRippleDetections_abs{k} = [];
-        %   AllRippleDetections_rel{k} = [];
-        %   RippleDurations{k} = [];
-        
-    end
     
     
-    %%  SW Detections
+    [rawData,t_ms]=dataRecordingObj.getData(ch,TOn(pCycle(k)), seg_ms);
     
-    minWidth_ms = 15;
-    midWidth_samples = round(minWidth_ms*1000/Fss);
-    thresh = 3;
+    DataSeg_BP = fobj.filt.BP1.getFilteredData(rawData);
+
+    DataSeg_FN = fobj.filt.FN.getFilteredData(DataSeg_BP);
     
-    subplot(5, 1, 5)
-    line([0 30000], [thresh thresh], 'color', 'r')
-    
-    peakDistance_ms = 100;
-    peakDistance_sample = round(peakDistance_ms*1000/Fss);
-    
-    [pks_sw,locs_sw,w_sw,p_sw] = findpeaks(zscore_SW, 'MinPeakHeight', thresh, 'MinPeakWidth',  midWidth_samples, 'MinPeakDistance', peakDistance_sample );
-    subplot(5, 1, 5)
-    hold on
-    plot(locs_sw,pks_sw,'bo')
-    
-    subplot(5, 1, 1)
-    hold on
-    plot(locs_sw,pks_sw,'rv')
-    
-    nPeaks_sw = numel(locs_sw);
-    
-    AllSWDetections = [];
-    
-    if nPeaks_sw > 0
-        
-        searchWin_ms =  1200;
-        searchWin_samples =  searchWin_ms/1000*Fss;
-        
-        for j = 1:nPeaks_sw
-            
-            thisPeak = locs_sw(j);
-            
-            if thisPeak <= searchWin_samples
-                continue
-            else
-                ROI_l = zscore_SW(thisPeak-searchWin_samples: thisPeak);
-            end
-            
-            sw_l_inds = find(ROI_l <= mean_zscore_sw_sample);
-            if isempty(sw_l_inds) % probably a case where there is an artifact
-              %  keyboard
-                continue
-            end
-            maxVal = numel(ROI_l) - sw_l_inds(end); % the largest value will be the index closest to the peak detection (for l)
-            
-            SwLOnset = thisPeak-maxVal;
-            
-            if thisPeak+searchWin_samples >= numel(zscore_SW)
-                continue
-            else
-                ROI_r = zscore_SW(thisPeak:thisPeak+searchWin_samples);
-            end
-            
-            sw_r_inds = find(ROI_r <= mean_zscore_sw_sample);
-            if isempty(sw_r_inds) % probably a case where there is an artifact
-             %   keyboard
-                continue
-            end
-            minVal = sw_r_inds(1); % the smallest value will be the index closest to the peak detection (for l)
-            
-            SwROffset = thisPeak+minVal;
-            
-            subplot(5, 1, 1)
-            line([SwLOnset SwLOnset], [-400 200], 'color', 'g')
-            line([SwROffset SwROffset], [-400 200], 'color', 'g')
-            
-            subplot(5, 1, 4)
-            line([SwLOnset SwLOnset], [-200 100], 'color', 'g')
-            line([SwROffset SwROffset], [-200 100], 'color', 'g')
-            
-            subplot(5, 1, 5)
-            line([SwLOnset SwLOnset], [0 6], 'color', 'g')
-            line([SwROffset SwROffset], [0 6], 'color', 'g')
-            
-            
-            AllSWDetections(j,1) = SwLOnset;
-            AllSWDetections(j,2) = thisPeak;
-            AllSWDetections(j,3) = SwROffset;
-        end
-        
-        
-        AllSWDetections_abs{k} = AllSWDetections+TOn(k)/1000*Fss;
-        % AllSWDetections_rel{k} = AllSWDetections;
-        %  SWDurations{k} = (AllSWDetections(:,3) - AllSWDetections(:,1))/Fss;
-        
-    else
-        AllSWDetections_abs{k} = [];
-        %AllSWDetections_rel{k} = [];
-        %  SWDurations{k} = [];
-    end
+    DataSeg_FNds = fobj.filt.F2.getFilteredData(DataSeg_FN);
     
     
-    %%
-    if doPlot
-        
-        plot_filename = [plotDir 'SWR-' sprintf('%03d', k)];
-        
-        plotpos = [0 0 25 15];
-        print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-        %print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
-    end
+    %thisSegData_wav = Wavdata(1:6000);
+    thisSegData_wav = DataSeg_FNds;
+    % [thisSegData_wav,nshifts] = shiftdim(thisSegData_wav',-1);
     
-    allArtifacts_abs{k} = allArtInds+TOn(k)/1000*Fss;
+    dsf = 20;
+    Fsd = Fs/dsf;
+    hcf = 400;
+    [n_ch,n_tr,N] = size(thisSegData_wav);
+    
+    %[bb,aa] = butter(2,hcf/(Fs/2),'low');
+    V_ds = reshape(permute(thisSegData_wav,[3 1 2]),[],n_ch*n_tr);
+   % V_ds = downsample(filtfilt(bb,aa,V_ds),dsf);
+    V_ds = reshape(V_ds,[],n_ch,n_tr);
+    
+    %
+    [N,n_chs,n_trials] = size(V_ds);
+    nfreqs = 60;
+    min_freq = 1.5;
+    max_freq = 800;
+    %Fsd = Fs/dsf;
+    %Fsd = Fs;
+    Fsd = Fs/DS_Factor;
+    min_scale = 1/max_freq*Fsd;
+    max_scale = 1/min_freq*Fsd;
+    wavetype = 'cmor1-1';
+    scales = logspace(log10(min_scale),log10(max_scale),nfreqs);
+    wfreqs = scal2frq(scales,wavetype,1/Fsd);
+    
+    use_ch = 1;
+    cur_V = squeeze(V_ds(:,use_ch,:));
+    V_wave = cwt(cur_V(:),scales,wavetype);
+    V_wave = reshape(V_wave,nfreqs,[],n_trials);
+    
+    %% Mean PLot
+    clims = [0 20];
+    tr =1;
+    
+    figure(104); clf
+    subplot(3,1,1);
+    plot(squeeze(DataSeg_FN), 'k');
+    axis tight
+    
+    title( ['SWR-Wavelet:'])
+    
+    subplot(3,1,2);
+    pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
+    % set(gca,'yscale','log');
+    axis tight
+    ylim([0 200])
+    %caxis(clims);
+    caxis([0 500]);
+    
+    subplot(3,1,3);
+    pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
+    % set(gca,'yscale','log');
+    axis tight
+    ylim([0 50])
+    %caxis(clims);
+    caxis([0 500]);
+    
+    xlabel('Time (s)')
+    ylabel('Frequency [Hz]')
+    
+    pause
 end
 
-D.AllRippleDetections_abs = AllRippleDetections_abs;
-%D.AllRippleDetections_rel = AllRippleDetections_rel;
-%D.RippleDurations = RippleDurations;
-D.AllSWDetections_abs = AllSWDetections_abs;
-D.allArtifacts_abs = allArtifacts_abs;
-
-%D.AllSWDetections_rel = AllSWDetections_rel;
-%D.SWDurations = SWDurations;
-
-DetectionSaveName = [plotDir '__SWR-Detections.mat'];
-save(DetectionSaveName, 'D');
-
-disp(['Saved:' DetectionSaveName ])
-
 end
-
-
 

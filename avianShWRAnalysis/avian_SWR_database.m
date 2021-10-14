@@ -13,6 +13,9 @@ switch gethostname
     DataDir = '/media/janie/4TB/';
     dirD = '/';
         
+    case 'NEUROPIXELS'
+        DataDir = 'G:\SWR\';
+    dirD = '\';
 end
     
    

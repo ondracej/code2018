@@ -95,6 +95,8 @@ chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2]; %acute
 
 %filename = 'E:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Ephys\106_CH10.continuous';
 
+filename = 'G:\SWR\ZF-o3b11\20210223\16-34-06\170_CH5.continuous';
+
 [data, timestamps, info] = load_open_ephys_data(filename);
 thisSegData_s = timestamps(1:end) - timestamps(1);
 Fs = info.header.sampleRate;
@@ -108,6 +110,29 @@ thisSegData = V_uV_data_full(:,:,:);
 recordingDuration_s = thisSegData_s(end);
 
 
+            fObj = filterData(Fs);
+            
+            fobj.filt.FL=filterData(Fs);
+            %fobj.filt.FL.lowPassPassCutoff=4.5;
+            %fobj.filt.FL.lowPassPassCutoff=20;
+            %fobj.filt.FL.lowPassStopCutoff=30;
+            fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.FL.lowPassStopCutoff=40;
+            fobj.filt.FL.attenuationInLowpass=20;
+            fobj.filt.FL=fobj.filt.FL.designLowPass;
+            fobj.filt.FL.padding=true;
+            
+            fobj.filt.FH2=filterData(Fs);
+            fobj.filt.FH2.highPassCutoff=100;
+            fobj.filt.FH2.lowPassCutoff=2000;
+            fobj.filt.FH2.filterDesign='butter';
+            fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+            fobj.filt.FH2.padding=true;
+            
+            fobj.filt.FN =filterData(Fs);
+            fobj.filt.FN.filterDesign='cheby1';
+            fobj.filt.FN.padding=true;
+            fobj.filt.FN=fobj.filt.FN.designNotch;
 
 
    %% Convert to Data File

@@ -19,7 +19,8 @@ addpath(genpath(pathToNSKToolbox))
 
 %recSession = 54; % (54) Chick-10  | 27.04.2019 - 19-33-33
 %recSession = 76; %(76) ZF-72-81 | 16.05.2019 - 19-18-21
-recSession = 81; %(81) ZF-72-81 | 16.05.2019 - 21-26-59 - Overnight
+%recSession = 81; %(81) ZF-72-81 | 16.05.2019 - 21-26-59 - Overnight
+recSession = 67; %(81) ZF-72-81 | 16.05.2019 - 21-26-59 - Overnight
 
 D_OBJ = avianSWRAnalysis_OBJ(recSession); 
 disp([D_OBJ.INFO.birdName ': ' D_OBJ.Session.time])

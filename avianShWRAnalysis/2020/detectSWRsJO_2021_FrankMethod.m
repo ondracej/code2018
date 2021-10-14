@@ -13,11 +13,11 @@ artifactThresh_neg = -800;
 %chanMap = [13 1 16 5 12 6 11 8 9];
 
 %chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2];
-rippleChans = [2 5 7 13 16];
+rippleChans = [2 3 7 13 14 15];
 %chanMap = [10 12 7 11 9 6 8 5 3 16 4 1 13 15 14 2];
 %chanMap = [10 12 7 11 9 6 8 5 3 16 4 13 15 14 2];%remove chan 1 broken
 ch = rippleChans;
-
+%ch = 7;
 %%
 [filepath,name,ext] = fileparts(SessionDir);
 
@@ -53,9 +53,14 @@ recordingDur_s = recordingDur_ms/1000;
 
 
 DS_Factor = 20;
+% bandPassFilter1 = [.5 400];
+% Ripple = [150 250];
+% SWFil = [.5 8];
+
 bandPassFilter1 = [.5 400];
-Ripple = [150 250];
-SWFil = [.5 8];
+Ripple = [12 150];
+SWFil = [.5 12];
+
 
 fObj = filterData(Fs_orig);
 
@@ -90,17 +95,15 @@ fobj.filt.SW1.filterDesign='butter';
 fobj.filt.SW1=fobj.filt.SW1.designBandPass;
 fobj.filt.SW1.padding=true;
 
-% fobj.filt.FL=filterData(Fs);
-% fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
-% fobj.filt.FL.lowPassStopCutoff=40;
-% fobj.filt.FL.attenuationInLowpass=20;
-% fobj.filt.FL=fobj.filt.FL.designLowPass;
-% fobj.filt.FL.padding=true;
+fobj.filt.FN =filterData(Fss);
+fobj.filt.FN.filterDesign='cheby1';
+fobj.filt.FN.padding=true;
+fobj.filt.FN=fobj.filt.FN.designNotch;
 
 
 %% Get a sample size for the population z score calculation
 
-smoothWin_ms = 50;
+smoothWin_ms = 15;
 smoothWin_sampls = round((smoothWin_ms/1000)*Fss);
 
 
@@ -122,7 +125,6 @@ for i=1:numel(pCycle)
     
     
     [rawData,t_ms]=dataRecordingObj.getData(ch,TOn(pCycle(i)), seg_ms);
-    
     DataSeg_DS = fobj.filt.F2.getFilteredData(rawData);
     
     sumData = (sum(squeeze(DataSeg_DS)))/ numel(ch); % The sum will be huge numbers
@@ -137,11 +139,19 @@ for i=1:numel(pCycle)
         continue
     end
     
-    
     DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS);
+    DataSeg_BP_N = fobj.filt.FN.getFilteredData(DataSeg_BP);
     
-    DataSeg_SW = fobj.filt.SW1.getFilteredData(DataSeg_BP);
-    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP);
+%     bla = squeeze(rawData);
+%     figure(105); clf
+%     subplot(2, 1, 1)
+%     plot(bla(3,:)); axis tight
+%     subplot(2, 1, 2)
+%     plot(squeeze(DataSeg_BP_N(1,:,:))); axis tight
+%     
+    
+    DataSeg_SW = fobj.filt.SW1.getFilteredData(DataSeg_BP_N);
+    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP_N);
     
     squared_rip = squeeze(DataSeg_Ripp).^2;
     summed_rip = sum(squared_rip);
@@ -195,7 +205,7 @@ for k=1:numel(TOn)-1
     [rawData,t_ms]=dataRecordingObj.getData(ch,TOn(k), seg_ms);
     
     DataSeg_DS = fobj.filt.F2.getFilteredData(rawData);
-    
+     
     %Artifacts
     sumData = (sum(squeeze(DataSeg_DS)))/ numel(ch); % The sum will be huge numbers
     
@@ -214,9 +224,11 @@ for k=1:numel(TOn)-1
     end
     
     DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS);
+    DataSeg_BP_N = fobj.filt.FN.getFilteredData(DataSeg_BP);
+   
     
-    DataSeg_SW = fobj.filt.SW1.getFilteredData(DataSeg_BP);
-    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP);
+    DataSeg_SW = fobj.filt.SW1.getFilteredData(DataSeg_BP_N);
+    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP_N);
     
     squared_rip = squeeze(DataSeg_Ripp).^2;
     summed_rip = sum(squared_rip);
@@ -256,7 +268,7 @@ for k=1:numel(TOn)-1
     
     subplot(5, 1, 2)
     plot(summed_rip); axis tight
-    ylim([0 1500])
+    ylim([0 3e4])
     title('Summed Ripple Population')
     %plot(hi)
     %[hi, lo] = envelope(summed_rip);
@@ -264,7 +276,7 @@ for k=1:numel(TOn)-1
     subplot(5, 1, 3)
     plot(zscore_rip); axis tight
     line([0 30000], [mean_zscore_powerTrace_sample mean_zscore_powerTrace_sample], 'color', 'k')
-    ylim([0 10])
+    ylim([0 5])
     title('Population Ripple Z-score')
     
     %     subplot(5, 1, 4)
@@ -273,12 +285,12 @@ for k=1:numel(TOn)-1
     
     subplot(5, 1, 4)
     plot(summed_SW); axis tight
-    ylim([0 1.5e6])
+    ylim([0 5e5])
     title('Summed Population SW')
     
     subplot(5, 1, 5)
     plot(zscore_SW); axis tight
-    ylim([0 10])
+    ylim([0 5])
     title('Population SW Z-Score')
     %%  Ripple Detections
     
@@ -377,7 +389,7 @@ for k=1:numel(TOn)-1
     
     minWidth_ms = 15;
     midWidth_samples = round(minWidth_ms*1000/Fss);
-    thresh = 3;
+    thresh = 2;
     
     subplot(5, 1, 5)
     line([0 30000], [thresh thresh], 'color', 'r')
@@ -406,6 +418,17 @@ for k=1:numel(TOn)-1
         for j = 1:nPeaks_sw
             
             thisPeak = locs_sw(j);
+            
+            % Check to see if peak val in original data is pos or negative
+            
+            DataSeg_SW_sq = squeeze(DataSeg_SW);
+            maxPeakVal = max(DataSeg_SW_sq(:,thisPeak));
+            
+            if maxPeakVal > 0
+                disp('Positive SW detected');
+               % keyboard
+                continue
+            end
             
             if thisPeak <= searchWin_samples
                 continue
