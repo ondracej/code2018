@@ -14,7 +14,7 @@ classdef chronoAnalysis_Obj < handle
             
             disp('Getting video info...')
             obj.HOST.hostname = gethostname;
-            
+            disp('...done!')
             if ispc
                 dirD = '\';
             else
@@ -38,10 +38,10 @@ classdef chronoAnalysis_Obj < handle
         
         
         %%
-        function [] = makeMultipleMoviesFromImages(obj, imageDir, movieName, saveDir, VideoFrameRate)
+        function [] = makeMultipleMoviesFromImages(obj, imageDir, movieName, saveDir, VideoFrameRate, doRotate, rotationAngle)
             
             fileFormat = 3; % (1)- tif, (2) -.jpg
-            doRotate = 1;
+            %doRotate = 1;
             
             %%
             switch fileFormat
@@ -105,7 +105,7 @@ classdef chronoAnalysis_Obj < handle
                   
                     if doRotate
                         
-                        img = imrotate(img,7, 'bilinear');
+                        img = imrotate(img,rotationAngle, 'bilinear');
                         imshow(img)
                     end
                     
@@ -187,7 +187,7 @@ classdef chronoAnalysis_Obj < handle
                 opticalFlow1 = vision.OpticalFlow('Method','Lucas-Kanade','ReferenceFrameDelay', 1);% use of the Lucas-Kanade method for optic flow determination
                 opticalFlow1.OutputValue = 'Horizontal and vertical components in complex form';
                 
-                disp('Extracting frames and calculating the optic flow...')
+                disp('Please use the mouse to draw a rectangle around the region of interest...')
                 
                 FrameOn = 1;
                 FrameOff =nFrames;
@@ -202,7 +202,7 @@ classdef chronoAnalysis_Obj < handle
                     if cnt == 1
                         figure
                         
-                        movROI.cdata = read(VideoObj,20);
+                        movROI.cdata = read(VideoObj,420); %420th frame
                         roi_frame = movROI.cdata;
                         im_roi = step(converter, roi_frame);
                         
@@ -213,8 +213,10 @@ classdef chronoAnalysis_Obj < handle
                         
                         rectim1 = getrect; %choose ROI
                         rectim1=ceil(rectim1);
-                        
+                        disp('Extracting frames and calculating the optic flow...')
                     end
+                    
+                    
                     im1 = im(rectim1(2):rectim1(2)+rectim1(4),rectim1(1):rectim1(1)+rectim1(3)); %choose this ROI part of the frame to calculate the optic flow
 
                     of1 = step(opticalFlow1, im1);
@@ -261,8 +263,7 @@ classdef chronoAnalysis_Obj < handle
             %               subplot(1, 2, 2)
             %               plot(fV2)
             
-            fV1_norm = fV1./(max(max(fV1)));
-            
+            fV1_norm = fV1./(max(max(fV1))); % normalized here
             
             %% Assumes a fps of 1 fps
             
@@ -473,11 +474,11 @@ classdef chronoAnalysis_Obj < handle
 
         
         
-        function [] = extractMvmtFromOF_separateParts(obj, fileToLoad, SaveTag)
+        function [] = extractMvmtFromOF_separateParts(obj, fileToLoad, figSaveDir, mvmtArtifacts)
             dbstop if error
             
-            figSaveDir = [obj.PATH.editedVidPath SaveTag '\'];
-            
+           %smoothWin_s = 5;
+           
              if exist(figSaveDir, 'dir') ==0
                 mkdir(figSaveDir);
                 disp(['Created directory: ' figSaveDir])
@@ -485,29 +486,68 @@ classdef chronoAnalysis_Obj < handle
             
             [pathstr,name,ext] = fileparts(fileToLoad); 
             
+            underscore = '_';
+            bla = find(name ==  underscore);
+            saveTag = name;
+            saveTag(bla) = '-';
+            
             d = load(fileToLoad);
             
-            fv = d.fV1;
+            fv = d.fV1; % This is the non-normalized OF
             fvN = fv./(max(max(fv))); % normalize between 1 and 0
-            
-            
-            %outliers_inds = find(fvN >= 0.3);
-            
-            
-            %outliers_inds = find(fvN >= 0.25);
-            %fvN(outliers_inds) = nan;  
-            
-            figure(200); clf
-            plot(fvN)
-            %smoothWin_s = 30;
-            %smoothFv = smooth(fvN, smoothWin_s);
-            %smoothFv = smooth(fvN.^2, smoothWin_s);
-            
-            plot(fvN)
-            hold on
-            %plot(smoothFv, 'k')
            
-
+%             figure(200); clf
+%             plot(fvN) % plot the diff
+%             axis tight
+            
+            medVal = nanmean(fvN);
+            stdVal = nanstd(fvN);
+            negThresh = medVal - stdVal;
+            negOutliers = find(fvN <=negThresh);
+            posOutliers  = find(fvN >= medVal+stdVal*8);
+            
+            fvN(negOutliers) = nan;
+            fvN(posOutliers) = nan;
+            fvN(mvmtArtifacts) = nan;
+           
+%             figure(200); clf
+%             plot(fvN) % plot the diff
+%             axis tight
+            
+            fvN_diff = diff(fvN);
+           
+            figure(200); clf
+            plot(fvN_diff) % plot the diff
+            axis tight
+            
+            %https://de.mathworks.com/matlabcentral/answers/105736-zscore-of-an-array-with-nan-s
+            fvN_diff_Z = bsxfun(@minus,fvN_diff,nanmean(fvN_diff));
+            fvN_diff_Z = bsxfun(@rdivide,fvN_diff_Z,nanstd(fvN_diff_Z));
+            
+            timepoints_s = 1:1:numel(fvN_diff_Z);
+            timepoints_hr = timepoints_s/3600;
+            
+            threshCrossing = 1; % 1 std of z-normalized data
+                      
+            figure(200); clf
+            
+            plot(timepoints_hr, fvN_diff_Z) % plot the diff
+            axis tight
+            hold on
+            line([0 timepoints_hr(end)], [threshCrossing threshCrossing], 'color', 'r')
+           % line([0 numel(fvN_diff_Z)], [2 2], 'color', 'g')
+            ylim([-10 10])
+            title(['Thresh = ' num2str(threshCrossing) ' std | ' saveTag])
+            xlabel('Activity (hours)')
+            ylabel('Normalized Activity (z-score)')
+            
+           saveName = [figSaveDir name '_Detections'];
+            %plotpos = [0 0 25 12];
+            plotpos = [0 0 20 8];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            
+            
+            %{
             prompt = {'Enter number of segments'};
             dlgtitle = 'Input';
             dims = [1 35];
@@ -516,12 +556,10 @@ classdef chronoAnalysis_Obj < handle
             
             nSegs = str2double(answer{:});
            
-            
+            disp('Please use the mouse to define the starts of the segments')
             [x,~] = ginput(nSegs-1);
             
-            %%
-           
-            % These need to be in multiples of 360
+            %% These need to be in multiples of 360
           
             allStarts = [];
             allStops = [];
@@ -534,15 +572,12 @@ classdef chronoAnalysis_Obj < handle
                     stop_multiplier = round(x(1)/360);
                     
                     stop = stop_multiplier*360;
-                    
-                    
-                    
+                 
                 elseif j == nSegs
                     
                     start = stop +1;
                     stop_multiplier = floor(numel(fvN) / 360);
                     stop = stop_multiplier*360;
-                    
                     
                 else
                     
@@ -555,7 +590,8 @@ classdef chronoAnalysis_Obj < handle
                 line([stop stop], [0 1], 'color', 'r')
                 line([start start], [0 1], 'color', 'r')
                 axis tight
-                title(SaveTag)
+                ylim([0 .5])
+                title(saveTag)
                 
                 allStarts(j) = start;
                 allStops(j) = stop;
@@ -563,73 +599,97 @@ classdef chronoAnalysis_Obj < handle
             end
             
              saveName = [figSaveDir name '_Detections_Raw-' ];
-                %plotpos = [0 0 25 12];
                 plotpos = [0 0 30 12];
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 
             %%
-            
+            %}
+        
+            %%
             timeWin_min = 6;
             timeWin_s  = timeWin_min *60;
             
-            allPartsTheshCnts = [];
-            allPartsThreshCross_inds = [];
-            allPartsTotalDataSize = [];
-            
-            percentile4ScaleEstimation = 95; % roi3
-            
-            
-            allPartsTheshCnts = [];
-            allPartsThreshCross_inds = [];
-            allPartsTotalDataSize = [];
-            for j = 1:nSegs
-                
-                part_fV = fvN(allStarts(j):allStops(j));
-                tOn = allStarts(j):timeWin_s:allStops(j);
-                
-                figure(240+j);clf;
-                %subplot(2, 1, 1)
-                plot(part_fV);
-                
-                 [~,y] = ginput(1);
-                
-                %sortedVals = sort(part_fV, 'ascend');
-                %scaleEstimator_thresh =sortedVals(round(percentile4ScaleEstimation/100*numel(sortedVals)));
-                %threshCrossing = find(sortedVals == scaleEstimator_thresh);
-                threshCrossing = y;
-                
-                hold on
-                line([0 numel(part_fV)], [threshCrossing threshCrossing], 'color', 'r')
-                axis tight
-                title(SaveTag)
-                %subplot(2, 1, 2)
-                
-               % plot(sortedVals)
-               % hold on
-               % line([threshCrossing threshCrossing], [0 1], 'color', 'r')
-               % axis tight
-                
-                
-                saveName = [figSaveDir name '_Detections_Raw-Seg-' num2str(j)];
-                %plotpos = [0 0 25 12];
-                plotpos = [0 0 30 12];
-                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-                
+%{
+%             allPartsTheshCnts = [];
+%             allPartsThreshCross_inds = [];
+%             allPartsTotalDataSize = [];
+%             
+%             percentile4ScaleEstimation = 95; % roi3
+%             
+%             allPartsTheshCnts = [];
+%             allPartsThreshCross_inds = [];
+%             allPartsTotalDataSize = [];
+%             smoothWin_s = 5;
+%             for j = 1:nSegs
+%                 
+%                 median_FullNormFvN = median(fvN);
+%                 smoothedfvN = smooth(fvN, smoothWin_s ); % 5 s
+%                 
+%                 test2 = diff(smoothedfvN);
+%                 figure; plot(test2);
+%                 
+%                 %part_fV = fvN(allStarts(j):allStops(j));
+%                 part_fV = smoothedfvN(allStarts(j):allStops(j));
+%                 tOn = allStarts(j):timeWin_s:allStops(j);
+%                 
+%                 figure(240+j);clf;
+%                 plot(part_fV);
+%                 hold on
+%                 axis tight
+%                 ylim([0 0.5])
+%                 
+%                 
+%                 test = diff(part_fV);
+%                 figure
+%                 plot(test);
+%                 
+%                 disp('Please use mouse to define the baseline')
+%                  [~,y] = ginput(1);
+%                 
+%                 %sortedVals = sort(part_fV, 'ascend');
+%                 %scaleEstimator_thresh =sortedVals(round(percentile4ScaleEstimation/100*numel(sortedVals)));
+%                 %threshCrossing = find(sortedVals == scaleEstimator_thresh);
+%                 threshCrossing = y;
+%                 
+%                 hold on
+%                 line([0 numel(part_fV)], [threshCrossing threshCrossing], 'color', 'r')
+%                 axis tight
+%                 title(saveTag)
+%                 %subplot(2, 1, 2)
+%                 
+%                % plot(sortedVals)
+%                % hold on
+%                % line([threshCrossing threshCrossing], [0 1], 'color', 'r')
+%                % axis tight
+%                 
+%                 
+%                 saveName = [figSaveDir name '_Detections_Raw-Seg-' num2str(j)];
+%                 %plotpos = [0 0 25 12];
+%                 plotpos = [0 0 30 12];
+%                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+%                 
                 
                 
                 %%
+                
+          %}      
+                tOn = 1:timeWin_s:numel(fvN_diff_Z);
                 
                 nBatches = numel(tOn);
                 
                 allThreshCross_cnts = [];
                 allThreshCross_inds = [];
                 totalDataSize = [];
+                
+                dataToThresh = fvN_diff_Z;
+                threshCrossing = 1; % 1 std of z-normalized data
+                
                 for i = 1:nBatches
                     
                     if i == nBatches
-                        thisData = fvN(tOn(i):allStops(j));
+                        thisData = dataToThresh(tOn(i):numel(dataToThresh));
                     else
-                        thisData = fvN(tOn(i):tOn(i)+timeWin_s-1);
+                        thisData = dataToThresh(tOn(i):tOn(i)+timeWin_s-1);
                     end
                     
                     threshCrossInds = find(thisData >= threshCrossing);
@@ -640,25 +700,18 @@ classdef chronoAnalysis_Obj < handle
                 end
                 
                 
-                allPartsTheshCnts{j} = allThreshCross_cnts;
-                allPartsThreshCross_inds{j} = allThreshCross_inds;
-                allPartsTotalDataSize{j} = totalDataSize;
+               % allPartsTheshCnts = allThreshCross_cnts;
+             %   allPartsThreshCross_inds = allThreshCross_inds;
+             %   allPartsTotalDataSize = totalDataSize;
                 
-            end
+     %%
             
-                 
-            disp('')
-            
-            allDetections_6minBins = cell2mat(allPartsTheshCnts);
-            allDurations_s = cell2mat(allPartsTotalDataSize);
-            
-            
-            allDetections_6minBins = allDetections_6minBins(1:end-1); % remove last incomplete bin
-            allDurations_s = allDurations_s(1:end-1);
+            allDetections_6minBins = allThreshCross_cnts(1:end-1); % remove last incomplete bin
+            allDurations_s = totalDataSize(1:end-1);
    
             figure(240);clf
             imagesc(allDetections_6minBins)
-            
+            caxis([0 100])
             xticks = get(gca, 'xtick');
             xticks_in_hr = xticks*6/60;
              xlabs = [];
@@ -667,38 +720,34 @@ classdef chronoAnalysis_Obj < handle
                 end
                 
             set(gca, 'xticklabel', xlabs)
-            
+            set(gca, 'ytick', [])
             xlabel('Activity in 6 Min bins (hours)')
-            title(SaveTag)
+            colorbar('northoutside')
+            title(['Activity map - ' saveTag])
             
             saveName = [figSaveDir name '_Detections_Imgsc'];
             %plotpos = [0 0 25 12];
-            plotpos = [0 0 30 12];
+            plotpos = [0 0 20 8];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
             
             %%
             textName = ['Detections-' name '.txt'];
-            %textName = 'Detections-ROI3_Nov14-001.txt';
-            
-            %fileToSave = ['E:\ChronoAnalysis\001_Vids_Nov14\contrastVids\OF_DS\textDetections\' textName];
             fileToSave = [figSaveDir textName];
                 
             fileID = fopen(fileToSave,'w');
-            %fprintf(fileID,'%6s %12s\n','x','exp(x)');
             fprintf(fileID,'%d\n',allDetections_6minBins);
             fclose(fileID);
             
             
-            
-            
-            
         end
+    
+
     end
     
     %%
     
-    
+
     
     methods (Hidden)
         %class constructor
