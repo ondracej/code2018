@@ -2,18 +2,23 @@ function [] = detectSWRsJO_2021_FrankMethod()
 
 
 %SessionDir = 'G:\SWR\ZF-60-88\20190429\15-48-05\Ephys\'; % need dirdelim at end
+%rippleChans = [2 7 13 12 11 1 16 3 6 4 5];
+
 %SessionDir = 'G:\SWR\ZF-72-96\20200108\14-03-08\Ephys\';
+%rippleChans = [1 5 11 14 4 8 7 9];
+
 SessionDir = 'G:\SWR\ZF-71-76\20190916\18-05-58\Ephys\';
+rippleChans = [15 14 12 7 2 5];
+%k=2001
 
-
-artifactThresh_pos = 500;
+artifactThresh_pos = 600;
 artifactThresh_neg = -800;
 
 %chanMap = [7 10 2 15 3 14 4 13 1 16 5 12 6 11 8 9];
 %chanMap = [13 1 16 5 12 6 11 8 9];
 
 %chanMap = [5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2];
-rippleChans = [2 3 7 13 14 15];
+
 %chanMap = [10 12 7 11 9 6 8 5 3 16 4 1 13 15 14 2];
 %chanMap = [10 12 7 11 9 6 8 5 3 16 4 13 15 14 2];%remove chan 1 broken
 ch = rippleChans;
@@ -57,9 +62,9 @@ DS_Factor = 20;
 % Ripple = [150 250];
 % SWFil = [.5 8];
 
-bandPassFilter1 = [.5 400];
-Ripple = [12 150];
-SWFil = [.5 12];
+bandPassFilter1 = [1 400];
+Ripple = [6 150];
+SWFil = [.5 4];
 
 
 fObj = filterData(Fs_orig);
@@ -95,6 +100,13 @@ fobj.filt.SW1.filterDesign='butter';
 fobj.filt.SW1=fobj.filt.SW1.designBandPass;
 fobj.filt.SW1.padding=true;
 
+fobj.filt.SW2=filterData(Fss);
+fobj.filt.SW2.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+fobj.filt.SW2.lowPassStopCutoff=40;
+fobj.filt.SW2.attenuationInLowpass=20;
+fobj.filt.SW2=fobj.filt.SW2.designLowPass;
+fobj.filt.SW2.padding=true;
+            
 fobj.filt.FN =filterData(Fss);
 fobj.filt.FN.filterDesign='cheby1';
 fobj.filt.FN.padding=true;
@@ -125,9 +137,10 @@ for i=1:numel(pCycle)
     
     
     [rawData,t_ms]=dataRecordingObj.getData(ch,TOn(pCycle(i)), seg_ms);
-    DataSeg_DS = fobj.filt.F2.getFilteredData(rawData);
-    
-    sumData = (sum(squeeze(DataSeg_DS)))/ numel(ch); % The sum will be huge numbers
+    DataSeg_DS = fobj.filt.F2.getFilteredData(rawData); % raw data --> downsampled data
+    DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
+     
+    sumData = (sum(squeeze(DataSeg_BP)))/ numel(ch); % The sum will be huge numbers
     
     artifactPosCheck = sum(sumData > artifactThresh_pos);
     artifactNegCheck = sum(sumData < artifactThresh_neg);
@@ -139,8 +152,8 @@ for i=1:numel(pCycle)
         continue
     end
     
-    DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS);
-    DataSeg_BP_N = fobj.filt.FN.getFilteredData(DataSeg_BP);
+   
+    DataSeg_BP_N = fobj.filt.FN.getFilteredData(DataSeg_BP); % band passed data --> notch filtered data
     
 %     bla = squeeze(rawData);
 %     figure(105); clf
@@ -148,10 +161,8 @@ for i=1:numel(pCycle)
 %     plot(bla(3,:)); axis tight
 %     subplot(2, 1, 2)
 %     plot(squeeze(DataSeg_BP_N(1,:,:))); axis tight
-%     
-    
-    DataSeg_SW = fobj.filt.SW1.getFilteredData(DataSeg_BP_N);
-    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP_N);
+%  
+    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP_N); % notch filted data --> ripple filter
     
     squared_rip = squeeze(DataSeg_Ripp).^2;
     summed_rip = sum(squared_rip);
@@ -160,21 +171,33 @@ for i=1:numel(pCycle)
     
     powerTrace_rip{i} = sqrt(smoothedSums2);
     
-    %
-    %     figure; subplot(4, 1, 1)
-    %     plot(squeeze(DataSeg_Ripp(1,:,:))); axis tight
-    %     subplot(4, 1, 2)
-    %     plot(squared_rip(1,:)); axis tight
-    %     subplot(4, 1, 3)
-    %     plot(summed_rip); axis tight
-    %     subplot(4, 1, 4)
-    %     plot(powerTrace_rip{i}); axis tight
-    
-    
+    %{
+        figure; subplot(4, 1, 1)
+        plot(squeeze(DataSeg_Ripp(1,:,:))); axis tight
+        subplot(4, 1, 2)
+        plot(squared_rip(1,:)); axis tight
+        subplot(4, 1, 3)
+        plot(summed_rip); axis tight
+        subplot(4, 1, 4)
+        plot(powerTrace_rip{i}); axis tight
+    %}
+     DataSeg_SW = fobj.filt.SW2.getFilteredData(DataSeg_DS); % downsampled data --> SW Filter
     
     squared_SW = squeeze(DataSeg_SW).^2;
     summed_SW = sum(squared_SW);
     sqrt_SW{i} = sqrt(summed_SW);
+    
+     %{
+        figure; subplot(4, 1, 1)
+        plot(squeeze(DataSeg_SW(1,:,:))); axis tight
+        subplot(4, 1, 2)
+        plot(squared_SW(1,:)); axis tight
+        subplot(4, 1, 3)
+        plot(summed_SW); axis tight
+        subplot(4, 1, 4)
+        plot(sqrt_SW{i}); axis tight
+    %}
+    
     
 end
 
@@ -197,17 +220,14 @@ TOn = 1:seg_s*1000:recordingDur_s*1000; % Needs to be in ms
 
 for k=1:numel(TOn)-1
     allArtInds  = [];
-    
-    % for j = 1:nChans
-    %   ch = chanMap(j);
-    %[rawData,t_ms]=dataRecordingObj.getData(ch,TOn(k), seg_ms);
-    
+  
     [rawData,t_ms]=dataRecordingObj.getData(ch,TOn(k), seg_ms);
     
-    DataSeg_DS = fobj.filt.F2.getFilteredData(rawData);
-     
+    DataSeg_DS = fobj.filt.F2.getFilteredData(rawData); % raw data --> down sampled
+    DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS); % down sampled  --> band passed
+       
     %Artifacts
-    sumData = (sum(squeeze(DataSeg_DS)))/ numel(ch); % The sum will be huge numbers
+    sumData = (sum(squeeze(DataSeg_BP)))/ numel(ch); % The sum will be huge numbers
     
     artifactPosCheck = sum(sumData > artifactThresh_pos);
     artifactNegCheck = sum(sumData < artifactThresh_neg);
@@ -223,12 +243,12 @@ for k=1:numel(TOn)-1
         
     end
     
-    DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS);
-    DataSeg_BP_N = fobj.filt.FN.getFilteredData(DataSeg_BP);
+ 
+    DataSeg_BP_N = fobj.filt.FN.getFilteredData(DataSeg_BP); % band passed --> notch filtered
    
     
-    DataSeg_SW = fobj.filt.SW1.getFilteredData(DataSeg_BP_N);
-    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP_N);
+    DataSeg_SW = fobj.filt.SW2.getFilteredData(DataSeg_DS); % down sampled  --> sharp wave
+    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP_N); % notch filter --> rippled
     
     squared_rip = squeeze(DataSeg_Ripp).^2;
     summed_rip = sum(squared_rip);
@@ -255,12 +275,12 @@ for k=1:numel(TOn)-1
     figure(100); clf;
     
     subplot(5, 1, 1)
-    plot(squeeze(DataSeg_DS(1,:,:))); axis tight
+    plot(squeeze(DataSeg_BP(1,:,:))); axis tight
     hold on
     yvals = zeros(1, numel(allArtInds));
     plot(allArtInds, yvals, 'k.')
-    ylim([-700 400])
-    title('Raw Data')
+    ylim([-500 400])
+    title('BP Raw Data')
     
     %     subplot(5, 1, 2)
     %     plot(squeeze(DataSeg_Ripp(1,:,:))); axis tight
@@ -290,7 +310,7 @@ for k=1:numel(TOn)-1
     
     subplot(5, 1, 5)
     plot(zscore_SW); axis tight
-    ylim([0 5])
+    ylim([0 4])
     title('Population SW Z-Score')
     %%  Ripple Detections
     
@@ -394,7 +414,7 @@ for k=1:numel(TOn)-1
     subplot(5, 1, 5)
     line([0 30000], [thresh thresh], 'color', 'r')
     
-    peakDistance_ms = 100;
+    peakDistance_ms = 200;
     peakDistance_sample = round(peakDistance_ms*1000/Fss);
     
     [pks_sw,locs_sw,w_sw,p_sw] = findpeaks(zscore_SW, 'MinPeakHeight', thresh, 'MinPeakWidth',  midWidth_samples, 'MinPeakDistance', peakDistance_sample );

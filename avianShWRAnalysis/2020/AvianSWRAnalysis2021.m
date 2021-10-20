@@ -134,11 +134,13 @@ recordingDuration_s = thisSegData_s(end);
             fobj.filt.FN.padding=true;
             fobj.filt.FN=fobj.filt.FN.designNotch;
 
+%% Create a .dat file
+ 
+dataDir = 'G:\SWR\ZF-o3b11\20210223\15-28-53\Ephys\';
+chanMap = [10 12 7 11 9 6 8 5 3 16 4 1 13 15 14 2]; % tetrode shanks, by columns, medial to lateral
 
-   %% Convert to Data File
-   
-   chanMap = [9 8 11 6 12 5 16 1 13 4 14 3 15 2 10 7]; % 9 is deepest
-   convertOpenEphysToRawBinary_JO(dataDir, chanMap);  % convert data, only for OpenEphys
+convertOpenEphysToRawBinary_JO(dataDir, chanMap);  % convert data, only for OpenEphys
+
    
    %% Ripple Detection?
    
@@ -163,7 +165,10 @@ timeToUse = dataSnippetT_s;
 %dataToUse = data;
 %timeToUse = thisSegData_s;
 
-%%
+
+
+
+%% Other ripple detection
 t_separation = 0.015;
 percentile = 0.90;
 
