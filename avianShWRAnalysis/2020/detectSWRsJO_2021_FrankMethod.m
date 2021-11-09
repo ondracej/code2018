@@ -1,14 +1,20 @@
 function [] = detectSWRsJO_2021_FrankMethod()
 
 
+addpath(genpath('C:\Users\Neuropix\Documents\GitHub\code2018\'));
+addpath(genpath('C:\Users\Neuropix\Documents\GitHub\NeuralElectrophysilogyTools\'));
+
 %SessionDir = 'G:\SWR\ZF-60-88\20190429\15-48-05\Ephys\'; % need dirdelim at end
 %rippleChans = [2 7 13 12 11 1 16 3 6 4 5];
 
-%SessionDir = 'G:\SWR\ZF-72-96\20200108\14-03-08\Ephys\';
-%rippleChans = [1 5 11 14 4 8 7 9];
+SessionDir = 'G:\SWR\ZF-72-96\20200108\14-03-08\Ephys\';
+rippleChans = [1 5 11 14 4 8 7 9];
 
-SessionDir = 'G:\SWR\ZF-71-76\20190916\18-05-58\Ephys\';
-rippleChans = [15 14 12 7 2 5];
+%SessionDir = 'G:\SWR\ZF-71-76\20190916\18-05-58\Ephys\';
+%rippleChans = [15 14 12 7 2 5];
+%SW_Chan = 15;
+
+%SW_ind = find(rippleChans == SW_Chan);
 %k=2001
 
 artifactThresh_pos = 600;
@@ -64,7 +70,7 @@ DS_Factor = 20;
 
 bandPassFilter1 = [1 400];
 Ripple = [6 150];
-SWFil = [.5 4];
+SWFil = [.5 4]; %not using this...
 
 
 fObj = filterData(Fs_orig);
@@ -100,6 +106,7 @@ fobj.filt.SW1.filterDesign='butter';
 fobj.filt.SW1=fobj.filt.SW1.designBandPass;
 fobj.filt.SW1.padding=true;
 
+% Original SW filter
 fobj.filt.SW2=filterData(Fss);
 fobj.filt.SW2.lowPassPassCutoff=30;% this captures the LF pretty well for detection
 fobj.filt.SW2.lowPassStopCutoff=40;
@@ -181,36 +188,72 @@ for i=1:numel(pCycle)
         subplot(4, 1, 4)
         plot(powerTrace_rip{i}); axis tight
     %}
-     DataSeg_SW = fobj.filt.SW2.getFilteredData(DataSeg_DS); % downsampled data --> SW Filter
     
-    squared_SW = squeeze(DataSeg_SW).^2;
-    summed_SW = sum(squared_SW);
-    sqrt_SW{i} = sqrt(summed_SW);
+    %  Here it does not help very much to combine the diff channels, so
+    %  lets rather pick one chanel and do the SW detection from that
+    
+   
+    
+     %DataSeg_SW = squeeze(fobj.filt.SW2.getFilteredData(DataSeg_DS)); % downsampled data --> SW Filter original
+     DataSeg_SW{i} = squeeze(fobj.filt.SW2.getFilteredData(DataSeg_BP)); % downsampled data --> SW Filter original
+   
+end
+
+%      for q = 1:size(DataSeg_SW, 1)
+%          allMins(q) = min(DataSeg_SW(q,:));
+%      end
+%      
+%      [minVal, minChanInd] = min(allMins);
+%   
+
+allCHans = cell2mat(DataSeg_SW);
+squaredAllSW = allCHans.^2;
+sqrtAllSW = sqrt(squaredAllSW);
+[maxVal, ~] = max(sqrtAllSW, [], 2);
+[maxVal2, SW_ind] = max(maxVal, [], 1);
+
+sqrt_SW = sqrtAllSW(SW_ind,:);
+
+   %  DataSeg_SW_negChan =  DataSeg_SW(SW_ind,:);
+    
+    % squared_SW = DataSeg_SW_negChan.^2;
+     
+    %squared_SW = squeeze(DataSeg_SW).^2;
+    %summed_SW = sum(squared_SW);
+    %sqrt_SW{i} = sqrt(squared_SW);
+    
     
      %{
-        figure; subplot(4, 1, 1)
-        plot(squeeze(DataSeg_SW(1,:,:))); axis tight
+        figure(104); clf;
+        subplot(4, 1, 1)
+        plot(squeeze(DataSeg_SW_negChan(1,:,:))); axis tight
+        title('raw SW data')
         subplot(4, 1, 2)
         plot(squared_SW(1,:)); axis tight
-        subplot(4, 1, 3)
-        plot(summed_SW); axis tight
+        title('squared SW data')
+        %subplot(4, 1, 3)
+        %plot(summed_SW); axis tight
+        %title('summed SW data')
         subplot(4, 1, 4)
         plot(sqrt_SW{i}); axis tight
+        title('sqrt SW data')
     %}
     
     
-end
+%end
 
 powerTrace_rip_sample = cell2mat(powerTrace_rip);
 [Z_sample_rip,mean_sample_rip,std_sample_rip]= zscore(powerTrace_rip_sample);
 mean_zscore_powerTrace_sample = mean(Z_sample_rip);
 
-SW_sum_sample = cell2mat(sqrt_SW);
-[Z_sample_sw,mean_sample_sw,std_sample_sw]= zscore(SW_sum_sample);
+%SW_sum_sample = cell2mat(sqrt_SW);
+%SW_sum_sample = cell2mat(DataSeg_SW_negChan);
+[Z_sample_sw,mean_sample_sw,std_sample_sw]= zscore(sqrt_SW);
 mean_zscore_sw_sample = mean(Z_sample_sw);
 
 
 %figure; plot(powerTrace_rip_sample(1:60*Fss))
+%figure; plot(Z_sample_sw(1:20*Fss))
 
 %% Now collect samples
 
@@ -245,9 +288,7 @@ for k=1:numel(TOn)-1
     
  
     DataSeg_BP_N = fobj.filt.FN.getFilteredData(DataSeg_BP); % band passed --> notch filtered
-   
     
-    DataSeg_SW = fobj.filt.SW2.getFilteredData(DataSeg_DS); % down sampled  --> sharp wave
     DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP_N); % notch filter --> rippled
     
     squared_rip = squeeze(DataSeg_Ripp).^2;
@@ -264,12 +305,20 @@ for k=1:numel(TOn)-1
     %mean_zscore_rip = mean(zscore_rip);
     %median_zscore_rip = median(zscore_rip);
     
-    squared_SW = squeeze(DataSeg_SW).^2;
-    summed_SW = sum(squared_SW);
-    sqrt_SW = sqrt(summed_SW);
+    %squared_SW = squeeze(DataSeg_SW).^2;
+    %summed_SW = sum(squared_SW);
+    %sqrt_SW = sqrt(summed_SW);
     
     %zscore_SW = (summed_SW - mean_sample_sw) / std_sample_sw;
+    
+    DataSeg_SW = squeeze(fobj.filt.SW2.getFilteredData(DataSeg_BP)); % down sampled  --> sharp wave
+    
+    DataSeg_SW_negChan =  DataSeg_SW(SW_ind,:);
+    squared_SW = DataSeg_SW_negChan.^2;
+    sqrt_SW = sqrt(squared_SW);
+    
     zscore_SW = (sqrt_SW - mean_sample_sw) / std_sample_sw;
+    %zscore_SW = zscore(DataSeg_SW_minChan);
     zscore_SW(allArtInds) = 1e-15;
     %%
     figure(100); clf;
@@ -304,8 +353,8 @@ for k=1:numel(TOn)-1
     %     ylim([-600 300])
     
     subplot(5, 1, 4)
-    plot(summed_SW); axis tight
-    ylim([0 5e5])
+    plot(DataSeg_SW_negChan); axis tight
+    %ylim([0 5e5])
     title('Summed Population SW')
     
     subplot(5, 1, 5)
@@ -409,7 +458,7 @@ for k=1:numel(TOn)-1
     
     minWidth_ms = 15;
     midWidth_samples = round(minWidth_ms*1000/Fss);
-    thresh = 2;
+    thresh = 1;
     
     subplot(5, 1, 5)
     line([0 30000], [thresh thresh], 'color', 'r')
@@ -528,6 +577,12 @@ D.AllRippleDetections_abs = AllRippleDetections_abs;
 %D.RippleDurations = RippleDurations;
 D.AllSWDetections_abs = AllSWDetections_abs;
 D.allArtifacts_abs = allArtifacts_abs;
+D.INFO.SessionDir = SessionDir;
+D.INFO.rippleChans = rippleChans;
+D.INFO.SWChan = rippleChans(SW_ind);
+D.INFO.artifactThresh_pos = artifactThresh_pos;
+D.INFO.artifactThresh_neg = artifactThresh_neg;
+
 
 %D.AllSWDetections_rel = AllSWDetections_rel;
 %D.SWDurations = SWDurations;
@@ -538,6 +593,7 @@ save(DetectionSaveName, 'D');
 disp(['Saved:' DetectionSaveName ])
 
 end
+
 
 
 
