@@ -1,13 +1,13 @@
 function [] = makeSummaryPlotFiringRatePharmacology()
 
-dataDir = 'Z:\JanieData\JessicaMeaData\20210816\Spike_Output_new\Sorted_Spikes\';
+dataDir = 'Z:\20210817\Spike_Output\Sorted\';
 
-Channel = 87;
-SaveName = '20210816-5HT1A-Ch87';
+Channel = 28;
+SaveName = '20210817-5HT2C-Ch28';
 
-baselineMatfile = '20210816-1441_CH-56-57-87-_SpikeData__87.mat';
-drugMatfile = '20210816-1453-5HT1A_CH-56-57-71-87-_SpikeData__87.mat';
-recoveryMatfile = '20210816-1507-recovery_CH-14-23-56-57-87-_SpikeData__87.mat';
+baselineMatfile = '20210817-1200_CH-28-34-56-64-83-_SpikeData__28.mat';
+drugMatfile = '20210817-1211-5HT2C_CH-25-17-28-42-56-73-83-_SpikeData__28.mat';
+recoveryMatfile = '20210817-1222-recovery_CH-24-25-17-28-42-46-47-56-64-66-77-83-_SpikeData__28.mat';
 
 %%
 
