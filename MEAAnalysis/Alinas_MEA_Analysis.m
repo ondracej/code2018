@@ -22,10 +22,9 @@ ConvertMCRackDataToPlexon(ChannelsToLoad, fileToLoad, SpikeOutputDir)
 %% 2.2 Load the file in the Plexon Spike Sorter
 
 % Make sure to save the file as
-% 1. Export Per-Waveform data (you will have to do this for each channel sorted
+% 1. Export Per-Waveform data (you will have to do this for each channel sorted)
 % - make sure to name the file with '__71 (the channel number) at the end
-2. Export to New .PLX
-
+% 2. Export to New .PLX
 
 
 %% 2.2 After spikesorting - make spike rasters for sorted data
