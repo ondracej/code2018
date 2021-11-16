@@ -136,8 +136,9 @@ recordingDuration_s = thisSegData_s(end);
 
 %% Create a .dat file
  
-dataDir = 'G:\SWR\ZF-72-01\20210225\17-42-17\Ephys\';
-chanMap = [10 12 7 11 9 6 8 5 3 16 4 1 13 15 14 2]; % tetrode shanks, by columns, medial to lateral
+dataDir = 'G:\SWR\ZF-72-01\20210225\15-05-52\Ephys\';
+%chanMap = [10 12 7 11 9 6 8 5 3 16 4 1 13 15 14 2]; % tetrode shanks, by columns, medial to lateral
+chanMap = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16]; % tetrode shanks, by columns, medial to lateral
 
 convertOpenEphysToRawBinary_JO(dataDir, chanMap);  % convert data, only for OpenEphys
 

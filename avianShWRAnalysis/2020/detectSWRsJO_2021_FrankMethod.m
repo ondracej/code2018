@@ -7,8 +7,17 @@ addpath(genpath('C:\Users\Neuropix\Documents\GitHub\NeuralElectrophysilogyTools\
 %SessionDir = 'G:\SWR\ZF-60-88\20190429\15-48-05\Ephys\'; % need dirdelim at end
 %rippleChans = [2 7 13 12 11 1 16 3 6 4 5];
 
-SessionDir = 'G:\SWR\ZF-72-96\20200108\14-03-08\Ephys\';
-rippleChans = [1 5 11 14 4 8 7 9];
+
+%% 72-01
+
+SessionDir = 'Z:\JanieData\JanieSpikeSorting\ZF-72-01\20210225_15-05-52\Ephys\';
+rippleChans = [7 8 4 14 11];
+
+
+%%
+%SessionDir = 'G:\SWR\ZF-72-96\20200108\14-03-08\Ephys\';
+%rippleChans = [1 5 11 14 4 8 7 9];
+
 
 %SessionDir = 'G:\SWR\ZF-71-76\20190916\18-05-58\Ephys\';
 %rippleChans = [15 14 12 7 2 5];
@@ -31,6 +40,10 @@ ch = rippleChans;
 %ch = 7;
 %%
 [filepath,name,ext] = fileparts(SessionDir);
+
+endout=regexp(SessionDir,filesep,'split');
+birdName = endout{4};
+RecSession = endout{5};
 
 plotDir = [filepath '\Detections\'];
 
@@ -388,6 +401,7 @@ for k=1:numel(TOn)-1
         searchWin_samples =  searchWin_ms/1000*Fss;
         % MAKE SURE TO MAKE THESE POINTS RELATIVE TO THE TON AT THE END!!!
         
+        cnt_rip = 1;
         for j = 1:nPeaks_rip
             
             thisPeak = locs_r(j);
@@ -438,17 +452,19 @@ for k=1:numel(TOn)-1
             line([RipLOnset RipLOnset], [-400 200], 'color', 'r')
             line([RipROffset RipROffset], [-400 200], 'color', 'r')
             
-            AllRippleDetections(j,1) = RipLOnset;
-            AllRippleDetections(j,2) = thisPeak;
-            AllRippleDetections(j,3) = RipROffset;
+            AllRippleDetections(cnt_rip ,1) = RipLOnset;
+            AllRippleDetections(cnt_rip ,2) = thisPeak;
+            AllRippleDetections(cnt_rip ,3) = RipROffset;
+            cnt_rip = cnt_rip +1;
+            
         end
         
-        AllRippleDetections_abs{k} = AllRippleDetections+TOn(k)/1000*Fss;
-        %  AllRippleDetections_rel{k} = AllRippleDetections(:,:);
+        AllRippleDetections_abs{k} = AllRippleDetections*DS_Factor+TOn(k)/1000*Fss;
+        AllRippleDetections_rel{k} = AllRippleDetections*DS_Factor;
         %   RippleDurations{k} = (AllRippleDetections(:,3) - AllRippleDetections(:,1))/Fss;
     else
         AllRippleDetections_abs{k} = [];
-        %   AllRippleDetections_rel{k} = [];
+        AllRippleDetections_rel{k} = [];
         %   RippleDurations{k} = [];
         
     end
@@ -484,6 +500,7 @@ for k=1:numel(TOn)-1
         searchWin_ms =  1200;
         searchWin_samples =  searchWin_ms/1000*Fss;
         
+        cnt_sw = 1;
         for j = 1:nPeaks_sw
             
             thisPeak = locs_sw(j);
@@ -536,25 +553,27 @@ for k=1:numel(TOn)-1
             subplot(5, 1, 4)
             line([SwLOnset SwLOnset], [-200 100], 'color', 'g')
             line([SwROffset SwROffset], [-200 100], 'color', 'g')
+            ylim([-500 250])
             
             subplot(5, 1, 5)
             line([SwLOnset SwLOnset], [0 6], 'color', 'g')
             line([SwROffset SwROffset], [0 6], 'color', 'g')
+            ylim([0 6])
             
-            
-            AllSWDetections(j,1) = SwLOnset;
-            AllSWDetections(j,2) = thisPeak;
-            AllSWDetections(j,3) = SwROffset;
+            AllSWDetections(cnt_sw,1) = SwLOnset;
+            AllSWDetections(cnt_sw,2) = thisPeak;% samples
+            AllSWDetections(cnt_sw,3) = SwROffset;
+            cnt_sw = cnt_sw+1;
         end
         
         
-        AllSWDetections_abs{k} = AllSWDetections+TOn(k)/1000*Fss;
-        % AllSWDetections_rel{k} = AllSWDetections;
+        AllSWDetections_abs{k} = AllSWDetections*DS_Factor+TOn(k)/1000*Fss;
+         AllSWDetections_rel{k} = AllSWDetections *DS_Factor;
         %  SWDurations{k} = (AllSWDetections(:,3) - AllSWDetections(:,1))/Fss;
         
     else
         AllSWDetections_abs{k} = [];
-        %AllSWDetections_rel{k} = [];
+        AllSWDetections_rel{k} = [];
         %  SWDurations{k} = [];
     end
     
@@ -573,16 +592,20 @@ for k=1:numel(TOn)-1
 end
 
 D.AllRippleDetections_abs = AllRippleDetections_abs;
-%D.AllRippleDetections_rel = AllRippleDetections_rel;
+D.AllRippleDetections_rel = AllRippleDetections_rel;
 %D.RippleDurations = RippleDurations;
 D.AllSWDetections_abs = AllSWDetections_abs;
+D.AllSWDetections_rel = AllSWDetections_rel;
 D.allArtifacts_abs = allArtifacts_abs;
 D.INFO.SessionDir = SessionDir;
 D.INFO.rippleChans = rippleChans;
 D.INFO.SWChan = rippleChans(SW_ind);
 D.INFO.artifactThresh_pos = artifactThresh_pos;
 D.INFO.artifactThresh_neg = artifactThresh_neg;
-
+D.INFO.TOn = TOn;
+D.INFO.seg_ms = seg_ms;
+D.INFO.birdName = birdName;
+D.INFO.RecSession = RecSession;
 
 %D.AllSWDetections_rel = AllSWDetections_rel;
 %D.SWDurations = SWDurations;
