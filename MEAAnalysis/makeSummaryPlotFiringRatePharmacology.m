@@ -1,7 +1,8 @@
 function [] = makeSummaryPlotFiringRatePharmacology()
 
+dbstop if error
 
-dataDir = 'Z:\JanieData\JessicaMeaData\20210902\Spike_Output\Sorted\';
+dataDir = 'Z:\JanieData\Alina-MeaData\20211129\Spikeoutput\new 16\';
 
 %Channel = 87;
 
@@ -9,8 +10,10 @@ dataDir = 'Z:\JanieData\JessicaMeaData\20210902\Spike_Output\Sorted\';
 %chanSet = [24 55 56 36 75];
 %chanSet = [45 54 67 68];
 %chanSet = [37 41 53 68 77 86];
-chanSet = [36 53 77];
+%chanSet = [36 53 77];
 
+chanSet = [16];
+ 
 nChans = numel(chanSet);
 
 for q = 1:nChans
@@ -22,15 +25,16 @@ for q = 1:nChans
     %SaveName = '20210819-5HT1D-Ch77';
     %SaveName = '20210820-5HT-Ch75';
     %SaveName = '20210824-ACh-Ch87';
-    SaveName = ['20210902-NE-Ch' num2str(Channel) '-2'];
+    %SaveName = ['20210902-NE-Ch' num2str(Channel) '-2'];
+    SaveName = ['20211129--Ch' num2str(Channel) '-NEW'];
     
     %baselineMatfile = '20210824-1123_CH-32-33-41-42-47-58-62-65-67-68-75-76-78-87-_SpikeData__87.mat';
     %drugMatfile = '20210824-1134-ACh_CH-32-33-41-42-48-58-62-65-66-75-76-78-87-_SpikeData__87.mat';
     %recoveryMatfile = '20210824-1145-recovery_CH-32-33-42-48-62-65-68-72-75-76-82-87-_SpikeData__87.mat';
     
-    baselineMatfile = ['20210902-1445_CH-14-36-53-57-73-77-_SpikeData__' num2str(Channel) '.mat'];
-    drugMatfile = ['20210902-1456-NE_CH-17-26-32-35-36-37-53-57-73-77-87-_SpikeData__' num2str(Channel) '.mat'];
-    recoveryMatfile = ['20210902-1507-recovery_CH-16-24-32-36-45-47-53-65-72-77-78-85-_SpikeData__' num2str(Channel) '.mat'];
+      baselineMatfile = ['new20211129-1353_CH-16-26-32-36-37-38-41-42-45-46-47-77-84-87-_SpikeData__' num2str(Channel) '.mat'];
+    drugMatfile = ['new20211129-1353drug_CH-16-26-32-36-37-38-41-42-45-46-47-77-84-87-_SpikeData__' num2str(Channel) '.mat'];
+    recoveryMatfile = ['new20211129-1353rec_CH-16-26-32-36-37-38-41-42-45-46-47-77-84-87-_SpikeData__' num2str(Channel) '.mat'];
 
 %        baselineMatfile = ['20210824-1542_CH-24-33-44-55-56-58-63-68-75-_SpikeData__' num2str(Channel) '.mat'];
 %     drugMatfile = ['20210824-1553-ACh_CH-24-33-44-55-56-58-63-68-75-_SpikeData__' num2str(Channel) '.mat'];
@@ -40,7 +44,7 @@ for q = 1:nChans
     
     bD = load([dataDir baselineMatfile]);
     dD = load([dataDir drugMatfile]);
-    rD = load([dataDir recoveryMatfile]);
+      rD = load([dataDir recoveryMatfile]);
     
     bD_fields = fieldnames(bD);
     dD_fields = fieldnames(dD);
@@ -48,37 +52,53 @@ for q = 1:nChans
     
     %%
     eval(['bD_units = bD.' cell2mat(bD_fields) '(:,2);']);
-    eval(['bD_timestamps_s = bD.' cell2mat(bD_fields) '(:,3);']);
+    eval(['bD_timestamps_s_all = bD.' cell2mat(bD_fields) '(:,3);']);
     eval(['bD_spikeWaveforms = bD.' cell2mat(bD_fields) '(:,4:end);']);
     
     eval(['dD_units = dD.' cell2mat(dD_fields) '(:,2);']);
-    eval(['dD_timestamps_s = dD.' cell2mat(dD_fields) '(:,3);']);
+    eval(['dD_timestamps_s_all = dD.' cell2mat(dD_fields) '(:,3);']);
     eval(['dD_spikeWaveforms = dD.' cell2mat(dD_fields) '(:,4:end);']);
     
     eval(['rD_units = rD.' cell2mat(rD_fields) '(:,2);']);
-    eval(['rD_timestamps_s = rD.' cell2mat(rD_fields) '(:,3);']);
+    eval(['rD_timestamps_s_all = rD.' cell2mat(rD_fields) '(:,3);']);
     eval(['rD_spikeWaveforms = rD.' cell2mat(rD_fields) '(:,4:end);']);
     
     %% Find the Inds that are the correct spike sorting
+    
+    bD_chans_present = unique(bD_units);
+    dD_chans_present = unique(dD_units);
+    rD_chans_present = unique(rD_units);
+    
+    %%
+    
+%     bD_chan1_inds = find(bD_units ==1);
+%     dD_chan1_inds = find(dD_units ==1);
+%     rD_chan1_inds = find(rD_units ==1);
     
     bD_chan1_inds = find(bD_units ==1);
     dD_chan1_inds = find(dD_units ==1);
     rD_chan1_inds = find(rD_units ==1);
     
-    bD_timestamps_s = bD_timestamps_s(bD_chan1_inds);
+    %bD_chan1_inds = 1:1:numel(bD_units);
+    %dD_chan1_inds = 1:1:numel(dD_units);
+    %rD_chan1_inds = 1:1:numel(rD_units);
+    
+    bD_timestamps_s = bD_timestamps_s_all(bD_chan1_inds);
     bD_spikeWaveforms = bD_spikeWaveforms(bD_chan1_inds,:);
     
-    dD_timestamps_s = dD_timestamps_s(dD_chan1_inds);
+    %figure; plot(bD_spikeWaveforms')
+    
+    dD_timestamps_s = dD_timestamps_s_all(dD_chan1_inds);
     dD_spikeWaveforms = dD_spikeWaveforms(dD_chan1_inds,:);
     
-    rD_timestamps_s = rD_timestamps_s(rD_chan1_inds);
+    rD_timestamps_s = rD_timestamps_s_all(rD_chan1_inds);
     rD_spikeWaveforms = rD_spikeWaveforms(rD_chan1_inds,:);
     
     %% Find max timestamps
     
-    bD_timestamps_s_max = max(bD_timestamps_s);
-    dD_timestamps_s_max = max(dD_timestamps_s);
-    rD_timestamps_s_max = max(rD_timestamps_s);
+    bD_timestamps_s_max = max(bD_timestamps_s_all);
+    dD_timestamps_s_max = max(dD_timestamps_s_all);
+    rD_timestamps_s_max = max(rD_timestamps_s_all);
     
     minVal = min([ bD_timestamps_s_max dD_timestamps_s_max rD_timestamps_s_max]);
     
@@ -119,21 +139,21 @@ for q = 1:nChans
     %% Plotting waveforms
     figH = figure(103); clf
     subplot(3, 6, [1 2])
-    plot(bD_spikeWaveforms(1:100,:)', 'k');
+    plot(bD_spikeWaveforms(1:end,:)', 'k');
     axis tight
     ylim([-5e4 5e4])
     title(['Baseline: Ch-' num2str(Channel)])
     xlabel('Samples')
     ylabel('Waveform')
     subplot(3, 6, [3 4])
-    plot(dD_spikeWaveforms(1:100,:)', 'k');
+    plot(dD_spikeWaveforms(1:end,:)', 'k');
     axis tight
     ylim([-5e4 5e4])
     title(['Drug: Ch-' num2str(Channel)])
     xlabel('Samples')
     ylabel('Waveform')
     subplot(3, 6, [5 6])
-    plot(rD_spikeWaveforms(1:100,:)', 'k');
+    plot(rD_spikeWaveforms(1:end,:)', 'k');
     axis tight
     ylim([-5e4 5e4])
     title(['Recovery: Ch-' num2str(Channel)])
@@ -149,6 +169,7 @@ for q = 1:nChans
     xlabel('Time (min)')
     ylabel('Firing Rate (Hz)')
     line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
+    title(['n = ' num2str(size(bD_spikeWaveforms,1)) ' spikes']);
     
     pre = allFRs{1}(1:5);
     post = allFRs{1}(6:end);
@@ -170,6 +191,7 @@ for q = 1:nChans
     xlabel('Time (min)')
     ylabel('Firing Rate (Hz)')
     line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
+    title(['n = ' num2str(size(dD_spikeWaveforms, 1)) ' spikes']);
     
     pre = allFRs{2}(1:5);
     post = allFRs{2}(6:end);
@@ -191,6 +213,7 @@ for q = 1:nChans
     xlabel('Time (min)')
     ylabel('Firing Rate (Hz)')
     line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
+    title(['n = ' num2str(size(rD_spikeWaveforms, 1)) ' spikes']);
     
     pre = allFRs{3}(1:5);
     post = allFRs{3}(6:end);

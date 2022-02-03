@@ -3,8 +3,9 @@
 
 %% Convert OEPS to Bin
 
-dataDir = 'G:\SWR\ZF-72-01\20210225\15-05-52\Ephys\';
-chanMap = [2 1 5 11 14 4 8 7 15 16 6 12 13 3 9 10]; % tetrode shanks, by depth 
+dataDir = 'G:\SWR\ZF-72-96\20200108\15-02-07\Ephys\';
+%chanMap = [2 1 5 11 14 4 8 7 15 16 6 12 13 3 9 10]; % For 72-01 - ML
+chanMap = [11 5 1 2 7 8 4 14 12 6 16 15 10 9 3 13]; % For 72-96 - ML
 
 % 13 3 9 10
 % 15 16 6 12

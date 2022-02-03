@@ -40,8 +40,6 @@
 
 %% Time Series Viewer works in matlab 2014b and also 2018a
 
-dataDir = 'G:\SWR\ZF-o3b11\20210223\14-11-12';
-% 10 9 3 13 12 6 16 15 7 8 4 14 11 5 1 2
 
 % Hameds Data
 % EEG1: 12, 13, 20, 21, 
@@ -51,7 +49,15 @@ dataDir = 'G:\SWR\ZF-o3b11\20210223\14-11-12';
 % EEG2: 43, 44, 45, 52, 53
 % LFP2: 41, 42, 47, 48, 49, 50, 55, 56
 %BestChan: 56
-%addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools')) 
+
+%dataDir = 'G:\Hamed-EEG-LFP\w0025\chronic_2021-07-14_20-24-58';
+%dataDir = 'G:\Hamed-EEG-LFP\w0025\chronic_2021-07-15_20-28-44';
+
+dataDir = 'H:\HamedsData\w042_w044\w042\chronic_2022-01-02_20-53-44';
+%EEG + LFP : 12 13 20 21 10 15 16 17 18 23 24  
+
+addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools')) 
+
 
 dataRecordingObj = OERecordingMF(dataDir);
 

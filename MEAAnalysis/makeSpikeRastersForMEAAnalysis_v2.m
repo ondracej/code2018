@@ -34,7 +34,7 @@ end
 %% Load files
 
 timeBlock_s = 30;
-spikeLimit = 60;
+spikeLimit = 20;
 
 for j = 1:nChansToLoad
     

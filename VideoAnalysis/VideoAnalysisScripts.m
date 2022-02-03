@@ -196,6 +196,9 @@ end
  calcOFOnDefinedRegion(V_OBJ)
  
  %% Downsampled OF claclulation, 30 fps
+ 
+ V_OBJ = testVideos(V_OBJ);
+ 
  dsFrameRate = 1;
  FrameRateOverride = 1;
  

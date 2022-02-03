@@ -1,6 +1,22 @@
 function [] = analyzeSWRDetections_2021()
 
-detFileToLoad = 'Z:\JanieData\JanieSpikeSorting\ZF-72-01\20210225_15-05-52\Ephys\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-71-76_Final\20190920\18-37-00\Ephys\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-71-76_Final\20190919\17-51-46\Ephys\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-71-76_Final\20190916\18-05-58\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-71-76_Final\20190917\16-05-11\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-71-76_Final\20190923\18-21-42\Ephys\Detections\__SWR-Detections.mat';
+
+%detFileToLoad = 'G:\SWR\ZF-o3b7\20200116\18-21-31\Ephys\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-o3b7\20200118\19-50-48\Ephys\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-o3b7\20200117\17-56-38\Ephys\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-o3b7\20200125\18-01-36\Ephys\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-o3b7\20200128\19-37-53\Ephys\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-o3b7\20200203\18-41-49\Ephys\Detections\__SWR-Detections.mat';
+
+detFileToLoad = 'H:\HamedsData\w042_w044\w044\chronic_2022-01-01_20-26-41\Ephys\Detections\__SWR-Detections.mat';
+isChronic = 1;
+
+dbstop if error
 
 load(detFileToLoad);
 disp('')
@@ -75,51 +91,65 @@ PostWin_ms = 250;
 PreWin_samp = PreWin_ms/1000*Fs_orig;
 PostWin_samp = PostWin_ms/1000*Fs_orig;
 
-for j = 1:nDataChunks
+if isChronic
+    nSegsToUse = 1000;
+    nDataChunksRand = randperm(nDataChunks);
     
-    thisSWDet_rel = D.AllSWDetections_rel{j}(:,2); % we use the rel times to load in the data
+    thisSegSet = nDataChunksRand(1:nSegsToUse);
+else
+    thisSegSet = 1:nSegsToUse;
+end
+
+
+for j = 1:numel(thisSegSet)
     
-    [rawData,t_ms]=dataRecordingObj.getData(SWChan,TOn_ms(j), seg_ms);
+    thisInd = thisSegSet(j);
     
-    DataSeg_BP = fobj.filt.BP1.getFilteredData(rawData); %raw
-    DataSeg_Rip = squeeze(fobj.filt.Rip1.getFilteredData(DataSeg_BP)); % SW
-    DataSeg_SW = squeeze(fobj.filt.SW2.getFilteredData(DataSeg_BP)); % SW
-    DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP)); % HF
-    
-    
-    %% Find the mins of the SWs
-    
-    cnt_sw = 1;
-    allMinInds = [];
-    for k = 1:numel(thisSWDet_rel)
+    if ~isempty(D.AllSWDetections_rel{thisInd})
+        thisSWDet_rel = D.AllSWDetections_rel{thisInd}(:,2); % we use the rel times to load in the data
         
-        [minv blaind] = min(DataSeg_SW(thisSWDet_rel(k)-PreWin_samp:thisSWDet_rel(k)+PostWin_samp));
+        [rawData,t_ms]=dataRecordingObj.getData(SWChan,TOn_ms(thisInd), seg_ms);
         
-        if minv > -200 % set this threshold to get rid of weird small amplitude SWs
-            continue
+        DataSeg_BP = fobj.filt.BP1.getFilteredData(rawData); %raw
+        DataSeg_Rip = squeeze(fobj.filt.Rip1.getFilteredData(DataSeg_BP)); % SW
+        DataSeg_SW = squeeze(fobj.filt.SW2.getFilteredData(DataSeg_BP)); % SW
+        DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(DataSeg_BP)); % HF
+        
+        
+        %% Find the mins of the SWs
+        
+        cnt_sw = 1;
+        allMinInds = [];
+        for k = 1:numel(thisSWDet_rel)
+            
+            [minv blaind] = min(DataSeg_SW(thisSWDet_rel(k)-PreWin_samp:thisSWDet_rel(k)+PostWin_samp));
+            
+            if minv > -200 % set this threshold to get rid of weird small amplitude SWs
+                continue
+            end
+            allMinInds(cnt_sw) = blaind + thisSWDet_rel(k)-PreWin_samp;
+            cnt_sw = cnt_sw+1;
         end
-        allMinInds(cnt_sw) = blaind + thisSWDet_rel(k)-PreWin_samp;
-        cnt_sw = cnt_sw+1;
-    end
-    
-    allMinInds = unique(allMinInds); % this gets rid of the double detections
-    
-    cnt_sw = 1;
-    BP_data = [];
-    SW_data = [];
-    SWHF_data = [];
-    for k = 1:numel(allMinInds)
-        BP_data(cnt_sw,:) = DataSeg_BP(allMinInds(k)-PreWin_samp*2:allMinInds(k)+PostWin_samp*2-1);
-        SW_data(cnt_sw,:)  = DataSeg_SW(allMinInds(k)-PreWin_samp*2:allMinInds(k)+PostWin_samp*2-1);
-        SWHF_data(cnt_sw,:) = DataSeg_HF(allMinInds(k)-PreWin_samp*2:allMinInds(k)+PostWin_samp*2-1);
-        Rip_data(cnt_sw,:) = DataSeg_Rip(allMinInds(k)-PreWin_samp*2:allMinInds(k)+PostWin_samp*2-1);
         
-        cnt_sw = cnt_sw+1;
+        allMinInds = unique(allMinInds); % this gets rid of the double detections
         
-    end
-    
-    
-    %{
+        cnt_sw = 1;
+        BP_data = [];
+        SW_data = [];
+        SWHF_data = [];
+        Rip_data = [];
+        for k = 1:numel(allMinInds)
+            BP_data(cnt_sw,:) = DataSeg_BP(allMinInds(k)-PreWin_samp*2:allMinInds(k)+PostWin_samp*2-1);
+            SW_data(cnt_sw,:)  = DataSeg_SW(allMinInds(k)-PreWin_samp*2:allMinInds(k)+PostWin_samp*2-1);
+            SWHF_data(cnt_sw,:) = DataSeg_HF(allMinInds(k)-PreWin_samp*2:allMinInds(k)+PostWin_samp*2-1);
+            Rip_data(cnt_sw,:) = DataSeg_Rip(allMinInds(k)-PreWin_samp*2:allMinInds(k)+PostWin_samp*2-1);
+            
+            cnt_sw = cnt_sw+1;
+            
+        end
+        
+        
+        %{
     for o = 1:size(SW_data, 1)
         figure(100); clf
         plot(SW_data (o,:));
@@ -127,19 +157,24 @@ for j = 1:nDataChunks
         line([15000 15000], [-400 200])
         pause
     end
-    %}
-    
-    allMinInds_REL{j} = allMinInds;
-    allMinInds_ABS{j} = allMinInds + TOn_ms(j)/1000*Fs_orig;
-    all_BP_data{j} = BP_data;
-    all_SW_data{j} = SW_data;
-    all_SWHF_data{j} = SWHF_data;
-    all_Rip_data{j} = Rip_data;
+        %}
+        
+        allMinInds_REL{j} = allMinInds;
+        allMinInds_ABS{j} = allMinInds + TOn_ms(thisInd)/1000*Fs_orig;
+        all_BP_data{j} = BP_data;
+        all_SW_data{j} = SW_data;
+        all_SWHF_data{j} = SWHF_data;
+        all_Rip_data{j} = Rip_data;
+    end
 end
 
 
 
 %% Concatenate
+
+
+nonemptyInds = cellfun(@(x) ~isempty(x), allMinInds_ABS);
+allMinInds_ABS = allMinInds_ABS(nonemptyInds); 
 
 allMinInds_ABS_concat_samp = cell2mat(allMinInds_ABS);
 allMinInds_ABS_concat_ms = allMinInds_ABS_concat_samp/Fs_orig*1000;
@@ -168,7 +203,7 @@ timestamps_ms = timestamps_samp/Fs_orig*1000;
 %%
 figH = figure (102); clf;
 subplot(5, 1, 1)
-plotInd = 6; %6
+plotInd = 300; %6
 
 plot(timestamps_ms,allBP_samps(plotInd,:), 'k');
 hold on
@@ -195,6 +230,7 @@ for j = 1:size(allSWHF_samps, 1)
 end
 
 subplot(5, 1, 3)
+cla
 imagesc(HFI, [0 30])
 
 %%
@@ -208,10 +244,10 @@ semSW = stdSW/sqrt(size(allSWPeaks_samps,1));
 subplot(5, 1, 4)
 plot(timestamps_ms,meanSW);
 hold on
-jbfill(timestamps_ms,[meanSW+semSW],[meanSW-semSW],[.5,0.5,.5],[.5,0.5,.5],[],.3);
+%jbfill(timestamps_ms,[meanSW+semSW],[meanSW-semSW],[.5,0.5,.5],[.5,0.5,.5],[],.3);
 hold on;
-plot(timestamps_ms,medianSW);
-jbfill(timestamps_ms,[medianSW+semSW],[medianSW-semSW],[.5,0.5,.5],[.5,0.5,.5],[],.3);
+plot(timestamps_ms,medianSW, 'k');
+%jbfill(timestamps_ms,[medianSW+semSW],[medianSW-semSW],[.5,0.5,.5],[.5,0.5,.5],[],.3);
 axis tight
 xlim([0 1000])
 ylim([-350 150])
@@ -243,7 +279,8 @@ annotation(figH,'textbox',...
 %%
 plot_filename = [plotDir 'SWRSummaryPlot'];
 
-plotpos = [0 0 25 15];
+
+plotpos = [0 0 15 15];
 print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
 print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
 
