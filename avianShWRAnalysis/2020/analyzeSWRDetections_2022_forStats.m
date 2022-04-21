@@ -7,8 +7,17 @@ function [] = analyzeSWRDetections_2022_forStats()
 %% 71-76
 %detFileToLoad = 'G:\SWR\ZF-71-76_Final\20190920\18-37-00\Detections\__SWR-Detections.mat';
 %detFileToLoad = 'G:\SWR\ZF-71-76_Final\20190919\17-51-46\Detections\__SWR-Detections.mat';
-detFileToLoad = 'G:\SWR\ZF-71-76_Final\20190917\16-05-11\Detections\__SWR-Detections.mat';
+%detFileToLoad = 'G:\SWR\ZF-71-76_Final\20190917\16-05-11\Detections\__SWR-Detections.mat';
 
+%% w027
+
+detFileToLoad = 'H:\HamedsData\w025_w027\w027\chronic_2021-08-04_22-02-26\Ephys\Detections\__SWR-Detections.mat';
+
+%%
+
+nonemptyInds = 
+artifactDets = find(cellfun(@(x) ~isempty(x), D.allArtifacts_abs));    
+artifactDiffs = diff(artifactDets);
 dbstop if error
 
 load(detFileToLoad);
@@ -95,7 +104,7 @@ for j = 1:numel(thisSegSet)
     if ~isempty(D.AllSWDetections_rel{thisInd})
         thisSWDet_rel = D.AllSWDetections_rel{thisInd}(:,2); % we use the rel times to load in the data
         
-        [rawData,t_ms]=dataRecordingObj.getData(SWChan,TOn_ms(thisInd), seg_ms);
+        [rawData,~]=dataRecordingObj.getData(SWChan,TOn_ms(thisInd), seg_ms);
         
         DataSeg_BP = fobj.filt.BP1.getFilteredData(rawData); %raw
         DataSeg_Rip = squeeze(fobj.filt.Rip1.getFilteredData(DataSeg_BP)); % SW
@@ -364,7 +373,7 @@ end
 subplot(5, 1, 3)
 cla
 imagesc(HFI, [0 40])
-colorbar('location', 'eastoutside')
+%colorbar('location', 'eastoutside')
 
 %%
 %allBP_samps = vertcat(all_BP_data{:});

@@ -9,7 +9,7 @@
 %% 1. Initialize the analysis code (cntrl + enter)
 
 pathToCodeRepository = 'C:\Users\Neuropix\Documents\GitHub\code2018\'; %Enter the directory where the matalb analysis code is located
-vidsToAnalyze = {'H:\SilkesData\VideosSPF\2021-Jul-06adlib\faa3-001-cam1-2021-Jul-08adlibgood.avi'}; % Enter the path to the original video to analyze
+vidsToAnalyze = {'3Tadpoles_20190802_11-20_001.avi'}; % Enter the path to the original video to analyze
 
 % -------------------------------------------------------------------------------------------------------------------
 addpath(genpath(pathToCodeRepository)) % adds the code to the matlab path 
@@ -22,10 +22,10 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze); % creates a matlab object C_OBJ for t
 % you want to be included in the analysis video - move all other images not to
 % be used into a "DoNotUse" directory
 
-imageDir = {'H:\SilkesData\VideosSPF\2021-Jul-06adlib\FFMPEG_faa3-001-cam1-2021-Jul-08adlibgood\'}; % The path to the ffmpeg raw image directory
+imageDir = {'Z:\JanieData\Tadpoles\3Tadpoles_perturbation\3Tadpoles_20190802_21-03\Raw\'}; % The path to the ffmpeg raw image directory
 
-movieName = 'faa3-001-cam1-2021-Jul-08adlibgood_contrast-rotated'; % enter a description of the video name and edits, eg "faa3-001-cam1-2021-Jul-08_contrast-rotated"
-saveDir = {'H:\SilkesData\VideosSPF\2021-Jul-06adlib\editedVids\'}; % the path to the directory where the newly created, contrast-enhanced videos will be saved, eg "editedVideos"
+movieName = '3Tadpoles_20190802_11-20'; % enter a description of the video name and edits, eg "faa3-001-cam1-2021-Jul-08_contrast-rotated"
+saveDir = {'Z:\JanieData\Tadpoles\3Tadpoles_perturbation\3Tadpoles_20190802_11-20-edited\'}; % the path to the directory where the newly created, contrast-enhanced videos will be saved, eg "editedVideos"
 
 % if the movie needs to be rotated so that the box you will draw around the
 % ROI is straight, make sure to change the variable "doRotate" to 1,

@@ -40,7 +40,7 @@ classdef chronoAnalysis_Obj < handle
         %%
         function [] = makeMultipleMoviesFromImages(obj, imageDir, movieName, saveDir, VideoFrameRate, doRotate, rotationAngle)
             
-            fileFormat = 3; % (1)- tif, (2) -.jpg
+            fileFormat = 1; % (1)- tif, (2) -.jpg
             %doRotate = 1;
             
             %%
@@ -103,6 +103,9 @@ classdef chronoAnalysis_Obj < handle
                 for f = FrameOn:FrameOff-1
                     img = imread([imageDir{:} resortedNames{f}]);
                   
+                    %J = adapthisteq(img,'clipLimit',0.02,'Distribution','rayleigh');
+                    %imshowpair(I,J,'montage');
+                    
                     if doRotate
                         
                         img = imrotate(img,rotationAngle, 'bilinear');
@@ -116,6 +119,7 @@ classdef chronoAnalysis_Obj < handle
                     elseif fileFormat ==3
                         
                         grayImage = rgb2gray(img);
+                        
                         %imshow(grayImage, []);
                         %pout_imadjust = imadjust(grayImage );
                         %pout_histeq = histeq(grayImage);
