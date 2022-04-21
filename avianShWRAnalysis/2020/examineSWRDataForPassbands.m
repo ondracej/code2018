@@ -1,9 +1,12 @@
 function [] = examineSWRDataForPassbands()
 
 
+addpath(genpath('C:\Users\Neuropix\Documents\GitHub\NeuralElectrophysilogyTools\'));
+
 %SessionDir = 'G:\SWR\ZF-60-88\20190429\15-48-05\Ephys\'; % need dirdelim at end
 %SessionDir = 'G:\SWR\ZF-72-96\20200108\14-03-08\Ephys\';
-SessionDir = 'G:\SWR\ZF-71-76\20190916\18-05-58\Ephys\';
+%SessionDir = 'G:\SWR\ZF-71-76\20190916\18-05-58\Ephys\';
+SessionDir = 'G:\SWR\ZF-o3b7\20200117\17-56-38\Ephys\';
 
 %chanMap = [7 10 2 15 3 14 4 13 1 16 5 12 6 11 8 9];
 %chanMap = [13 1 16 5 12 6 11 8 9];
@@ -12,7 +15,7 @@ SessionDir = 'G:\SWR\ZF-71-76\20190916\18-05-58\Ephys\';
 %rippleChans = [2 5 7 13 16];
 %chanMap = [10 12 7 11 9 6 8 5 3 16 4 1 13 15 14 2];
 %chanMap = [10 12 7 11 9 6 8 5 3 16 4 13 15 14 2];%remove chan 1 broken
-ch = 7;
+ch = 9;
 
 %%
 [filepath,name,ext] = fileparts(SessionDir);
@@ -79,7 +82,7 @@ fobj.filt.FN=fobj.filt.FN.designNotch;
 
 
 
-seg_s= 20; % 2 second overlap
+seg_s= 60; % 2 second overlap
 seg_ms= seg_s*1000;
 TOn = 1:seg_s*1000:recordingDur_s*1000; % Needs to be in ms
 
@@ -90,11 +93,17 @@ nCycles = numel(TOn);
 rng(1); % for reproducibiity
 pCycle=randperm(nCycles);
 
+hourIntoVideo = 3;
+hourIntoVideo = hourIntoVideo*3600*1000;
 
-for k=1:numel(TOn)-1
+bla = find(TOn >  hourIntoVideo);
+
+k= 185;
+for k=181:numel(TOn)-1
     
-    
-    [rawData,t_ms]=dataRecordingObj.getData(ch,TOn(pCycle(k)), seg_ms);
+    k
+    %[rawData,t_ms]=dataRecordingObj.getData(ch,TOn(pCycle(k)), seg_ms);
+    [rawData,t_ms]=dataRecordingObj.getData(ch,TOn(k), seg_ms);
     
     DataSeg_BP = fobj.filt.BP1.getFilteredData(rawData);
 
@@ -137,7 +146,7 @@ for k=1:numel(TOn)-1
     V_wave = reshape(V_wave,nfreqs,[],n_trials);
     
     %% Mean PLot
-    clims = [0 20];
+    clims = [0 1200];
     tr =1;
     
     figure(104); clf
@@ -153,7 +162,7 @@ for k=1:numel(TOn)-1
     axis tight
     ylim([0 200])
     %caxis(clims);
-    caxis([0 500]);
+    caxis(clims);
     
     subplot(3,1,3);
     pcolor((1:N)/Fsd,wfreqs,abs(squeeze(V_wave(:,:,tr))));shading flat
@@ -161,13 +170,15 @@ for k=1:numel(TOn)-1
     axis tight
     ylim([0 50])
     %caxis(clims);
-    caxis([0 500]);
+    caxis(clims);
     
     xlabel('Time (s)')
     ylabel('Frequency [Hz]')
-    
-    pause
+   
+    disp('')
+    %pause
 end
 
 end
+
 
