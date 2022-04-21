@@ -10,9 +10,9 @@
 % 2.1 convert .h5 files to plexon format
 
 
-ChannelsToLoad = [84 36]; % channels of interest
-fileToLoad = 'F:\20211105\Output\20211105-1357.h5'; % .h5 file to load
-SpikeOutputDir= 'F:\20211105\SpikeOutput\'; % spike output driectory (end with \ )
+ChannelsToLoad = [16 36 38 85]; % channels of interest
+fileToLoad = 'Z:\20211117\Output\20211117-1501rec.h5'; % .h5 file to load
+SpikeOutputDir= 'Z:\20211117\Spikeoutput\'; % spike output driectory (end with \ )
 
 
 addpath(genpath('C:\Users\dlc\Documents\GitHub\code2018\'));
