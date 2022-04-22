@@ -8,8 +8,8 @@
 %% 2) SWR analysis % cntrl + enter
 
 
-fileToLoad = 'F:\Johanna_MEA_Data\20220404\h5_output\20220404-1430-Baseline.h5'; % .h5 file to load
-saveDir = 'F:\Johanna_MEA_Data\20220404\swr_analysis\';         %make sure it ends with a \     
+fileToLoad = 'F:\Johanna_MEA_Data\20220404\h5_output\20220404-1430-Recovery.h5'; % .h5 file to load
+saveDir = 'F:\Johanna_MEA_Data\20220404\swr_analysis';         %make sure it ends with a \     
              
 ChannelsToNoTIncludeInDetections = [];  % numbers of noisy channles, otherwise leave empty: [] 
 
