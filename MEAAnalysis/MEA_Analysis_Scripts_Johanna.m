@@ -1,18 +1,43 @@
-%% 1) Define analysis directory
 
-analysisDir = 'E:\MEA_Data\allSWRData\20210811\'; % path to the analysis directory, should contain the 'BL', 'postPain', and 'postTouch' directories
+%% Initialize the program
 
+analysisDir = 'E:\MEA_Data\allSWRData\20210812\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
-%% 2) convert .mcd files into .hdf5 files
-%% 3) use the 'Analyzer Rack' to look at the raw data and identify all of the noisy channels
+%% Before continuing this analysis
 
-%% 4)  SWR Analysis
+%% 0) Move the files into the newly created directories
 
-h5_fileToLoad = 'E:\MEA_Data\allSWRData\20210811\_h5_files\20210811-1442.h5'; % .h5 file to load
-ChannelsToNoTIncludeInDetections = [21 12 22 13 23 33 34 64 66];
+%% 1)  Use the "Analyzer rack" to identify:
+    %1a) All noisy channles to exclude for the SWR analysis == "SWR_Analysis_noisy_channels" 
+    %1b) All channles that have large amplitude spikes for the firing rate == "Firing_Rate_Analysis_channels_with_spikes"    
 
-mea_OBJ = load_MCS_data_detectSWRs(mea_OBJ, fileToLoad, ChannelsToNoTIncludeInDetections);
+%% 2)  Convert the .mcs file into a HDF% (.h5) file 
 
-%%
+%% Inititialize the analysis
+
+mea_OBJ = addAnalysisInfoToObj(mea_OBJ);
+
+%% SWR Analysis
+
+mea_OBJ = load_MCS_data_detectSWRs(mea_OBJ);
+
+mea_OBJ = collectAllSWRDetections(mea_OBJ);
+
+
+%% Firing Rate Analysis
+
+mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
+
+%% Spike sort the files using the plexon offline sorter
+
+% Use the same filter for all of the data (ie, butterworth, 2pole)
+% Make sure to save the file as
+% 1. Export Per-Waveform data (you will have to do this for each channel sorted)
+% - make sure to name the file with '__71 (the channel number) at the end
+% 2. When you are all done sorting all the channels, export to New .PLX - this takes a long time
+
+%% After spike sorting
+
+mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
 
