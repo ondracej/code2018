@@ -4,8 +4,8 @@ classdef MEA_Analysis_OBJ < handle
     properties (Access = public)
         
         PATH
-        SWR_INFO
         ANALYSIS
+        VALID
     end
     
     methods
@@ -104,6 +104,39 @@ classdef MEA_Analysis_OBJ < handle
             
             obj.ANALYSIS.h5_fileToLoad = [obj.PATH.h5Files h5File];
             disp(['H5 file loaded: ' h5File])
+            
+            
+            [filepath,ExpName,ext] = fileparts(h5File);
+            
+            swrAnalysisDetections_plotDir = [obj.PATH.swrAnalysis ExpName '_Plots' obj.PATH.dirD];
+            swrAnalysisDetections_Dir = [obj.PATH.swrAnalysis ExpName '_SWR_Detections' obj.PATH.dirD];
+            
+            obj.PATH.swrAnalysisDetections_plotDir = swrAnalysisDetections_plotDir;
+            obj.PATH.swrAnalysisDetections_Dir = swrAnalysisDetections_Dir;
+            
+            if exist(swrAnalysisDetections_plotDir, 'dir') ==0
+                mkdir(swrAnalysisDetections_plotDir);
+                disp(['Created directory: ' swrAnalysisDetections_plotDir])
+            end
+            
+            if exist(swrAnalysisDetections_Dir, 'dir') ==0
+                mkdir(swrAnalysisDetections_Dir);
+                disp(['Created directory: ' swrAnalysisDetections_Dir])
+            end
+            
+            obj.ANALYSIS.ExpName = ExpName;
+            
+            
+            spikeAnalysis_plotDir = [obj.PATH.spikeAnalysis ExpName '_Plots' obj.PATH.dirD];
+            obj.PATH.spikeAnalysis_plotDir = spikeAnalysis_plotDir;
+            
+            
+            if exist(spikeAnalysis_plotDir, 'dir') ==0
+                mkdir(spikeAnalysis_plotDir);
+                disp(['Created directory: ' spikeAnalysis_plotDir])
+            end
+            
+            
             %%
             
             dlgtitle = 'Please enter noisy channels:';
@@ -123,36 +156,24 @@ classdef MEA_Analysis_OBJ < handle
         
         function obj = load_MCS_data_detectSWRs(obj)
             
+            disp('Loading data and detecting SWRs....')
+            
             dbstop if error
             doPlot = 0; % will pause the analysis
             
             fileToLoad = obj.ANALYSIS.h5_fileToLoad;
             
             data = McsHDF5.McsData(fileToLoad);
-            [filepath,name,ext] = fileparts(fileToLoad);
             
-            swrAnalysisDetections_plotDir = [obj.PATH.swrAnalysis name '_Plots' obj.PATH.dirD];
-            swrAnalysisDetections_Dir = [obj.PATH.swrAnalysis name '_SWR_Detections' obj.PATH.dirD];
+            name = obj.ANALYSIS.ExpName;
             
-            obj.PATH.swrAnalysisDetections_plotDir = swrAnalysisDetections_plotDir;
-            obj.PATH.swrAnalysisDetections_Dir = swrAnalysisDetections_Dir;
-            
-            if exist(swrAnalysisDetections_plotDir, 'dir') == 0
-                mkdir(swrAnalysisDetections_plotDir);
-                disp(['Created: '  swrAnalysisDetections_plotDir])
-            end
-            
-            if exist(swrAnalysisDetections_Dir, 'dir') == 0
-                mkdir(swrAnalysisDetections_Dir);
-                disp(['Created: '  swrAnalysisDetections_Dir])
-            end
+            %swrAnalysisDetections_plotDir = obj.PATH.swrAnalysisDetections_plotDir;
+            swrAnalysisDetections_Dir = obj.PATH.swrAnalysisDetections_Dir;
             
             %check if ripple data already exists
             if isfile([swrAnalysisDetections_Dir name '_RippleData.mat'])
                 
             else
-                
-                
                 
                 %% For getting the correct channel order
                 
@@ -364,9 +385,11 @@ classdef MEA_Analysis_OBJ < handle
                             continue
                         end
                         
-                        test = max(diff(data_rect_rippleBP(winROI)));
-                        
-                        if test < 0.1 %derivative of the signal shoudl be small for normal data
+%test = max(diff(smooth(data_rect_rippleBP(winROI))));
+%test = max(diff(ChanData(winROI)));
+%                         figure; plot(diff(data_rect_rippleBP(winROI)))
+%                         figure; plot(data_rect_rippleBP(winROI))
+                    %    if test < 0.1 %derivative of the signal should be small for normal data
                             
                             
                             chanDataROI{cnt} = ChanData(winROI);
@@ -383,7 +406,7 @@ classdef MEA_Analysis_OBJ < handle
                             if doPlot
                                 figure(100);clf
                                 subplot(3, 1, 1)
-                                plot(time_s(winROI), data_rect_rippleBP(winROI));
+                                plot(time_s(winROI), smooth(data_rect_rippleBP(winROI)));
                                 axis tight
                                 ylim([0 20])
                                 
@@ -406,9 +429,11 @@ classdef MEA_Analysis_OBJ < handle
                             end
                             
                             cnt = cnt+1;
-                        end
+                     %   end
                         
                     end
+                    
+                   
                     
                     allChanDataROI{k} = chanDataROI;
                     allChanDataROI_T_s{k} = chanDataROI_T_s;
@@ -424,13 +449,15 @@ classdef MEA_Analysis_OBJ < handle
                     allChanName{k} = ChansForDetection(k);
                     allChanInd{k} = ChanIndsForDetection(k);
                     
+                     disp(['Found ' num2str((numel(chanDataROI))) ' SWRs on channel']);
+                    
                 end
                 
                 
                 AllDetections = [];
                 extrachannelDetections = [];
                 for runs = 1:15
-                    
+                    runs
                     if runs == 1
                         nonempty = cell2mat(cellfun(@(x) ~isempty(x),allChan_peakTime_Fs,'UniformOutput',false));
                         peakTimes_fs = allChan_peakTime_Fs(nonempty);
@@ -525,8 +552,14 @@ end
                 SWR_INFO.allChan_peakP = allChan_peakP;
                 SWR_INFO.Fs = Fs;
                 SWR_INFO.plottingOrder = plottingOrder;
+                SWR_INFO.chanInds = chanInds;
+                
                 SWR_INFO.fobj = fobj;
                 
+                SWR_INFO.WinSizeL = WinSizeL;
+                SWR_INFO.WinSizeR = WinSizeR;
+                
+                disp('Saving.......')
                 save([swrAnalysisDetections_Dir name '_RippleData.mat'], 'SWR_INFO', '-v7.3')
                 obj.ANALYSIS.SWR_INFO = SWR_INFO;
                 disp(['Saved: ' [swrAnalysisDetections_Dir name '_RippleData.mat']])
@@ -537,55 +570,118 @@ end
         
         function obj = collectAllSWRDetections(obj)
             
+            disp('Collecting SWR detections...')
             
-            %% collect all SWR times for all channels:
-            nUniqueDetections = numel(AllUniqueDetections);
-            ROI_fs = [];
-            for o = 1:nUniqueDetections
-                thisDet = AllUniqueDetections(o);
-                ROI_fs{o} = thisDet-WinSizeL:thisDet+WinSizeR;
+            swrAnalysisDetections_Dir = obj.PATH.swrAnalysisDetections_Dir;
+            name = obj.ANALYSIS.ExpName;
+            
+            if isfile([swrAnalysisDetections_Dir name '_RippleData.mat'])
+                load([swrAnalysisDetections_Dir name '_RippleData.mat'])
+                disp(['Loaded previously saved file: ' [swrAnalysisDetections_Dir name '_RippleData.mat']])
+            else
+                disp('Please run "load_MCS_data_detectSWRs" first')
+                return
             end
             
-            AllSWRDataOnChans = [];
-            SWR_Detection_fs = [];
-            SWR_Detection_s = [];
-            for k = 1:numel(plottingOrder)
+            if isfile([swrAnalysisDetections_Dir name '-Detections.mat'])
                 
-                disp(['Collecting SWRs ' num2str((k)) '/' num2str(numel(plottingOrder))])
-                thisChan = chanInds(k);
-                cfg.channel = [thisChan thisChan]; % channel index 5 to 15
+                load([swrAnalysisDetections_Dir name '-Detections.mat'])
+                disp(['Loaded previously saved file: ' [swrAnalysisDetections_Dir name '-Detections.mat']])
                 
-                chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
-                ChanData = chanDataParital.ChannelData/1e6; %loads all data info
+                obj.ANALYSIS.SWR_INFO = SWR_INFO;
+                obj.ANALYSIS.Detections = D;
                 
-                for j = 1:numel(ROI_fs)
-                    thisROI = ROI_fs{j};
-                    AllSWRDataOnChans{k,j} = ChanData(thisROI);
-                    SWR_Detection_fs(k,j) = AllUniqueDetections(j);
-                    SWR_Detection_s(k,j) = AllUniqueDetections(j)/Fs;
+            else
+                
+                
+                %% load the data
+                
+                fileToLoad = obj.ANALYSIS.h5_fileToLoad;
+                
+                data = McsHDF5.McsData(fileToLoad);
+                recordingDuration_s = double(data.Recording{1,1}.Duration/1e6);
+                
+                cfg = [];
+                cfg.window = [0 recordingDuration_s]; % time
+                
+                dataTmp= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+                
+                %% collect all SWR times for all channels:
+                AllUniqueDetections = SWR_INFO.AllUniqueDetections;
+                nUniqueDetections = numel(AllUniqueDetections);
+                
+                Fs = SWR_INFO.Fs;
+                
+                WinSizeL = SWR_INFO.WinSizeL;
+                WinSizeR = SWR_INFO.WinSizeR;
+                
+                ROI_fs = [];
+                for o = 1:nUniqueDetections
+                    thisDet = AllUniqueDetections(o);
+                    ROI_fs{o} = thisDet-WinSizeL:thisDet+WinSizeR;
                 end
+                
+                plottingOrder = SWR_INFO.plottingOrder;
+                chanInds = SWR_INFO.chanInds;
+                
+                AllSWRDataOnChans = [];
+                SWR_Detection_fs = [];
+                SWR_Detection_s = [];
+                
+                for k = 1:numel(plottingOrder)
+                    
+                    disp(['Collecting SWRs ' num2str((k)) '/' num2str(numel(plottingOrder))])
+                    thisChan = chanInds(k);
+                    cfg.channel = [thisChan thisChan]; % channel index 5 to 15
+                    
+                    chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+                    ChanData = chanDataParital.ChannelData/1e6; %loads all data info
+                    
+                    for j = 1:numel(ROI_fs)
+                        thisROI = ROI_fs{j};
+                        AllSWRDataOnChans{k,j} = ChanData(thisROI);
+                        SWR_Detection_fs(k,j) = AllUniqueDetections(j);
+                        SWR_Detection_s(k,j) = AllUniqueDetections(j)/Fs;
+                    end
+                end
+                
+                D.AllSWRDataOnChans = AllSWRDataOnChans;
+                D.SWR_Detection_fs = SWR_Detection_fs;
+                D.SWR_Detection_s = SWR_Detection_s;
+                D.plottingOrder = plottingOrder;
+                D.channelsNotToInclude = obj.ANALYSIS.SWR_Analysis_noisy_channels;
+                D.Fs = Fs;
+                %D.timepoints_s = timepoints_s;
+                disp('Saving detections...')
+                save([swrAnalysisDetections_Dir name '-Detections.mat'], 'D', '-v7.3')
+                disp('Saving completed...')
+                
+                obj.ANALYSIS.SWR_INFO = SWR_INFO;
+                obj.ANALYSIS.Detections = D;
             end
+        end
+        %% Printing figures
+        
+        function obj =  plotSWRDetection(obj)
+            
+            Fs = obj.ANALYSIS.SWR_INFO.Fs;
+            WinSizeL = obj.ANALYSIS.SWR_INFO.WinSizeL;
             
             timepoints_s = (1:1:WinSizeL*2+1)/Fs;
             xticks = 0:0.2:2;
             xticklabs = -1:0.2:1;
-            
-            D.AllSWRDataOnChans = AllSWRDataOnChans;
-            D.SWR_Detection_fs = SWR_Detection_fs;
-            D.SWR_Detection_s = SWR_Detection_s;
-            D.plottingOrder = plottingOrder;
-            D.channelsNotToInclude = ChannelsToNoTIncludeInDetections;
-            D.Fs = Fs;
-            D.timepoints_s = timepoints_s;
-            
-            save([saveDir name '-Detections.mat'], 'D', '-v7.3')
             
             xlabs = [];
             for j = 1:numel(xticklabs)
                 xlabs{j} = num2str(xticklabs(j));
             end
             
+            AllSWRDataOnChans = obj.ANALYSIS.Detections.AllSWRDataOnChans;
+            plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
+            ChannelsToNoTIncludeInDetections = obj.ANALYSIS.SWR_Analysis_noisy_channels;
             
+            fobj = obj.ANALYSIS.SWR_INFO.fobj;
+            name = obj.ANALYSIS.ExpName;
             for j = 1: size(AllSWRDataOnChans, 2)
                 
                 offset = 0;
@@ -593,6 +689,7 @@ end
                 figH = figure (100);clf
                 figHH = figure (200);clf
                 hold on
+                
                 for k = 1:   size(AllSWRDataOnChans, 1)
                     
                     toPlot = AllSWRDataOnChans{k,j};
@@ -623,7 +720,7 @@ end
                     subplot(1, 3, 2)
                     hold on
                     plot(timepoints_s, data_FLBP+offsetFil, 'color', col);
-                    % text(0, toPlot(1)+offset, thisChan)
+                    text(0, toPlot(1)+offsetFil, thisChan)
                     
                     subplot(1, 3, 3)
                     hold on
@@ -701,42 +798,184 @@ end
                 line([1 1], [-30 1750], 'color', 'k', 'linestyle', ':')
                 xlabel('Time (s)')
                 
-                textAnnotation = ['File: ' name ' | SWR Detection: ' num2str(round(SWR_Detection_s(k,j), 2)) 's' ];
+                textAnnotation = ['File: ' name ' | SWR Detection: ' num2str(j) ];
                 % Create textbox
                 annotation(figH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
                 
-                saveName = [plotDir name '_SWR-stack' sprintf('%03d',j)];
+                saveName = [obj.PATH.swrAnalysisDetections_plotDir name '_SWR-stack_' sprintf('%03d',j)];
                 figure(figH)
-                plotpos = [0 0 50 50];
-                
+                plotpos = [0 0 25 25];
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
                 
+                %%
                 figure(figHH)
-                
-                textAnnotation = ['File: ' name ' | SWR Detection: ' num2str(round(SWR_Detection_s(k,j), 2)) 's' ];
+                textAnnotation = ['File: ' name ' | SWR Detection: '  num2str(j)];
                 % Create textbox
                 annotation(figHH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
                 
-                saveName = [plotDir name '_SWR-grid' sprintf('%03d',j)];
+                saveName = [obj.PATH.swrAnalysisDetections_plotDir name '_SWR-grid_' sprintf('%03d',j)];
                 figure(figHH)
-                plotpos = [0 0 50 50];
+                plotpos = [0 0 25 25];
                 
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
                 
             end
             
-            %save([saveDir 'DetectionsToSort.mat'], 'all_data_FLBP', 'INFO', '-v7.3')
-            
             close all
-            %}
             
+        end
+        
+        function obj = validateSWRDetections(obj)
+            
+            if ~isfield(obj.ANALYSIS.Detections, 'AllSWRDataOnChans')
+                if isfile([obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat'])
+                    load([obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat'])
+                else
+                    disp(['Could not find Detections file: ' [obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat']])
+                end
+            end
+            
+            D = obj.ANALYSIS.Detections;
+            
+            Fs = D.Fs;
+            WinSizeL = 1*Fs;
+            
+            AllSWRDataOnChans = D.AllSWRDataOnChans;
+            SWR_Detection_s = D.SWR_Detection_s;
+            SWR_Detection_fs = D.SWR_Detection_fs;
+            
+            nDetections = size(AllSWRDataOnChans, 2);
+            timepoints_s = (1:1:WinSizeL*2+1)/Fs;
+            plottingOrder = D.plottingOrder;
+            nInds = size(AllSWRDataOnChans, 2);
+            
+            
+            %%
+            spc = figure (200);clf %grid
+            
+            %% Key Press Function
+            set(spc, 'KeyPressFcn', {@SWRValidation_key_press_obj, spc});
+            %%
+            
+            detectionInd = 1;
+            allSavedDetectionInds = [];
+            setappdata(spc, 'detectionInd', detectionInd);
+            setappdata(spc, 'nDetections', nDetections);
+            setappdata(spc, 'plottingOrder', plottingOrder);
+             setappdata(spc, 'nInds', nInds);
+            setappdata(spc, 'Fs', Fs);
+            setappdata(spc, 'SWR_Detection_s', SWR_Detection_s);
+            setappdata(spc, 'Detection_fs', Detection_fs);
+            
+            
+            setappdata(spc, 'timepoints_s', timepoints_s);
+            setappdata(spc, 'AllSWRDataOnChans', AllSWRDataOnChans);
+            
+            setappdata(spc, 'allSavedDetectionInds', allSavedDetectionInds);
+            setappdata(spc, 'SWRDetectionDir', obj.PATH.swrAnalysisDetections_Dir);
+            
+            updateGridPlotMEA_OBJ(obj, spc);
             
             
         end
         
+        function [] = updateGridPlotMEA_OBJ(obj, spc)
+            
+            AllSWRDataOnChans = getappdata(spc, 'AllSWRDataOnChans');
+            
+            timepoints_s = getappdata(spc, 'timepoints_s');
+            plottingOrder = getappdata(spc, 'plottingOrder');
+            detectionInd = getappdata(spc, 'detectionInd');
+            nInds = getappdata(spc, 'nInds');
+            Fs = getappdata(spc, 'Fs');
+            
+            figure(spc); clf
+            disp('Updating plot....')
+            
+            DS_Factor = 20;
+            
+            fObj = filterData(Fs);
+            
+            fobj.filt.F2=filterData(Fs);
+            fobj.filt.F2.downSamplingFactor=DS_Factor; % original is 128 for 32k for sampling rate of 250
+            fobj.filt.F2=fobj.filt.F2.designDownSample;
+            fobj.filt.F2.padding=true;
+            fobj.filt.F2fs=fobj.filt.F2.filteredSamplingFrequency;
+            for k = 1:   size(AllSWRDataOnChans, 1)
+                
+                toPlot = AllSWRDataOnChans{k,detectionInd};
+                
+                [data_shift,nshifts] = shiftdim(toPlot',-2);
+                [data_F2, t_s] = (fobj.filt.F2.getFilteredData(data_shift));% 1-2000 BP
+                data_F2 = squeeze(data_F2);
+                
+                %% Grid pattern
+                
+                if k == 1
+                    counter = 0;
+                    scnt = 2;
+                    
+                elseif k == 7
+                    scnt = 9;
+                    counter = 1;
+                elseif k == 31
+                    scnt = 34;
+                    counter = 2;
+                elseif k == 54
+                    scnt = 58;
+                    counter = 3;
+                else
+                    scnt = k+1+counter;
+                end
+                %scnt
+                subplot(8, 8, scnt)
+                
+                plot(t_s, data_F2, 'k');
+                
+                thisChan = num2str(plottingOrder(k));
+                title(thisChan)
+                grid('on')
+                axis tight
+                ylim([-40 20])
+                
+            end
+            allSavedDetectionInds = getappdata(spc, 'allSavedDetectionInds');
+            
+            if ismember(detectionInd, allSavedDetectionInds)    
+                textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) '-- Detected'];
+            else
+                textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds)];
+            end
+            % Create textbox
+            annotation(spc,'textbox', [0.5 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
+            
+            disp('Finished....')
+        end
+        
+        
+        
+        
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% Firing Rate analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
         function obj = convertH5DataToPlexonMatlabFormat(obj)
             dbstop if error
             
+            %             if doOverride
+            %
+            %                 dlgtitle = 'Please enter channles with spikes:';
+            %                 answer = inputdlg('Enter space-separated numbers:', dlgtitle, [1 80]);
+            %
+            %                 obj.ANALYSIS.Firing_Rate_Analysis_channels_with_spikes = str2num(answer{1});
+            %                 disp(['Spiking channels: ' num2str(obj.ANALYSIS.Firing_Rate_Analysis_channels_with_spikes)])
+            %                 ChannelsToLoad =  obj.ANALYSIS.Firing_Rate_Analysis_channels_with_spikes;
+            %             else
+            %                 ChannelsToLoad = obj.ANALYSIS.Firing_Rate_Analysis_channels_with_spikes;
+            %             end
+            
+            ChannelsToLoad = obj.ANALYSIS.Firing_Rate_Analysis_channels_with_spikes;
             %%
             
             fileToLoad = obj.ANALYSIS.h5_fileToLoad;
@@ -751,7 +990,7 @@ end
             cfg.window = [0 1]; % time range 0 to 1 s
             
             dataTmp= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
-            ChannelsToLoad = obj.ANALYSIS.Firing_Rate_Analysis_channels_with_spikes;
+            
             
             %Original
             %plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 15 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
@@ -810,6 +1049,7 @@ end
             textName = [name '_CH-' chanTxt '_SpikeData.mat'];
             saveName = [obj.PATH.spikeAnalysis textName];
             save(saveName, 'DATA', 'INFO', '-v7.3')
+            disp(['Saved spike file: ' saveName]);
             
         end
         
@@ -819,12 +1059,12 @@ end
             dbstop if error
             %%
             
-            [filepath,name,ext] = fileparts(obj.ANALYSIS.h5_fileToLoad);
-            
-            spikeAnalysis_plotDir = [obj.PATH.spikeAnalysis name '_Plots' obj.PATH.dirD];
-            
-            obj.PATH.spikeAnalysis_plotDir = spikeAnalysis_plotDir;
-           
+            %             [filepath,name,ext] = fileparts(obj.ANALYSIS.h5_fileToLoad);
+            %
+            %             spikeAnalysis_plotDir = [obj.PATH.spikeAnalysis name '_Plots' obj.PATH.dirD];
+            %
+            %             obj.PATH.spikeAnalysis_plotDir = spikeAnalysis_plotDir;
+            %
             
             spikeDir = obj.PATH.spikeAnalysis;
             files = dir(fullfile(spikeDir));
@@ -850,7 +1090,14 @@ end
                 allChoices{j} = list{indx(j)};
             end
             
-         
+            ChanText = [];
+            for j = 1:nChansToLoad
+                
+                thisName = allChoices{j};
+                ChanName{j} = thisName(end-5:end-4);
+                ChanText = [ChanText '-' thisName(end-5:end-4)];
+            end
+            
             %% Load files
             
             timeBlock_s = 30;
@@ -971,19 +1218,19 @@ end
             
             %% Printing figures
             
-%             ctext  ='C';
-%             FileSearch = find(file{1}==ctext);
-%             ExpDate = file{1}(1:FileSearch-2);
+            %             ctext  ='C';
+            %             FileSearch = find(file{1}==ctext);
+            %             ExpDate = file{1}(1:FileSearch-2);
             
             figure(figHH);
             % Create textbox
             annotation(figHH,'textbox',...
                 [0.015 0.98 0.20 0.03],...
-                'String',{ExpDate},...
+                'String',{obj.ANALYSIS.ExpName},...
                 'LineStyle','none',...
                 'FitBoxToText','off');
             
-            saveName = [spikeAnalysis_plotDir '_CH' ChanText '__FR'];
+            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__FR'];
             plotpos = [0 0 12 10];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
@@ -991,11 +1238,11 @@ end
             % Create textbox
             annotation(figH,'textbox',...
                 [0.015 0.98 0.20 0.03],...
-                'String',{ExpDate},...
+                'String',{obj.ANALYSIS.ExpName},...
                 'LineStyle','none',...
                 'FitBoxToText','off');
             
-            saveName = [spikeAnalysis_plotDir '_CH' ChanText '__Raster'];
+            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__Raster'];
             plotpos = [0 0 15 12];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
@@ -1009,8 +1256,6 @@ end
             
             
         end
-        
-        
         
     end
     

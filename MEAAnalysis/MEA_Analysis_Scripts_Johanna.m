@@ -21,11 +21,28 @@ mea_OBJ = addAnalysisInfoToObj(mea_OBJ);
 %% SWR Analysis
 
 mea_OBJ = load_MCS_data_detectSWRs(mea_OBJ);
-
 mea_OBJ = collectAllSWRDetections(mea_OBJ);
 
+% printing figures
+mea_OBJ = plotSWRDetection(mea_OBJ);
 
+%% 
+
+mea_OBJ = validateSWRDetections(mea_OBJ);
+
+
+% SWR validation - base this off of the grid plotting combined with 
+% SWRValidation_key_press
+
+% Delay plotter
+% SWR_delay_map_plotter_function(DetectionFileToAnalyze, DetectionNumberToAnalyze)
+
+%% SWR statistics
+% save this as a mat files
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Firing Rate Analysis
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 
@@ -41,3 +58,7 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 
 mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
 
+%checkSpikesOnSortedData()
+ 
+%makeSummaryPlotFiringRatePharmacology
+% Compare baseline and recover firing rates
