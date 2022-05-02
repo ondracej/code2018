@@ -11,9 +11,7 @@ classdef dlcAnalysis_OBJ_embryo < handle
     methods
         
         
-        function obj = definePaths(obj,analysisDir)
-            
-            %obj.HOST.hostname = gethostname;
+        function obj = definePaths(obj,analysisDir, ExperimentName)
             
             if ispc
                 dirD = '\';
@@ -21,298 +19,226 @@ classdef dlcAnalysis_OBJ_embryo < handle
                 dirD = '/';
             end
             
-            %            obj.HOST.dirD = dirD;
+            fps = 50;
+            obj.VID.fps = fps;
             
-            %% Define associated directories
+            %% Find CSV files
             
-            obj.PATH.BL = [analysisDir 'BL' dirD];
-            obj.PATH.postPain = [analysisDir 'postPain' dirD];
-            obj.PATH.postTouch = [analysisDir 'postTouch' dirD];
+            csvfiles = dir(fullfile(analysisDir, '*.csv'));
+            nFiles = numel(csvfiles);
+            fileNames = [];
+            for j = 1:nFiles
+                fileNames{j} = csvfiles(j).name;
+            end
             
-            slashInds = find(analysisDir == dirD);
-            obj.PATH.ExpName = analysisDir(slashInds(2)+1:slashInds(3)-1);
-            analysisName = obj.PATH.ExpName;
+            list = {fileNames{1:end}};
+            
+            for j = 1:3
+                switch j
+                    case 1
+                        prompt = 'Please select the "BL" csv file';
+                    case 2
+                        prompt = 'Please select the "postPain" csv file';
+                    case 3
+                        prompt = 'Please select the "postTouch" csv file';
+                end
+                
+                
+                
+                [indx,tf] = listdlg('PromptString',prompt, 'ListString',list, 'SelectionMode','single', 'ListSize', [700 200]);
+                
+                SelectedFiles{j} = list{indx};
+                
+            end
+            
             underscore = '_';
-            bla = find(analysisName == underscore);
-            analysisName(bla) = '-';
-            obj.PATH.ExpNameText = analysisName;
+            bla = find(ExperimentName == underscore);
+            ExperimentName(bla) = '-';
             
-            %% Look in directories for .csv files
-            %% BL
-            files = dir(fullfile(obj.PATH.BL));
-            nFiles = numel(files);
+            obj.PATH.ExperimentName = ExperimentName;
+            obj.PATH.analysisDir = analysisDir;
             
-            for j = 1:nFiles
-                fileNames{j} = files(j).name;
+            BL_csv = SelectedFiles{1};
+            pP_csv = SelectedFiles{2};
+            pT_csv = SelectedFiles{3};
+            
+            obj.PATH.BL_csv = BL_csv;
+            obj.PATH.pP_csv = pP_csv;
+            obj.PATH.pT_csv = pT_csv;
+            
+            %% Create plot Dirs
+            
+            obj.PATH.Plots = [analysisDir 'Plots' dirD];
+            
+            if exist(obj.PATH.Plots, 'dir') ==0
+                mkdir(obj.PATH.Plots);
+                disp(['Created directory: ' obj.PATH.Plots])
             end
             
-            searchString = ['.csv']; % look for the .csv file
-            
-            matchInds = cellfun(@(x) strfind(x, searchString), fileNames, 'UniformOutput', 0);
-            matchIndsPlace = cell2mat(matchInds);
-            
-            %[minVal, minInd] = min(matchIndsPlace);
-            matchInds_nonempty = find(cellfun(@(x) ~isempty(x), matchInds)==1);
-            
-            obj.PATH.BL_csv_unfil = fileNames{matchInds_nonempty(1)};
-            obj.PATH.BL_csv_fil = fileNames{matchInds_nonempty(2)};
-            
-            searchString = ['.mp4']; % look for the video file
-            
-            matchInds = cellfun(@(x) strfind(x, searchString), fileNames, 'UniformOutput', 0);
-            matchIndsPlace = cell2mat(matchInds);
-            matchInds_nonempty = find(cellfun(@(x) ~isempty(x), matchInds)==1);
-            
-            if ~isempty(matchIndsPlace)
-                obj.PATH.BL_video = fileNames{matchInds_nonempty};
-            else
-                obj.PATH.BL_video = [];
-            end
-            
-            obj.PATH.BL_plots = [obj.PATH.BL 'Plots' dirD];
-            
-            if exist(obj.PATH.BL_plots, 'dir') ==0
-                mkdir(obj.PATH.BL_plots);
-                disp(['Created directory: ' obj.PATH.BL_plots])
-            end
-            
-            %% postPain
-            files = dir(fullfile(obj.PATH.postPain ));
-            nFiles = numel(files);
-            
-            for j = 1:nFiles
-                fileNames{j} = files(j).name;
-            end
-            
-            searchString = ['.csv']; % look for the .csv file
-            
-            matchInds = cellfun(@(x) strfind(x, searchString), fileNames, 'UniformOutput', 0);
-            matchIndsPlace = cell2mat(matchInds);
-            
-            %[minVal, minInd] = min(matchIndsPlace);
-            matchInds_nonempty = find(cellfun(@(x) ~isempty(x), matchInds)==1);
-            
-            obj.PATH.postPain_csv_unfil = fileNames{matchInds_nonempty(1)};
-            obj.PATH.postPain_csv_fil = fileNames{matchInds_nonempty(2)};
-            
-            searchString = ['.mp4']; % look for the video file
-            
-            matchInds = cellfun(@(x) strfind(x, searchString), fileNames, 'UniformOutput', 0);
-            matchIndsPlace = cell2mat(matchInds);
-            matchInds_nonempty = find(cellfun(@(x) ~isempty(x), matchInds)==1);
-            
-            if ~isempty(matchIndsPlace)
-                obj.PATH.postPain_video = fileNames{matchInds_nonempty};
-            else
-                obj.PATH.postPain_video = [];
-            end
-            
-            obj.PATH.postPain_plots = [obj.PATH.postPain 'Plots' dirD];
-            
-            if exist(obj.PATH.postPain_plots, 'dir') ==0
-                mkdir(obj.PATH.postPain_plots);
-                disp(['Created directory: ' obj.PATH.postPain_plots])
-            end
-            
-            %% postTouch
-            files = dir(fullfile(obj.PATH.postTouch));
-            nFiles = numel(files);
-            
-            for j = 1:nFiles
-                fileNames{j} = files(j).name;
-            end
-            
-            searchString = ['.csv']; % look for the .csv file
-            
-            matchInds = cellfun(@(x) strfind(x, searchString), fileNames, 'UniformOutput', 0);
-            matchIndsPlace = cell2mat(matchInds);
-            
-            %[minVal, minInd] = min(matchIndsPlace);
-            matchInds_nonempty = find(cellfun(@(x) ~isempty(x), matchInds)==1);
-            
-            obj.PATH.postTouch_csv_unfil = fileNames{matchInds_nonempty(1)};
-            obj.PATH.postTouch_csv_fil = fileNames{matchInds_nonempty(2)};
-            
-            searchString = ['.mp4']; % look for the video file
-            
-            matchInds = cellfun(@(x) strfind(x, searchString), fileNames, 'UniformOutput', 0);
-            matchIndsPlace = cell2mat(matchInds);
-            matchInds_nonempty = find(cellfun(@(x) ~isempty(x), matchInds)==1);
-            
-            if ~isempty(matchIndsPlace)
-                obj.PATH.postTouch_video = fileNames{matchInds_nonempty};
-            else
-                obj.PATH.postTouch_video = [];
-            end
-            
-            obj.PATH.postTouch_plots = [obj.PATH.postTouch 'Plots' dirD];
-            
-            if exist(obj.PATH.postTouch_plots, 'dir') ==0
-                mkdir(obj.PATH.postTouch_plots);
-                disp(['Created directory: ' obj.PATH.postTouch_plots])
-            end
+            %             obj.PATH.pP_plots = [analysisDir 'pP_Plots' dirD];
+            %
+            %             if exist(obj.PATH.pP_plots, 'dir') ==0
+            %                 mkdir(obj.PATH.pP_plots);
+            %                 disp(['Created directory: ' obj.PATH.pP_plots])
+            %             end
+            %
+            %             obj.PATH.pT_plots = [analysisDir 'pT_Plots' dirD];
+            %
+            %             if exist(obj.PATH.pT_plots, 'dir') ==0
+            %                 mkdir(obj.PATH.pT_plots);
+            %                 disp(['Created directory: ' obj.PATH.pT_plots])
+            %             end
             
         end
         
         
-        function [obj] = loadTrackedData(obj, whichExperiment, isFiltered)
+        function [obj] = loadTrackedData(obj)
             
-            disp('Loading tracked data...')
-            
-            switch whichExperiment
-                case 1 %BL
-                    if isFiltered
-                        filename = obj.PATH.BL_csv_fil;
-                    else
-                        filename = obj.PATH.BL_csv_unfil;
-                    end
-                    
-                case 2 %postPain
-                    
-                    if isFiltered
-                        filename = obj.PATH.postPain_csv_fil;
-                    else
-                        filename = obj.PATH.postPain_csv_unfil;
-                    end
-                case 3 %postTouch
-                    if isFiltered
-                        filename = obj.PATH.postTouch_csv_fil;
-                    else
-                        filename = obj.PATH.postTouch_csv_unfil;
-                    end
-            end
-            
-            filename
-            %% Initialize variables.
-            
-            delimiter = ',';
-            startRow = 4;
-            
-            %% Read columns of data as strings:
-            % For more information, see the TEXTSCAN documentation.
-            formatSpec = '%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%[^\n\r]';
-            
-            %% Open the text file.
-            fileID = fopen(filename,'r');
-            
-            %% Read columns of data according to format string.
-            % This call is based on the structure of the file used to generate this
-            % code. If an error occurs for a different file, try regenerating the code
-            % from the Import Tool.
-            dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false);
-            
-            %% Close the text file.
-            fclose(fileID);
-            
-            %% Convert the contents of columns containing numeric strings to numbers.
-            % Replace non-numeric strings with NaN.
-            raw = repmat({''},length(dataArray{1}),length(dataArray)-1);
-            for col=1:length(dataArray)-1
-                raw(1:length(dataArray{col}),col) = dataArray{col};
-            end
-            numericData = NaN(size(dataArray{1},1),size(dataArray,2));
-            
-            for col=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]
-                % Converts strings in the input cell array to numbers. Replaced non-numeric
-                % strings with NaN.
-                rawData = dataArray{col};
-                for row=1:size(rawData, 1)
-                    % Create a regular expression to detect and remove non-numeric prefixes and
-                    % suffixes.
-                    regexstr = '(?<prefix>.*?)(?<numbers>([-]*(\d+[\,]*)+[\.]{0,1}\d*[eEdD]{0,1}[-+]*\d*[i]{0,1})|([-]*(\d+[\,]*)*[\.]{1,1}\d+[eEdD]{0,1}[-+]*\d*[i]{0,1}))(?<suffix>.*)';
-                    try
-                        result = regexp(rawData{row}, regexstr, 'names');
-                        numbers = result.numbers;
-                        
-                        % Detected commas in non-thousand locations.
-                        invalidThousandsSeparator = false;
-                        if any(numbers==',')
-                            thousandsRegExp = '^\d+?(\,\d{3})*\.{0,1}\d*$';
-                            if isempty(regexp(thousandsRegExp, ',', 'once'))
-                                numbers = NaN;
-                                invalidThousandsSeparator = true;
+            for j = 1:3
+                
+                switch j
+                    case 1
+                        filename = [obj.PATH.analysisDir obj.PATH.BL_csv];
+                        disp('Loading tracked data: baseline...')
+                    case 2
+                        filename = [obj.PATH.analysisDir obj.PATH.pP_csv];
+                        disp('Loading tracked data: postPain...')
+                    case 3
+                        filename = [obj.PATH.analysisDir obj.PATH.pT_csv];
+                        disp('Loading tracked data: postTouch...')
+                end
+                %% Initialize variables.
+                
+                delimiter = ',';
+                startRow = 4;
+                
+                %% Read columns of data as strings:
+                % For more information, see the TEXTSCAN documentation.
+                formatSpec = '%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%[^\n\r]';
+                
+                %% Open the text file.
+                fileID = fopen(filename,'r');
+                
+                %% Read columns of data according to format string.
+                % This call is based on the structure of the file used to generate this
+                % code. If an error occurs for a different file, try regenerating the code
+                % from the Import Tool.
+                dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'HeaderLines' ,startRow-1, 'ReturnOnError', false);
+                
+                %% Close the text file.
+                fclose(fileID);
+                
+                %% Convert the contents of columns containing numeric strings to numbers.
+                % Replace non-numeric strings with NaN.
+                raw = repmat({''},length(dataArray{1}),length(dataArray)-1);
+                for col=1:length(dataArray)-1
+                    raw(1:length(dataArray{col}),col) = dataArray{col};
+                end
+                numericData = NaN(size(dataArray{1},1),size(dataArray,2));
+                
+                for col=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]
+                    % Converts strings in the input cell array to numbers. Replaced non-numeric
+                    % strings with NaN.
+                    rawData = dataArray{col};
+                    for row=1:size(rawData, 1)
+                        % Create a regular expression to detect and remove non-numeric prefixes and
+                        % suffixes.
+                        regexstr = '(?<prefix>.*?)(?<numbers>([-]*(\d+[\,]*)+[\.]{0,1}\d*[eEdD]{0,1}[-+]*\d*[i]{0,1})|([-]*(\d+[\,]*)*[\.]{1,1}\d+[eEdD]{0,1}[-+]*\d*[i]{0,1}))(?<suffix>.*)';
+                        try
+                            result = regexp(rawData{row}, regexstr, 'names');
+                            numbers = result.numbers;
+                            
+                            % Detected commas in non-thousand locations.
+                            invalidThousandsSeparator = false;
+                            if any(numbers==',')
+                                thousandsRegExp = '^\d+?(\,\d{3})*\.{0,1}\d*$';
+                                if isempty(regexp(thousandsRegExp, ',', 'once'))
+                                    numbers = NaN;
+                                    invalidThousandsSeparator = true;
+                                end
                             end
+                            % Convert numeric strings to numbers.
+                            if ~invalidThousandsSeparator
+                                numbers = textscan(strrep(numbers, ',', ''), '%f');
+                                numericData(row, col) = numbers{1};
+                                raw{row, col} = numbers{1};
+                            end
+                        catch me
                         end
-                        % Convert numeric strings to numbers.
-                        if ~invalidThousandsSeparator
-                            numbers = textscan(strrep(numbers, ',', ''), '%f');
-                            numericData(row, col) = numbers{1};
-                            raw{row, col} = numbers{1};
-                        end
-                    catch me
                     end
                 end
+                
+                
+                %% Replace non-numeric cells with NaN
+                R = cellfun(@(x) ~isnumeric(x) && ~islogical(x),raw); % Find non-numeric cells
+                raw(R) = {NaN}; % Replace non-numeric cells
+                
+                %% Allocate imported array to column variable names
+                allCoords.bodyparts_scorer = cell2mat(raw(:, 1));
+                
+                allCoords.uppereyelid.x = cell2mat(raw(:, 2));
+                allCoords.uppereyelid.y = cell2mat(raw(:, 3));
+                allCoords.uppereyelid.likelihood = cell2mat(raw(:, 4));
+                
+                allCoords.lowereyelid.x = cell2mat(raw(:, 5));
+                allCoords.lowereyelid.y = cell2mat(raw(:, 6));
+                allCoords.lowereyelid.likelihood = cell2mat(raw(:, 7));
+                
+                allCoords.upperbeak.x = cell2mat(raw(:, 8));
+                allCoords.upperbeak.y = cell2mat(raw(:, 9));
+                allCoords.upperbeak.likelihood = cell2mat(raw(:, 10));
+                
+                allCoords.lowerbeak.x = cell2mat(raw(:, 11));
+                allCoords.lowerbeak.y = cell2mat(raw(:, 12));
+                allCoords.lowerbeak.likelihood = cell2mat(raw(:, 13));
+                
+                allCoords.elbow.x = cell2mat(raw(:, 14));
+                allCoords.elbow.y = cell2mat(raw(:, 15));
+                allCoords.elbow.likelihood = cell2mat(raw(:, 16));
+                
+                allCoords.tarsus.x = cell2mat(raw(:, 17));
+                allCoords.tarsus.y = cell2mat(raw(:, 18));
+                allCoords.tarsus.likelihood = cell2mat(raw(:, 19));
+                
+                allCoords.metatarsus.x = cell2mat(raw(:, 20));
+                allCoords.metatarsus.y = cell2mat(raw(:, 21));
+                allCoords.metatarsus.likelihood = cell2mat(raw(:, 22));
+                
+                %             allCoords.rightfoot.x = cell2mat(raw(:, 23));
+                %             allCoords.rightfoot.y = cell2mat(raw(:, 24));
+                %             allCoords.rightfoot.likelihood = cell2mat(raw(:, 25));
+                
+                varNames = {'bodyparts_scorer', 'uppereyelid', 'lowereyelid', 'upperbeak', 'lowerbeak', 'elbow', 'tarsus', 'metatarsus'} ;
+                
+                allCoords.nEntries = numel(allCoords.uppereyelid.y);
+                
+                switch j
+                    case 1 %BL
+                        obj.COORDS.BL = allCoords;
+                        obj.COORDS.BL_varNames = varNames;
+                        
+                    case 2 %postPain
+                        
+                        obj.COORDS.pP = allCoords;
+                        obj.COORDS.pP_varNames = varNames;
+                        
+                    case 3 %postTouch
+                        
+                        obj.COORDS.pT = allCoords;
+                        obj.COORDS.pT_varNames = varNames;
+                        
+                end
+                
+                disp('Body parts annotated: ')
+                celldisp(varNames);
+                disp(['n Entries: ' num2str(allCoords.nEntries )]);
+                
+                %% Clear temporary variables
+                clearvars filename delimiter startRow formatSpec fileID dataArray ans raw col numericData rawData row regexstr result numbers invalidThousandsSeparator thousandsRegExp me R;
+                
+                disp('done...')
             end
             
-            
-            %% Replace non-numeric cells with NaN
-            R = cellfun(@(x) ~isnumeric(x) && ~islogical(x),raw); % Find non-numeric cells
-            raw(R) = {NaN}; % Replace non-numeric cells
-            
-            %% Allocate imported array to column variable names
-            allCoords.bodyparts_scorer = cell2mat(raw(:, 1));
-            
-            allCoords.uppereyelid.x = cell2mat(raw(:, 2));
-            allCoords.uppereyelid.y = cell2mat(raw(:, 3));
-            allCoords.uppereyelid.likelihood = cell2mat(raw(:, 4));
-            
-            allCoords.lowereyelid.x = cell2mat(raw(:, 5));
-            allCoords.lowereyelid.y = cell2mat(raw(:, 6));
-            allCoords.lowereyelid.likelihood = cell2mat(raw(:, 7));
-            
-            allCoords.upperbeak.x = cell2mat(raw(:, 8));
-            allCoords.upperbeak.y = cell2mat(raw(:, 9));
-            allCoords.upperbeak.likelihood = cell2mat(raw(:, 10));
-            
-            allCoords.lowerbeak.x = cell2mat(raw(:, 11));
-            allCoords.lowerbeak.y = cell2mat(raw(:, 12));
-            allCoords.lowerbeak.likelihood = cell2mat(raw(:, 13));
-            
-            allCoords.elbow.x = cell2mat(raw(:, 14));
-            allCoords.elbow.y = cell2mat(raw(:, 15));
-            allCoords.elbow.likelihood = cell2mat(raw(:, 16));
-            
-            allCoords.tarsus.x = cell2mat(raw(:, 17));
-            allCoords.tarsus.y = cell2mat(raw(:, 18));
-            allCoords.tarsus.likelihood = cell2mat(raw(:, 19));
-            
-            allCoords.metatarsus.x = cell2mat(raw(:, 20));
-            allCoords.metatarsus.y = cell2mat(raw(:, 21));
-            allCoords.metatarsus.likelihood = cell2mat(raw(:, 22));
-            
-            %             allCoords.rightfoot.x = cell2mat(raw(:, 23));
-            %             allCoords.rightfoot.y = cell2mat(raw(:, 24));
-            %             allCoords.rightfoot.likelihood = cell2mat(raw(:, 25));
-            
-            varNames = {'bodyparts_scorer', 'uppereyelid', 'lowereyelid', 'upperbeak', 'lowerbeak', 'elbow', 'tarsus', 'metatarsus'} ;
-            
-            allCoords.nEntries = numel(allCoords.uppereyelid.y);
-            
-            switch whichExperiment
-                case 1 %BL
-                    obj.COORDS.BL = allCoords;
-                    obj.COORDS.BL_varNames = varNames;
-                    
-                case 2 %postPain
-                    
-                    obj.COORDS.postPain = allCoords;
-                    obj.COORDS.postPain_varNames = varNames;
-                    
-                case 3 %postTouch
-                    
-                    obj.COORDS.postTouch = allCoords;
-                    obj.COORDS.postTouch_varNames = varNames;
-                    
-            end
-            
-            disp('Body parts annotated: ')
-            celldisp(varNames);
-            disp(['n Entries: ' num2str(allCoords.nEntries )]);
-            
-            %% Clear temporary variables
-            clearvars filename delimiter startRow formatSpec fileID dataArray ans raw col numericData rawData row regexstr result numbers invalidThousandsSeparator thousandsRegExp me R;
-            
-            disp('done...')
         end
         
         function [obj] = loadVideoData(obj)
@@ -338,347 +264,665 @@ classdef dlcAnalysis_OBJ_embryo < handle
         
         %% Analysis
         
-        
-        function [obj] = plot_liklihood_over_time(obj, whichExperiment)
+        function [obj] = plot_variable_over_time(obj, variable)
             
-            switch whichExperiment
-                case 1 %BL
-                    coords = obj.COORDS.BL;
-                    varNames = obj.COORDS.BL_varNames;
-                    
-                    expText = 'BL';
-                    plotPath = obj.PATH.BL_plots;
-                case 2 %postPain
-                    
-                    coords = obj.COORDS.postPain;
-                    varNames = obj.COORDS.postPain_varNames;
-                    
-                    expText = 'postPain';
-                    plotPath = obj.PATH.postPain_plots;
-                    
-                case 3 %postTouch
-                    coords = obj.COORDS.postTouch;
-                    varNames = obj.COORDS.postTouch_varNames;
-                    
-                    expText = 'postTouch';
-                    plotPath = obj.PATH.postTouch_plots;
-            end
             
-            list = {varNames{2:end}};
+            fps = obj.VID.fps;
+            
+            
+            list = {obj.COORDS.BL_varNames{2:end}};
             [indx,tf] = listdlg('PromptString','Choose tracked objects:', 'ListString',list);
             
             nChoices = numel(indx);
-            for j = 1:nChoices
-                allChoices{j} = list{indx(j)};
+            for k = 1:nChoices
+                allChoices{k} = list{indx(k)};
             end
             
-            cols = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560]...
-                [0.4660, 0.6740, 0.1880],  [0, 0.75, 0.75], [0.6350, 0.0780, 0.1840], [0.25, 0.25, 0.25], [0.360000 0.540000 0.660000]...
-                [0.890000 0.150000 0.210000], [0.600000 0.400000 0.800000], [1.000000 0.800000 0.640000], [0.840000 0.040000 0.330000]};
-            
-            %% Iterate over Choices
-            figH = figure(100);clf
-            
-            for j = 1:nChoices
+            for  k =1:3
                 
-                thisTrackedObject = allChoices{j};
-                
-                %eval(['coords_X = coords.' thisTrackedObject '.x;']);
-                %eval(['coords_Y = coords.' thisTrackedObject '.y;']);
-                eval(['likelihood = coords.' thisTrackedObject '.likelihood;']);
-                
-                subplot(nChoices, 1, j)
-                
-                %plot(likelihood, 'color', cols{j}, 'marker', '.', 'markersize', 2, 'linestyle', '-')
-                plot(likelihood, 'color', cols{j}, 'linestyle', '-')
-                %  legend(thisTrackedObject)
-                %   legend ('boxoff')
-                axis tight
-                meanVal = nanmean(likelihood);
-                stdVal = nanstd(likelihood);
-                title([thisTrackedObject ' | Mean likelihood: '   num2str(meanVal) ' ± ' num2str(stdVal) ' (std)' ])
-                ylabel('Likelihood')
-                
-                if j == nChoices
-                    xlabel('Frames')
+                switch k
+                    case 1 %BL
+                        coords = obj.COORDS.BL;
+                        varNames = obj.COORDS.BL_varNames;
+                        
+                    case 2 %postPain
+                        
+                        coords = obj.COORDS.pP;
+                        varNames = obj.COORDS.pP_varNames;
+                        
+                        
+                    case 3 %postTouch
+                        coords = obj.COORDS.pT;
+                        varNames = obj.COORDS.pT_varNames;
+                        
+                        
                 end
-            end
-            
-            annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExpNameText '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
-            
-            saveName = [plotPath 'Likelihood_' expText ];
-            plotpos = [0 0 15 20]; % keep this so arena dims look ok
-            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-            
-        end
-        
-        function [obj] = plot_coords_over_time(obj, whichExperiment, x_or_y)
-            
-            switch whichExperiment
-                case 1 %BL
-                    coords = obj.COORDS.BL;
-                    varNames = obj.COORDS.BL_varNames;
-                    
-                    expText = 'BL';
-                    plotPath = obj.PATH.BL_plots;
-                case 2 %postPain
-                    
-                    coords = obj.COORDS.postPain;
-                    varNames = obj.COORDS.postPain_varNames;
-                    
-                    expText = 'postPain';
-                    plotPath = obj.PATH.postPain_plots;
-                    
-                case 3 %postTouch
-                    coords = obj.COORDS.postTouch;
-                    varNames = obj.COORDS.postTouch_varNames;
-                    
-                    expText = 'postTouch';
-                    plotPath = obj.PATH.postTouch_plots;
-            end
-            
-            list = {varNames{2:end}};
-            [indx,tf] = listdlg('PromptString','Choose tracked objects:', 'ListString',list);
-            
-            nChoices = numel(indx);
-            for j = 1:nChoices
-                allChoices{j} = list{indx(j)};
-            end
-            
-            cols = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560]...
-                [0.4660, 0.6740, 0.1880],  [0, 0.75, 0.75], [0.6350, 0.0780, 0.1840], [0.25, 0.25, 0.25], [0.360000 0.540000 0.660000]...
-                [0.890000 0.150000 0.210000], [0.600000 0.400000 0.800000], [1.000000 0.800000 0.640000], [0.840000 0.040000 0.330000]};
-            
-            %% Iterate over Choices
-            figH = figure(100);clf
-            
-            for j = 1:nChoices
                 
-                thisTrackedObject = allChoices{j};
+                figure(100+k);clf
                 
-                switch x_or_y
+                cols = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560]...
+                    [0.4660, 0.6740, 0.1880],  [0, 0.75, 0.75], [0.6350, 0.0780, 0.1840], [0.25, 0.25, 0.25], [0.360000 0.540000 0.660000]...
+                    [0.890000 0.150000 0.210000], [0.600000 0.400000 0.800000], [1.000000 0.800000 0.640000], [0.840000 0.040000 0.330000]};
+                
+                %% Iterate over Choices
+                % figH = figure(100);clf
+                
+                for j = 1:nChoices
+                    
+                    thisTrackedObject = allChoices{j};
+                    
+                    switch variable
+                        
+                        case 1
+                            eval(['likelihood = coords.' thisTrackedObject '.likelihood;']);
+                            data = likelihood;
+                            varText = 'likelihood';
+                            ylab = 'Likelihood';
+                        case 2
+                            
+                            eval(['coords_X = coords.' thisTrackedObject '.x;']);
+                            data = coords_X;
+                            
+                            varText = 'value';
+                            ylab = 'x-coords';
+                        case 3
+                            eval(['coords_Y = coords.' thisTrackedObject '.y;']);
+                            data = coords_Y;
+                            varText = 'value';
+                            ylab = 'y-coords';
+                    end
+                    
+                    
+                    subplot(nChoices, 1, j)
+                    
+                    timepoints_frames = 1:1:numel(data);
+                    timepoints_s = timepoints_frames/fps;
+                    
+                    %plot(likelihood, 'color', cols{j}, 'marker', '.', 'markersize', 2, 'linestyle', '-')
+                    plot(timepoints_s, data, 'color', cols{j}, 'linestyle', '-')
+                    %  legend(thisTrackedObject)
+                    %   legend ('boxoff')
+                    axis tight
+                    meanVal = nanmean(data);
+                    stdVal = nanstd(data);
+                    
+                    minVal(j) = min(data);
+                    maxVal(j) = max(data);
+                    
+                    title([thisTrackedObject ' | Mean ' varText ': '   num2str(meanVal) ' ± ' num2str(stdVal) ' (std)' ])
+                    ylabel(ylab)
+                    
+                    if j == nChoices
+                        xlabel('Time (s)')
+                    end
+                end
+                
+                
+                allMinVals(:,k) = minVal;
+                allMaxVals(:,k) = maxVal;
+                
+            end
+            
+            allMins = min(allMinVals, [], 2);
+            allMaxs = max(allMaxVals, [], 2);
+            
+            for  o = 1:3
+                switch o
                     case 1
-                        eval(['thisCoord = coords.' thisTrackedObject '.x;']);
-                        ylabelTxt = 'x coords';
-                        saveText = 'X-Coordinates';
+                        expText = 'BL';
+                        
                     case 2
-                        eval(['thisCoord = coords.' thisTrackedObject '.y;']);
-                        ylabelTxt = 'y coords';
-                        saveText = 'Y-Coordinates';
+                        expText = 'postPain';
+                        
+                    case 3
+                        expText = 'postTouch';
+                        
+                end
+                figH = figure(100+o);
+                for oo = 1:nChoices
+                    
+                    subplot(nChoices, 1, oo)
+                    ylim([allMins(oo)  allMaxs(oo)])
                 end
                 
-                subplot(nChoices, 1, j)
+                annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExperimentName '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
                 
-                %plot(likelihood, 'color', cols{j}, 'marker', '.', 'markersize', 2, 'linestyle', '-')
-                plot(thisCoord, 'color', cols{j}, 'linestyle', '-')
-                %  legend(thisTrackedObject)
-                %   legend ('boxoff')
-                axis tight
-                meanVal = nanmean(thisCoord);
-                stdVal = nanstd(thisCoord);
-                title([thisTrackedObject ' | Mean value: '   num2str(meanVal) ' ± ' num2str(stdVal) ' (std)' ])
-                ylabel(ylabelTxt)
-                
-                if j == nChoices
-                    xlabel('Frames')
-                end
+                saveName = [obj.PATH.Plots ylab '_' expText ];
+                plotpos = [0 0 15 20]; % keep this so arena dims look ok
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             end
-            
-            annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExpNameText '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
-            
-            saveName = [plotPath saveText '_' expText];
-            plotpos = [0 0 15 20]; % keep this so arena dims look ok
-            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-            
         end
         
-        function [obj] = plotTrajectories(obj, whichExperiment, likelihood_cutoff)
+        
+        
+        function [obj] = plotDetectionClusters(obj, likelihood_cutoff)
             
+            list = {obj.COORDS.BL_varNames{2:end}};
+            [indx,tf] = listdlg('PromptString','Choose tracked objects:', 'ListString',list);
             
-            switch whichExperiment
-                case 1 %BL
-                    coords = obj.COORDS.BL;
-                    varNames = obj.COORDS.BL_varNames;
-                    vidPath = obj.PATH.BL_video;
-                    expText = 'BL';
-                    plotPath = obj.PATH.BL_plots;
-                case 2 %postPain
-                    
-                    coords = obj.COORDS.postPain;
-                    varNames = obj.COORDS.postPain_varNames;
-                    vidPath = obj.PATH.postPain_video;
-                    expText = 'postPain';
-                    plotPath = obj.PATH.postPain_plots;
-                    
-                case 3 %postTouch
-                    coords = obj.COORDS.postTouch;
-                    varNames = obj.COORDS.postTouch_varNames;
-                    vidPath = obj.PATH.postTouch_video;
-                    expText = 'postTouch';
-                    plotPath = obj.PATH.postTouch_plots;
+            nChoices = numel(indx);
+            for k = 1:nChoices
+                allChoices{k} = list{indx(k)};
             end
             
-            if ~isempty(vidPath)
-                vidObj = VideoReader(vidPath);
-                frameToPlot = 200;
-                vidFrame = read(vidObj, frameToPlot );
+            for j = 1:3
                 
-                vidHeight = vidObj.Height;
-                vidWidth = vidObj.Width;
+                switch j
+                    case 1 %BL
+                        coords = obj.COORDS.BL;
+                        varNames = obj.COORDS.BL_varNames;
+                        
+                        expText = 'BL';
+                        
+                    case 2 %postPain
+                        
+                        coords = obj.COORDS.pP;
+                        varNames = obj.COORDS.pP_varNames;
+                        
+                        expText = 'postPain';
+                        
+                        
+                    case 3 %postTouch
+                        coords = obj.COORDS.pT;
+                        varNames = obj.COORDS.pT_varNames;
+                        
+                        expText = 'postTouch';
+                        
+                end
                 
-            else
-                vidFrame = [];
+                plotPath = obj.PATH.Plots;
+                
                 vidHeight = 1080;
                 vidWidth = 1920;
                 
+                cols = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560]...
+                    [0.4660, 0.6740, 0.1880],  [0, 0.75, 0.75], [0.6350, 0.0780, 0.1840], [0.25, 0.25, 0.25], [0.360000 0.540000 0.660000]...
+                    [0.890000 0.150000 0.210000], [0.600000 0.400000 0.800000], [1.000000 0.800000 0.640000], [0.840000 0.040000 0.330000]};
+                
+                %% Iterate over Choices
+                figH = figure(100+j);clf
+                
+                trackedText = [];
+                legText = [];
+                for j = 1:nChoices
+                    
+                    thisTrackedObject = allChoices{j};
+                    
+                    eval(['coords_X = coords.' thisTrackedObject '.x;']);
+                    eval(['coords_Y = coords.' thisTrackedObject '.y;']);
+                    eval(['likelihood = coords.' thisTrackedObject '.likelihood;']);
+                    
+                    hold on
+                    % liklihood
+                    HL_inds = find(likelihood >= likelihood_cutoff);
+                    n_inds = numel(HL_inds);
+                    
+                    % plot(coords_X, coords_Y, 'color', C(j,:), 'marker', '.', 'markersize', 10, 'linestyle', 'none')
+                    plot(coords_X(HL_inds), coords_Y(HL_inds), 'color', cols{j}, 'marker', '.', 'markersize', 10, 'linestyle', '-')
+                    trackedText = [trackedText '-' thisTrackedObject];
+                    legText{j} = thisTrackedObject;
+                    
+                end
+                
+                xlim([0 vidWidth]);
+                ylim([0 vidHeight]);
+                legend(legText)
+                legend ('boxoff')
+                legend('location', 'eastoutside')
+                figure(figH)
+                title('Detection clusters')
+                ylabel('y coordinates')
+                xlabel('x coordinates')
+                
+                annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[ obj.PATH.ExperimentName '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
+                disp('Printing Plot')
+                
+                saveName = [plotPath 'DetectionClusters_' expText];
+                plotpos = [0 0 25 18]; % keep this so arena dims look ok
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             end
+        end
+        
+        
+        
+        function [obj] = plotVelocity(obj, likelihood_cutoff)
             
-            list = {varNames{2:end}};
+            fps = obj.VID.fps;
+            
+            list = {obj.COORDS.BL_varNames{2:end}};
             [indx,tf] = listdlg('PromptString','Choose tracked objects:', 'ListString',list);
             
             nChoices = numel(indx);
-            for j = 1:nChoices
-                allChoices{j} = list{indx(j)};
+            for k = 1:nChoices
+                allChoices{k} = list{indx(k)};
             end
             
-            cols = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560]...
-                [0.4660, 0.6740, 0.1880],  [0, 0.75, 0.75], [0.6350, 0.0780, 0.1840], [0.25, 0.25, 0.25], [0.360000 0.540000 0.660000]...
-                [0.890000 0.150000 0.210000], [0.600000 0.400000 0.800000], [1.000000 0.800000 0.640000], [0.840000 0.040000 0.330000]};
-            
-            %% Iterate over Choices
-            figH = figure(100);clf
-            if ~isempty(vidFrame)
-                image(vidFrame)
+            for j = 1:3
+                
+                switch j
+                    case 1 %BL
+                        coords = obj.COORDS.BL;
+                        varNames = obj.COORDS.BL_varNames;
+                        
+                        expText = 'BL';
+                        
+                    case 2 %postPain
+                        
+                        coords = obj.COORDS.pP;
+                        varNames = obj.COORDS.pP_varNames;
+                        
+                        expText = 'postPain';
+                        
+                        
+                    case 3 %postTouch
+                        coords = obj.COORDS.pT;
+                        varNames = obj.COORDS.pT_varNames;
+                        
+                        expText = 'postTouch';
+                        
+                end
+                
+                plotPath = obj.PATH.Plots;
+                
+                vidHeight = 1080;
+                vidWidth = 1920;
+                
+                cols = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560]...
+                    [0.4660, 0.6740, 0.1880],  [0, 0.75, 0.75], [0.6350, 0.0780, 0.1840], [0.25, 0.25, 0.25], [0.360000 0.540000 0.660000]...
+                    [0.890000 0.150000 0.210000], [0.600000 0.400000 0.800000], [1.000000 0.800000 0.640000], [0.840000 0.040000 0.330000]};
+                
+                %% Iterate over Choices
+                
+                figure(100+j);clf
+                figure(200+j);clf
+                
+                timeRes_s = 1/fps;
+                
+                for oo = 1:nChoices
+                    
+                    thisTrackedObject = allChoices{oo};
+                    
+                    eval(['coords_X = coords.' thisTrackedObject '.x;']);
+                    eval(['coords_Y = coords.' thisTrackedObject '.y;']);
+                    eval(['likelihood = coords.' thisTrackedObject '.likelihood;']);
+                    
+                    hold on
+                    % liklihood
+                    HL_inds = find(likelihood >= likelihood_cutoff);
+                    n_inds = numel(HL_inds);
+                    
+                    c_X = coords_X(HL_inds);
+                    c_Y = coords_Y(HL_inds);
+                    
+                    euclideanDistance = [];
+                    for k = 1:numel(c_X)-1
+                        point_xy_t0 = [c_X(k), c_Y(k)];
+                        point_xy_t1 = [c_X(k+1), c_Y(k+1)];
+                        distance = [point_xy_t0; point_xy_t1];
+                        euclideanDistance(k) = pdist(distance,'euclidean');
+                        
+                    end
+                    
+                    meanVal_euclidian = mean(euclideanDistance);
+                    stdVal_euclidian = std(euclideanDistance);
+                    
+                    timepoints_frames = 1:1:numel(euclideanDistance);
+                    timepoints_s =timepoints_frames/fps;
+                    
+                    velocity_px_per_s = euclideanDistance/timeRes_s;
+                    
+                    meanVal_vel = mean(velocity_px_per_s);
+                    stdVal_vel = std(velocity_px_per_s);
+                    
+                    figure(100+j)
+                    subplot(nChoices, 1, oo)
+                    hold on
+                    plot(timepoints_s, euclideanDistance, 'color', cols{oo}, 'marker', '.', 'markersize', 5, 'linestyle', '-')
+                    clear('coords_X', 'coords_Y');
+                    axis tight
+                    ylim([0 5])
+                    title([thisTrackedObject ' | Mean Euclidean distance: '   num2str(meanVal_euclidian) ' ± ' num2str(stdVal_euclidian) ' (std)' ])
+                    ylabel('Distance (px)')
+                    
+                    figure(200+j)
+                    subplot(nChoices, 1, oo)
+                    hold on
+                    plot(timepoints_s, velocity_px_per_s, 'color', cols{oo}, 'marker', '.', 'markersize', 5, 'linestyle', '-')
+                    clear('coords_X', 'coords_Y');
+                    axis tight
+                    ylim([0 100])
+                    title([thisTrackedObject ' | Mean velocity: '   num2str(meanVal_vel) ' ± ' num2str(stdVal_vel) ' (std)' ])
+                    ylabel('Velocity (px/s)')
+                    
+                    allEucDist{oo} = euclideanDistance;
+                    allVel{oo} = velocity_px_per_s;
+                end
+                
+                plotPath = obj.PATH.Plots;
+                plotpos = [0 0 15 20]; % keep this so arena dims look ok
+                
+                figH = figure(200+j);
+                xlabel('Time (s)')
+                annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExperimentName '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
+                saveName = [plotPath 'Velocity' expText];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+                figH = figure(100+j);
+                xlabel('Time (s)')
+                annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExperimentName '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
+                saveName = [plotPath 'Distance' expText];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+                allEucDistOverExps{j} = allEucDist;
+                allVelsOverExps{j} = allVel;
             end
             
-            trackedText = [];
-            legText = [];
-            for j = 1:nChoices
-                
-                thisTrackedObject = allChoices{j};
-                
-                eval(['coords_X = coords.' thisTrackedObject '.x;']);
-                eval(['coords_Y = coords.' thisTrackedObject '.y;']);
-                eval(['likelihood = coords.' thisTrackedObject '.likelihood;']);
-                
-                hold on
-                % liklihood
-                HL_inds = find(likelihood >= likelihood_cutoff);
-                n_inds = numel(HL_inds);
-                
-                %plot(coords_X, coords_Y, 'color', C(j,:), 'marker', '.', 'markersize', 10, 'linestyle', '-')
-                plot(coords_X(HL_inds), coords_Y(HL_inds), 'color', cols{j}, 'marker', '.', 'markersize', 10, 'linestyle', '-')
-                trackedText = [trackedText '-' thisTrackedObject];
-                legText{j} = thisTrackedObject;
-                
-            end
+            saveNameDistances = [obj.PATH.Plots 'Euclidean.mat'];
+            save(saveNameDistances, 'allEucDistOverExps', 'allVelsOverExps', 'allChoices')
             
-            xlim([0 vidWidth]);
-            ylim([0 vidHeight]);
-            legend(legText)
-            legend ('boxoff')
-            legend('location', 'eastoutside')
-            figure(figH)
-            %axis off
-            analysisName = obj.PATH.ExpName;
-            underscore = '_';
-            bla = find(analysisName == underscore);
-            analysisName(bla) = '-';
-            
-            annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[ '-'  analysisName '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
-            disp('Printing Plot')
-            
-            saveName = [plotPath obj.VID.vidName(1:end-4) trackedText '_tracked'];
-            plotpos = [0 0 70 40]; % keep this so arena dims look ok
-            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            obj.PATH.EuclideanMat = saveNameDistances;
             
         end
         
-        function [obj] = plotDetectionClusters(obj, whichExperiment, likelihood_cutoff)
-            
-            
-            switch whichExperiment
-                case 1 %BL
-                    coords = obj.COORDS.BL;
-                    varNames = obj.COORDS.BL_varNames;
-                    
-                    expText = 'BL';
-                    plotPath = obj.PATH.BL_plots;
-                case 2 %postPain
-                    
-                    coords = obj.COORDS.postPain;
-                    varNames = obj.COORDS.postPain_varNames;
-                    
-                    expText = 'postPain';
-                    plotPath = obj.PATH.postPain_plots;
-                    
-                case 3 %postTouch
-                    coords = obj.COORDS.postTouch;
-                    varNames = obj.COORDS.postTouch_varNames;
-                    
-                    expText = 'postTouch';
-                    plotPath = obj.PATH.postTouch_plots;
+        
+        function obj = makePlotsForDistances(obj, vel_or_dist)
+            if isfile(obj.PATH.EuclideanMat)
+                load(obj.PATH.EuclideanMat);
+            else
+                disp('Please run "plotVelocity" analysis')
+                return
             end
             
-            vidHeight = 1080;
-            vidWidth = 1920;
-            
-            
-            list = {varNames{2:end}};
-            [indx,tf] = listdlg('PromptString','Choose tracked objects:', 'ListString',list);
-            
-            nChoices = numel(indx);
-            for j = 1:nChoices
-                allChoices{j} = list{indx(j)};
+            switch vel_or_dist
+                case 1
+                    BL_vels = allVelsOverExps{1,1};
+                    pP_vels = allVelsOverExps{1,2};
+                    pT_vels = allVelsOverExps{1,3};
+                    lab = 'Velocity (px/s)';
+                    savetxt = 'Velocity';
+                case 2
+                    BL_vels = allEucDistOverExps{1,1};
+                    pP_vels = allEucDistOverExps{1,2};
+                    pT_vels = allEucDistOverExps{1,3};
+                    lab = 'Distance (px)';
+                    savetxt = 'Distance';
+                    
             end
             
-            cols = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560]...
-                [0.4660, 0.6740, 0.1880],  [0, 0.75, 0.75], [0.6350, 0.0780, 0.1840], [0.25, 0.25, 0.25], [0.360000 0.540000 0.660000]...
-                [0.890000 0.150000 0.210000], [0.600000 0.400000 0.800000], [1.000000 0.800000 0.640000], [0.840000 0.040000 0.330000]};
+            nChoices = numel(allChoices);
+            p = numSubplots(nChoices);
             
-            %% Iterate over Choices
-            figH = figure(100);clf
-            
-            trackedText = [];
-            legText = [];
-            for j = 1:nChoices
+            %% Boxplots
+            figure(103); clf
+            for k = 1:nChoices
                 
-                thisTrackedObject = allChoices{j};
+                BL_val = BL_vels{1,k};
+                pP_val = pP_vels{1,k};
+                pT_val = pT_vels{1,k};
                 
-                eval(['coords_X = coords.' thisTrackedObject '.x;']);
-                eval(['coords_Y = coords.' thisTrackedObject '.y;']);
-                eval(['likelihood = coords.' thisTrackedObject '.likelihood;']);
+                [p1,h] = ranksum(BL_val, pP_val);
+                [p2,h] = ranksum(BL_val, pT_val);
                 
-                hold on
-                % liklihood
-                HL_inds = find(likelihood >= likelihood_cutoff);
-                n_inds = numel(HL_inds);
+                subplot(p(1),p(2),k)
                 
-                % plot(coords_X, coords_Y, 'color', C(j,:), 'marker', '.', 'markersize', 10, 'linestyle', 'none')
-                plot(coords_X(HL_inds), coords_Y(HL_inds), 'color', cols{j}, 'marker', '.', 'markersize', 10, 'linestyle', '-')
-                trackedText = [trackedText '-' thisTrackedObject];
-                legText{j} = thisTrackedObject;
+                x = [BL_val pP_val pT_val];
+                g = [zeros(length(BL_val), 1); ones(length(pP_val), 1); 2*ones(length(pT_val), 1)];
+                %boxplot(x, g, 'plotstyle', 'compact', 'Labels',{'BL','postPain', 'postTouch'}, 'color', 'k' , 'whisker', 50)
+                boxplot(x, g, 'Labels',{'BL','postPain', 'postTouch'}, 'color', 'k' , 'whisker', 50)
+                yss = ylim;
+                text(0.8, yss(2)*0.9, ['BL vs pP: p = ' num2str(p1)]);
+                text(0.8, yss(2)*0.8, ['BL vs pT: p = ' num2str(p2)]);
+                ylabel(lab)
+                title(allChoices{k})
                 
             end
             
-            xlim([0 vidWidth]);
-            ylim([0 vidHeight]);
-            legend(legText)
-            legend ('boxoff')
-            legend('location', 'eastoutside')
-            figure(figH)
-            title('Detection clusters')
-            ylabel('y coordinates')
-            xlabel('x coordinates')
+            plotpos = [0 0 30 15]; % keep this so arena dims look ok
             
-            annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[ obj.PATH.ExpNameText '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
-            disp('Printing Plot')
-            
-            saveName = [plotPath 'DetectionClusters_' expText];
-            plotpos = [0 0 25 18]; % keep this so arena dims look ok
+            saveName = [obj.PATH.Plots 'Boxplot-' savetxt];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+                
+            %% heatmap
+            
+            clims = [-2 15];
+            
+            fps = 50;
+            smoothWin_s = 1;
+            smoothWin_frames = smoothWin_s*fps;
+            
+            for k = 1:nChoices
+                
+                thisBLVal = BL_vels{k};
+                
+                [Z_BL,mean_BL,std_BL]= zscore(thisBLVal);
+                
+                thispPVal = pP_vels{k};
+                thispTVal = pT_vels{k};
+                
+                zscore_pP = (thispPVal - mean_BL) ./ std_BL;
+                zscore_pT = (thispTVal - mean_BL) ./ std_BL;
+                
+                minVal = min([Z_BL zscore_pP zscore_pT]);
+                maxVal = max([Z_BL zscore_pP zscore_pT]);
+                
+                %clims = [floor(minVal) ceil(maxVal)];
+                
+                figure(100+k); clf
+                subplot(3, 1, 1)
+                %imagesc(Z_BL, clims)
+                imagesc(smooth(Z_BL, smoothWin_frames)', clims)
+                xticks = get(gca, 'xtick');
+                xticlabs = xticks/fps;
+                for j = 1:numel(xticlabs)
+                    xtickLabs{j} = num2str(xticlabs(j));
+                end
+                set(gca, 'xticklabel',xtickLabs)
+                set(gca,'YTickLabel',[]);
+                colorbar
+                title([allChoices{k} ': Baseline'])
+                
+                subplot(3, 1, 2)
+                %imagesc(zscore_pP, clims)
+                imagesc(smooth(zscore_pP, smoothWin_frames)', clims)
+                xticks = get(gca, 'xtick');
+                xticlabs = xticks/fps;
+                for j = 1:numel(xticlabs)
+                    xtickLabs{j} = num2str(xticlabs(j));
+                end
+                set(gca, 'xticklabel',xtickLabs)
+                set(gca,'YTickLabel',[]);
+                colorbar
+                title([allChoices{k} ': postPain'])
+                
+                subplot(3, 1, 3)
+                %imagesc(zscore_pT, clims)
+                imagesc(smooth(zscore_pT,smoothWin_frames)', clims)
+                xticks = get(gca, 'xtick');
+                xticlabs = xticks/fps;
+                for j = 1:numel(xticlabs)
+                    xtickLabs{j} = num2str(xticlabs(j));
+                end
+                set(gca, 'xticklabel',xtickLabs)
+                set(gca,'YTickLabel',[]);
+                colorbar
+                title([allChoices{k} ': postTouch'])
+                xlabel('Time (s)')
+                
+                plotpos = [0 0 15 12]; % keep this so arena dims look ok
+                
+                saveName = [obj.PATH.Plots 'Heatmap-' allChoices{k} '_' savetxt];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+            end
+            %% Z scores
+            for k = 1:nChoices
+                
+                thisBLVal = BL_vels{k};
+                [Z_BL,mean_BL,std_BL]= zscore(thisBLVal);
+                
+                thispPVal = pP_vels{k};
+                thispTVal = pT_vels{k};
+                
+                zscore_pP = (thispPVal - mean_BL) ./ std_BL;
+                zscore_pT = (thispTVal - mean_BL) ./ std_BL;
+                
+                figure(100+k); clf
+                
+                subplot(3, 1, 1)
+                timepoints_frames = 1:1:numel(Z_BL);
+                timepoints_s = timepoints_frames/fps;
+                plot(timepoints_s, smooth(Z_BL, smoothWin_frames))
+                axis tight
+                title([allChoices{k} ': Baseline'])
+                ylabel('Z-score')
+                
+                subplot(3, 1, 2)
+                timepoints_frames = 1:1:numel(zscore_pP);
+                timepoints_s = timepoints_frames/fps;
+                plot(timepoints_s, smooth(zscore_pP, smoothWin_frames))
+                title([allChoices{k} ': postPain'])
+                ylabel('Z-score')
+                axis tight
+                
+                subplot(3, 1, 3)
+                timepoints_frames = 1:1:numel(zscore_pT);
+                timepoints_s = timepoints_frames/fps;
+                plot(timepoints_s, smooth(zscore_pT,smoothWin_frames))
+                  axis tight
+                xlabel('Time (s)')
+                ylabel('Z-score')
+                title([allChoices{k} ': postTouch'])
+                
+                
+                plotpos = [0 0 15 12]; % keep this so arena dims look ok
+                
+                saveName = [obj.PATH.Plots 'Zscores-' allChoices{k} '_' savetxt];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+            end
+            
             
         end
+        
+        
+        function obj = makePlotsMeanWindowAnalysis(obj, vel_or_dist)
+        
+
+            if isfile(obj.PATH.EuclideanMat)
+                load(obj.PATH.EuclideanMat);
+            else
+                disp('Please run "plotVelocity" analysis')
+                return
+            end
+            
+            switch vel_or_dist
+                case 1
+                    BL_vels = allVelsOverExps{1,1};
+                    pP_vels = allVelsOverExps{1,2};
+                    pT_vels = allVelsOverExps{1,3};
+                    lab = 'Velocity (px/s)';
+                    savetxt = 'Velocity';
+                    
+                case 2
+                    BL_vels = allEucDistOverExps{1,1};
+                    pP_vels = allEucDistOverExps{1,2};
+                    pT_vels = allEucDistOverExps{1,3};
+                    lab = 'Distance (px)';
+                    savetxt = 'Distance';
+                    
+            end
+            
+            nChoices = numel(allChoices);
+            p = numSubplots(nChoices);
+            
+            %% Boxplots
+            figure(103); clf
+            
+            fps = 50;
+            
+            timeWindow_roi_s = [10 120];
+            timeWindow_roi_frames = timeWindow_roi_s*fps;
+            win_s = 5;
+            win_frames = win_s*fps;
+            for k = 1:nChoices
+                
+                BL_val = BL_vels{1,k}(timeWindow_roi_frames(1): timeWindow_roi_frames(2)-1);
+                pP_val = pP_vels{1,k}(timeWindow_roi_frames(1): timeWindow_roi_frames(2)-1);
+                pT_val = pT_vels{1,k}(timeWindow_roi_frames(1): timeWindow_roi_frames(2)-1);
+            
+                BL_buff = buffer(BL_val, win_frames);
+                pP_buff = buffer(pP_val, win_frames);
+                pT_buff = buffer(pT_val, win_frames);
+                
+                BL_means = mean(BL_buff, 1);
+                pP_means = mean(pP_buff, 1);
+                pT_means = mean(pT_buff, 1);
+                
+                allBL_buffs{k} =BL_buff;
+                allpP_buffs{k} =pP_buff;
+                allpT_buffs{k} =pT_buff;
+                %[h, pp] = lillietest(BL_means );
+                
+                [p1,h] = ranksum(BL_means, pP_means);
+                [p2,h] = ranksum(BL_means, pT_means);
+                
+%                 [h, p1] = ttest(BL_means, pP_means);
+%                 [h, p2] = ttest(BL_means, pT_means);
+                
+                subplot(p(1),p(2),k)
+                
+                toPlot = [BL_means ; pP_means ;pT_means];
+                boxplot(toPlot', 'Labels',{'BL','postPain', 'postTouch'}, 'color', 'k' , 'whisker', 50)
+               
+                yss = ylim;
+                text(0.8, yss(2)*0.9, ['BL vs pP: p = ' num2str(p1)]);
+                text(0.8, yss(2)*0.8, ['BL vs pT: p = ' num2str(p2)]);
+                ylabel(lab)
+                title(allChoices{k})
+                
+            end
+            
+             plotpos = [0 0 35 15]; % keep this so arena dims look ok
+            
+            saveName = [obj.PATH.Plots 'BoxplotMeans-' savetxt];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+               
+            clims = [0 0.5];
+            
+             for k = 1:nChoices
+                 
+                  
+                BL_buff = mean(allBL_buffs{k}, 1);
+                pP_buff = mean(allpP_buffs{k}, 1);
+                pT_buff = mean(allpT_buffs{k}, 1);
+                 
+            toPlot = [BL_buff; pP_buff; pT_buff];
+             
+            subplot(p(1),p(2),k)
+             
+            imagesc(toPlot)
+            %imagesc(toPlot, clims)
+            colorbar
+            title(allChoices{k})
+            
+             xticks = 1:5:22;
+             
+                xticlabs = {'15', '40', '65', '90', '115'}; 
+                set(gca, 'xtick', xticks)
+                set(gca, 'xticklabels', xticlabs)
+                set(gca,'YTickLabel',[]);
+                xlabel('Time (s)')
+             end
+            
+              plotpos = [0 0 35 15]; % keep this so arena dims look ok
+            
+            saveName = [obj.PATH.Plots 'HeatmapMeans-' savetxt];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+               
+        end
+        
+        
         
         function [] = plotTrajectoriesMakeVideo(obj)
             
@@ -849,97 +1093,6 @@ classdef dlcAnalysis_OBJ_embryo < handle
             
         end
         
-        
-        
-        function [obj] = plotVelocity(obj, likelihood_cutoff)
-            
-            if nargin <2
-                likelihood_cutoff = 0;
-                text_save = ['-full'];
-            else
-                text_save = ['-LH'];
-            end
-            
-            text_supp = ['LH = ' num2str(likelihood_cutoff)];
-            
-            VidFrameRate = obj.VID.VidFrameRate;
-            nEntries = obj.COORDS.nEntries;
-            
-            varNames = obj.COORDS.varNames;
-            
-            list = {varNames{2:end}};
-            [indx,tf] = listdlg('PromptString','Choose tracked objects:', 'ListString',list);
-            
-            nChoices = numel(indx);
-            trackedText = [];
-            for j = 1:nChoices
-                allChoices{j} = list{indx(j)};
-                trackedText{j} = list{indx(j)};
-            end
-            
-            cols = {'r', 'c','g', 'b', 'y', 'm', 'w', 'k'};
-            
-            %% Iterate over Choices
-            
-            timeRes_s = 1/VidFrameRate;
-            
-            figH = figure(100);clf
-            for j = 1:nChoices
-                
-                
-                thisTrackedObject = allChoices{j};
-                fieldMatch = isfield(obj.COORDS, thisTrackedObject);
-                
-                if fieldMatch
-                    eval(['coords_X = obj.COORDS.' thisTrackedObject '.x;']);
-                    eval(['coords_Y = obj.COORDS.' thisTrackedObject '.y;']);
-                    eval(['likelihood = obj.COORDS.' thisTrackedObject '.likelihood;']);
-                    
-                    HL_inds = find(likelihood >= likelihood_cutoff);
-                    n_inds = numel(HL_inds);
-                    
-                    c_X = coords_X(HL_inds);
-                    c_Y = coords_Y(HL_inds);
-                    
-                    % Determine Euclidian distance for velocity calc
-                    euclidianDistance = [];
-                    for k = 1:numel(c_X)-1
-                        point_xy_t0 = [c_X(k), c_Y(k)];
-                        point_xy_t1 = [c_X(k+1), c_Y(k+1)];
-                        distance = [point_xy_t0; point_xy_t1];
-                        euclidianDistance(k) = pdist(distance,'euclidean');
-                        
-                    end
-                    
-                    velocity_px_per_s = euclidianDistance/timeRes_s;
-                    hold on
-                    
-                    
-                    %subplot(nChoices, 1, j)
-                    hold on
-                    plot(euclidianDistance, 'color', cols{j}, 'marker', '.', 'markersize', 20, 'linestyle', '-')
-                    clear('coords_X', 'coords_Y');
-                    
-                end
-            end
-            
-            % Label figure
-            legend(trackedText)
-            axis tight
-            ylim([0 100])
-            xlabel('Frames')
-            ylabel('Distance (px)')
-            
-            figure(figH)
-            annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.VID.vidName '-' text_supp],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
-            disp('Printing Plot')
-            
-            % Print figure
-            plotPath = obj.PATH.plotPath;
-            saveName = [plotPath obj.VID.vidName(1:end-4) '_Distance' text_save];
-            plotpos = [0 0 25 15];
-            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-        end
         
         function [obj] = plotTimeSpentInQuadrants(obj, likelihood_cutoff)
             
@@ -1218,11 +1371,11 @@ classdef dlcAnalysis_OBJ_embryo < handle
     
     methods (Hidden)
         %class constructor
-        function obj = dlcAnalysis_OBJ_embryo(analysisDir)
+        function obj = dlcAnalysis_OBJ_embryo(analysisDir, ExperimentName)
             
-            addpath(genpath(analysisDir))
+            %addpath(genpath(analysisDir, ExperimentName))
             
-            obj = definePaths(obj, analysisDir);
+            obj = definePaths(obj, analysisDir, ExperimentName);
             
             
         end

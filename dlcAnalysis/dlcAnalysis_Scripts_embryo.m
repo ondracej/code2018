@@ -2,45 +2,42 @@
 % written by Janie Ondracek, janie.ondracek@tum.de
 
 %% 1) Define analysis directory
-analysisDir = 'G:\EmbryoAnalysis\BT18_140222-2_040222\'; % path to the analysis directory, should contain the 'BL', 'postPain', and 'postTouch' directories
-
-dlc_OBJ = dlcAnalysis_OBJ_embryo(analysisDir);
+analysisDir = 'G:\EmbryoAnalysis\ED18\BT18_280322-2_150422\AllData\'; % path to the analysis directory, should contain the 'BL', 'postPain', and 'postTouch' directories
+ExperimentName = 'BT18_280322-2_150422';
+likelihood_cutoff = 0.0;
+dlc_OBJ = dlcAnalysis_OBJ_embryo(analysisDir, ExperimentName);
 
 %% 2) Load csv files 
 
-    whichExperiment = 1; % 1: BL; 2: postPain; 3: postTouch
-    isFiltered = 0;
-    dlc_OBJ = loadTrackedData(dlc_OBJ, whichExperiment, isFiltered);
-
+dlc_OBJ = loadTrackedData(dlc_OBJ);
 
 %% 3) Load Video data
 
 %dlc_OBJ = loadVideoData(dlc_OBJ);
 
 %% 3) Analysis
-% plot likelihood
-plot_liklihood_over_time(dlc_OBJ, whichExperiment)
 
-% plot x coordinates
-x_or_y = 1; % 1) x coords; 2) y coords;
-plot_coords_over_time(dlc_OBJ, whichExperiment, x_or_y)
-
-% plot y coordinates
-x_or_y = 2; % 1) x coords; 2) y coords;
-plot_coords_over_time(dlc_OBJ, whichExperiment, x_or_y)
+plot_variable_over_time(dlc_OBJ, 1) % likelihood
+plot_variable_over_time(dlc_OBJ, 2) % x coordinates
+plot_variable_over_time(dlc_OBJ, 3) % y coordinates
 
 % plot detection clusters
-likelihood_cutoff = 0.0;
-dlc_OBJ = plotDetectionClusters(dlc_OBJ, whichExperiment, likelihood_cutoff);
+dlc_OBJ = plotDetectionClusters(dlc_OBJ, likelihood_cutoff);
 
-%% plot trajectories with likelihood cutoff
+% plot velocity (euclidean distance)
+dlc_Obj = plotVelocity(dlc_OBJ, likelihood_cutoff);
 
-likelihood_cutoff = 0.95;
+% 
+dlc_Obj = makePlotsForDistances(dlc_Obj, 2);
 
-[dlc_Obj ] = plotTrajectories_with_likelihood(dlc_OBJ, likelihood_cutoff);
+% Box plots,heat maps for 5 s windows
+dlc_Obj = makePlotsMeanWindowAnalysis(dlc_Obj, 2);
 
 %% Videos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 plotTrajectoriesMakeVideo(dlc_Obj);
+
+
+
 
 %% Make Video with Likelihood cutoff and frame cutoff
 
