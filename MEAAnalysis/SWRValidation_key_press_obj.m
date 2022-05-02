@@ -146,7 +146,7 @@ end
 function [] = updateGridPlotMEA_kp(spc)
 
 nInds = getappdata(spc, 'nInds');
-  
+
 AllSWRDataOnChans = getappdata(spc, 'AllSWRDataOnChans');
 %timepoints_s = getappdata(spc, 'timepoints_s');
 plottingOrder = getappdata(spc, 'plottingOrder');
@@ -196,7 +196,7 @@ for k = 1:   size(AllSWRDataOnChans, 1)
     end
     %scnt
     subplot(8, 8, scnt)
-  
+    
     plot(t_s, data_F2, 'k');
     
     
@@ -232,12 +232,18 @@ AllSWRDataOnChans = getappdata(spc, 'AllSWRDataOnChans');
 SWRDetectionDir = getappdata(spc, 'SWRDetectionDir');
 Fs = getappdata(spc, 'Fs');
 
+SWR_Detection_s = getappdata(spc, 'SWR_Detection_s');
+SWR_Detection_fs = getappdata(spc, 'Detection_fs');
+
+allValidated_SWR_Detection_s = SWR_Detection_s(:,allSavedDetectionInds);
+allValidated_SWR_Detection_fs = SWR_Detection_fs(:,allSavedDetectionInds);
+
 allValidatedSWRS = AllSWRDataOnChans(:,allSavedDetectionInds);
 plottingOrder = getappdata(spc, 'plottingOrder');
 
 saveName = [SWRDetectionDir 'Validated_SWRs.mat'];
-    save(saveName, 'allValidatedSWRS', 'plottingOrder', 'Fs', '-v7.3')
-
+save(saveName, 'allValidatedSWRS', 'plottingOrder', 'Fs', 'allValidated_SWR_Detection_s', 'allValidated_SWR_Detection_fs', '-v7.3')
+disp(['Saved Validated SWRs: ' saveName])
 end
 
 
