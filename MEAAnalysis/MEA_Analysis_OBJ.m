@@ -22,7 +22,7 @@ classdef MEA_Analysis_OBJ < handle
             %% adding code paths
             
             McsCodePath = 'C:\Users\dlc\Documents\GitHub\McsMatlabDataTools';
-            code2018Path = 'C:\Users\dlc\Documents\GitHub\code2018';
+            code2018Path = 'C:\Users\SWR-Analysis\Documents\GitHub\code2018';
             NETCode = 'C:\Users\dlc\Documents\GitHub\NeuralElectrophysilogyTools';
             
             if isfolder(McsCodePath)
