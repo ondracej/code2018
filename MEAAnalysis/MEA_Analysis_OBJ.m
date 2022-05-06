@@ -21,9 +21,9 @@ classdef MEA_Analysis_OBJ < handle
             
             %% adding code paths
             
-            McsCodePath = 'C:\Users\dlc\Documents\GitHub\McsMatlabDataTools';
+            McsCodePath = 'C:\Users\SWR-Analysis\Documents\GitHub\McsMatlabDataTools';
             code2018Path = 'C:\Users\SWR-Analysis\Documents\GitHub\code2018';
-            NETCode = 'C:\Users\dlc\Documents\GitHub\NeuralElectrophysilogyTools';
+            NETCode = 'C:\Users\SWR-Analysis\Documents\GitHub\NeuralElectrophysilogyTools';
             
             if isfolder(McsCodePath)
                 addpath(genpath('C:\Users\dlc\Documents\GitHub\McsMatlabDataTools'));
@@ -158,7 +158,6 @@ classdef MEA_Analysis_OBJ < handle
             disp(['Spiking channels: ' num2str(obj.ANALYSIS.Firing_Rate_Analysis_channels_with_spikes)])
             
         end
-        
         
         function obj = load_MCS_data_detectSWRs_rippleDetection(obj)
             
@@ -575,9 +574,6 @@ end
             end
         end
         
-        
-        
-        
         function obj = load_MCS_data_detectSWRs_zscore_detection(obj)
             
             disp('Loading data and detecting SWRs....')
@@ -985,8 +981,6 @@ end
                 
             end
         end
-        
-        
         
         function obj = collectAllSWRDetections(obj)
             
@@ -1404,7 +1398,6 @@ end
             disp('Finished....')
         end
         
-        
         function obj = calculateDelaysfromValidSWRs_makePlots(obj)
             
             
@@ -1802,10 +1795,6 @@ end
                 
             end
         end
-        
-        
-        
-        
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Firing Rate analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

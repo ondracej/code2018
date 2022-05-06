@@ -1,31 +1,28 @@
 
-%% Initialize the program
-
-%% To run a cell, typue STRG + Enter
+%% [1] Initialize the program
+% *** To run a cell, type STRG + Enter
 
 analysisDir = 'F:\Johanna_MEA_Data\20220421\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
-%% Save object - to save the object in the middle of the analysis
-mea_OBJ = saveCurrentAnalysis(mea_OBJ, analysisDir);
+                %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
+                %% Save object - to save the object in the middle of the analysis
+                mea_OBJ = saveCurrentAnalysis(mea_OBJ, analysisDir);
 
-%% Load an analysis object - only use if zou have previous analysis to load
-mea_OBJ = loadAnalysisObject(mea_OBJ, analysisDir);
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
+                %% Load an analysis object - only use if zou have previous analysis to load
+                mea_OBJ = loadAnalysisObject(mea_OBJ, analysisDir);
+                %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
 
 %% Before continuing this analysis
 
-%% 0) Move the files into the newly created directories
-
-%% 1)  Use the "Analyzer rack" to identify:
+% 0) Move the files into the newly created directorie
+% 1) Use the "Analyzer rack" to identify:
     %1a) All noisy channles to exclude for the SWR analysis == "SWR_Analysis_noisy_channels" 
     %1b) 5 channels with good SWRs
     %1c) All channles that have large amplitude spikes for the firing rate == "Firing_Rate_Analysis_channels_with_spikes"    
+% 2) Convert the .mcs file into a HDF% (.h5) file 
 
-%% 2)  Convert the .mcs file into a HDF% (.h5) file 
-
-%% 3) Inititialize the analysis -- slect the file to analyze
+%% [2] Inititialize the analysis -- select the file to analyze
 % Need 1) noisy channels, 2) 5 SWR channels, 3) spiking channels
 
 mea_OBJ = addAnalysisInfoToObj(mea_OBJ);
@@ -37,9 +34,7 @@ mea_OBJ = addAnalysisInfoToObj(mea_OBJ);
 %% SWR Detection Analysis - this takes a long time
 
 mea_OBJ = load_MCS_data_detectSWRs_zscore_detection(mea_OBJ);
-
 mea_OBJ = collectAllSWRDetections(mea_OBJ);
-
 % printing figures
 mea_OBJ = plotSWRDetection(mea_OBJ);
 
@@ -48,7 +43,6 @@ mea_OBJ = validateSWRDetections(mea_OBJ);
 
 %% Make delay plot
 mea_OBJ = calculateDelaysfromValidSWRs_makePlots(mea_OBJ);
-
 
 %% SWR statistics (@ Janie to do)
 % save this as a mat files
