@@ -17,10 +17,11 @@ function [] = wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files,
     file_to_load = [wav_file_dir this_file];
 
     % Read in the wav file and save the parameters
-    [wav_file,fs, bits] = wavread(file_to_load);
+    %[wav_file,fs, bits] = wavread(file_to_load);
+    [wav_file,fs ] = audioread(file_to_load);
     setappdata(spc, 'wav_file', wav_file);
     setappdata(spc, 'fs', fs);
-    setappdata(spc, 'bits', bits);
+    %setappdata(spc, 'bits', bits);
 
     setappdata(spc, 'this_file', this_file);
 

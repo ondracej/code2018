@@ -1,18 +1,10 @@
-function[] = wav_browser()
+function[] = wav_browser(wav_file_dir)
 
-%% Enter the directory path
-
-wav_file_dir = 'E:\Data\FemaleFeedback\w022\';
-
-
-
-
-
-
-
-
-
-
+if nargin <1
+    %% Enter the directory path
+    
+    wav_file_dir = 'E:\Data\FemaleFeedback\w022\';
+end
 
 %%
 dbstop if error
@@ -24,7 +16,7 @@ elseif isunix
 end
 
 good_wavs_dir = [wav_file_dir 'Edited' dirD];
-% 
+%
 % if exist(good_wavs_dir , 'dir') == 0
 %     mkdir(good_wavs_dir );
 % end
