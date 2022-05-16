@@ -21,9 +21,9 @@ classdef MEA_Analysis_OBJ < handle
             
             %% adding code paths
             
-            McsCodePath = 'C:\Users\dlc\Documents\GitHub\McsMatlabDataTools';
-            code2018Path = 'C:\Users\dlc\Documents\GitHub\code2018';
-            NETCode = 'C:\Users\dlc\Documents\GitHub\NeuralElectrophysilogyTools';
+            McsCodePath = 'C:\Users\SWR-Analysis\Documents\GitHub\McsMatlabDataTools';
+            code2018Path = 'C:\Users\SWR-Analysis\Documents\GitHub\code2018';
+            NETCode = 'C:\Users\SWR-Analysis\Documents\GitHub\NeuralElectrophysilogyTools';
             
             if isfolder(McsCodePath)
                 addpath(genpath('C:\Users\dlc\Documents\GitHub\McsMatlabDataTools'));
@@ -44,11 +44,13 @@ classdef MEA_Analysis_OBJ < handle
             end
             
             %% Define folder structure
-            
+            obj.PATH.analysisDir = analysisDir;
             obj.PATH.mcdFiles = [analysisDir '_mcd_files' dirD];
             obj.PATH.h5Files = [analysisDir '_h5_files' dirD];
             obj.PATH.swrAnalysis = [analysisDir 'SWR_Analysis' dirD];
             obj.PATH.spikeAnalysis = [analysisDir 'Firing_Rate_Analysis' dirD];
+            obj.PATH.objSaveDir = [analysisDir 'AnalysisObjects' dirD];
+            
             obj.PATH.dirD  = dirD ;
             
             if exist(obj.PATH.mcdFiles, 'dir') ==0
@@ -158,7 +160,6 @@ classdef MEA_Analysis_OBJ < handle
             disp(['Spiking channels: ' num2str(obj.ANALYSIS.Firing_Rate_Analysis_channels_with_spikes)])
             
         end
-        
         
         function obj = load_MCS_data_detectSWRs_rippleDetection(obj)
             
@@ -575,9 +576,6 @@ end
             end
         end
         
-        
-        
-        
         function obj = load_MCS_data_detectSWRs_zscore_detection(obj)
             
             disp('Loading data and detecting SWRs....')
@@ -986,8 +984,6 @@ end
             end
         end
         
-        
-        
         function obj = collectAllSWRDetections(obj)
             
             disp('Collecting SWR detections...')
@@ -1105,34 +1101,34 @@ end
             fObj = obj.ANALYSIS.SWR_INFO.fobj;
             
             
-                fobj.filt.FL=filterData(Fs);
-                fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
-                fobj.filt.FL.lowPassStopCutoff=40;
-                fobj.filt.FL.attenuationInLowpass=20;
-                fobj.filt.FL=fobj.filt.FL.designLowPass;
-                fobj.filt.FL.padding=true;
-                
-                fobj.filt.BP=filterData(Fs);
-                fobj.filt.BP.highPassCutoff=1;
-                fobj.filt.BP.lowPassCutoff=2000;
-                fobj.filt.BP.filterDesign='butter';
-                fobj.filt.BP=fobj.filt.BP.designBandPass;
-                fobj.filt.BP.padding=true;
+            fobj.filt.FL=filterData(Fs);
+            fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.FL.lowPassStopCutoff=40;
+            fobj.filt.FL.attenuationInLowpass=20;
+            fobj.filt.FL=fobj.filt.FL.designLowPass;
+            fobj.filt.FL.padding=true;
             
-                fobj.filt.Ripple=filterData(Fs);
-                fobj.filt.Ripple.highPassCutoff=80;
-                fobj.filt.Ripple.lowPassCutoff=300;
-                fobj.filt.Ripple.filterDesign='butter';
-                fobj.filt.Ripple=fobj.filt.Ripple.designBandPass;
-                fobj.filt.Ripple.padding=true;
-                
-                fobj.filt.SW=filterData(Fs);
-                fobj.filt.SW.highPassCutoff=8;
-                fobj.filt.SW.lowPassCutoff=40;
-                fobj.filt.SW.filterDesign='butter';
-                fobj.filt.SW=fobj.filt.SW.designBandPass;
-                fobj.filt.SW.padding=true;
-                
+            fobj.filt.BP=filterData(Fs);
+            fobj.filt.BP.highPassCutoff=1;
+            fobj.filt.BP.lowPassCutoff=2000;
+            fobj.filt.BP.filterDesign='butter';
+            fobj.filt.BP=fobj.filt.BP.designBandPass;
+            fobj.filt.BP.padding=true;
+            
+            fobj.filt.Ripple=filterData(Fs);
+            fobj.filt.Ripple.highPassCutoff=80;
+            fobj.filt.Ripple.lowPassCutoff=300;
+            fobj.filt.Ripple.filterDesign='butter';
+            fobj.filt.Ripple=fobj.filt.Ripple.designBandPass;
+            fobj.filt.Ripple.padding=true;
+            
+            fobj.filt.SW=filterData(Fs);
+            fobj.filt.SW.highPassCutoff=8;
+            fobj.filt.SW.lowPassCutoff=40;
+            fobj.filt.SW.filterDesign='butter';
+            fobj.filt.SW=fobj.filt.SW.designBandPass;
+            fobj.filt.SW.padding=true;
+            
             name = obj.ANALYSIS.ExpName;
             for j = 1: size(AllSWRDataOnChans, 2)
                 
@@ -1404,9 +1400,403 @@ end
             disp('Finished....')
         end
         
-        
-        
-        
+        function obj = calculateDelaysfromValidSWRs_makePlots(obj)
+            
+            
+            validSWRSFile = [obj.PATH.swrAnalysisDetections_Dir 'Validated_SWRs.mat'];
+            load(validSWRSFile);
+            
+            
+            figSaveDir = [obj.PATH.swrAnalysisDetections_plotDir];
+            
+            SWRs=allValidatedSWRS;
+            %chansNotToPlot = obj.ANALYSIS.SWR_Analysis_noisy_channels;
+            chansNotToPlot = [];
+            plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
+            NoDetChanInds = ismember(plottingOrder, chansNotToPlot);
+            
+            %% reorganizing the data in matrices and SWR trough detection
+            
+            % designing a filter for extraction of low frequenc ? component of each
+            % SWR, the sharp wave (e.g. 20-40 Hz)
+            
+            [b1,a1] = butter(2,[150 400]/(Fs/2)); % ripple burst spectral range
+            [b2,a2] = butter(2,[.2 20]/(Fs/2)); % sharp wave range
+            
+            %%
+            
+            nSWRCounts = size(SWRs, 2);
+            
+            for j = 1:nSWRCounts
+                % reading from the cell, filtering, and rearranging in a 3D matrix
+                swr_count=j;
+                
+                for chnl=1:size(SWRs,1)
+                    SWR(:,chnl)=SWRs{chnl,swr_count};
+                end
+                
+                % we filter the data to just extract the low-frequency component,
+                % the Sharp Wave, and to detect the trough based on it
+                ripple=filtfilt(b1,a1,SWR);
+                sharp_wave=filtfilt(b2,a2,SWR);
+                
+                ripples_mat(:,:,swr_count)=ripple;
+                sharp_wave_mat(:,:,swr_count)=sharp_wave;
+                
+                
+                %% plotting one SWR for all channels
+                dist=10; % distance between channels for the plottring %???????????????????
+                
+                col_g = [0 .4 .2];
+                col_r = [1 .5 .6];
+                col_gr = [.9 .9 .9];
+                
+                FigH = figure(100); clf
+                
+                for chnl=1:size(SWRs,1)
+                    
+                    match =  NoDetChanInds(chnl);
+                    
+                    subplot(1,2,1) % first subplot Sharp Wave
+                    hold on
+                    if match
+                        
+                        plot((1:length(sharp_wave_mat(:,:,swr_count)))/Fs,sharp_wave_mat(:,chnl,swr_count)-dist*chnl,...
+                            'color', col_gr);
+                        
+                        thisChan = num2str(plottingOrder(chnl));
+                        text(0.5, sharp_wave_mat(chnl,swr_count)-dist*chnl, thisChan)
+                        
+                        % continue
+                        disp('')
+                    else
+                        
+                        plot((1:length(sharp_wave_mat(:,:,swr_count)))/Fs,sharp_wave_mat(:,chnl,swr_count)-dist*chnl,...
+                            'color', col_g);
+                        
+                        thisChan = num2str(plottingOrder(chnl));
+                        text(0.5, sharp_wave_mat(chnl,swr_count)-dist*chnl, thisChan)
+                        
+                    end
+                    
+                    
+                    subplot(1,2,2) % second subplot Sharp wave and Ripples
+                    hold on
+                    if match
+                        
+                        
+                        plot((1:length(ripples_mat(:,:,swr_count)))/Fs,.5*ripples_mat(:,chnl,swr_count)-dist*chnl,...
+                            'color',col_gr);
+                        plot((1:length(sharp_wave_mat(:,:,swr_count)))/Fs,sharp_wave_mat(:,chnl,swr_count)-dist*chnl,...
+                            'color',col_gr );
+                    else
+                        plot((1:length(ripples_mat(:,:,swr_count)))/Fs,.5*ripples_mat(:,chnl,swr_count)-dist*chnl,...
+                            'color',col_r);
+                        plot((1:length(sharp_wave_mat(:,:,swr_count)))/Fs,sharp_wave_mat(:,chnl,swr_count)-dist*chnl,...
+                            'color',col_g );
+                    end
+                    
+                    
+                    hold on
+                    
+                    
+                end
+                figure(FigH)
+                subplot(1,2,1)
+                axis tight
+                %yticks(dist*(-chnl:4:-1));
+                % yticklabels(num2cell(1:4:chnl));
+                yticklabels([]);
+                xlim([.5 1.5])
+                ylim([-600 0])
+                ylabel('channels')
+                xlabel('Time (sec)');
+                title(['Raw Data: ' obj.ANALYSIS.ExpName ' SWR: ' num2str(swr_count) ]);
+                
+                subplot(1,2,2)
+                % yticks(dist*(-chnl:4:-1));
+                %yticklabels({});
+                yticklabels([]);
+                xlim([.5 1.5])
+                ylim([-600 0])
+                xlabel('Time (sec)');
+                
+                %%
+                
+                %
+                % saveName = [figSaveDir 'RawData__' sprintf('%03d', j)];
+                % plotpos = [0 0 12 18];
+                % print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+                
+                %% extracting the ripple envelope, plotting 1 SWR along channels
+                % extracting the trough times across channels
+                t_trough_ind = [];
+                for chnl=1:size(sharp_wave_mat,2)
+                    %[~,t_trough_ind(chnl)]=min(sharp_wave_mat(:,chnl,swr_count),[],'all','linear');
+                    match =  NoDetChanInds(chnl); % we do not look for the mins in the noisy channels
+                    if ~match
+                        [~,t_trough_ind(chnl)]=min(sharp_wave_mat(:,chnl,swr_count));
+                    else
+                        
+                        t_trough_ind(chnl)=nan;
+                    end
+                end
+                %t_trough=(t_trough_ind-min(t_trough_ind,[],'all'))/fs;
+                t_trough=(t_trough_ind-min(t_trough_ind))/Fs;
+                
+                % ripple envelope and plot with sharp waves
+                win_len=round(Fs/20) ; % sliding window for the RMS envelope
+                [up,lo] = envelope(ripples_mat(:,:,swr_count),win_len,'rms');
+                
+                % plotting one SW and ripple envelopes for all channels
+                dist=20; % distance between channels for the plottring %???????????????????
+                samps=1:1:length(SWR);
+                t_plot=samps/(Fs/1)-1;
+                
+                %%
+                figure(103); clf
+                chnls=1:59; % channels to plot
+                %for chnl=chnls %size(SWRs,1)
+                for chnl=1:59 %size(SWRs,1)
+                    
+                    subplot(1,4,2); % for the sharp wave and ripples envelope
+                    
+                    thisChan = num2str(plottingOrder(chnl));
+                    match =  NoDetChanInds(chnl); % we do not look for the mins in the noisy channels
+                    
+                    if ~match
+                        plot(t_plot,ripples_mat(samps,chnl,swr_count)-dist*chnl,'color',col_r);     hold on
+                        plot(t_plot,up(samps,chnl)-dist*chnl,t_plot,lo(samps,chnl)-dist*chnl,'color',[.5 0 0]);
+                        text(-0.5, sharp_wave_mat(chnl,swr_count)-dist*chnl, thisChan)
+                    else
+                        plot(t_plot,ripples_mat(samps,chnl,swr_count)-dist*chnl,'color',col_gr);     hold on
+                        plot(t_plot,up(samps,chnl)-dist*chnl,t_plot,lo(samps,chnl)-dist*chnl,'color',col_gr);
+                        text(-0.5, sharp_wave_mat(chnl,swr_count)-dist*chnl, thisChan)
+                    end
+                    
+                    
+                    subplot(1,4,1) % for the sharp wave and the ripples
+                    if ~match
+                        plot(t_plot,ripples_mat(samps,chnl,swr_count)-dist*chnl,'color',col_r);     hold on
+                        plot(t_plot,sharp_wave_mat(samps,chnl,swr_count)-dist*chnl,'color',col_g);
+                        text(-0.5, sharp_wave_mat(chnl,swr_count)-dist*chnl, thisChan)
+                    else
+                        plot(t_plot,ripples_mat(samps,chnl,swr_count)-dist*chnl,'color',col_gr);     hold on
+                        plot(t_plot,sharp_wave_mat(samps,chnl,swr_count)-dist*chnl,'color',col_gr);
+                        text(-0.5, sharp_wave_mat(chnl,swr_count)-dist*chnl, thisChan)
+                    end
+                    
+                end
+                
+                subplot(1,4,1)
+                % yticks(dist*(chnls(1):4:chnls(end)));
+                % yticklabels(num2cell(chnls(1):4:chnls(end)));
+                ylabel('channels')
+                yticklabels([]);
+                xlim([-.5 .5])
+                % ylim(dist*[chnls(1)-1 chnls(end)+1])
+                ylim([-1200 0])
+                xlabel('Time (sec)');
+                title(['Raw Data: ' obj.ANALYSIS.ExpName  ' SWR: ' num2str(swr_count) ]);
+                
+                
+                subplot(1,4,2);
+                yticks([]);
+                xlim([-.5 .5])
+                %ylim(dist*[chnls(1)-1 chnls(end)+1])
+                ylim([-1200 0])
+                xlabel('Time (sec)');
+                
+                
+                %%
+                
+                % threshold for ripple detection
+                %tr=median(up)+3.0*iqr(up);
+                
+                tr=median(up)+2*iqr(up);
+                t0=ones(1,length(chnls));
+                
+                hold on
+                % adding the threshold to the subplot 1
+                %for chnl=chnls
+                %searchROI = 25500:40000; % -.25s to +.25 s
+                searchROI = 30000:40000; % -.25s to +.25 s
+                
+                for chnl=1:59
+                    
+                    thisChan = num2str(plottingOrder(chnl));
+                    match =  NoDetChanInds(chnl); % we do not look for th
+                    
+                    
+                    t_0=find(up(searchROI,chnl)>tr(chnl),1) +searchROI(1); % time index of the first supra threshold detection
+                    %t_0=find(up(:,chnl)>tr(chnl),1); % time index of the first supra threshold detection
+                    if ~isempty(t_0)
+                        if t_0>.7*Fs && t_0<1.2*Fs
+                            t0(chnl-chnls(1)+1)=t_0;  % fist supra-threshold sample for each channel
+                        end
+                        subplot(1,4,1)
+                        plot(t_plot(t0(chnl-chnls(1)+1)),up(t0(chnl-chnls(1)+1),chnl)-dist*chnl,'color',[.4 .0 .4],'marker','s','markersize',5);
+                        
+                        subplot(1,4,2)
+                        plot(t_plot(t0(chnl-chnls(1)+1)),up(t0(chnl-chnls(1)+1),chnl)-dist*chnl,'color',[.4 .0 .4],'marker','s','markersize',5);
+                        
+                    end
+                    if match
+                        t0(chnl-chnls(1)+1) = nan;
+                    end
+                end
+                
+                title('Ripple Onset Detection');
+                
+                t00=t0/Fs; % in s
+                
+                %%
+                %     saveName = [figSaveDir 'Detections__' sprintf('%03d', j)];
+                %     plotpos = [0 0 15 18];
+                %     print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+                %figure; plot(up(searchROI,chnl))
+                %% delay map visualization
+                
+                % the time when the SWR has been detected in a channel first, is the reference time, or zero
+                % delay, and we consider the time of observation of the SWR in the other
+                % channels as the daly of the spread of the SWR, so we subtract the t_min
+                % from all the t_delays
+                sorted_t00=unique(sort(t00));
+                %t00_min=sorted_t00(3); % after sorting the delay times, the first one is 0 (or 1/Fs) which is associated ...
+                t00_min=sorted_t00(2);
+                
+                medianTime = nanmedian(sorted_t00(1:end));
+                % diffT = medianTime-t00_min;
+                
+                AllDiffsFromMedian = medianTime - sorted_t00;
+                
+                %TInd = find(AllDiffsFromMedian < 0.17); % look for the first ind where the diff between median is < 110 ms
+                TInd = find(AllDiffsFromMedian < 0.15); % look for the first ind where the diff between median is < 110 ms
+                
+                t00_min=sorted_t00(TInd(1));
+                
+                
+                %%
+                
+                whichInd = find(t00 == t00_min);
+                firstChan = plottingOrder(whichInd);
+                
+                % with the channels with no detected SWR.
+                t0=t00-t00_min;
+                
+                allzeros = find(t0 < 0); % chans with no detections
+                
+                
+                t0NoZeros = t0;
+                t0NoZeros(allzeros) = nan;
+                % constructing the grid of coordinates based on the paddings of our
+                % recording micro array electorde
+                % z matrix, regarding the fact that some of the entries in the 8x8 array
+                % are not active electrodes, we can assign any random value, i.e. random delay, to those places, just to be able to
+                % make a complete matrix. To keep the continuity, we assign a neighboring values to those entries.
+                % At the end we do not consider those places on the final plot
+                
+                toT0 = t0NoZeros;
+                %  toT0 = t0;
+                zz = [];
+                %zz=[t0(5) t0(1:3) t0(3) t0(4:5) t0(5) t0(6:53) t0(54) t0(54:59) t0(59)];
+                zz=[ nan toT0(1:6) nan toT0(7:30) nan toT0(31:53) nan toT0(54:59) nan ];
+                z=reshape(zz,8,8)';
+                
+                
+                zX=[ nan plottingOrder(1:6) nan plottingOrder(7:30) nan plottingOrder(31:53) nan plottingOrder(54:59) nan ];
+                zZ=reshape(zX,8,8)';
+                
+                %max_val=max(z,[],'all');
+                %min_val=min(z,[],'all');
+                %max_val=max(max(z));
+                %min_val=min(min(z));
+                %imagesc([0 7*spacing],[0 7*spacing],z,clim); colormap(cmap); axis equal
+                %%
+                %figure0=figure(301); clf
+                subplot(1, 4, [3 4])
+                %cmap=summer;
+                %cmap=flipud(pink);
+                cmap=flipud(copper);
+                colormap(cmap)
+                
+                clims = [0 .35];
+                
+                
+                zToPlot = flipud(z);
+                [row, col] = find(zToPlot == 0);
+                %zToPlot = z;
+                [nr,nc] = size(zToPlot);
+                pcolor([zToPlot nan(nr,1); nan(1,nc+1)]);
+                %shading flat;
+                colorbar
+                hold on
+                plot(col+.5, row+.5, 'k*')
+                caxis(clims);
+                
+                % Label the names
+                
+                cnt =1;
+                for rows = [8 7 6 5 4 3 2 1]
+                    for cols  = [1 2 3 4 5 6 7 8]
+                        
+                        if rows == 8 && cols == 1
+                            
+                        elseif rows == 8 && cols ==8
+                            
+                        elseif rows == 8 && cols ==8
+                            
+                        elseif rows == 4 && cols ==1
+                            
+                        elseif rows == 1 && cols ==1
+                            
+                        elseif rows == 1 && cols ==8
+                            
+                        else
+                            text(cols+.3, rows+.8, num2str(plottingOrder(cnt)))
+                            cnt = cnt +1;
+                        end
+                    end
+                end
+                
+                
+                title([obj.ANALYSIS.ExpName ' SWR ' num2str(swr_count) ': Delay map']);
+                %xlabel('x (\mu m)','fontweight','bold')
+                %ylabel('y (\mu m)','fontweight','bold')
+                a = colorbar;
+                a.Label.String = 'delay (sec)';
+                axis off
+                
+                saveName = [figSaveDir 'DataDelayMap__' sprintf('%03d', swr_count)];
+                plotpos = [0 0 30 15];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                % print_in_A4(0, saveName, '-depsc', 0, plotpos);
+                
+                %% Detection Info To Save
+                
+                Det.ripples_mat = ripples_mat;
+                Det.sharp_wave_mat = sharp_wave_mat;
+                Det.up = up;
+                Det.lo = lo;
+                Det.tr = tr;
+                Det.plottingOrder = plottingOrder;
+                Det.chansNotToPlot = chansNotToPlot;
+                Det.t_plot = t_plot;
+                Det.firstChan = firstChan;
+                Det.medianTime = medianTime;
+                Det.t00 = t00;
+                Det.t00_min = t00_min;
+                Det.t0 = t0;
+                Det.t0NoZeros = t0NoZeros;
+                Det.z = z;
+                Det.zToPlot = zToPlot;
+                
+                save([obj.PATH.swrAnalysisDetections_Dir '_DelayMap_' sprintf('%03d', swr_count) '.mat'], 'Det', '-v7.3')
+                
+            end
+        end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Firing Rate analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1503,6 +1893,45 @@ end
             save(saveName, 'DATA', 'INFO', '-v7.3')
             disp(['Saved spike file: ' saveName]);
             
+        end
+        
+        function obj = saveCurrentAnalysis(obj, analysisDir)
+            
+            objSaveDir = [analysisDir 'AnalysisObjects' obj.PATH.dirD];
+            
+            if exist(objSaveDir, 'dir') ==0
+                mkdir(objSaveDir);
+                disp(['Created directory: ' objSaveDir])
+            end
+            
+            obj.PATH.objSaveDir = objSaveDir;
+            
+            filename = [objSaveDir obj.ANALYSIS.ExpName '__OBJ.mat'];
+            
+            save(filename, 'obj', '-v7.3');
+            disp(['Saved analysis object: ' filename]);
+            
+        end
+        
+        function obj = loadAnalysisObject(obj, analysisDir)
+            
+            ObjFiles = dir(fullfile(obj.PATH.objSaveDir, '*.mat'));
+            nFiles = numel(ObjFiles);
+            fileNames = [];
+            for j = 1:nFiles
+                fileNames{j} = ObjFiles(j).name;
+            end
+            
+            list = {fileNames{1:end}};
+            
+            
+            prompt = 'Please choose an analysis object:';
+            [indx,tf] = listdlg('PromptString',prompt, 'ListString',list, 'SelectionMode','single', 'ListSize', [400 200]);
+            
+            SelectedObj = list{indx};
+          
+            load([obj.PATH.objSaveDir SelectedObj])
+            disp(['Loaded analysis object: ' [obj.PATH.objSaveDir SelectedObj]])
         end
         
         
