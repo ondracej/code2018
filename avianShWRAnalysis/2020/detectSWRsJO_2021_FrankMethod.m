@@ -84,10 +84,16 @@ doPlot = 1;
 
 
 %% w044
- SessionDir = 'H:\HamedsData\w042_w044\w044\chronic_2022-01-01_20-26-41\Ephys\';
- rippleChans = [9 10 11];
- s_ToLightOff = 1999;
+ %SessionDir = 'H:\HamedsData\w042_w044\w044\chronic_2022-01-01_20-26-41\Ephys\';
+ %rippleChans = [9 10 11];
+ %s_ToLightOff = 1999;
  
+%% w027
+
+ SessionDir = 'H:\HamedsData\w025_w027\w027\chronic_2021-08-04_22-02-26\Ephys\';
+ rippleChans = [49 50];
+ s_ToLightOff = 21142;
+
 
 %%
 %SessionDir = 'G:\SWR\ZF-72-96\20200108\14-03-08\Ephys\';

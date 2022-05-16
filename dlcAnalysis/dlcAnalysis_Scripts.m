@@ -4,12 +4,12 @@
 %% Initialization
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pathToCodeRepository = '/home/janie/Documents/Code/code2018/';
+pathToCodeRepository = 'C:\Users\Neuropix\Documents\GitHub\code2018\';
 addpath(genpath(pathToCodeRepository)) 
 
 % Define paths
 
-analysisDir = '/home/janie/Dropbox/tmp/turtle/new/';
+analysisDir = 'G:\EmbryoAnalysis\Analysis\';
 VidToAnalyze = 'Video 959.avi';
 dlc_OBJ = dlcAnalysis_OBJ(analysisDir, VidToAnalyze);
 

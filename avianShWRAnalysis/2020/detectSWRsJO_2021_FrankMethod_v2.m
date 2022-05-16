@@ -8,7 +8,7 @@ addpath(genpath('C:\Users\Neuropix\Documents\GitHub\NeuralElectrophysilogyTools\
 %rippleChans = [2 7 13 12 11 1 16 3 6 4 5];
 
 isChronic = 1;
-doPlot = 0;
+doPlot = 1;
 %% 72-01
 
 %SessionDir = 'Z:\JanieData\JanieSpikeSorting\ZF-72-01\20210225_15-05-52\Ephys\';
@@ -61,8 +61,8 @@ doPlot = 0;
 
 %% 71-76 chronic
 
-artifactThresh_pos = 600;
-artifactThresh_neg = -800;
+%artifactThresh_pos = 600;
+%artifactThresh_neg = -800;
 
 % SessionDir = 'G:\SWR\ZF-71-76_Final\20190920\18-37-00\Ephys';
 % rippleChans = [7 10 2];
@@ -72,9 +72,9 @@ artifactThresh_neg = -800;
 % rippleChans = [7 10 2];
 % s_ToLightOff = 7694;
 
-SessionDir = 'G:\SWR\ZF-71-76_Final\20190917\16-05-11\Ephys';
-rippleChans = [7 10 2];
-s_ToLightOff = 14089;
+% SessionDir = 'G:\SWR\ZF-71-76_Final\20190917\16-05-11\Ephys';
+% rippleChans = [7 10 2];
+% s_ToLightOff = 14089;
 
 %SessionDir = 'G:\SWR\ZF-71-76_Final\20190916\18-05-58\Ephys';
 %rippleChans = [7 10 2];
@@ -97,13 +97,26 @@ s_ToLightOff = 14089;
  
  %% w027
  
-%  artifactThresh_pos = 400;
-% artifactThresh_neg = -450;
+  artifactThresh_pos = 600;
+ artifactThresh_neg = -650;
 % 
-%  SessionDir = 'H:\HamedsData\w025_w027\w027\chronic_2021-07-28_21-51-11\Ephys';
-%   rippleChans = [41 49 50];
-%  s_ToLightOff = 529;
+  %SessionDir = 'H:\HamedsData\w025_w027\w027\chronic_2021-07-28_21-51-11\Ephys';
+  %rippleChans = [41 49 50];
+  %s_ToLightOff = 529;
 
+  SessionDir = 'H:\HamedsData\w025_w027\w027\chronic_2021-08-04_22-02-26\Ephys\';
+  rippleChans = [41 49 50];
+  s_ToLightOff = 1060;
+%   
+%   SessionDir = 'H:\HamedsData\w025_w027\w027\chronic_2021-08-05_22-06-10\Ephys\';
+%   rippleChans = [41 49 50];
+%   s_ToLightOff = 852;
+  
+%   SessionDir = 'H:\HamedsData\w025_w027\w027\chronic_2021-08-06_20-57-20\Ephys\';
+%   rippleChans = [41 49 50];
+%   s_ToLightOff = 4951;
+  
+  
 %%
 %SessionDir = 'G:\SWR\ZF-72-96\20200108\14-03-08\Ephys\';
 %rippleChans = [1 5 11 14 4 8 7 9];

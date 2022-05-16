@@ -72,4 +72,15 @@ phi = unwrap(angle(X));
 freq = 1/(2*pi) * diff(phi) * Fs;
 %}
 
-   
+
+%% Cumulative Distribution
+%{
+  bincenters = 100:20:1650; % Define for data
+    
+    [cx, cy] = hist(thisData, bincenters);
+    bla_z = cumsum(cx) ./ sum(cx);
+    
+    hold on
+    plot(cy, bla_z, 'k', 'linewidth', 2)
+    
+ %}  
