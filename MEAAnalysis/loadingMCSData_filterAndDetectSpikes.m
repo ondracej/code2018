@@ -15,6 +15,7 @@ doPlot = 1;
 %fileToLoad = 'E:\JohannasDataFigs\SWRs-202103-29\NewPlots\ RippleData.mat';
 %load(fileToLoad)
 
+fileToLoad = 'G:\MEA\20210816\Output2022\20210816-1317.h5'
 data = McsHDF5.McsData(fileToLoad);
 [filepath,name,ext] = fileparts(fileToLoad);
 
