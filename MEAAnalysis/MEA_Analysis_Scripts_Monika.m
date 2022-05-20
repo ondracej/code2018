@@ -2,7 +2,7 @@
 %% [1] Initialize the program
 % *** To run a cell, type STRG + Enter
 
-analysisDir = 'E:\MEA_Data\allSWRData\20210816\'; % path to the analysis directory
+analysisDir = 'Y:\JanieData\MEA-Projects\Monika\20220429\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -25,27 +25,7 @@ mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 %% [2] Inititialize the analysis -- select the file to analyze
 % Need 1) noisy channels, 2) 5 SWR channels, 3) spiking channels
 
-mea_OBJ = addAnalysisInfoToObj(mea_OBJ);
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-%% SWR Analysis
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% SWR Detection Analysis - this takes a long time
-
-mea_OBJ = load_MCS_data_detectSWRs_zscore_detection(mea_OBJ);
-mea_OBJ = collectAllSWRDetections(mea_OBJ);
-% printing figures
-mea_OBJ = plotSWRDetection(mea_OBJ);
-
-%% Validate detected SWRs
-mea_OBJ = validateSWRDetections(mea_OBJ);
-
-%% Make delay plot
-mea_OBJ = calculateDelaysfromValidSWRs_makePlots(mea_OBJ);
-
-%% SWR statistics (@ Janie to do)
-% save this as a mat files
+mea_OBJ = addAnalysisInfoToObj_noSWR(mea_OBJ);
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Firing Rate Analysis
@@ -64,6 +44,8 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 %% After spike sorting
 
 mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
+
+mea_OBJ = doAnalysisFiringRateComparison(mea_OBJ);
 
 %checkSpikesOnSortedData()
  

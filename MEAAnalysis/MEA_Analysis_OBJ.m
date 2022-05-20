@@ -11,7 +11,7 @@ classdef MEA_Analysis_OBJ < handle
     methods
         
         
-        function obj = getPathInfo(obj,analysisDir)
+        function obj = getPathInfo(obj,analysisDir, hostname)
             
             if ispc
                 dirD = '\';
@@ -20,10 +20,22 @@ classdef MEA_Analysis_OBJ < handle
             end
             
             %% adding code paths
+            switch hostname
+                
+                case 'DLC'
+                    McsCodePath = 'C:\Users\dlc\Documents\GitHub\McsMatlabDataTools';
+                    code2018Path = 'C:\Users\dlc\Documents\GitHub\code2018\';
+                    NETCode = 'C:\Users\dlc\Documents\GitHub\NeuralElectrophysilogyTools';
+                    
+                case ''
+                    
+                otherwise
+                    
+                    McsCodePath = 'C:\Users\SWR-Analysis\Documents\GitHub\McsMatlabDataTools';
+                    code2018Path = 'C:\Users\SWR-Analysis\Documents\GitHub\code2018';
+                    NETCode = 'C:\Users\SWR-Analysis\Documents\GitHub\NeuralElectrophysilogyTools';
+            end
             
-            McsCodePath = 'C:\Users\SWR-Analysis\Documents\GitHub\McsMatlabDataTools';
-            code2018Path = 'C:\Users\SWR-Analysis\Documents\GitHub\code2018';
-            NETCode = 'C:\Users\SWR-Analysis\Documents\GitHub\NeuralElectrophysilogyTools';
             
             if isfolder(McsCodePath)
                 addpath(genpath('C:\Users\dlc\Documents\GitHub\McsMatlabDataTools'));
@@ -50,6 +62,7 @@ classdef MEA_Analysis_OBJ < handle
             obj.PATH.swrAnalysis = [analysisDir 'SWR_Analysis' dirD];
             obj.PATH.spikeAnalysis = [analysisDir 'Firing_Rate_Analysis' dirD];
             obj.PATH.dirD  = dirD ;
+            obj.PATH.hostname  = hostname ;
             
             if exist(obj.PATH.mcdFiles, 'dir') ==0
                 mkdir(obj.PATH.mcdFiles );
@@ -150,6 +163,91 @@ classdef MEA_Analysis_OBJ < handle
             
             obj.ANALYSIS.SWR_Analysis_SWR_chans = str2num(answer{1});
             disp(['SWR channels: ' num2str(obj.ANALYSIS.SWR_Analysis_SWR_chans)])
+            
+            dlgtitle = 'Please enter channels with spikes:';
+            answer = inputdlg('Enter space-separated numbers:', dlgtitle, [1 80]);
+            
+            obj.ANALYSIS.Firing_Rate_Analysis_channels_with_spikes = str2num(answer{1});
+            disp(['Spiking channels: ' num2str(obj.ANALYSIS.Firing_Rate_Analysis_channels_with_spikes)])
+            
+        end
+        
+        
+         function obj = addAnalysisInfoToObj_noSWR(obj)
+            % Look for h5 files
+            h5FilesDir = obj.PATH.h5Files;
+            files = dir(fullfile(h5FilesDir));
+            nFiles = numel(files);
+            
+            for j = 1:nFiles
+                fileNames{j} = files(j).name;
+            end
+            
+            searchString = ['.h5']; % look for the .csv file
+            
+            matchInds = cellfun(@(x) strfind(x, searchString), fileNames, 'UniformOutput', 0);
+            matchIndsPlace = cell2mat(matchInds);
+            matchInds_nonempty = find(cellfun(@(x) ~isempty(x), matchInds)==1);
+            
+            varNames = fileNames(matchInds_nonempty);
+            
+            list = {varNames{1:end}};
+            [indx,tf] = listdlg('PromptString','Choose h5 file to analyze objects:', 'ListString',list, 'SelectionMode','single');
+            
+            h5File = list{indx};
+            
+            %             nChoices = numel(indx);
+            %             for j = 1:nChoices
+            %                 allChoices{j} = list{indx(j)};
+            %             end
+            
+            obj.ANALYSIS.h5_fileToLoad = [obj.PATH.h5Files h5File];
+            disp(['H5 file loaded: ' h5File])
+            
+            
+            [filepath,ExpName,ext] = fileparts(h5File);
+            
+            swrAnalysisDetections_plotDir = [obj.PATH.swrAnalysis ExpName '_Plots' obj.PATH.dirD];
+            %swrAnalysisDetections_Dir = [obj.PATH.swrAnalysis ExpName '_SWR_Detections' obj.PATH.dirD];
+            
+            %obj.PATH.swrAnalysisDetections_plotDir = swrAnalysisDetections_plotDir;
+            %obj.PATH.swrAnalysisDetections_Dir = swrAnalysisDetections_Dir;
+            
+%             if exist(swrAnalysisDetections_plotDir, 'dir') ==0
+%                 mkdir(swrAnalysisDetections_plotDir);
+%                 disp(['Created directory: ' swrAnalysisDetections_plotDir])
+%             end
+            
+%             if exist(swrAnalysisDetections_Dir, 'dir') ==0
+%                 mkdir(swrAnalysisDetections_Dir);
+%                 disp(['Created directory: ' swrAnalysisDetections_Dir])
+%             end
+            
+            obj.ANALYSIS.ExpName = ExpName;
+            
+            spikeAnalysis_plotDir = [obj.PATH.spikeAnalysis ExpName '_Plots' obj.PATH.dirD];
+            obj.PATH.spikeAnalysis_plotDir = spikeAnalysis_plotDir;
+            
+            
+            if exist(spikeAnalysis_plotDir, 'dir') ==0
+                mkdir(spikeAnalysis_plotDir);
+                disp(['Created directory: ' spikeAnalysis_plotDir])
+            end
+            
+            
+            %%
+            
+%             dlgtitle = 'Please enter noisy channels:';
+%             answer = inputdlg('Enter space-separated numbers:', dlgtitle, [1 80]);
+%             
+%             obj.ANALYSIS.SWR_Analysis_noisy_channels = str2num(answer{1});
+%             disp(['Noisy channels: ' num2str(obj.ANALYSIS.SWR_Analysis_noisy_channels)])
+%             
+%             dlgtitle = 'Please enter 5 channels with SWRs:';
+%             answer = inputdlg('Enter space-separated numbers:', dlgtitle, [1 80]);
+%             
+%             obj.ANALYSIS.SWR_Analysis_SWR_chans = str2num(answer{1});
+%             disp(['SWR channels: ' num2str(obj.ANALYSIS.SWR_Analysis_SWR_chans)])
             
             dlgtitle = 'Please enter channels with spikes:';
             answer = inputdlg('Enter space-separated numbers:', dlgtitle, [1 80]);
@@ -1796,6 +1894,53 @@ end
             end
         end
         
+        
+        
+         function obj = load_MCS_data_getLEDStims(obj)
+            
+            disp('Loading data....')
+            
+            dbstop if error
+            doPlot = 0; % will pause the analysis
+            
+            fileToLoad = obj.ANALYSIS.h5_fileToLoad;
+            
+            data = McsHDF5.McsData(fileToLoad);
+            
+            name = obj.ANALYSIS.ExpName;
+            
+            %swrAnalysisDetections_plotDir = obj.PATH.swrAnalysisDetections_plotDir;
+            swrAnalysisDetections_Dir = obj.PATH.swrAnalysisDetections_Dir;
+            
+            
+                
+                %% For getting the correct channel order
+                
+                cfg = [];
+                cfg.channel = [1 60]; % channel index 5 to 15
+                cfg.window = [0 1]; % time range 0 to 1 s
+                
+                dataTmp= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+                
+                cfg = [];
+                cfg.window = [0 10]; % time range 0 to 1 s
+                cfg.channel = [1 2]; % channel index 5 to 15
+                dataTmp2= data.Recording{2}.AnalogStream{1}.readPartialChannelData(cfg);
+                % Original plotting Order
+                %plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 15 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
+                
+                %Not including ch 15 = reference
+                plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
+                
+                ChanLabelInds = str2double(dataTmp.Info.Label(:));
+                
+                chanInds = [];
+                for k = 1:numel(plottingOrder)
+                    chanInds(k) = find(ChanLabelInds == plottingOrder(k));
+                end
+                
+            end  
+                
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Firing Rate analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1892,6 +2037,275 @@ end
             disp(['Saved spike file: ' saveName]);
             
         end
+        
+        function obj = doAnalysisFiringRateComparison(obj)
+
+            cd(obj.PATH.spikeAnalysis);
+            
+            title_bas = 'Please select baseline file:';
+            title_exp = 'Please select experiment file:';
+            title_rec = 'Please select recovery file:';
+            
+
+                [file_bas,path_bas] = uigetfile('*.mat', title_bas);
+                [file_exp,path_exp] = uigetfile('*.mat', title_exp);
+                [file_rec,path_rec] = uigetfile('*.mat', title_rec);
+
+
+                
+           
+    SaveName = ['20211129--Ch' num2str(Channel) '-NEW'];
+    
+      baselineMatfile = file_bas;
+    drugMatfile = file_exp;
+    recoveryMatfile = file_rec;
+
+    %%
+    
+    bD = load([dataDir baselineMatfile]);
+    dD = load([dataDir drugMatfile]);
+    rD = load([dataDir recoveryMatfile]);
+    
+    bD_fields = fieldnames(bD);
+    dD_fields = fieldnames(dD);
+    rD_fields = fieldnames(rD);
+    
+    %%
+    eval(['bD_units = bD.' cell2mat(bD_fields) '(:,2);']);
+    eval(['bD_timestamps_s_all = bD.' cell2mat(bD_fields) '(:,3);']);
+    eval(['bD_spikeWaveforms = bD.' cell2mat(bD_fields) '(:,4:end);']);
+    
+    eval(['dD_units = dD.' cell2mat(dD_fields) '(:,2);']);
+    eval(['dD_timestamps_s_all = dD.' cell2mat(dD_fields) '(:,3);']);
+    eval(['dD_spikeWaveforms = dD.' cell2mat(dD_fields) '(:,4:end);']);
+    
+    eval(['rD_units = rD.' cell2mat(rD_fields) '(:,2);']);
+    eval(['rD_timestamps_s_all = rD.' cell2mat(rD_fields) '(:,3);']);
+    eval(['rD_spikeWaveforms = rD.' cell2mat(rD_fields) '(:,4:end);']);
+    
+    %% Find the Inds that are the correct spike sorting
+    
+    bD_chans_present = unique(bD_units);
+    dD_chans_present = unique(dD_units);
+    rD_chans_present = unique(rD_units);
+    
+    %%
+    
+%     bD_chan1_inds = find(bD_units ==1);
+%     dD_chan1_inds = find(dD_units ==1);
+%     rD_chan1_inds = find(rD_units ==1);
+    
+    bD_chan1_inds = find(bD_units ==1);
+    dD_chan1_inds = find(dD_units ==1);
+    rD_chan1_inds = find(rD_units ==1);
+    
+    %bD_chan1_inds = 1:1:numel(bD_units);
+    %dD_chan1_inds = 1:1:numel(dD_units);
+    %rD_chan1_inds = 1:1:numel(rD_units);
+    
+    bD_timestamps_s = bD_timestamps_s_all(bD_chan1_inds);
+    bD_spikeWaveforms = bD_spikeWaveforms(bD_chan1_inds,:);
+    
+    %figure; plot(bD_spikeWaveforms')
+    
+    dD_timestamps_s = dD_timestamps_s_all(dD_chan1_inds);
+    dD_spikeWaveforms = dD_spikeWaveforms(dD_chan1_inds,:);
+    
+    rD_timestamps_s = rD_timestamps_s_all(rD_chan1_inds);
+    rD_spikeWaveforms = rD_spikeWaveforms(rD_chan1_inds,:);
+    
+    %% Find max timestamps
+    
+    bD_timestamps_s_max = max(bD_timestamps_s_all);
+    dD_timestamps_s_max = max(dD_timestamps_s_all);
+    rD_timestamps_s_max = max(rD_timestamps_s_all);
+    
+    minVal = min([ bD_timestamps_s_max dD_timestamps_s_max rD_timestamps_s_max]);
+    
+    
+    
+    %%
+    timeWin_s = 60;
+    tOn = 1:timeWin_s:minVal;
+    allSpks = [];
+    allFRs = [];
+    
+    for j = 1:3
+        
+        switch j
+            case 1
+                data = bD_timestamps_s;
+            case 2
+                data = dD_timestamps_s;
+            case 3
+                data = rD_timestamps_s;
+        end
+        
+        spks = [];
+        for k = 1:numel(tOn)-1
+            
+            roi_start = tOn(k);
+            roi_stop = tOn(k)+timeWin_s-1;
+            spks(k) = numel(find(data >= roi_start & data <=roi_stop));
+            
+        end
+        
+        allSpks{j} = spks;
+        allFRs{j} = spks./timeWin_s;
+    end
+    
+    allFRMax = ceil(max(cell2mat(allFRs)));
+    
+    %% Plotting waveforms
+    figH = figure(103); clf
+    subplot(3, 6, [1 2])
+    plot(bD_spikeWaveforms(1:end,:)', 'k');
+    axis tight
+    ylim([-5e4 5e4])
+    title(['Baseline: Ch-' num2str(Channel)])
+    xlabel('Samples')
+    ylabel('Waveform')
+    subplot(3, 6, [3 4])
+    plot(dD_spikeWaveforms(1:end,:)', 'k');
+    axis tight
+    ylim([-5e4 5e4])
+    title(['Drug: Ch-' num2str(Channel)])
+    xlabel('Samples')
+    ylabel('Waveform')
+    subplot(3, 6, [5 6])
+    plot(rD_spikeWaveforms(1:end,:)', 'k');
+    axis tight
+    ylim([-5e4 5e4])
+    title(['Recovery: Ch-' num2str(Channel)])
+    xlabel('Samples')
+    ylabel('Waveform')
+    %% PLotting firing rates
+    
+    subplot(3, 6, 7)
+    plot(allFRs{1}, 'k.', 'linestyle', '-')
+    axis tight
+    ylim([0 allFRMax])
+    xlim([0 11])
+    xlabel('Time (min)')
+    ylabel('Firing Rate (Hz)')
+    line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
+    title(['n = ' num2str(size(bD_spikeWaveforms,1)) ' spikes']);
+    
+    pre = allFRs{1}(1:5);
+    post = allFRs{1}(6:end);
+    subplot(3, 6, 8);
+    toPlot = [mean(pre) ; mean(post)];
+    errs = [std(pre) ; std(post)];
+    bar(toPlot, 'FaceColor','k')
+    hold on
+    errorbar([1 2],toPlot,errs,'k','MarkerSize',5,'MarkerEdgeColor','k','MarkerFaceColor','k')
+    set(gca, 'xticklabel', {'Pre', 'Post'})
+    ylabel('Firing Rate (Hz)')
+    ylim([0 allFRMax])
+    %%
+    subplot(3, 6, 9)
+    plot(allFRs{2}, 'k.', 'linestyle', '-')
+    axis tight
+    ylim([0 allFRMax])
+    xlim([0 11])
+    xlabel('Time (min)')
+    ylabel('Firing Rate (Hz)')
+    line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
+    title(['n = ' num2str(size(dD_spikeWaveforms, 1)) ' spikes']);
+    
+    pre = allFRs{2}(1:5);
+    post = allFRs{2}(6:end);
+    subplot(3, 6, 10);
+    toPlot = [mean(pre) ; mean(post)];
+    errs = [std(pre) ; std(post)];
+    bar(toPlot, 'FaceColor',[0 .5 .5])
+    hold on
+    errorbar([1 2],toPlot,errs,'k','MarkerSize',5,'MarkerEdgeColor','k','MarkerFaceColor','k')
+    set(gca, 'xticklabel', {'Pre', 'Post'})
+    ylabel('Firing Rate (Hz)')
+    ylim([0 allFRMax])
+    %%
+    subplot(3, 6, 11)
+    plot(allFRs{3}, 'k.', 'linestyle', '-')
+    axis tight
+    ylim([0 allFRMax])
+    xlim([0 11])
+    xlabel('Time (min)')
+    ylabel('Firing Rate (Hz)')
+    line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
+    title(['n = ' num2str(size(rD_spikeWaveforms, 1)) ' spikes']);
+    
+    pre = allFRs{3}(1:5);
+    post = allFRs{3}(6:end);
+    subplot(3, 6, 12);
+    toPlot = [mean(pre) ; mean(post)];
+    errs = [std(pre) ; std(post)];
+    bar(toPlot, 'FaceColor','k')
+    hold on
+    errorbar([1 2],toPlot,errs,'k','MarkerSize',5,'MarkerEdgeColor','k','MarkerFaceColor','k')
+    set(gca, 'xticklabel', {'Pre', 'Post'})
+    ylabel('Firing Rate (Hz)')
+    ylim([0 allFRMax])
+    
+    %%
+    subplot(3, 6, [15 16])
+    
+    xes_n = numel(allFRs{1});
+    xes = ones(1, xes_n);
+    
+    toPlot  = [mean(allFRs{1}) ; mean(allFRs{2}) ; mean(allFRs{3})];
+    bar(toPlot)
+    hold on
+    plot(xes, allFRs{1}, 'k.')
+    hold on
+    plot(xes*2, allFRs{2}, 'r.')
+    plot(xes*3, allFRs{3}, 'k.')
+    set(gca, 'xtick', [1 2 3])
+    set(gca, 'xticklabel', {'Baseline', 'Drug', 'Recovery'})
+    xlim([0 4])
+    ylim([0 allFRMax])
+    title('Firing rate summary')
+    ylabel('Firing Rate (Hz)')
+    %%
+    [h1, p1] = ttest(allFRs{1},  allFRs{2});
+    [h2, p2] = ttest(allFRs{3},  allFRs{2});
+    [h3, p3] = ttest(allFRs{1},  allFRs{3});
+    
+    Name = {'Baseline-Drug';'Recovery-Drug';'Baseline-Recovery'};
+    h = [h1;h2;h3];
+    p = [p1;p2;p3];
+    T = table(h,p,'RowNames',Name);
+    
+    
+    ha = subplot(3, 6, [17 18]);
+    pos = get(ha,'Position');
+    un = get(ha,'Units');
+    delete(ha)
+    
+    ht = uitable('Data',T{:,:},'ColumnName',T.Properties.VariableNames,...
+        'RowName',T.Properties.RowNames,'Units', un, 'Position',pos);
+    ha = subplot(3, 6, [17 18]);
+    title(['T-test statistics - ' SaveName])
+    axis off
+    %%
+    
+    saveName = [dataDir SaveName '_SummaryPlot'];
+    
+    plotpos = [0 0 40 15];
+    
+    print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+end
+
+
+        
+        
+        
+        
+        
+        %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% Saving objects
+        %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
         
         function obj = saveCurrentAnalysis(obj, analysisDir)
             
@@ -2146,7 +2560,9 @@ end
             
             addpath(genpath(analysisDir))
             
-            obj = getPathInfo(obj, analysisDir);
+            hostname = gethostname;
+            
+            obj = getPathInfo(obj, analysisDir, hostname);
             
             
         end
