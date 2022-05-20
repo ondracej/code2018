@@ -1,6 +1,7 @@
 
 %% [1] Initialize the program
 % *** To run a cell, type STRG + Enter
+cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
 
 analysisDir = 'E:\MEA_Data\allSWRData\20210816\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
@@ -65,6 +66,7 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 
 mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
 
+%%
 %checkSpikesOnSortedData()
  
 %makeSummaryPlotFiringRatePharmacology

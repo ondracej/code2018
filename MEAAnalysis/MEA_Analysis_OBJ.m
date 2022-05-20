@@ -61,6 +61,8 @@ classdef MEA_Analysis_OBJ < handle
             obj.PATH.h5Files = [analysisDir '_h5_files' dirD];
             obj.PATH.swrAnalysis = [analysisDir 'SWR_Analysis' dirD];
             obj.PATH.spikeAnalysis = [analysisDir 'Firing_Rate_Analysis' dirD];
+            obj.PATH.objSaveDir = [analysisDir 'AnalysisObjects' dirD];
+            
             obj.PATH.dirD  = dirD ;
             obj.PATH.hostname  = hostname ;
             
@@ -2340,10 +2342,10 @@ end
             prompt = 'Please choose an analysis object:';
             [indx,tf] = listdlg('PromptString',prompt, 'ListString',list, 'SelectionMode','single', 'ListSize', [400 200]);
             
-            SelectedObj{j} = list{indx};
-            
-            load([obj.PATH.objSaveDir cell2mat(SelectedObj)])
-            disp(['Loaded analysis object: ' [obj.PATH.objSaveDir cell2mat(SelectedObj)]])
+            SelectedObj = list{indx};
+          
+            load([obj.PATH.objSaveDir SelectedObj])
+            disp(['Loaded analysis object: ' [obj.PATH.objSaveDir SelectedObj]])
         end
         
         
