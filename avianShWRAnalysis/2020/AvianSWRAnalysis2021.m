@@ -52,8 +52,13 @@
 
 %dataDir = 'G:\Hamed-EEG-LFP\w0025\chronic_2021-07-14_20-24-58';
 %dataDir = 'G:\Hamed-EEG-LFP\w0025\chronic_2021-07-15_20-28-44';
+%dataDir = 'G:\SWR\ZF-o3b7\20200117\17-56-38\Ephys';
+dataDir = 'G:\SWR\ZF-72-01\20210225\16-44-46\Ephys';
 
-dataDir = 'I:\Grass\FrogSleep\CubanTreeFrog2\20190729-Ephys\CubanTF2_2019-07-29_20-53-12';
+
+
+
+%dataDir = 'I:\Grass\FrogSleep\CubanTreeFrog2\20190729-Ephys\CubanTF2_2019-07-29_20-53-12';
 %EEG + LFP : 12 13 20 21 10 15 16 17 18 23 24  
 
 addpath(genpath('C:\Users\Janie\Documents\GitHub\NeuralElectrophysilogyTools')) 

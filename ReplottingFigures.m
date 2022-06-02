@@ -1,9 +1,9 @@
 
 
-figDir = 'Z:\HamedData\CorrelationPaper\CurrentDraftMarch2022\CurrentFigs\Supp2\';
+figDir = 'C:\Users\Neuropix\Dropbox\Writing\00_Articles\May312022_SleepCircuits\Figures\';
 
-OrigFigName = 'Z:\HamedData\CorrelationPaper\CurrentDraftMarch2022\CurrentFigs\Supp2\supp Fig. 1 (DOS baed on age).fig';
-FigName = 'SuppFig2-Age-jo-2';
+OrigFigName = 'C:\Users\Neuropix\Dropbox\Writing\00_Articles\May312022_SleepCircuits\Figures\IS_example2.fig';
+FigName = 'IS';
 %FigName = 'Fig1MedianSleepDepthWithErrorBarBasedAge';
 
 openfig(OrigFigName)
@@ -12,7 +12,7 @@ openfig(OrigFigName)
    
 %plotpos = [0 0 15 8]; %Fig 1
  %plotpos = [0 0 8 10]; %Fig 2
- plotpos = [0 0 40 12]; %Fig 2
+ %plotpos = [0 0 40 12]; %Fig 2
  %plotpos = [0 0 20 12]; %Fig 2
  %plotpos = [0 0 15 12]; %Fig 2
  
@@ -23,5 +23,8 @@ openfig(OrigFigName)
  
   %saveName  = 'Z:\HamedData\CorrelationPaper\CurrentDraftMarch2022\Current Figs\Fig. 1\';
  
+  
+  plotpos = [0 0 25 15]; %Fig 2
+  
  print_in_A4(0, saveName, '-djpeg', 0, plotpos);
  print_in_A4(0, saveName, '-depsc', 3, plotpos);

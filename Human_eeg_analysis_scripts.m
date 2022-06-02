@@ -14,7 +14,7 @@ for j = 1:nDataFiles
     
     dlc_OBJ = loadCSVfile(dlc_OBJ, filename);
     
-    visualize = 0;
+    visualize = 1;
     dlc_OBJ = findArtifactsPreprocessData(dlc_OBJ,visualize);
     
     %dlc_OBJ = filterAndBinData_PlotMatrix(dlc_OBJ);
