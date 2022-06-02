@@ -90,7 +90,7 @@ for o = 1:numel(ClusterIDs)
     allWaveforms = squeeze(wf.waveFormsMean);
     
     
-    chInd = thisChan;
+    chInd = thisChan+1;
     thisWave = allWaveforms(chInd, :);
     allWaves = squeeze(wf.waveForms(1,:,:,:));
     thisCHanAllaWaves = allWaves(:,chInd,:);
