@@ -15,3 +15,9 @@ np_OBJ = loadNidaqFindStimEdges(np_OBJ);
 %%
 
 np_OBJ  = syncSquareWave(np_OBJ);
+%%
+
+[np_OBJ] = loadSpikes(np_OBJ);
+
+%%
+np_OBJ = alignSpikesToStims(np_OBJ);

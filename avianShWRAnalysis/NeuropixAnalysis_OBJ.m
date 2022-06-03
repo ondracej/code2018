@@ -616,7 +616,164 @@ classdef NeuropixAnalysis_OBJ < handle
             disp(' done.')
         end
         
+        
+        
+        function [obj] = loadSpikes(obj)
+            
+            %   function sel_units = load_and_add_spk_data(spk_dir)
+            
+            spk_dir = obj.PATH.ap_path;
+            
+            % spike times coming from the ap file
+            spk_times = readNPY(fullfile(spk_dir, 'spike_times.npy'));  % in indices of spike glx
+            
+            % corresponding spike sorting cluster
+            spk_clust = readNPY(fullfile(spk_dir, 'spike_clusters.npy'));
+            
+            % cluster information
+            cluster_info = tdfread(fullfile(spk_dir, 'cluster_info.tsv'), '\t');
+            
+            
+            if ~isfield(cluster_info, 'id')
+                cluster_info.id = cluster_info.cluster_id;
+            end
+            
+            %%% INCLUSION
+            % include only units that fire with higher than 1 Hz spike rate
+            fr_incl = cluster_info.fr > 2 ;
+            
+            % spike times and cluster for multiunits and good units only
+            %c_incl = ~contains(cellstr(cluster_info.group), 'noise');
+            c_incl = contains(cellstr(cluster_info.group), 'good');
+            
+            if size(fr_incl, 1) ~= size(c_incl, 1)
+                fr_incl= fr_incl';
+            end
+            
+            %%% FILTER
+            sel_units.id = cluster_info.id(c_incl & fr_incl);
+            sel_units.chan = cluster_info.ch(c_incl & fr_incl);
+            sel_units.depth = cluster_info.depth(c_incl & fr_incl);
+            sel_units.fr= cluster_info.fr(c_incl & fr_incl);
+            
+            % sort by depth
+            % [~, i] = sort(sel_units.fr);
+            % i = sort_spike_cluster(obj, sel_units)
+            all_units = [];
+            for i = 1:numel(sel_units.chan)
+                
+                all_units(i).id = sel_units.id(i);
+                all_units(i).chan = sel_units.chan(i);
+                all_units(i).depth = sel_units.depth(i);
+                all_units(i).fr = sel_units.fr(i);
+                
+                idx_incl = ismember(spk_clust, all_units(i).id);
+                
+                
+                all_units(i).t = double(spk_times( idx_incl )) ./ 30000;
+                all_units(i).t_clust = spk_clust( idx_incl );
+            end
+            
+            obj.ANALYSIS.SPKS.all_units = all_units;
+            
+            
+            %%% correct if multiple spike clusters per channel exist
+            
+            % for k = unique(sel_units.chan)
+            %
+            %     idx_same_chan = find(sel_units.chan);
+            %
+            %     for j = 1:length(idx_same_chan)
+            %
+            %         sel_units.chan(idx_same_chan(j)) = sel_units.chan(idx_same_chan(j))+1/length(idx_same_chan);
+            %     end
+            % end
+            %
+        end
+        
+        function obj = alignSpikesToStims(obj)
+        
+            disp('')
+            
+              %T' = T - Eb + Ea
+              fsLFP = obj.ANALYSIS.fsLFP;
+              fsNidaq = obj.ANALYSIS.fsNidaq;
+              
+              
+              %Stims Onsets and Offsets
+              StimOnsets_fs_nidaq = obj.ANALYSIS.StimOnsets_fs_nidaq;
+              StimOffsets_fs_nidaq = obj.ANALYSIS.StimOffsets_fs_nidaq;
+             
+              StimNames = fieldnames(StimOnsets_fs_nidaq);
+              nStims = numel(StimNames);
+              
+              %StimOnsets_fs_nidaq_s = StimOnsets_fs_nidaq./fsNidaq;
+              %StimOffsets_fs_nidaq_s = StimOffsets_fs_nidaq./fsNidaq;
+              
+             % Square waves sync
+              LFP_SqareSync = obj.ANALYSIS.posLFPLocs_fsLFP;
+              NiDaq_SqareSync = obj.ANALYSIS.posSyncLocs_fsNidaq;
+              
+              LFP_SqareSync_s = LFP_SqareSync./fsLFP;
+              NiDaq_SqareSync_s = NiDaq_SqareSync./fsNidaq;
+              
+              
+              % SpikeTimes are in s
+              all_units = obj.ANALYSIS.Spks.all_units;
+              
+              nUnits = numel(all_units);
+              
+              for j = 1:nStims
+                  
+                  thisStim = StimNames{j};
+                  
+                  eval(['thisStimOnsets = StimOnsets_fs_nidaq.' thisStim ';'])
+                  eval(['thisStimOffsets = StimOffsets_fs_nidaq.' thisStim ';'])
+              
+                  thisStimOnsets_s = thisStimOnsets/fsNidaq;
+                  thisStimOffsets_s = thisStimOffsets/fsNidaq;
+              
+              for k = 1:nUnits
+                  
+                  thisUnit = all_units(k);
+                  spikeTimes_s = thisUnit.t;
+              
+                  figure; plot(spikeTimes_s)
+                  
+              end
+                  
+                  
+            
+        end
+        
+        %
+        %             function i = sort_spike_cluster(obj, sel_units)
+        %
+        %                 % sort by firing rate and by pallium / bg
+        %
+        %                 fr = sel_units.fr;
+        %                 ch = sel_units.chan;
+        %                 % above pallium
+        %                 iA = sort_cluster_within_chrange(sel_units.chan, fr, ch_strt, ch_end)
+        %
+        %                 % BG
+        %                 B = find(sel_units.chan < 200);
+        %                 [~, iB] = sort(fr(B), 'descend');
+        %
+        %                 % concatenate
+        %                 i = [ A(iA); B(iB) ];
+        %             end
+        
+        
+        %
+        %             function iA = sort_cluster_within_chrange(ch, fr, ch_strt, ch_end)
+        %
+        %                 A = find(ch > ch_strt & ch < ch_end );
+        %                 [~, iA] = sort(fr(A), 'descend');
+        %
+        %             end
     end
+    
     
     %%
     
