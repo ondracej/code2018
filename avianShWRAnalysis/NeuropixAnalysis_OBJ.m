@@ -22,8 +22,10 @@ classdef NeuropixAnalysis_OBJ < handle
             %% adding code paths
             
             
-            code2018Path = 'C:\Users\dlc\Documents\GitHub\code2018';
-            SpikeGLXTools = 'C:\Users\Neuropix\Documents\GitHub\SpikeGLX_Datafile_Tools';
+            code2018Path = 'D:\Github\code2018';
+            %SpikeGLXTools = 'C:\Users\Neuropix\Documents\GitHub\SpikeGLX_Datafile_Tools';
+            npymatlab = 'D:\Github\npy-matlab-master';
+            
             
             if isfolder(code2018Path)
                 addpath(genpath(code2018Path));
@@ -31,11 +33,18 @@ classdef NeuropixAnalysis_OBJ < handle
                 disp('Please check definition for code2018 path in "getPathInfo"')
             end
             
-            if isfolder(SpikeGLXTools)
-                addpath(genpath(SpikeGLXTools));
+%             if isfolder(SpikeGLXTools)
+%                 addpath(genpath(SpikeGLXTools));
+%             else
+%                 disp('Please check definition for SpikeGLXTools path in "getPathInfo"')
+%             end
+            
+            if isfolder(npymatlab)
+                addpath(genpath(npymatlab));
             else
-                disp('Please check definition for SpikeGLXTools path in "getPathInfo"')
+                disp('Please check definition for npymatlab path in "getPathInfo"')
             end
+            
             
             % Ask user for binary file
             [lfp_binName, lfp_path] = uigetfile('*.bin', 'Select LFP .bin file');
@@ -411,7 +420,7 @@ classdef NeuropixAnalysis_OBJ < handle
         function obj = syncSquareWave(obj)
             
             
-            if isfile([nidaq_path nidaq_binName(1:end-9)  '__NiDaqLFP_SquareSync.mat'])
+            if isfile([obj.PATH.nidaq_path obj.PATH.nidaq_binName(1:end-9)  '__NiDaqLFP_SquareSync.mat'])
                 disp(['Loading previously saved square sync file: ' [obj.PATH.nidaq_path obj.PATH.nidaq_binName(1:end-9)  '__NiDaqLFP_SquareSync.mat']])
                 
                 load([obj.PATH.nidaq_path obj.PATH.nidaq_binName(1:end-9)  '__NiDaqLFP_SquareSync.mat'])
@@ -640,7 +649,7 @@ classdef NeuropixAnalysis_OBJ < handle
             
             %%% INCLUSION
             % include only units that fire with higher than 1 Hz spike rate
-            fr_incl = cluster_info.fr > 2 ;
+            fr_incl = cluster_info.fr > 0 ;
             
             % spike times and cluster for multiunits and good units only
             %c_incl = ~contains(cellstr(cluster_info.group), 'noise');
@@ -719,7 +728,7 @@ classdef NeuropixAnalysis_OBJ < handle
               
               
               % SpikeTimes are in s
-              all_units = obj.ANALYSIS.Spks.all_units;
+              all_units = obj.ANALYSIS.SPKS.all_units;
               
               nUnits = numel(all_units);
               
@@ -738,7 +747,14 @@ classdef NeuropixAnalysis_OBJ < handle
                   thisUnit = all_units(k);
                   spikeTimes_s = thisUnit.t;
               
-                  figure; plot(spikeTimes_s)
+                  
+                  
+                  
+                  
+                  
+                  %figure; plot(spikeTimes_s)
+                  
+                  
                   
               end
                   
@@ -773,7 +789,7 @@ classdef NeuropixAnalysis_OBJ < handle
         %
         %             end
     end
-    
+    end
     
     %%
     

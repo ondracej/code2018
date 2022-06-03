@@ -1,6 +1,6 @@
 
 
-AnalysisDir = 'F:\Neuropixel-w051\';
+AnalysisDir = 'G:\Neuropixel\w051\w051_raw-04_g0\';
 
 
 cd(AnalysisDir)
