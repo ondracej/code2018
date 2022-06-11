@@ -1,9 +1,11 @@
 
 %% [1] Initialize the program
 % *** To run a cell, type STRG + Enter
+
+addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
 cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
 
-analysisDir = 'E:\MEA_Data\allSWRData\20210816\'; % path to the analysis directory
+analysisDir = 'F:\Johanna_MEA_Data\20221104\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -66,7 +68,14 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 
 mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
 
-%%
+%% Standalone code
+
+spikeDir = 'F:\Johanna_MEA_Data\20221104\Firing_Rate_Analysis\';
+
+doAnalysisFiringRateComparison(spikeDir, mea_OBJ);
+
+
+
 %checkSpikesOnSortedData()
  
 %makeSummaryPlotFiringRatePharmacology

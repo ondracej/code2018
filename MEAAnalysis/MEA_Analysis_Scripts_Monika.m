@@ -2,25 +2,23 @@
 %% [1] Initialize the program
 % *** To run a cell, type STRG + Enter
 
-analysisDir = 'Y:\JanieData\MEA-Projects\Monika\20220429\'; % path to the analysis directory
+analysisDir = 'D:\MonikaData\20220429\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
-
-                %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
-                %% Save object - to save the object in the middle of the analysis
-                mea_OBJ = saveCurrentAnalysis(mea_OBJ, analysisDir);
-
-                %% Load an analysis object - only use if zou have previous analysis to load
-                mea_OBJ = loadAnalysisObject(mea_OBJ, analysisDir);
-                %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
+% 
+%                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
+%                 %% Save object - to save the object in the middle of the analysis
+%                 mea_OBJ = saveCurrentAnalysis(mea_OBJ, analysisDir);
+% 
+%                 %% Load an analysis object - only use if zou have previous analysis to load
+%                 mea_OBJ = loadAnalysisObject(mea_OBJ, analysisDir);
+%                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
 
 %% Before continuing this analysis
 
 % 0) Move the files into the newly created directorie
 % 1) Use the "Analyzer rack" to identify:
-    %1a) All noisy channles to exclude for the SWR analysis == "SWR_Analysis_noisy_channels" 
-    %1b) 5 channels with good SWRs
-    %1c) All channles that have large amplitude spikes for the firing rate == "Firing_Rate_Analysis_channels_with_spikes"    
-% 2) Convert the .mcs file into a HDF% (.h5) file 
+    %1a) All channles that have large amplitude spikes for the firing rate == "Firing_Rate_Analysis_channels_with_spikes"    
+% 2) Convert the .mcs file into a HDF5 (.h5) file 
 
 %% [2] Inititialize the analysis -- select the file to analyze
 % Need 1) noisy channels, 2) 5 SWR channels, 3) spiking channels
@@ -47,6 +45,7 @@ mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
 
 mea_OBJ = doAnalysisFiringRateComparison(mea_OBJ);
 
+%%
 %checkSpikesOnSortedData()
  
 %makeSummaryPlotFiringRatePharmacology
