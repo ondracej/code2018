@@ -3,9 +3,9 @@
 % *** To run a cell, type STRG + Enter
 
 addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
-cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
+cd 'C:\Users\Neuropix\Documents\GitHub\code2018\MEAAnalysis\'
 
-analysisDir = 'F:\Johanna_MEA_Data\20221104\'; % path to the analysis directory
+analysisDir = 'Z:\JanieData\MEA-Projects\JessicaMeaData\20210826\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -70,9 +70,9 @@ mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
 
 %% Standalone code
 
-spikeDir = 'F:\Johanna_MEA_Data\20221104\Firing_Rate_Analysis\';
+spikeDir = 'Z:\JanieData\MEA-Projects\JessicaMeaData\20210826\Firing_Rate_Analysis\';
 
-doAnalysisFiringRateComparison(spikeDir, mea_OBJ);
+doAnalysisFiringRateComparison(spikeDir, mea_OBJ, 1);
 
 
 
