@@ -107,7 +107,8 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
         
         newWavName = [wavName(1:end-4) '--' endingtxt '.wav'];
         
-        wavwrite(YY,44100, [wav_file_dir newWavName])
+        %wavwrite(YY,44100, [wav_file_dir newWavName])
+        audiowrite([wav_file_dir newWavName], YY,44100)
         
         
         

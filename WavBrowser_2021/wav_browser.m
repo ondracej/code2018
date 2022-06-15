@@ -3,7 +3,7 @@ function[] = wav_browser(wav_file_dir)
 if nargin <1
     %% Enter the directory path
     
-    wav_file_dir = 'E:\Data\FemaleFeedback\w022\';
+    wav_file_dir = 'C:\Users\Neuropix\Documents\code\makeSound\BOS\';
 end
 
 %%
