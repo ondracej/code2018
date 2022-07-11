@@ -1407,7 +1407,7 @@ end
             
             dbstop if error
             
-            cd(SWRAnalysisDir);
+          
             
             title_Swr = 'Please select validated SWR.mat file';
             [file_swr,path_swr] = uigetfile('*.mat', title_Swr);
@@ -1642,16 +1642,34 @@ end
         
         function obj = validateSWRDetections(obj)
             
-            if ~isfield(obj.ANALYSIS.Detections, 'AllSWRDataOnChans')
-                if isfile([obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat'])
-                    load([obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat'])
-                else
-                    disp(['Could not find Detections file: ' [obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat']])
-                end
-            end
             
-            D = obj.ANALYSIS.Detections;
+            %% Check if fields exist
             
+                       title_Detections = 'Please select Detections.mat file';
+                       
+                       
+            [file_detections,path_detections] = uigetfile('*.mat', title_Detections);
+            load([path_detections file_detections])
+            
+%             if ~isfield(obj.ANALYSIS.Detections, 'AllSWRDataOnChans')
+%                 if isfile([obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat'])
+%                     load([obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat'])
+%                 else        
+%                     disp(['Could not find Detections file: ' [obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat']])
+%                 end
+%             end
+%             
+            %D = obj.ANALYSIS.Detections;
+            
+            
+            ExpName = file_detections(1:end-15);
+               % underscore = '_';
+               % bla = find(ExpName == underscore);
+               % ExpName(bla) = '-';
+                
+            
+                
+                
             Fs = D.Fs;
             WinSizeL = 1*Fs;
             
@@ -1687,8 +1705,14 @@ end
             setappdata(spc, 'AllSWRDataOnChans', AllSWRDataOnChans);
             
             setappdata(spc, 'allSavedDetectionInds', allSavedDetectionInds);
-            setappdata(spc, 'SWRDetectionDir', obj.PATH.swrAnalysisDetections_Dir);
-            setappdata(spc, 'name', obj.ANALYSIS.ExpName);
+            
+            %setappdata(spc, 'SWRDetectionDir', obj.PATH.swrAnalysisDetections_Dir);
+            setappdata(spc, 'SWRDetectionDir', path_detections);
+            %setappdata(spc, 'name', obj.ANALYSIS.ExpName);
+            
+            setappdata(spc, 'name',ExpName);
+            
+                
             
             updateGridPlotMEA_OBJ(obj, spc);
             
@@ -1771,16 +1795,34 @@ end
         function obj = calculateDelaysfromValidSWRs_makePlots(obj)
             
             
-            validSWRSFile = [obj.PATH.swrAnalysisDetections_Dir 'Validated_SWRs.mat'];
-            load(validSWRSFile);
+            title_Swr = 'Please select validated SWR.mat file';
+            [file_swr,path_swr] = uigetfile('*.mat', title_Swr);
+            load([path_swr file_swr])
             
             
-            figSaveDir = [obj.PATH.swrAnalysisDetections_plotDir];
+%             title_Swr = 'Please select Ripple Data.mat file';
+%             [file_rippleData,path_rippledata] = uigetfile('*.mat', title_Swr);
+%             load([path_rippledata file_rippleData])
+%             
+            
+            
+            %validSWRSFile = [obj.PATH.swrAnalysisDetections_Dir 'Validated_SWRs.mat'];
+            %load(validSWRSFile);
+            
+            figSaveDir = [path_swr(1:end-15) 'Plots\'];
+            
+               if exist(figSaveDir, 'dir') ==0
+                mkdir(figSaveDir);
+                disp(['Created directory: ' figSaveDir])
+               end
+            
+            
+            
             
             SWRs=allValidatedSWRS;
             %chansNotToPlot = obj.ANALYSIS.SWR_Analysis_noisy_channels;
             chansNotToPlot = [];
-            plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
+           % plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
             NoDetChanInds = ismember(plottingOrder, chansNotToPlot);
             
             %% reorganizing the data in matrices and SWR trough detection
@@ -1869,6 +1911,13 @@ end
                     
                     
                 end
+                
+                ExpName = file_swr(1:end-19);
+                underscore = '_';
+                bla = find(ExpName == underscore);
+                ExpName(bla) = '-';
+                
+                
                 figure(FigH)
                 subplot(1,2,1)
                 axis tight
@@ -1879,7 +1928,7 @@ end
                 ylim([-600 0])
                 ylabel('channels')
                 xlabel('Time (sec)');
-                title(['Raw Data: ' obj.ANALYSIS.ExpName ' SWR: ' num2str(swr_count) ]);
+                title(['Raw Data: ' ExpName ' SWR: ' num2str(swr_count) ]);
                 
                 subplot(1,2,2)
                 % yticks(dist*(-chnl:4:-1));
@@ -1966,7 +2015,7 @@ end
                 % ylim(dist*[chnls(1)-1 chnls(end)+1])
                 ylim([-1200 0])
                 xlabel('Time (sec)');
-                title(['Raw Data: ' obj.ANALYSIS.ExpName  ' SWR: ' num2str(swr_count) ]);
+                title(['Raw Data: ' ExpName  ' SWR: ' num2str(swr_count) ]);
                 
                 
                 subplot(1,4,2);
@@ -2130,7 +2179,7 @@ end
                 end
                 
                 
-                title([obj.ANALYSIS.ExpName ' SWR ' num2str(swr_count) ': Delay map']);
+                title([ExpName ' SWR ' num2str(swr_count) ': Delay map']);
                 %xlabel('x (\mu m)','fontweight','bold')
                 %ylabel('y (\mu m)','fontweight','bold')
                 a = colorbar;
@@ -2161,7 +2210,7 @@ end
                 Det.z = z;
                 Det.zToPlot = zToPlot;
                 
-                save([obj.PATH.swrAnalysisDetections_Dir '_DelayMap_' sprintf('%03d', swr_count) '.mat'], 'Det', '-v7.3')
+                save([path_swr '_DelayMap_' sprintf('%03d', swr_count) '.mat'], 'Det', '-v7.3')
                 
             end
         end
@@ -2353,22 +2402,27 @@ end
             dbstop if error
             
             cd(SWRAnalysisDir);
-            
             title_Swr = 'Please select validated SWR .mat file';
-            
-            
             [file_swr,path_swr] = uigetfile('*.mat', title_Swr);
-            
             load([path_swr file_swr])
+            
+            
+            
+%             title_Swr = 'Please select Ripple Data.mat file';
+%             [file_rippleData,path_rippledata] = uigetfile('*.mat', title_Swr);
+%             load([path_rippledata file_rippleData])
+%             
+            
+            
             
             disp('')
             
             SWRs=allValidatedSWRS;
-            chansNotToPlot = obj.ANALYSIS.SWR_Analysis_noisy_channels;
+            %chansNotToPlot = obj.ANALYSIS.SWR_Analysis_noisy_channels;
             %chansNotToPlot = [];
-            plottingOrder = plottingOrder;
-            nonNoisyChanInds = ~ismember(plottingOrder, chansNotToPlot);
-            noisyChanInds = ismember(plottingOrder, chansNotToPlot);
+            %plottingOrder = plottingOrder;
+%            nonNoisyChanInds = ~ismember(plottingOrder, chansNotToPlot);
+%            noisyChanInds = ismember(plottingOrder, chansNotToPlot);
             
             nSWRs = size(SWRs, 2);
             
@@ -2414,7 +2468,7 @@ end
             
             %%
             
-            win_s = 0.150;
+            win_s = 0.250;
             win_samp = win_s*Fs;
             zeroPoint = round(size(SWR, 1)/2);
             ROI = zeroPoint-win_samp-1: zeroPoint+ win_samp-1;
@@ -2483,8 +2537,13 @@ end
             clr = get(gca,'colororder');
             
             axis tight
-            Xticks = get(gca, 'xtick');
-            xtickLabs = {'-150', '-100', '-50', '0', '50', '100', '150'};
+            %Xticks = get(gca, 'xtick');
+            
+            xtickss = [0.7500    0.8000    0.8500    0.9000    0.9500    1.0000    1.0500    1.1000    1.1500    1.2000    1.2500];
+            set(gca, 'xtick', xtickss);
+            
+            %xtickLabs = {'-150', '-100', '-50', '0', '50', '100', '150'};
+            xtickLabs = {'-250', '-200', '-150', '-100', '-50', '0', '50', '100', '150', '200', '250'};
             set(gca, 'xticklabel', xtickLabs);
             xlabel('Time (ms)')
             %ylim([-30 0])
