@@ -1405,47 +1405,50 @@ end
         function obj =  plotValidSWRDetections(SWRAnalysisDir, obj)
             
             
-                dbstop if error
+            dbstop if error
             
             cd(SWRAnalysisDir);
             
-            title_Swr = 'Please select validated SWR .mat file';
-            
-            
+            title_Swr = 'Please select validated SWR.mat file';
             [file_swr,path_swr] = uigetfile('*.mat', title_Swr);
-            
             load([path_swr file_swr])
+            
+            
+            title_Swr = 'Please select Ripple Data.mat file';
+            [file_rippleData,path_rippledata] = uigetfile('*.mat', title_Swr);
+            load([path_rippledata file_rippleData])
+            
             
             disp('')
             
             SWRs=allValidatedSWRS;
             chansNotToPlot = obj.ANALYSIS.SWR_Analysis_noisy_channels;
             %chansNotToPlot = [];
-            plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
+            %plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
             nonNoisyChanInds = ~ismember(plottingOrder, chansNotToPlot);
             noisyChanInds = ismember(plottingOrder, chansNotToPlot);
             
             nSWRs = size(SWRs, 2);
             
             
-%             
-%             swrAnalysisDetections_Dir = obj.PATH.swrAnalysisDetections_Dir;
-%             name = obj.ANALYSIS.ExpName;
-%             
-%             if isfile([swrAnalysisDetections_Dir name '-Detections.mat'])
-%                 
-%                 load([swrAnalysisDetections_Dir name '-Detections.mat'])
-%                 disp(['Loaded previously saved file: ' [swrAnalysisDetections_Dir name '-Detections.mat']])
-%                 
-%                 load([swrAnalysisDetections_Dir name '_RippleData.mat'])
-%                 
-%                 
-%                 obj.ANALYSIS.SWR_INFO = SWR_INFO;
-%                 obj.ANALYSIS.Detections = D;
-%             end
-%             
-            Fs = obj.ANALYSIS.SWR_INFO.Fs;
-            WinSizeL = obj.ANALYSIS.SWR_INFO.WinSizeL;
+            %
+            %             swrAnalysisDetections_Dir = obj.PATH.swrAnalysisDetections_Dir;
+            %             name = obj.ANALYSIS.ExpName;
+            %
+            %             if isfile([swrAnalysisDetections_Dir name '-Detections.mat'])
+            %
+            %                 load([swrAnalysisDetections_Dir name '-Detections.mat'])
+            %                 disp(['Loaded previously saved file: ' [swrAnalysisDetections_Dir name '-Detections.mat']])
+            %
+            %                 load([swrAnalysisDetections_Dir name '_RippleData.mat'])
+            %
+            %
+            %                 obj.ANALYSIS.SWR_INFO = SWR_INFO;
+            %                 obj.ANALYSIS.Detections = D;
+            %             end
+            %
+            %   Fs = obj.ANALYSIS.SWR_INFO.Fs;
+            WinSizeL = SWR_INFO.WinSizeL;
             
             timepoints_s = (1:1:WinSizeL*2+1)/Fs;
             xticks = 0:0.2:2;
@@ -1457,10 +1460,10 @@ end
             end
             
             AllSWRDataOnChans = SWRs;
-           % plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
+            % plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
             ChannelsToNoTIncludeInDetections = chansNotToPlot;
             
-            fObj = obj.ANALYSIS.SWR_INFO.fobj;
+            fObj = SWR_INFO.fobj;
             
             
             fobj.filt.FL=filterData(Fs);
@@ -2199,9 +2202,9 @@ end
                 
                 SWR = [];
                 for chnl=1:size(SWRs,1)
-                  
-                  SWR  = cell2mat(SWRs(:,j))';
-%                     SWR(:,chnl)=SWRs{chnl,j};
+                    
+                    SWR  = cell2mat(SWRs(:,j))';
+                    %                     SWR(:,chnl)=SWRs{chnl,j};
                 end
                 
                 %figure; plot(SWR(:, 1))
@@ -2211,8 +2214,8 @@ end
                 ripple=filtfilt(b1,a1,SWR);
                 sharp_wave=filtfilt(b2,a2,SWR);
                 
-               % ripples_mat(:,:,j)=ripple;
-              %  sharp_wave_mat(:,:,j)=sharp_wave;
+                % ripples_mat(:,:,j)=ripple;
+                %  sharp_wave_mat(:,:,j)=sharp_wave;
                 
                 %%
                 
@@ -2265,14 +2268,14 @@ end
                     %figure; plot(-sharp_wave(ROI, MostNegChans(oo)));
                     if numel(locs) >1
                         [maxProm, pind] = max(p);
-                    
+                        
                         pks = pks(pind);
                         locs = locs(pind);
-                    w = w(pind);
+                        w = w(pind);
                         p = p(pind);
                     end
                     
-                        peakWidths_ms(oo) =  (w/Fs)*1000;
+                    peakWidths_ms(oo) =  (w/Fs)*1000;
                     
                 end
                 
@@ -2345,7 +2348,7 @@ end
         
         
         
-          function [obj] = calcSWRStatistics_SWR_Ind_And_Chan(SWRAnalysisDir,  SWR_Ind, SWR_Chans, obj)
+        function [obj] = calcSWRStatistics_SWR_Ind_And_Chan(SWRAnalysisDir,  SWR_Ind, SWR_Chans, obj)
             
             dbstop if error
             
@@ -2363,22 +2366,22 @@ end
             SWRs=allValidatedSWRS;
             chansNotToPlot = obj.ANALYSIS.SWR_Analysis_noisy_channels;
             %chansNotToPlot = [];
-            plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
+            plottingOrder = plottingOrder;
             nonNoisyChanInds = ~ismember(plottingOrder, chansNotToPlot);
             noisyChanInds = ismember(plottingOrder, chansNotToPlot);
             
             nSWRs = size(SWRs, 2);
             
-             
-             for k = 1:7
-                 
-                 thisChan = SWR_Chans(k);
-                 
-                 chanInd = find(plottingOrder == thisChan);
-                 ChanSetInds(k) =  chanInd;
-             end
-             
-        
+            
+            for k = 1:7
+                
+                thisChan = SWR_Chans(k);
+                
+                chanInd = find(plottingOrder == thisChan);
+                ChanSetInds(k) =  chanInd;
+            end
+            
+            
             
             %% designing a filter for extraction of low frequenc ? component of each
             % SWR, the sharp wave (e.g. 20-40 Hz)
@@ -2388,157 +2391,157 @@ end
             
             %find Min value
             j = SWR_Ind;
+            
+            SWR = [];
+            for chnl=1:size(SWRs,1)
                 
-                SWR = [];
-                for chnl=1:size(SWRs,1)
-                  
-                  SWR  = cell2mat(SWRs(:,j))';
-%                     SWR(:,chnl)=SWRs{chnl,j};
-                end
-                
-                
-                
-                
-                %figure; plot(SWR(:, 1))
-                
-                % we filter the data to just extract the low-frequency component,
-                % the Sharp Wave, and to detect the trough based on it
-                ripple=filtfilt(b1,a1,SWR);
-                sharp_wave=filtfilt(b2,a2,SWR);
-                
-               % ripples_mat(:,:,j)=ripple;
-              %  sharp_wave_mat(:,:,j)=sharp_wave;
-                
-                %%
-                
-                win_s = 0.150;
-                win_samp = win_s*Fs;
-                zeroPoint = round(size(SWR, 1)/2);
-                ROI = zeroPoint-win_samp-1: zeroPoint+ win_samp-1;
-                invertSW = -sharp_wave;
-                
-                minVal = []; minInd = [];
-                
-                
-                
-                
-                for chnl=1:numel(ChanSetInds)
-                    thisChanInd = ChanSetInds(chnl);
-                    %plot(sharp_wave_mat(ROI,chnl))
-                    [minVal(chnl), minInd(chnl)] = min(sharp_wave(ROI,thisChanInd));
-                    
-                end
-                
-%                 
-%                 validChansMinVals = minVal;
-%                 validChansMinVals(noisyChanInds) = nan;
-%                 
-%                 validChansMinValInds = minInd;
-%                 validChansMinValInds(noisyChanInds) = nan;
-                
-                %                 validChansMinVals = minVal(nonNoisyChanInds);
-                %                 validChansMinValInds = minInd(nonNoisyChanInds);
-                %
-                %                 validChanInds = plottingOrder(nonNoisyChanInds);
-                %
-                
-              %  [B,I] = sort(validChansMinVals, 'ascend');
-                
-                
-              %  MostNegChans = I(1:5);
-                
-             %   MostNegMinVals = validChansMinVals(MostNegChans );
-             %   MostNegMinValInds = validChansMinValInds(MostNegChans );
-                %%
-                ROI_s = ROI/Fs;
-                figure(102); clf
-                subplot(1, 3, 1)
-                LegTxt = []; peakWidths_ms  = [];
-                for oo = 1:numel(minVal)
-                    hold on
-                       thisChanInd = ChanSetInds(oo);
-                       
-                    plot(ROI_s, sharp_wave(ROI, thisChanInd))
-                    LegTxt{oo} = ['Ch-' num2str(SWR_Chans(oo))];
-                    
-                    [pks,locs,w,p] = findpeaks(-sharp_wave(ROI, thisChanInd), 'MinPeakHeight', 5, 'WidthReference','halfheight');
-                    
-                    % figure; plot(-sharp_wave(ROI, thisChanInd));
-                    if numel(locs) >1
-                        [maxProm, pind] = max(p);
-                        
-                        pks = pks(pind);
-                        locs = locs(pind);
-                        w = w(pind);
-                        p = p(pind);
-                    end
-                    
-                        peakWidths_ms(oo) =  (w/Fs)*1000;
-                    
-                end
-                
-                clr = get(gca,'colororder');
-                
-                axis tight
-                Xticks = get(gca, 'xtick');
-                xtickLabs = {'-150', '-100', '-50', '0', '50', '100', '150'};
-                set(gca, 'xticklabel', xtickLabs);
-                xlabel('Time (ms)')
-                %ylim([-30 0])
-                
-                legend(LegTxt, 'Location', 'best')
-                title([file_swr(1:end-19) ' | SWR-' num2str(j)])
-                
-                %%
-                subplot(1, 3, 2); cla
-                for k = 1:numel(minVal)
-                    hold on
-                    plot(peakWidths_ms(k), minVal(k), 'marker', '*', 'color', clr(k,:))
-                end
-                
-                legend(LegTxt, 'Location', 'best')
-                axis tight
-                xlim([30 120])
-                %ylim([-30 0])
-                xlabel('SW duration (ms)')
-                ylabel('SW negative peak value (uV)')
-                
-                %%
-                
-                
-                amplitudes_uV = [minVal]';
-                durations_ms = [peakWidths_ms]';
-                
-                Name = LegTxt;
-                
-                T = table(amplitudes_uV,durations_ms,'RowNames',Name);
-                
-                ha = subplot(1, 3, 3);
-                pos = get(ha,'Position');
-                un = get(ha,'Units');
-                delete(ha)
-                
-                ht = uitable('Data',T{:,:},'ColumnName',T.Properties.VariableNames,...
-                    'RowName',T.Properties.RowNames,'Units', un, 'Position',pos);
-                ha = subplot(1, 3, 3);
-                
-                saveName = [path_swr file_swr(1:end-19) '_SWRStats_' sprintf('%03d', j)];
-                
-                plotpos = [0 0 50 12];
-                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-                
-                %% 
-                
-                allStats{j}.Chans = MostNegChans;
-                allStats{j}.Amplitudes_uV = MostNegMinVals;
-                allStats{j}.peakWidths_ms = peakWidths_ms;
-                
-                writetable(T, [saveName '.xls'], 'WriteRowNames',true)
-                
-                disp('')
+                SWR  = cell2mat(SWRs(:,j))';
+                %                     SWR(:,chnl)=SWRs{chnl,j};
             end
             
-       
+            
+            
+            
+            %figure; plot(SWR(:, 1))
+            
+            % we filter the data to just extract the low-frequency component,
+            % the Sharp Wave, and to detect the trough based on it
+            ripple=filtfilt(b1,a1,SWR);
+            sharp_wave=filtfilt(b2,a2,SWR);
+            
+            % ripples_mat(:,:,j)=ripple;
+            %  sharp_wave_mat(:,:,j)=sharp_wave;
+            
+            %%
+            
+            win_s = 0.150;
+            win_samp = win_s*Fs;
+            zeroPoint = round(size(SWR, 1)/2);
+            ROI = zeroPoint-win_samp-1: zeroPoint+ win_samp-1;
+            invertSW = -sharp_wave;
+            
+            minVal = []; minInd = [];
+            
+            
+            
+            
+            for chnl=1:numel(ChanSetInds)
+                thisChanInd = ChanSetInds(chnl);
+                %plot(sharp_wave_mat(ROI,chnl))
+                [minVal(chnl), minInd(chnl)] = min(sharp_wave(ROI,thisChanInd));
+                
+            end
+            
+            %
+            %                 validChansMinVals = minVal;
+            %                 validChansMinVals(noisyChanInds) = nan;
+            %
+            %                 validChansMinValInds = minInd;
+            %                 validChansMinValInds(noisyChanInds) = nan;
+            
+            %                 validChansMinVals = minVal(nonNoisyChanInds);
+            %                 validChansMinValInds = minInd(nonNoisyChanInds);
+            %
+            %                 validChanInds = plottingOrder(nonNoisyChanInds);
+            %
+            
+            %  [B,I] = sort(validChansMinVals, 'ascend');
+            
+            
+            %  MostNegChans = I(1:5);
+            
+            %   MostNegMinVals = validChansMinVals(MostNegChans );
+            %   MostNegMinValInds = validChansMinValInds(MostNegChans );
+            %%
+            ROI_s = ROI/Fs;
+            figure(102); clf
+            subplot(1, 3, 1)
+            LegTxt = []; peakWidths_ms  = [];
+            for oo = 1:numel(minVal)
+                hold on
+                thisChanInd = ChanSetInds(oo);
+                
+                plot(ROI_s, sharp_wave(ROI, thisChanInd))
+                LegTxt{oo} = ['Ch-' num2str(SWR_Chans(oo))];
+                
+                [pks,locs,w,p] = findpeaks(-sharp_wave(ROI, thisChanInd), 'MinPeakHeight', 5, 'WidthReference','halfheight');
+                
+                % figure; plot(-sharp_wave(ROI, thisChanInd));
+                if numel(locs) >1
+                    [maxProm, pind] = max(p);
+                    
+                    pks = pks(pind);
+                    locs = locs(pind);
+                    w = w(pind);
+                    p = p(pind);
+                end
+                
+                peakWidths_ms(oo) =  (w/Fs)*1000;
+                
+            end
+            
+            clr = get(gca,'colororder');
+            
+            axis tight
+            Xticks = get(gca, 'xtick');
+            xtickLabs = {'-150', '-100', '-50', '0', '50', '100', '150'};
+            set(gca, 'xticklabel', xtickLabs);
+            xlabel('Time (ms)')
+            %ylim([-30 0])
+            
+            legend(LegTxt, 'Location', 'best')
+            title([file_swr(1:end-19) ' | SWR-' num2str(j)])
+            
+            %%
+            subplot(1, 3, 2); cla
+            for k = 1:numel(minVal)
+                hold on
+                plot(peakWidths_ms(k), minVal(k), 'marker', '*', 'color', clr(k,:))
+            end
+            
+            legend(LegTxt, 'Location', 'best')
+            axis tight
+            xlim([30 120])
+            %ylim([-30 0])
+            xlabel('SW duration (ms)')
+            ylabel('SW negative peak value (uV)')
+            
+            %%
+            
+            
+            amplitudes_uV = [minVal]';
+            durations_ms = [peakWidths_ms]';
+            
+            Name = LegTxt;
+            
+            T = table(amplitudes_uV,durations_ms,'RowNames',Name);
+            
+            ha = subplot(1, 3, 3);
+            pos = get(ha,'Position');
+            un = get(ha,'Units');
+            delete(ha)
+            
+            ht = uitable('Data',T{:,:},'ColumnName',T.Properties.VariableNames,...
+                'RowName',T.Properties.RowNames,'Units', un, 'Position',pos);
+            ha = subplot(1, 3, 3);
+            
+            saveName = [path_swr file_swr(1:end-19) '_SWRStats_' sprintf('%03d', j)];
+            
+            plotpos = [0 0 50 12];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            
+            %%
+            
+            allStats{j}.Chans = SWR_Chans;
+            allStats{j}.Amplitudes_uV = minVal;
+            allStats{j}.peakWidths_ms = peakWidths_ms;
+            
+            writetable(T, [saveName '.xls'], 'WriteRowNames',true)
+            
+            disp('')
+        end
+        
+        
         
         
         
