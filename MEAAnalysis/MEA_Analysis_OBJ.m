@@ -1296,7 +1296,7 @@ end
                 [data_shift,nshifts] = shiftdim(ChanData',-2);
                 
                 % Sharp wave
-                [DataSeg_DS, t_s] = fobj.filt.F2.getFilteredData(data_shift_zscore); % raw data --> downsampled data
+                [DataSeg_DS, t_s] = fobj.filt.F2.getFilteredData(data_shift); % raw data --> downsampled data
                 DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
               %  DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP); % notch filted data --> ripple filter
                 
@@ -1353,7 +1353,7 @@ end
                 for q =1:numel(peakTime_Fs)
                     
                     winROI = peakTime_Fs(q)-WinSizeL:peakTime_Fs(q)+WinSizeR;
-                    if winROI(1) <0 || winROI(end) > numel(zscore_rip)
+                    if winROI(1) <0 || winROI(end) > numel(BP_DataInverted)
                         continue
                     end
                     
