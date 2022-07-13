@@ -23,22 +23,22 @@ toc
 
 %% plot detection clusters
 
-likelihood_cutoff  = 0;
+likelihood_cutoff  = 0.98;
 SaveNameTxt = 'BeakClusters-';
 dlc_OBJ = plotDetectionClusters(dlc_OBJ, likelihood_cutoff, SaveNameTxt );
 
 %% Distance between beak parts
-%likelihood_cutoff  = 0;
-dlc_Obj = plotDistanceBetweenTwoPoints(dlc_OBJ, 0);
+likelihood_cutoff  = 0.98;
+dlc_OBJ = plotDistanceBetweenTwoPoints(dlc_OBJ, likelihood_cutoff);
 
 %% Distance between beak parts
-%likelihood_cutoff  = 0;
-[dlc_Obj] = plotAngleBetweenThreePoints(dlc_OBJ, 0);
+likelihood_cutoff   = 0.98;
+[dlc_OBJ] = plotAngleBetweenThreePoints(dlc_OBJ, likelihood_cutoff);
 
 %% Movement
 
-%likelihood_cutoff  = 0;
-[dlc_Obj] = plotMovement(dlc_Obj, 0);
+likelihood_cutoff  = 0.98;
+[dlc_OBJ] = plotMovement(dlc_OBJ, likelihood_cutoff);
 
 %% Other analysis
 %% Raw coordinates
@@ -49,7 +49,8 @@ plot_variable_over_time(dlc_OBJ, 3) % y coordinates
 %% Velocity and heat maps
 % plot velocity over time
 SaveNameTxt = 'BeakClusters-';
-dlc_Obj = plotVelocity(dlc_OBJ, SaveNameTxt, likelihood_cutoff);
+likelihood_cutoff  = 0.98;
+dlc_OBJ = plotVelocity(dlc_OBJ, SaveNameTxt, likelihood_cutoff);
 
 %% 
 %dlc_Obj = makePlotsForDistances(dlc_Obj, 2);

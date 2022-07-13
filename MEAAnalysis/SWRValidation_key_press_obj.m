@@ -113,15 +113,16 @@ function [] = updateAnnotation(spc)
 detectionInd = getappdata(spc, 'detectionInd');
 allSavedDetectionInds = getappdata(spc, 'allSavedDetectionInds');
 nInds = getappdata(spc, 'nInds');
+SWR_Detection_s = getappdata(spc, 'SWR_Detection_s');
 
 if ismember(detectionInd, allSavedDetectionInds)
-    
-    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | d-detection; s-save detection file-- Detected'];
+    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | t = ' num2str(SWR_Detection_s(1, detectionInd)) 's | d-detection; r-remove detection; s-save file -- Detected'];
 else
-    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | d-detection; s-save detection file' ];
+    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | t = ' num2str(SWR_Detection_s(1, detectionInd)) 's | d-detection; r-remove detection; s-save file'];
 end
+
 % Create textbox
-annotation(spc,'textbox', [0.5 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
+annotation(spc,'textbox', [0.2 0.95 0.5 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
 
 
 
@@ -132,11 +133,12 @@ function [] = updateGridPlotMEA_kp(spc)
 nInds = getappdata(spc, 'nInds');
 
 AllSWRDataOnChans = getappdata(spc, 'AllSWRDataOnChans');
-%timepoints_s = getappdata(spc, 'timepoints_s');
+timepoints_s = getappdata(spc, 'timepoints_s');
 plottingOrder = getappdata(spc, 'plottingOrder');
 detectionInd = getappdata(spc, 'detectionInd');
 Fs = getappdata(spc, 'Fs');
-
+SWR_Detection_s = getappdata(spc, 'SWR_Detection_s');
+            
 figure(spc); clf
 disp('Updating plot....')
 
@@ -197,13 +199,13 @@ end
 allSavedDetectionInds = getappdata(spc, 'allSavedDetectionInds');
 
 if ismember(detectionInd, allSavedDetectionInds)
-    
-    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) '-- Detected'];
+    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | t = ' num2str(SWR_Detection_s(1, detectionInd)) 's | d-detection; r-remove detection; s-save file -- Detected'];
 else
-    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds)];
+    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | t = ' num2str(SWR_Detection_s(1, detectionInd)) 's | d-detection; r-remove detection; s-save file'];
 end
+
 % Create textbox
-annotation(spc,'textbox', [0.5 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
+annotation(spc,'textbox', [0.2 0.95 0.5 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
 
 disp('Finished....')
 end

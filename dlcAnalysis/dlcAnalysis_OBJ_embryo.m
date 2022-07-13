@@ -640,7 +640,7 @@ classdef dlcAnalysis_OBJ_embryo < handle
                 legend ('boxoff')
                 legend('location', 'eastoutside')
                 figure(figH)
-                title('Detection clusters')
+                title(['Detection clusters | Likelihood  Cutoff: ' num2str(likelihood_cutoff)])
                 ylabel('y coordinates')
                 xlabel('x coordinates')
                 
@@ -737,22 +737,34 @@ classdef dlcAnalysis_OBJ_embryo < handle
                 
                 hold on
                 % liklihood
-                HL_inds_1 = find(likelihood_1 >= likelihood_cutoff);
+                HL_inds_1 = find(likelihood_1 < likelihood_cutoff);
                 n_inds_1 = numel(HL_inds_1);
                 
-                HL_inds_2 = find(likelihood_2 >= likelihood_cutoff);
+                HL_inds_2 = find(likelihood_2 < likelihood_cutoff);
                 n_inds_2 = numel(HL_inds_2);
                 
+%                 c_X_1 = coords_X_1(HL_inds_1);
+%                 c_Y_1 = coords_Y_1(HL_inds_1);
+%                 
+%                 c_X_2 = coords_X_2(HL_inds_2);
+%                 c_Y_2 = coords_Y_2(HL_inds_2);
                 
-                c_X_1 = coords_X_1(HL_inds_1);
-                c_Y_1 = coords_Y_1(HL_inds_1);
+                c_X_1 = coords_X_1;
+                c_Y_1 = coords_Y_1;
                 
-                c_X_2 = coords_X_2(HL_inds_2);
-                c_Y_2 = coords_Y_2(HL_inds_2);
+                c_X_1(HL_inds_1) = nan; % set all low probabilities to 0
+                c_Y_1(HL_inds_1) = nan;
                 
-                if numel(c_X_1) ~= numel(c_X_2)
-                    keyboard
-                end
+                c_X_2 = coords_X_2;
+                c_Y_2 = coords_Y_2;
+                
+                c_X_2(HL_inds_2)= nan;
+                c_Y_2(HL_inds_2) = nan;
+                
+                
+%                 if numel(c_X_1) ~= numel(c_X_2)
+%                     keyboard
+%                 end
                 
                 euclideanDistance = [];
                 for k = 1:numel(c_X_1)
@@ -764,16 +776,18 @@ classdef dlcAnalysis_OBJ_embryo < handle
                     
                 end
                 
-                meanVal_euclidian = mean(euclideanDistance);
-                stdVal_euclidian = std(euclideanDistance);
+                nMissingDatapoints = sum(isnan(euclideanDistance));
+                
+                meanVal_euclidian = nanmean(euclideanDistance);
+                stdVal_euclidian = nanstd(euclideanDistance);
                 
                 timepoints_frames = 1:1:numel(euclideanDistance);
                 timepoints_s =timepoints_frames/fps;
                 
                 velocity_px_per_s = euclideanDistance/timeRes_s;
                 
-                meanVal_vel = mean(velocity_px_per_s);
-                stdVal_vel = std(velocity_px_per_s);
+                meanVal_vel = nanmean(velocity_px_per_s);
+                stdVal_vel = nanstd(velocity_px_per_s);
                 
                 %%
                 figH = figure(105); clf
@@ -790,7 +804,7 @@ classdef dlcAnalysis_OBJ_embryo < handle
                 plotpos = [0 0 40 12]; % keep this so arena dims look ok
                 
                 
-                annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExperimentName '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
+                annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExperimentName '-' expText ' | Likelihood  Cutoff: ' num2str(likelihood_cutoff)],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
                 saveName = [savePath 'Distance_' thisTrackedObject1 '-' thisTrackedObject2 '_'  expText];
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
                 
@@ -820,7 +834,7 @@ classdef dlcAnalysis_OBJ_embryo < handle
             
             yss = ylim;
             ylabel(['Distance between ' thisTrackedObject1 ' and ' thisTrackedObject2 ' (px)'])
-            title(obj.PATH.ExperimentName)
+            title([obj.PATH.ExperimentName ' | Likelihood  Cutoff: ' num2str(likelihood_cutoff)])
             distance_BL_Touch = allEucDistOverExps{3}';
             distance_Touch = allEucDistOverExps{4}';
             
@@ -1007,23 +1021,36 @@ classdef dlcAnalysis_OBJ_embryo < handle
                 eval(['likelihood_R = coords.' refObject '.likelihood;']);
                 
                 
-                %                     hold on
-                %                     % liklihood
-                %                     HL_inds_1 = find(likelihood_1 >= likelihood_cutoff);
-                %                     n_inds_1 = numel(HL_inds_1);
-                %
-                %                     HL_inds_2 = find(likelihood_2 >= likelihood_cutoff);
-                %                     n_inds_2 = numel(HL_inds_2);
+                hold on
+                % liklihood
+                HL_inds_1 = find(likelihood_1 < likelihood_cutoff);
+                n_inds_1 = numel(HL_inds_1);
+                
+                HL_inds_2 = find(likelihood_2 < likelihood_cutoff);
+                n_inds_2 = numel(HL_inds_2);
+                
+                  
+                HL_inds_R = find(likelihood_R < likelihood_cutoff);
+                n_inds_R = numel(HL_inds_R);
                 
                 
                 c_X_1 = coords_X_1;
                 c_Y_1 = coords_Y_1;
                 
+                c_X_1(HL_inds_1) = nan; % set all low probabilities to 0
+                c_Y_1(HL_inds_1) = nan;
+                
                 c_X_2 = coords_X_2;
                 c_Y_2 = coords_Y_2;
                 
+                c_X_2(HL_inds_2)= nan;
+                c_Y_2(HL_inds_2) = nan;
+                
                 c_X_R = coords_X_R;
                 c_Y_R = coords_Y_R;
+                
+                c_X_R(HL_inds_R) = nan;
+                c_Y_R(HL_inds_R) = nan;
                 
                 % P1 = [10  210];
                 % P2 = [140 210];
@@ -1110,7 +1137,7 @@ Theta = atan2(norm(cross(v_1, v_2)), dot(v_1, v_2));
                 plotpos = [0 0 40 12]; % keep this so arena dims look ok
                 
                 
-                annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExperimentName '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
+                annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExperimentName '-' expText ' | Likelihood  Cutoff: ' num2str(likelihood_cutoff)],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
                 saveName = [savePath thisTrackedObject1 '-' thisTrackedObject2 '_Degree' expText];
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
                 
@@ -1140,7 +1167,7 @@ Theta = atan2(norm(cross(v_1, v_2)), dot(v_1, v_2));
             
             yss = ylim;
             ylabel(['Angle between ' thisTrackedObject1 ' and ' thisTrackedObject2 ' (Deg.)'])
-            title(obj.PATH.ExperimentName)
+            title([obj.PATH.ExperimentName ' | Likelihood  Cutoff: ' num2str(likelihood_cutoff)])
             distance_BL_Touch = allDegreesOverExps{3}';
             distance_Touch = allDegreesOverExps{4}';
             
@@ -1369,7 +1396,7 @@ Theta = atan2(norm(cross(v_1, v_2)), dot(v_1, v_2));
                 
                 figH = figure(200+j);
                 xlabel('Time (s)')
-                annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExperimentName '-' expText],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
+                annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.PATH.ExperimentName '-' expText ' | Likelihood  Cutoff: ' num2str(likelihood_cutoff)],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
                 saveName = [savePath SaveNameTxt '_Velocity' expText];
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
                 
@@ -1515,7 +1542,7 @@ Theta = atan2(norm(cross(v_1, v_2)), dot(v_1, v_2));
                 hold on
                 boxplot(x, g, 'color', 'k', 'whisker', inf, 'Labels',{'BL-Touch','Touch'})
                 
-                title([obj.PATH.ExperimentName ' | ' thisTrackedObject])
+                title([obj.PATH.ExperimentName ' | ' thisTrackedObject ' | Likelihood  Cutoff: ' num2str(likelihood_cutoff)])
                 
                 ylim(yss)
                 
