@@ -5,7 +5,7 @@
 addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
 cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
 
-analysisDir = 'F:\Johanna_MEA_Data\20220620\'; % path to the analysis directory
+analysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220620\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -50,7 +50,7 @@ mea_OBJ = collectAllSWRDetections(mea_OBJ);
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  Analysis on SWRs 
 
-SWRAnalysisDir = 'F:\Johanna_MEA_Data\20220620\SWR_Analysis\20220620_1448_SWR_Detections\';
+SWRAnalysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220620\SWR_Analysis\20220620_1448_recovery_SWR_Detections\';
 cd(SWRAnalysisDir);
 
 %% Validate detected SWRs

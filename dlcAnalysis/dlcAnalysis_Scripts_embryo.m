@@ -6,8 +6,8 @@
 %% 1) Define analysis directory and identify csv files
 % Make sure to put all the .csv files for one experiment into one directory
 
-analysisDir = 'Y:\JanieData\DLC-Analysis\ChickEmbryoTracking\NEW-July2022\130522-E-3\AllCSVFiles\'; % path to the analysis directory, should contain the .csv files
-ExperimentName = '130522-E-3';
+analysisDir = 'Y:\JanieData\DLC-Analysis\ChickEmbryoTracking\NEW-July2022\ProbFiles\'; % path to the analysis directory, should contain the .csv files
+ExperimentName = 'ProbFiles';
 
 addpath(genpath('C:\Users\dlc\Documents\DLCEmbryoCode'));
 dlc_OBJ = dlcAnalysis_OBJ_embryo(analysisDir, ExperimentName);
@@ -36,7 +36,7 @@ likelihood_cutoff   = 0.98;
 [dlc_OBJ] = plotAngleBetweenThreePoints(dlc_OBJ, likelihood_cutoff);
 
 %% Movement
-
+dbstop if error
 likelihood_cutoff  = 0.98;
 [dlc_OBJ] = plotMovement(dlc_OBJ, likelihood_cutoff);
 

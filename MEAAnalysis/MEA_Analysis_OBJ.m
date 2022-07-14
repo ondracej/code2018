@@ -1175,12 +1175,12 @@ end
             fobj.filt.Rip1=fobj.filt.Rip1.designBandPass;
             fobj.filt.Rip1.padding=true;
             
-            % fobj.filt.SW1=filterData(Fss);
-            % fobj.filt.SW1.highPassCutoff=SWFil(1);
-            % fobj.filt.SW1.lowPassCutoff=SWFil(2);
-            % fobj.filt.SW1.filterDesign='butter';
-            % fobj.filt.SW1=fobj.filt.SW1.designBandPass;
-            % fobj.filt.SW1.padding=true;
+%             fobj.filt.SW1=filterData(Fss);
+%             fobj.filt.SW1.highPassCutoff=SWFil(1);
+%             fobj.filt.SW1.lowPassCutoff=SWFil(2);
+%             fobj.filt.SW1.filterDesign='butter';
+%             fobj.filt.SW1=fobj.filt.SW1.designBandPass;
+%             fobj.filt.SW1.padding=true;
             
             % Original SW filter
             fobj.filt.SW2=filterData(Fss);
@@ -1298,6 +1298,8 @@ end
                 % Sharp wave
                 [DataSeg_DS, t_s] = fobj.filt.F2.getFilteredData(data_shift); % raw data --> downsampled data
                 DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
+                DataSeg_SW2 = fobj.filt.SW2.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
+                
               %  DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP); % notch filted data --> ripple filter
                 
 %                 squared_rip = squeeze(DataSeg_Ripp).^2;
@@ -1308,7 +1310,12 @@ end
                 
                 BP_DataInverted = -squeeze(DataSeg_BP);
                 BP_DataInverted  = BP_DataInverted -mean(BP_DataInverted);
-                %  figure; plot(BP_DataInverted)
+                
+                SW_DataInverted = -squeeze(DataSeg_SW2);
+                SW_DataInverted  = SW_DataInverted -mean(SW_DataInverted);
+                
+                %  figure; plot(SW_DataInverted)
+                % figure; plot(BP_DataInverted)
                 %   figure; plot(squeeze(DataSeg_BP))
                 %% Does not catch everything
                 
@@ -1330,8 +1337,8 @@ end
                 
                 
                 %[peakH,peakTime_Fs, peakW, peakP] = findpeaks(BP_DataInverted, 'MinPeakHeight', thresh, 'MinPeakWidth',  midWidth_samples, 'MinPeakDistance', peakDistance_sample );
-                [peakH,peakTime_Fs, peakW, peakP] = findpeaks(BP_DataInverted, 'MinPeakHeight', thresh, 'MinPeakDistance', peakDistance_sample );
-                
+                %[peakH,peakTime_Fs, peakW, peakP] = findpeaks(BP_DataInverted, 'MinPeakHeight', thresh, 'MinPeakDistance', peakDistance_sample,'MinPeakWidth',  midWidth_samples);
+                [peakH,peakTime_Fs, peakW, peakP] = findpeaks(SW_DataInverted, 'MinPeakHeight', thresh, 'MinPeakDistance', peakDistance_sample);
                 %% Detect Ripples
                 
                 if isempty(peakH)
@@ -1379,7 +1386,7 @@ end
                         subplot(2, 1, 2)
                         % plot(time_s(winROI), ChanData_cond(winROI));
                         hold on
-                        plot(t_s(winROI), zscore_rip(winROI), 'k');
+                        plot(t_s(winROI), squeeze(DataSeg_SW2(winROI)), 'k');
                         axis tight
                         title('Z-scored data')
                         ylim([-10 20])
@@ -2486,12 +2493,12 @@ end
                 
                 baselineROI = 1:5000; % -.25s to +.25 s
                 
-                %tr=median(up)+2*iqr(up);
-                tr=median(up(baselineROI,:))+ 1*iqr(up(baselineROI,:));
+                tr=median(up)+2*iqr(up);
+                %tr=median(up(baselineROI,:))+ 1*iqr(up(baselineROI,:));
                 t0=ones(1,length(chnls));
                 
-                diffs = diff(up(baselineROI,:));
-                figure; plot(diffs(:,1));
+               % diffs = diff(up(baselineROI,:));
+             %   figure; plot(diffs(:,1));
                 for chnl=1:59
                     
                     thisChan = num2str(plottingOrder(chnl));
