@@ -3318,7 +3318,14 @@ end
                 
                 
                 %%
-                timeWin_s = 60;
+                
+                if expSwitch == 1
+                    timeWin_s = 60;
+                else
+                    timeWin_s = 30;
+                    
+                end
+                
                 tOn = 1:timeWin_s:minVal;
                 allSpks = [];
                 allFRs = [];
@@ -3362,7 +3369,9 @@ end
                 plot(dD_spikeWaveforms(1:end,:)', 'k');
                 axis tight
                 ylim([-5e4 5e4])
+                
                 if expSwitch == 1
+                    
                     title(['Drug: Ch-' num2str(thisChannel)])
                 else
                     title(['Stimulation: Ch-' num2str(thisChannel)])
@@ -3388,8 +3397,20 @@ end
                 line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
                 title(['n = ' num2str(size(bD_spikeWaveforms,1)) ' spikes']);
                 
+                if expSwitch ~= 1
+                    xtickss = get(gca, 'xtick');
+                    for g = 1:numel(xtickss)
+                        
+                        thisTick = xtickss(g)/2;
+                        xticklabs{g} = num2str(thisTick);
+                    end
+                        set(gca, 'xticklabel', xticklabs)
+                end
+                
+                
                 pre = allFRs{1}(1:5);
                 post = allFRs{1}(6:end);
+                
                 subplot(3, 6, 8);
                 toPlot = [mean(pre) ; mean(post)];
                 errs = [std(pre) ; std(post)];
@@ -3409,6 +3430,16 @@ end
                 ylabel('Firing Rate (Hz)')
                 line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
                 title(['n = ' num2str(size(dD_spikeWaveforms, 1)) ' spikes']);
+                
+                if expSwitch ~= 1
+                    xtickss = get(gca, 'xtick');
+                    for g = 1:numel(xtickss)
+                        
+                        thisTick = xtickss(g)/2;
+                        xticklabs{g} = num2str(thisTick);
+                    end
+                        set(gca, 'xticklabel', xticklabs)
+                end
                 
                 pre = allFRs{2}(1:5);
                 post = allFRs{2}(6:end);
@@ -3432,6 +3463,15 @@ end
                 line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
                 title(['n = ' num2str(size(rD_spikeWaveforms, 1)) ' spikes']);
                 
+                if expSwitch ~= 1
+                    xtickss = get(gca, 'xtick');
+                    for g = 1:numel(xtickss)
+                        
+                        thisTick = xtickss(g)/2;
+                        xticklabs{g} = num2str(thisTick);
+                    end
+                        set(gca, 'xticklabel', xticklabs)
+                end
                 pre = allFRs{3}(1:5);
                 post = allFRs{3}(6:end);
                 subplot(3, 6, 12);
