@@ -2890,7 +2890,7 @@ end
             nSWRs = size(SWRs, 2);
             
             
-            for k = 1:7
+            for k = 1:length(SWR_Chans)% 1:7
                 
                 thisChan = SWR_Chans(k);
                 
@@ -2931,7 +2931,7 @@ end
             
             %%
             
-            win_s = 0.250;
+            win_s = 0.300;
             win_samp = win_s*Fs;
             zeroPoint = round(size(SWR, 1)/2);
             ROI = zeroPoint-win_samp-1: zeroPoint+ win_samp-1;
