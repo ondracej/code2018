@@ -5,7 +5,7 @@
 addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
 cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
 
-analysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220620\'; % path to the analysis directory
+analysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220503\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -50,7 +50,7 @@ mea_OBJ = collectAllSWRDetections(mea_OBJ);
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  Analysis on SWRs 
 
-SWRAnalysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220620\SWR_Analysis\20220620_1448_recovery_SWR_Detections\';
+SWRAnalysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220503\SWR_Analysis\20220503_1538_SWR_Detections\';
 cd(SWRAnalysisDir);
 
 %% Validate detected SWRs
@@ -92,7 +92,8 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 
 %% After spike sorting
 
-mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
+textSave = 'Baseline';
+mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ, textSave);
 
 %% Standalone code
 

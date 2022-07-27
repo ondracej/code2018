@@ -896,7 +896,7 @@ end
                 
                 minWidth_ms = 10;
                 midWidth_samples = round(minWidth_ms/1000*Fss);
-                thresh = 18;
+                thresh = 8;
                 
                 peakDistance_ms = 100;
                 peakDistance_sample = round(peakDistance_ms/1000*Fss);
@@ -904,7 +904,7 @@ end
                 
                 [peakH,peakTime_Fs, peakW, peakP] = findpeaks(zscore_rip, 'MinPeakHeight', thresh, 'MinPeakWidth',  midWidth_samples, 'MinPeakDistance', peakDistance_sample );
                 %[peakH,peakTime_Fs, peakW, peakP] = findpeaks(zscore_rip, 'MinPeakHeight', thresh, 'MinPeakDistance', peakDistance_sample );
-                
+                figure; plot(zscore_rip)
                 %% Detect Ripples
                 
                 if isempty(peakH)
@@ -1106,7 +1106,7 @@ end
             disp('Loading data and detecting SWRs....')
             
             dbstop if error
-            doPlot = 0; % will pause the analysis
+            doPlot = 1; % will pause the analysis
             
             fileToLoad = obj.ANALYSIS.h5_fileToLoad;
             
@@ -1389,7 +1389,7 @@ end
                         plot(t_s(winROI), squeeze(DataSeg_SW2(winROI)), 'k');
                         axis tight
                         title('Z-scored data')
-                        ylim([-10 20])
+                        ylim([-20 20])
                         
                         pause
                     end
@@ -3594,7 +3594,11 @@ end
         end
         
         
-        function obj = FiringRateAnalysis_makeRasters(obj)
+        function obj = FiringRateAnalysis_makeRasters(obj, textSave)
+            
+            if nargin <2
+                textSave = '';
+            end
             
             dbstop if error
             %%
@@ -3770,7 +3774,7 @@ end
                 'LineStyle','none',...
                 'FitBoxToText','off');
             
-            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__FR'];
+            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__FR-' textSave];
             plotpos = [0 0 12 10];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
@@ -3782,7 +3786,7 @@ end
                 'LineStyle','none',...
                 'FitBoxToText','off');
             
-            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__Raster'];
+            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__Raster-' textSave];
             plotpos = [0 0 15 12];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
