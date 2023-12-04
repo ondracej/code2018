@@ -69,7 +69,7 @@ classdef chicken_OT_analysis_OBJ < handle
                     %addpath(genpath('/home/dlc/code/GitHub/code2018/OT_Analysis/'));
                     %addpath(genpath('/home/dlc/code/GitHub/UMS2K-master/'));
                     
-                    OT_Data_Path = 'D:\MLD\OTData\Results\';
+                    OT_Data_Path = 'Z:\hameddata2\Janie-OT-MLD\OT-MLD\OTProject\OTData\Results\';
                     
             end
             
