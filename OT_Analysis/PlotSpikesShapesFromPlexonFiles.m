@@ -1,6 +1,6 @@
 
 
-DirToLoad = ['X:\Janie-OT-MLD\PlexonData-HRTF\'];
+DirToLoad = ['X:\Janie-OT-MLD\PlexonData-WN\'];
 
 PlotDir = [DirToLoad 'SpikeFiles\' ];
 
