@@ -3,9 +3,9 @@
 % *** To run a cell, type STRG + Enter
 
 addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
-cd 'C:\Users\Neuropix\Documents\GitHub\code2018\MEAAnalysis\'
+cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
 
-analysisDir = 'Z:\JanieData\MEA-Projects\JessicaMeaData\20210826\'; % path to the analysis directory
+analysisDir = 'F:\Johanna_MEA_Data\20220603\'; % path to the analysis directory %% CHANGE THIS 
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -30,25 +30,52 @@ mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
 mea_OBJ = addAnalysisInfoToObj(mea_OBJ);
 
+%mea_OBJ = addAnalysisInfoToObj_noSWR(mea_OBJ);
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %% SWR Analysis
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% SWR Detection Analysis - this takes a long time
 
-mea_OBJ = load_MCS_data_detectSWRs_zscore_detection(mea_OBJ);
+mea_OBJ = load_MCS_data_detectSWRs_SW_detection(mea_OBJ);
+%mea_OBJ = load_MCS_data_detectSWRs_zscore_detection(mea_OBJ);
+%mea_OBJ  = load_MCS_data_detectSWRs_rippleDetection(mea_OBJ);
+
 mea_OBJ = collectAllSWRDetections(mea_OBJ);
 % printing figures
-mea_OBJ = plotSWRDetection(mea_OBJ);
+%mea_OBJ = plotSWRDetection(mea_OBJ);
+
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Analysis on SWRs 
+
+SWRAnalysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220503\SWR_Analysis\20220503_1538_SWR_Detections\'; %% CHANGE THIS 
+cd(SWRAnalysisDir);
 
 %% Validate detected SWRs
 mea_OBJ = validateSWRDetections(mea_OBJ);
 
-%% Make delay plot
-mea_OBJ = calculateDelaysfromValidSWRs_makePlots(mea_OBJ);
+%% Plot valid SWRs 
+textSave = 'Baseline';
+mea_OBJ = plotValidSWRDetections(textSave , SWRAnalysisDir, mea_OBJ);
 
-%% SWR statistics (@ Janie to do)
-% save this as a mat files
+%% Make delay plot
+textSave = 'Baseline';
+mea_OBJ = calculateDelaysfromValidSWRs_makePlots(textSave, mea_OBJ);
+
+%% SWR statistics 
+
+SWR_Ind = 3;
+SWR_Chans = [32 33 34 35 36 37 38]; % Maximum 7 channels
+textSave = 'Baseline';
+mea_OBJ = calcSWRStatistics_SWR_Ind_And_Chan(textSave, SWRAnalysisDir, SWR_Ind, SWR_Chans, mea_OBJ);
+
+
+%%
+%mea_OBJ = calcSWRStatistics(SWRAnalysisDir, mea_OBJ);
+
+%%
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Firing Rate Analysis
@@ -66,7 +93,8 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 
 %% After spike sorting
 
-mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
+textSave = 'Baseline';
+mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ, textSave);
 
 %% Standalone code
 

@@ -2,7 +2,12 @@
 %% [1] Initialize the program
 % *** To run a cell, type STRG + Enter
 
-analysisDir = 'D:\MonikaData\20220429\'; % path to the analysis directory
+
+addpath(genpath('D:\Github\code2018'));
+cd 'D:\Github\code2018\MEAAnalysis\'
+
+
+analysisDir = 'F:\20220622\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 % 
 %                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -43,7 +48,9 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 
 mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
 
-mea_OBJ = doAnalysisFiringRateComparison(mea_OBJ);
+%%
+spikeDir = 'F:\20220622\Firing_Rate_Analysis\';
+doAnalysisFiringRateComparison(spikeDir, mea_OBJ, 2);
 
 %%
 %checkSpikesOnSortedData()

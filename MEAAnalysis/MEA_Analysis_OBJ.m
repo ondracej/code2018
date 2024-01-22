@@ -264,7 +264,7 @@ classdef MEA_Analysis_OBJ < handle
             disp('Loading data and detecting SWRs....')
             
             dbstop if error
-            doPlot = 1; % will pause the analysis
+            doPlot = 0; % will pause the analysis
             
             fileToLoad = obj.ANALYSIS.h5_fileToLoad;
             
@@ -691,362 +691,814 @@ end
             swrAnalysisDetections_Dir = obj.PATH.swrAnalysisDetections_Dir;
             
             %check if ripple data already exists
-            if isfile([swrAnalysisDetections_Dir name '_RippleData.mat'])
+            %             if isfile([swrAnalysisDetections_Dir name '_RippleData.mat'])
+            %
+            %             else
+            
+            %% For getting the correct channel order
+            
+            cfg = [];
+            cfg.channel = [1 60]; % channel index 5 to 15
+            cfg.window = [0 1]; % time range 0 to 1 s
+            
+            dataTmp= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+            
+            % Original plotting Order
+            %plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 15 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
+            
+            %Not including ch 15 = reference
+            plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
+            
+            ChanLabelInds = str2double(dataTmp.Info.Label(:));
+            
+            chanInds = [];
+            for k = 1:numel(plottingOrder)
+                chanInds(k) = find(ChanLabelInds == plottingOrder(k));
+            end
+            
+            %% Designing filters
+            Fs = 32000;
+            DS_Factor = 20;
+            bandPassFilter1 = [1 400];
+            Ripple = [6 300];
+            
+            fObj = filterData(Fs);
+            
+            fobj.filt.F2=filterData(Fs);
+            fobj.filt.F2.downSamplingFactor=DS_Factor; % original is 128 for 32k for sampling rate of 250
+            fobj.filt.F2=fobj.filt.F2.designDownSample;
+            fobj.filt.F2.padding=true;
+            fobj.filt.F2Fs=fobj.filt.F2.filteredSamplingFrequency;
+            
+            Fss = fobj.filt.F2Fs;
+            
+            %BandPass 1
+            fobj.filt.BP1=filterData(Fss);
+            fobj.filt.BP1.highPassCutoff=bandPassFilter1(1);
+            fobj.filt.BP1.lowPassCutoff=bandPassFilter1(2);
+            fobj.filt.BP1.filterDesign='butter';
+            fobj.filt.BP1=fobj.filt.BP1.designBandPass;
+            fobj.filt.BP1.padding=true;
+            
+            %BandPass 1
+            fobj.filt.Rip1=filterData(Fss);
+            fobj.filt.Rip1.highPassCutoff=Ripple(1);
+            fobj.filt.Rip1.lowPassCutoff=Ripple(2);
+            fobj.filt.Rip1.filterDesign='butter';
+            fobj.filt.Rip1=fobj.filt.Rip1.designBandPass;
+            fobj.filt.Rip1.padding=true;
+            
+            % fobj.filt.SW1=filterData(Fss);
+            % fobj.filt.SW1.highPassCutoff=SWFil(1);
+            % fobj.filt.SW1.lowPassCutoff=SWFil(2);
+            % fobj.filt.SW1.filterDesign='butter';
+            % fobj.filt.SW1=fobj.filt.SW1.designBandPass;
+            % fobj.filt.SW1.padding=true;
+            
+            % Original SW filter
+            fobj.filt.SW2=filterData(Fss);
+            fobj.filt.SW2.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.SW2.lowPassStopCutoff=40;
+            fobj.filt.SW2.attenuationInLowpass=20;
+            fobj.filt.SW2=fobj.filt.SW2.designLowPass;
+            fobj.filt.SW2.padding=true;
+            %
+            % fobj.filt.FN =filterData(Fss);
+            % fobj.filt.FN.filterDesign='cheby1';
+            % fobj.filt.FN.padding=true;
+            % fobj.filt.FN=fobj.filt.FN.designNotch;
+            
+            
+            %% Load full channel data
+            
+            smoothWin_ms = 15;
+            smoothWin_sampls = round((smoothWin_ms/1000)*Fss);
+            
+            recordingDuration_s = double(data.Recording{1,1}.Duration/1e6);
+            
+            cfg = [];
+            cfg.window = [0 recordingDuration_s]; % time
+            smoothWin = 0.10*Fs;
+            
+            DetChanInds = ~ismember(plottingOrder, obj.ANALYSIS.SWR_Analysis_noisy_channels);
+            ChansForDetection = plottingOrder(DetChanInds);
+            ChanIndsForDetection = chanInds(DetChanInds);
+            
+            SWR_Analysis_SWR_chans = obj.ANALYSIS.SWR_Analysis_SWR_chans;
+            nSWRChans = numel(SWR_Analysis_SWR_chans);
+            
+            %% Comment this out!!
+            
+            chans_w_SWRs_set = [];
+            for k = 1:nSWRChans
+                chans_w_SWRs_set(k) = find(plottingOrder == SWR_Analysis_SWR_chans(k));
+            end
+            
+            ChanData_for_zscore = []; ChanData_for_SW_zscore = [];
+            for k = 1:numel(chans_w_SWRs_set)
                 
-            else
+                thisChan = chans_w_SWRs_set(k);
                 
-                %% For getting the correct channel order
+                cfg.channel = [thisChan thisChan]; % channel index 5 to 15
                 
-                cfg = [];
-                cfg.channel = [1 60]; % channel index 5 to 15
-                cfg.window = [0 1]; % time range 0 to 1 s
-                
-                dataTmp= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
-                
-                % Original plotting Order
-                %plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 15 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
-                
-                %Not including ch 15 = reference
-                plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
-                
-                ChanLabelInds = str2double(dataTmp.Info.Label(:));
-                
-                chanInds = [];
-                for k = 1:numel(plottingOrder)
-                    chanInds(k) = find(ChanLabelInds == plottingOrder(k));
-                end
-                
-                %% Designing filters
-                Fs = 32000;
-                DS_Factor = 20;
-                bandPassFilter1 = [1 400];
-                Ripple = [6 150];
-                
-                fObj = filterData(Fs);
-                
-                fobj.filt.F2=filterData(Fs);
-                fobj.filt.F2.downSamplingFactor=DS_Factor; % original is 128 for 32k for sampling rate of 250
-                fobj.filt.F2=fobj.filt.F2.designDownSample;
-                fobj.filt.F2.padding=true;
-                fobj.filt.F2Fs=fobj.filt.F2.filteredSamplingFrequency;
-                
-                Fss = fobj.filt.F2Fs;
-                
-                %BandPass 1
-                fobj.filt.BP1=filterData(Fss);
-                fobj.filt.BP1.highPassCutoff=bandPassFilter1(1);
-                fobj.filt.BP1.lowPassCutoff=bandPassFilter1(2);
-                fobj.filt.BP1.filterDesign='butter';
-                fobj.filt.BP1=fobj.filt.BP1.designBandPass;
-                fobj.filt.BP1.padding=true;
-                
-                %BandPass 1
-                fobj.filt.Rip1=filterData(Fss);
-                fobj.filt.Rip1.highPassCutoff=Ripple(1);
-                fobj.filt.Rip1.lowPassCutoff=Ripple(2);
-                fobj.filt.Rip1.filterDesign='butter';
-                fobj.filt.Rip1=fobj.filt.Rip1.designBandPass;
-                fobj.filt.Rip1.padding=true;
-                
-                % fobj.filt.SW1=filterData(Fss);
-                % fobj.filt.SW1.highPassCutoff=SWFil(1);
-                % fobj.filt.SW1.lowPassCutoff=SWFil(2);
-                % fobj.filt.SW1.filterDesign='butter';
-                % fobj.filt.SW1=fobj.filt.SW1.designBandPass;
-                % fobj.filt.SW1.padding=true;
-                
-                % Original SW filter
-                fobj.filt.SW2=filterData(Fss);
-                fobj.filt.SW2.lowPassPassCutoff=30;% this captures the LF pretty well for detection
-                fobj.filt.SW2.lowPassStopCutoff=40;
-                fobj.filt.SW2.attenuationInLowpass=20;
-                fobj.filt.SW2=fobj.filt.SW2.designLowPass;
-                fobj.filt.SW2.padding=true;
-                %
-                % fobj.filt.FN =filterData(Fss);
-                % fobj.filt.FN.filterDesign='cheby1';
-                % fobj.filt.FN.padding=true;
-                % fobj.filt.FN=fobj.filt.FN.designNotch;
+                chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+                ChanData = chanDataParital.ChannelData/1e6; %loads all data info
                 
                 
-                %% Load full channel data
+                [data_shift_zscore,nshifts] = shiftdim(ChanData,-1);
                 
-                smoothWin_ms = 15;
-                smoothWin_sampls = round((smoothWin_ms/1000)*Fss);
+                DataSeg_DS = fobj.filt.F2.getFilteredData(data_shift_zscore); % raw data --> downsampled data
+                DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
+                DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP); % notch filted data --> ripple filter
                 
-                recordingDuration_s = double(data.Recording{1,1}.Duration/1e6);
+                ChanData_for_zscore{k} = squeeze(DataSeg_Ripp); %loads all data info
                 
-                cfg = [];
-                cfg.window = [0 recordingDuration_s]; % time
-                smoothWin = 0.10*Fs;
+                %ChanData_for_SW_zscore{k} = squeeze(fobj.filt.SW2.getFilteredData(DataSeg_BP));
+                %figure; plot(squeeze(DataSeg_DS))
                 
-                DetChanInds = ~ismember(plottingOrder, obj.ANALYSIS.SWR_Analysis_noisy_channels);
-                ChansForDetection = plottingOrder(DetChanInds);
-                ChanIndsForDetection = chanInds(DetChanInds);
+            end
+            
+            
+            allData_zcore = cell2mat(ChanData_for_zscore);
+            
+            squared_rip = allData_zcore.^2;
+            summed_rip = sum(squared_rip, 2);
+            smoothedSums2 = smoothdata(summed_rip, 'gaussian', smoothWin_sampls);
+            powerTrace_rip = sqrt(smoothedSums2);
+            
+            %figure; plot(powerTrace_rip);
+            
+            [Z_sample_rip,mean_sample_rip,std_sample_rip]= zscore(powerTrace_rip);
+            mean_zscore_powerTrace_sample = mean(Z_sample_rip);
+            
+            %% SW
+            
+            %                 allCHans = cell2mat(ChanData_for_SW_zscore);
+            %                 squaredAllSW = allCHans.^2;
+            %                 sqrtAllSW = sqrt(squaredAllSW);
+            %                 [maxVal, ~] = max(sqrtAllSW, [], 1);
+            %                 [maxVal2, SW_ind] = max(maxVal, [], 2);
+            %
+            %                 sqrt_SW = sqrtAllSW(:,SW_ind);
+            %
+            %                 [Z_sample_sw,mean_sample_sw,std_sample_sw]= zscore(sqrt_SW);
+            %                 mean_zscore_sw_sample = mean(Z_sample_sw);
+            %
+            
+            
+            for k = 1:numel(ChansForDetection)
+                %for k = 18
                 
-                SWR_Analysis_SWR_chans = obj.ANALYSIS.SWR_Analysis_SWR_chans;
-                nSWRChans = numel(SWR_Analysis_SWR_chans);
                 
-                %% Ccomment this out!!
+                disp(['Processing chan ' num2str((k)) '/' num2str(numel(ChansForDetection))])
+                disp(['Chan: ' num2str(ChansForDetection(k))])
                 
-                chans_w_SWRs_set = [];
-                for k = 1:nSWRChans
-                    chans_w_SWRs_set(k) = find(plottingOrder == SWR_Analysis_SWR_chans(k));
-                end
+                thisChan = ChanIndsForDetection(k);
                 
-                ChanData_for_zscore = []; ChanData_for_SW_zscore = [];
-                for k = 1:numel(chans_w_SWRs_set)
-                    
-                    thisChan = chans_w_SWRs_set(k);
-                    
-                    cfg.channel = [thisChan thisChan]; % channel index 5 to 15
-                    
-                    chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
-                    ChanData = chanDataParital.ChannelData/1e6; %loads all data info
-                    
-                    
-                    [data_shift_zscore,nshifts] = shiftdim(ChanData,-1);
-                    
-                    DataSeg_DS = fobj.filt.F2.getFilteredData(data_shift_zscore); % raw data --> downsampled data
-                    DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
-                    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP); % notch filted data --> ripple filter
-                    
-                    ChanData_for_zscore{k} = squeeze(DataSeg_Ripp); %loads all data info
-                    
-                    %ChanData_for_SW_zscore{k} = squeeze(fobj.filt.SW2.getFilteredData(DataSeg_BP));
-                    
-                end
+                cfg.channel = [thisChan thisChan]; % channel index 5 to 15
                 
-                allData_zcore = cell2mat(ChanData_for_zscore);
+                chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+                ChanData = chanDataParital.ChannelData/1e6; %loads all data info
                 
-                squared_rip = allData_zcore.^2;
-                summed_rip = sum(squared_rip, 2);
-                smoothedSums2 = smoothdata(summed_rip, 'gaussian', smoothWin_sampls);
+                timestamps = chanDataParital.ChannelDataTimeStamps;
+                time_samp = 1:1:numel(timestamps);
+                time_s = time_samp/Fss;
+                
+                %% Filter data
+                
+                [data_shift,nshifts] = shiftdim(ChanData',-2);
+                
+                % Sharp wave
+                [DataSeg_DS, t_s] = fobj.filt.F2.getFilteredData(data_shift_zscore); % raw data --> downsampled data
+                DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
+                DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP); % notch filted data --> ripple filter
+                
+                squared_rip = squeeze(DataSeg_Ripp).^2;
+                smoothedSums2 = smoothdata(squared_rip, 'gaussian', smoothWin_sampls);
                 powerTrace_rip = sqrt(smoothedSums2);
+                zscore_rip = (powerTrace_rip - mean_sample_rip) ./ std_sample_rip;
+                zscore_rip = zscore_rip-mean(zscore_rip);
                 
+               % BP_DataInverted = -squeeze(DataSeg_BP);
+               % BP_DataInverted  = BP_DataInverted -mean(BP_DataInverted);
+              %  %  figure; plot(BP_DataInverted)
+                %   figure; plot(squeeze(DataSeg_BP))
+                %% Does not catch everything
                 
-                [Z_sample_rip,mean_sample_rip,std_sample_rip]= zscore(powerTrace_rip);
-                mean_zscore_powerTrace_sample = mean(Z_sample_rip);
-                
-                %% SW
-                
-                %                 allCHans = cell2mat(ChanData_for_SW_zscore);
-                %                 squaredAllSW = allCHans.^2;
-                %                 sqrtAllSW = sqrt(squaredAllSW);
-                %                 [maxVal, ~] = max(sqrtAllSW, [], 1);
-                %                 [maxVal2, SW_ind] = max(maxVal, [], 2);
+                %                     minWidth_ms = 10;
+                %                     midWidth_samples = round(minWidth_ms/1000*Fss);
+                %                     thresh = 4;
                 %
-                %                 sqrt_SW = sqrtAllSW(:,SW_ind);
-                %
-                %                 [Z_sample_sw,mean_sample_sw,std_sample_sw]= zscore(sqrt_SW);
-                %                 mean_zscore_sw_sample = mean(Z_sample_sw);
-                %
+                %                     peakDistance_ms = 100;
+                %                     peakDistance_sample = round(peakDistance_ms/1000*Fss);
+                
+                %[peakH,peakTime_Fs, peakW, peakP] = findpeaks(zscore_rip, 'MinPeakHeight', thresh, 'MinPeakWidth',  midWidth_samples, 'MinPeakDistance', peakDistance_sample );
+                
+                minWidth_ms = 10;
+                midWidth_samples = round(minWidth_ms/1000*Fss);
+                thresh = 8;
+                
+                peakDistance_ms = 100;
+                peakDistance_sample = round(peakDistance_ms/1000*Fss);
                 
                 
-                for k = 1:numel(ChansForDetection)
-                    %for k = 18
+                [peakH,peakTime_Fs, peakW, peakP] = findpeaks(zscore_rip, 'MinPeakHeight', thresh, 'MinPeakWidth',  midWidth_samples, 'MinPeakDistance', peakDistance_sample );
+                %[peakH,peakTime_Fs, peakW, peakP] = findpeaks(zscore_rip, 'MinPeakHeight', thresh, 'MinPeakDistance', peakDistance_sample );
+                figure; plot(zscore_rip)
+                %% Detect Ripples
+                
+                if isempty(peakH)
+                    disp(['No ripples detected on ch ' num2str(plottingOrder(k))])
+                end
+                
+                peakTimes_s = peakTime_Fs/Fss;
+                
+                %% Collecting data Snippets and info
+                
+                WinSizeL = 1*Fss;
+                WinSizeR = 1*Fss;
+                
+                cnt = 1;
+                
+                chanDataROI = []; chanDataROI_T_s = [];
+                chan_peakTime_Fs = []; chan_peakTime_s = [];
+                chan_peakH = []; chan_peakW_Fs = []; chan_peakW_s = []; chan_peakP = [];
+                for q =1:numel(peakTime_Fs)
                     
-                    
-                    disp(['Processing chan ' num2str((k)) '/' num2str(numel(ChansForDetection))])
-                    disp(['Chan: ' num2str(ChansForDetection(k))])
-                    
-                    thisChan = ChanIndsForDetection(k);
-                    
-                    cfg.channel = [thisChan thisChan]; % channel index 5 to 15
-                    
-                    chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
-                    ChanData = chanDataParital.ChannelData/1e6; %loads all data info
-                    
-                    timestamps = chanDataParital.ChannelDataTimeStamps;
-                    time_samp = 1:1:numel(timestamps);
-                    time_s = time_samp/Fss;
-                    
-                    %% Filter data
-                    
-                    [data_shift,nshifts] = shiftdim(ChanData',-2);
-                    
-                    % Sharp wave
-                    [DataSeg_DS, t_s] = fobj.filt.F2.getFilteredData(data_shift_zscore); % raw data --> downsampled data
-                    DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
-                    DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP); % notch filted data --> ripple filter
-                    
-                    squared_rip = squeeze(DataSeg_Ripp).^2;
-                    smoothedSums2 = smoothdata(squared_rip, 'gaussian', smoothWin_sampls);
-                    powerTrace_rip = sqrt(smoothedSums2);
-                    zscore_rip = (powerTrace_rip - mean_sample_rip) ./ std_sample_rip;
-                    
-                    %%
-                    
-                    minWidth_ms = 10;
-                    midWidth_samples = round(minWidth_ms/1000*Fss);
-                    thresh = 8;
-                    
-                    peakDistance_ms = 100;
-                    peakDistance_sample = round(peakDistance_ms/1000*Fss);
-                    
-                    [peakH,peakTime_Fs, peakW, peakP] = findpeaks(zscore_rip, 'MinPeakHeight', thresh, 'MinPeakWidth',  midWidth_samples, 'MinPeakDistance', peakDistance_sample );
-                    
-                    
-                    %% Detect Ripples
-                    
-                    if isempty(peakH)
-                        disp(['No ripples detected on ch ' num2str(plottingOrder(k))])
+                    winROI = peakTime_Fs(q)-WinSizeL:peakTime_Fs(q)+WinSizeR;
+                    if winROI(1) <0 || winROI(end) > numel(zscore_rip)
+                        continue
                     end
                     
-                    peakTimes_s = peakTime_Fs/Fss;
+                    chanDataROI{cnt} = ChanData(winROI);
+                    chanDataROI_T_s{cnt} = time_s(winROI);
                     
-                    %% Collecting data Snippets and info
+                    chan_peakTime_Fs(cnt) = peakTime_Fs(q);
+                    chan_peakTime_s(cnt) = peakTimes_s(q);
                     
-                    WinSizeL = 1*Fss;
-                    WinSizeR = 1*Fss;
+                    chan_peakH(cnt) = peakH(q);
+                    chan_peakW_Fs(cnt) = peakW(q);
+                    chan_peakW_s(cnt) = peakW(q)/Fs;
+                    chan_peakP(cnt) = peakP(q);
                     
-                    cnt = 1;
-                    
-                    chanDataROI = []; chanDataROI_T_s = [];
-                    chan_peakTime_Fs = []; chan_peakTime_s = [];
-                    chan_peakH = []; chan_peakW_Fs = []; chan_peakW_s = []; chan_peakP = [];
-                    for q =1:numel(peakTime_Fs)
+                    if doPlot
+                        figure(100);clf
+                        subplot(2, 1, 1)
+                        plot(t_s(winROI), squeeze(DataSeg_BP(winROI)));
+                        axis tight
+                        title('Raw data')
+                        % ylim([0 20])
                         
-                        winROI = peakTime_Fs(q)-WinSizeL:peakTime_Fs(q)+WinSizeR;
-                        if winROI(1) <0 || winROI(end) > numel(zscore_rip)
-                            continue
-                        end
+                        subplot(2, 1, 2)
+                        % plot(time_s(winROI), ChanData_cond(winROI));
+                        hold on
+                        plot(t_s(winROI), zscore_rip(winROI), 'k');
+                        axis tight
+                        title('Z-scored data')
+                        ylim([-10 20])
                         
-                        chanDataROI{cnt} = ChanData(winROI);
-                        chanDataROI_T_s{cnt} = time_s(winROI);
-                        
-                        chan_peakTime_Fs(cnt) = peakTime_Fs(q);
-                        chan_peakTime_s(cnt) = peakTimes_s(q);
-                        
-                        chan_peakH(cnt) = peakH(q);
-                        chan_peakW_Fs(cnt) = peakW(q);
-                        chan_peakW_s(cnt) = peakW(q)/Fs;
-                        chan_peakP(cnt) = peakP(q);
-                        
-                        if doPlot
-                            figure(100);clf
-                            subplot(2, 1, 1)
-                            plot(t_s(winROI), squeeze(DataSeg_BP(winROI)));
-                            axis tight
-                            title('Raw data')
-                            % ylim([0 20])
-                            
-                            subplot(2, 1, 2)
-                            % plot(time_s(winROI), ChanData_cond(winROI));
-                            hold on
-                            plot(t_s(winROI), zscore_rip(winROI), 'k');
-                            axis tight
-                            title('Z-scored data')
-                            ylim([-10 20])
-                            
-                            pause
-                        end
-                        
-                        cnt = cnt+1;
-                        
+                        pause
                     end
                     
-                    allChanDataROI{k} = chanDataROI;
-                    allChanDataROI_T_s{k} = chanDataROI_T_s;
-                    
-                    allChan_peakTime_Fs{k} = chan_peakTime_Fs;
-                    allChan_peakTime_s{k} = chan_peakTime_s;
-                    
-                    allChan_peakH{k} = chan_peakH;
-                    allChan_peakW_Fs{k} = chan_peakW_Fs;
-                    allChan_peakW_s{k} = chan_peakW_s;
-                    allChan_peakP{k} = chan_peakP;
-                    
-                    allChanName{k} = ChansForDetection(k);
-                    allChanInd{k} = ChanIndsForDetection(k);
-                    
-                    disp(['Found ' num2str((numel(chanDataROI))) ' SWRs on channel']);
+                    cnt = cnt+1;
                     
                 end
                 
+                allChanDataROI{k} = chanDataROI;
+                allChanDataROI_T_s{k} = chanDataROI_T_s;
                 
-                AllDetections = [];
-                extrachannelDetections = [];
-                for runs = 1:15
-                    runs
-                    if runs == 1
-                        nonempty = cell2mat(cellfun(@(x) ~isempty(x),allChan_peakTime_Fs,'UniformOutput',false));
-                        peakTimes_fs = allChan_peakTime_Fs(nonempty);
-                        [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
-                        %peakTimes_fs = detections;
-                    else
-                        if isempty(extrachannelDetections)
-                            continue
-                        end
-                        nonempty = cell2mat(cellfun(@(x) ~isempty(x),extrachannelDetections,'UniformOutput',false));
-                        peakTimes_fs  = extrachannelDetections(nonempty);
-                        [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
-                        extrachannelDetections = [];
+                allChan_peakTime_Fs{k} = chan_peakTime_Fs;
+                allChan_peakTime_s{k} = chan_peakTime_s;
+                
+                allChan_peakH{k} = chan_peakH;
+                allChan_peakW_Fs{k} = chan_peakW_Fs;
+                allChan_peakW_s{k} = chan_peakW_s;
+                allChan_peakP{k} = chan_peakP;
+                
+                allChanName{k} = ChansForDetection(k);
+                allChanInd{k} = ChanIndsForDetection(k);
+                
+                disp(['Found ' num2str((numel(chanDataROI))) ' SWRs on channel ' num2str(ChansForDetection(k))]);
+                
+            end
+            
+            
+            AllDetections = [];
+            extrachannelDetections = [];
+            for runs = 1:20
+                runs
+                if runs == 1
+                    nonempty = cell2mat(cellfun(@(x) ~isempty(x),allChan_peakTime_Fs,'UniformOutput',false));
+                    peakTimes_fs = allChan_peakTime_Fs(nonempty);
+                    [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
+                    %peakTimes_fs = detections;
+                else
+                    if isempty(extrachannelDetections)
+                        continue
                     end
+                    nonempty = cell2mat(cellfun(@(x) ~isempty(x),extrachannelDetections,'UniformOutput',false));
+                    peakTimes_fs  = extrachannelDetections(nonempty);
+                    [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
+                    extrachannelDetections = [];
+                end
+                
+                detSum = sum(detections);
+                
+                if detSum == 0
+                    continue
+                    keyboard
+                elseif detSum == 1
+                    AllDetections{runs} = detChan_peakTimes_fs;
+                    continue
+                else
                     
-                    detSum = sum(detections);
+                    [maxval, minds] = max(detections);
                     
-                    if detSum == 0
-                        continue
-                        keyboard
-                    elseif detSum == 1
-                        AllDetections{runs} = detChan_peakTimes_fs;
-                        continue
-                    else
-                        
-                        [maxval, minds] = max(detections);
-                        
-                        detChan_peakTimes_fs = peakTimes_fs{minds};
-                        
-                        %allRois = INFO.allChanDataROI{minds};
-                        %allTimes = INFO.allChanDataROI_T_s{minds};
-                        %{
+                    detChan_peakTimes_fs = peakTimes_fs{minds};
+                    
+                    %allRois = INFO.allChanDataROI{minds};
+                    %allTimes = INFO.allChanDataROI_T_s{minds};
+                    %{
 for j = 1:maxval
 figure(100);clf
     plot(allTimes{j}, allRois{j})
     pause
 end
-                        %}
-                        %% Go over all the detections on other channels and see if this is within a 1 s range
-                        WinSizeL = 1*Fs;
-                        WinSizeR = 1*Fs;
-                        
-                        ROI_fs = [];
-                        for o = 1:numel(detChan_peakTimes_fs)
-                            thisDet = detChan_peakTimes_fs(o);
-                            ROI_fs{o} = thisDet-WinSizeL:thisDet+WinSizeR;
-                        end
-                        
-                        for q = 1:numel(peakTimes_fs)
-                            thisChanDets = peakTimes_fs{q};
-                            for o = 1:numel(thisChanDets)
-                                thisChanDet = thisChanDets(o);
-                                
-                                match = [];
-                                for oo = 1:numel(ROI_fs)
-                                    
-                                    match = [match ; double(ismember(thisChanDets, ROI_fs{oo}))];
-                                    
-                                end
-                            end
-                            testCase = sum(match, 1);
-                            
-                            if sum(testCase) == numel(thisChanDets)
-                                
-                                disp('All detected')
-                                
-                            else
-                                
-                                nonmatch = find(testCase == 0);
-                                extrachannelDetections{q} = thisChanDets(nonmatch);
-                                
-                            end
-                        end
-                        
-                        %% All Detections
-                        AllDetections{runs} = detChan_peakTimes_fs;
+                    %}
+                    %% Go over all the detections on other channels and see if this is within a 1 s range
+                    WinSizeL = 1*Fs;
+                    WinSizeR = 1*Fs;
+                    
+                    ROI_fs = [];
+                    for o = 1:numel(detChan_peakTimes_fs)
+                        thisDet = detChan_peakTimes_fs(o);
+                        ROI_fs{o} = thisDet-WinSizeL:thisDet+WinSizeR;
                     end
+                    
+                    for q = 1:numel(peakTimes_fs)
+                        thisChanDets = peakTimes_fs{q};
+                        for o = 1:numel(thisChanDets)
+                            thisChanDet = thisChanDets(o);
+                            
+                            match = [];
+                            for oo = 1:numel(ROI_fs)
+                                
+                                match = [match ; double(ismember(thisChanDets, ROI_fs{oo}))];
+                                
+                            end
+                        end
+                        testCase = sum(match, 1);
+                        
+                        if sum(testCase) == numel(thisChanDets)
+                            
+                            disp('All detected')
+                            
+                        else
+                            
+                            nonmatch = find(testCase == 0);
+                            extrachannelDetections{q} = thisChanDets(nonmatch);
+                            
+                        end
+                    end
+                    
+                    %% All Detections
+                    AllDetections{runs} = detChan_peakTimes_fs;
                 end
+                %end
+                AllUniqueDetections  = sort(cell2mat(AllDetections));
+                
+                SWR_INFO.AllUniqueDetections = AllUniqueDetections;
+                
+                SWR_INFO.allChanDataROI = allChanDataROI;
+                SWR_INFO.allChanDataROI_T_s = allChanDataROI_T_s;
+                
+                SWR_INFO.allChan_peakTime_Fs = allChan_peakTime_Fs;
+                SWR_INFO.allChan_peakTime_s = allChan_peakTime_s;
+                
+                SWR_INFO.allChan_peakH = allChan_peakH;
+                SWR_INFO.allChan_peakW_Fs = allChan_peakW_Fs;
+                SWR_INFO.allChan_peakW_s = allChan_peakW_s;
+                SWR_INFO.allChan_peakP = allChan_peakP;
+                
+                SWR_INFO.plottingOrder = plottingOrder;
+                SWR_INFO.chanInds = chanInds;
+                
+                SWR_INFO.fobj = fobj;
+                SWR_INFO.DS_Factor = DS_Factor;
+                SWR_INFO.Fs = Fs;
+                SWR_INFO.Fss = Fss;
+                
+                SWR_INFO.WinSizeL = WinSizeL;
+                SWR_INFO.WinSizeR = WinSizeR;
+                
+                disp('Saving.......')
+                save([swrAnalysisDetections_Dir name '_RippleData.mat'], 'SWR_INFO', '-v7.3')
+                obj.ANALYSIS.SWR_INFO = SWR_INFO;
+                disp(['Saved: ' [swrAnalysisDetections_Dir name '_RippleData.mat']])
+                
+                
+            end
+        end
+        
+        
+        function obj = load_MCS_data_detectSWRs_SW_detection(obj)
+            
+            disp('Loading data and detecting SWRs....')
+            
+            dbstop if error
+            doPlot = 0; % will pause the analysis
+            
+            fileToLoad = obj.ANALYSIS.h5_fileToLoad;
+            
+            data = McsHDF5.McsData(fileToLoad);
+            
+            name = obj.ANALYSIS.ExpName;
+            
+            %swrAnalysisDetections_plotDir = obj.PATH.swrAnalysisDetections_plotDir;
+            swrAnalysisDetections_Dir = obj.PATH.swrAnalysisDetections_Dir;
+            
+            %check if ripple data already exists
+            %             if isfile([swrAnalysisDetections_Dir name '_RippleData.mat'])
+            %
+            %             else
+            
+            %% For getting the correct channel order
+            
+            cfg = [];
+            cfg.channel = [1 60]; % channel index 5 to 15
+            cfg.window = [0 1]; % time range 0 to 1 s
+            
+            dataTmp= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+            
+            % Original plotting Order
+            %plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 15 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
+            
+            %Not including ch 15 = reference
+            plottingOrder = [21 31 41 51 61 71 12 22 32 42 52 62 72 82 13 23 33 43 53 63 73 83 14 24 34 44 54 64 74 84 25 35 45 55 65 75 85 16 26 36 46 56 66 76 86 17 27 37 47 57 67 77 87 28 38 48 58 68 78];
+            
+            ChanLabelInds = str2double(dataTmp.Info.Label(:));
+            
+            chanInds = [];
+            for k = 1:numel(plottingOrder)
+                chanInds(k) = find(ChanLabelInds == plottingOrder(k));
+            end
+            
+            %% Designing filters
+            Fs = 32000;
+            DS_Factor = 20;
+            bandPassFilter1 = [1 400];
+            Ripple = [6 300];
+            
+            fObj = filterData(Fs);
+            
+            fobj.filt.F2=filterData(Fs);
+            fobj.filt.F2.downSamplingFactor=DS_Factor; % original is 128 for 32k for sampling rate of 250
+            fobj.filt.F2=fobj.filt.F2.designDownSample;
+            fobj.filt.F2.padding=true;
+            fobj.filt.F2Fs=fobj.filt.F2.filteredSamplingFrequency;
+            
+            Fss = fobj.filt.F2Fs;
+            
+            %BandPass 1
+            fobj.filt.BP1=filterData(Fss);
+            fobj.filt.BP1.highPassCutoff=bandPassFilter1(1);
+            fobj.filt.BP1.lowPassCutoff=bandPassFilter1(2);
+            fobj.filt.BP1.filterDesign='butter';
+            fobj.filt.BP1=fobj.filt.BP1.designBandPass;
+            fobj.filt.BP1.padding=true;
+            
+            %BandPass 1
+            fobj.filt.Rip1=filterData(Fss);
+            fobj.filt.Rip1.highPassCutoff=Ripple(1);
+            fobj.filt.Rip1.lowPassCutoff=Ripple(2);
+            fobj.filt.Rip1.filterDesign='butter';
+            fobj.filt.Rip1=fobj.filt.Rip1.designBandPass;
+            fobj.filt.Rip1.padding=true;
+            
+%             fobj.filt.SW1=filterData(Fss);
+%             fobj.filt.SW1.highPassCutoff=SWFil(1);
+%             fobj.filt.SW1.lowPassCutoff=SWFil(2);
+%             fobj.filt.SW1.filterDesign='butter';
+%             fobj.filt.SW1=fobj.filt.SW1.designBandPass;
+%             fobj.filt.SW1.padding=true;
+            
+            % Original SW filter
+            fobj.filt.SW2=filterData(Fss);
+            fobj.filt.SW2.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.SW2.lowPassStopCutoff=40;
+            fobj.filt.SW2.attenuationInLowpass=20;
+            fobj.filt.SW2=fobj.filt.SW2.designLowPass;
+            fobj.filt.SW2.padding=true;
+            %
+            % fobj.filt.FN =filterData(Fss);
+            % fobj.filt.FN.filterDesign='cheby1';
+            % fobj.filt.FN.padding=true;
+            % fobj.filt.FN=fobj.filt.FN.designNotch;
+            
+            
+            %% Load full channel data
+            
+            smoothWin_ms = 15;
+            smoothWin_sampls = round((smoothWin_ms/1000)*Fss);
+            
+            recordingDuration_s = double(data.Recording{1,1}.Duration/1e6);
+            
+            cfg = [];
+            cfg.window = [0 recordingDuration_s]; % time
+            smoothWin = 0.10*Fs;
+            
+            DetChanInds = ~ismember(plottingOrder, obj.ANALYSIS.SWR_Analysis_noisy_channels);
+            ChansForDetection = plottingOrder(DetChanInds);
+            ChanIndsForDetection = chanInds(DetChanInds);
+            
+            SWR_Analysis_SWR_chans = obj.ANALYSIS.SWR_Analysis_SWR_chans;
+            nSWRChans = numel(SWR_Analysis_SWR_chans);
+            
+            %% Comment this out!!
+            
+%             chans_w_SWRs_set = [];
+%             for k = 1:nSWRChans
+%                 chans_w_SWRs_set(k) = find(plottingOrder == SWR_Analysis_SWR_chans(k));
+%             end
+            
+%             ChanData_for_zscore = []; ChanData_for_SW_zscore = [];
+%             for k = 1:numel(chans_w_SWRs_set)
+%                 
+%                 thisChan = chans_w_SWRs_set(k);
+%                 
+%                 cfg.channel = [thisChan thisChan]; % channel index 5 to 15
+%                 
+%                 chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+%                 ChanData = chanDataParital.ChannelData/1e6; %loads all data info
+%                 
+%                 
+%                 [data_shift_zscore,nshifts] = shiftdim(ChanData,-1);
+%                 
+%                 DataSeg_DS = fobj.filt.F2.getFilteredData(data_shift_zscore); % raw data --> downsampled data
+%                 DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
+%                 DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP); % notch filted data --> ripple filter
+%                 
+%                 ChanData_for_zscore{k} = squeeze(DataSeg_Ripp); %loads all data info
+%                 
+%                 %ChanData_for_SW_zscore{k} = squeeze(fobj.filt.SW2.getFilteredData(DataSeg_BP));
+%                 %figure; plot(squeeze(DataSeg_DS))
+%                 
+%             end
+            
+            
+%             allData_zcore = cell2mat(ChanData_for_zscore);
+%             
+%             squared_rip = allData_zcore.^2;
+%             summed_rip = sum(squared_rip, 2);
+%             smoothedSums2 = smoothdata(summed_rip, 'gaussian', smoothWin_sampls);
+%             powerTrace_rip = sqrt(smoothedSums2);
+%             
+%             %figure; plot(powerTrace_rip);
+%             
+%             [Z_sample_rip,mean_sample_rip,std_sample_rip]= zscore(powerTrace_rip);
+%             mean_zscore_powerTrace_sample = mean(Z_sample_rip);
+%             
+            %% SW
+            
+            %                 allCHans = cell2mat(ChanData_for_SW_zscore);
+            %                 squaredAllSW = allCHans.^2;
+            %                 sqrtAllSW = sqrt(squaredAllSW);
+            %                 [maxVal, ~] = max(sqrtAllSW, [], 1);
+            %                 [maxVal2, SW_ind] = max(maxVal, [], 2);
+            %
+            %                 sqrt_SW = sqrtAllSW(:,SW_ind);
+            %
+            %                 [Z_sample_sw,mean_sample_sw,std_sample_sw]= zscore(sqrt_SW);
+            %                 mean_zscore_sw_sample = mean(Z_sample_sw);
+            %
+            
+            
+            for k = 1:numel(ChansForDetection)
+                %for k = 18
+                
+                
+                disp(['Processing chan ' num2str((k)) '/' num2str(numel(ChansForDetection))])
+                disp(['Chan: ' num2str(ChansForDetection(k))])
+                
+                thisChan = ChanIndsForDetection(k);
+                
+                cfg.channel = [thisChan thisChan]; % channel index 5 to 15
+                
+                chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+                ChanData = chanDataParital.ChannelData/1e6; %loads all data info
+                
+                timestamps = chanDataParital.ChannelDataTimeStamps;
+                time_samp = 1:1:numel(timestamps);
+                time_s = time_samp/Fss;
+                
+                %% Filter data
+                
+                [data_shift,nshifts] = shiftdim(ChanData',-2);
+                
+                % Sharp wave
+                [DataSeg_DS, t_s] = fobj.filt.F2.getFilteredData(data_shift); % raw data --> downsampled data
+                DataSeg_BP = fobj.filt.BP1.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
+                DataSeg_SW2 = fobj.filt.SW2.getFilteredData(DataSeg_DS); % downsampled data --> band passed data
+                
+              %  DataSeg_Ripp = fobj.filt.Rip1.getFilteredData(DataSeg_BP); % notch filted data --> ripple filter
+                
+%                 squared_rip = squeeze(DataSeg_Ripp).^2;
+%                 smoothedSums2 = smoothdata(squared_rip, 'gaussian', smoothWin_sampls);
+%                 powerTrace_rip = sqrt(smoothedSums2);
+%                 zscore_rip = (powerTrace_rip - mean_sample_rip) ./ std_sample_rip;
+%                 zscore_rip = zscore_rip-mean(zscore_rip);
+                
+                BP_DataInverted = -squeeze(DataSeg_BP);
+                BP_DataInverted  = BP_DataInverted -mean(BP_DataInverted);
+                
+                SW_DataInverted = -squeeze(DataSeg_SW2);
+                SW_DataInverted  = SW_DataInverted -mean(SW_DataInverted);
+                
+                %  figure; plot(SW_DataInverted)
+                % figure; plot(BP_DataInverted)
+                %   figure; plot(squeeze(DataSeg_BP))
+                %% Does not catch everything
+                
+                %                     minWidth_ms = 10;
+                %                     midWidth_samples = round(minWidth_ms/1000*Fss);
+                %                     thresh = 4;
+                %
+                %                     peakDistance_ms = 100;
+                %                     peakDistance_sample = round(peakDistance_ms/1000*Fss);
+                
+                %[peakH,peakTime_Fs, peakW, peakP] = findpeaks(zscore_rip, 'MinPeakHeight', thresh, 'MinPeakWidth',  midWidth_samples, 'MinPeakDistance', peakDistance_sample );
+                
+                minWidth_ms = 10;
+                midWidth_samples = round(minWidth_ms/1000*Fss);
+                thresh = 18;
+                
+                peakDistance_ms = 100;
+                peakDistance_sample = round(peakDistance_ms/1000*Fss);
+                
+                
+                %[peakH,peakTime_Fs, peakW, peakP] = findpeaks(BP_DataInverted, 'MinPeakHeight', thresh, 'MinPeakWidth',  midWidth_samples, 'MinPeakDistance', peakDistance_sample );
+                %[peakH,peakTime_Fs, peakW, peakP] = findpeaks(BP_DataInverted, 'MinPeakHeight', thresh, 'MinPeakDistance', peakDistance_sample,'MinPeakWidth',  midWidth_samples);
+                [peakH,peakTime_Fs, peakW, peakP] = findpeaks(SW_DataInverted, 'MinPeakHeight', thresh, 'MinPeakDistance', peakDistance_sample);
+                %% Detect Ripples
+                
+                if isempty(peakH)
+                    disp(['No ripples detected on ch ' num2str(plottingOrder(k))])
+                end
+                
+                peakTimes_s = peakTime_Fs/Fss;
+                
+                %% Collecting data Snippets and info
+                
+                WinSizeL = 1*Fss;
+                WinSizeR = 1*Fss;
+                
+                cnt = 1;
+                
+                chanDataROI = []; chanDataROI_T_s = [];
+                chan_peakTime_Fs = []; chan_peakTime_s = [];
+                chan_peakH = []; chan_peakW_Fs = []; chan_peakW_s = []; chan_peakP = [];
+                for q =1:numel(peakTime_Fs)
+                    
+                    winROI = peakTime_Fs(q)-WinSizeL:peakTime_Fs(q)+WinSizeR;
+                    if winROI(1) <0 || winROI(end) > numel(BP_DataInverted)
+                        continue
+                    end
+                    
+                    chanDataROI{cnt} = ChanData(winROI);
+                    chanDataROI_T_s{cnt} = time_s(winROI);
+                    
+                    chan_peakTime_Fs(cnt) = peakTime_Fs(q);
+                    chan_peakTime_s(cnt) = peakTimes_s(q);
+                    
+                    chan_peakH(cnt) = peakH(q);
+                    chan_peakW_Fs(cnt) = peakW(q);
+                    chan_peakW_s(cnt) = peakW(q)/Fs;
+                    chan_peakP(cnt) = peakP(q);
+                    
+                    if doPlot
+                        figure(100);clf
+                        subplot(2, 1, 1)
+                        plot(t_s(winROI), squeeze(DataSeg_BP(winROI)));
+                        axis tight
+                        title('Raw data')
+                        % ylim([0 20])
+                        
+                        subplot(2, 1, 2)
+                        % plot(time_s(winROI), ChanData_cond(winROI));
+                        hold on
+                        plot(t_s(winROI), squeeze(DataSeg_SW2(winROI)), 'k');
+                        axis tight
+                        title('Z-scored data')
+                        ylim([-20 20])
+                        
+                        pause
+                    end
+                    
+                    cnt = cnt+1;
+                    
+                end
+                
+                allChanDataROI{k} = chanDataROI;
+                allChanDataROI_T_s{k} = chanDataROI_T_s;
+                
+                allChan_peakTime_Fs{k} = chan_peakTime_Fs;
+                allChan_peakTime_s{k} = chan_peakTime_s;
+                
+                allChan_peakH{k} = chan_peakH;
+                allChan_peakW_Fs{k} = chan_peakW_Fs;
+                allChan_peakW_s{k} = chan_peakW_s;
+                allChan_peakP{k} = chan_peakP;
+                
+                allChanName{k} = ChansForDetection(k);
+                allChanInd{k} = ChanIndsForDetection(k);
+                
+                disp(['Found ' num2str((numel(chanDataROI))) ' SWRs on channel ' num2str(ChansForDetection(k))]);
+                
+            end
+            
+            
+            AllDetections = [];
+            extrachannelDetections = [];
+            for runs = 1:20
+                runs
+                if runs == 1
+                    nonempty = cell2mat(cellfun(@(x) ~isempty(x),allChan_peakTime_Fs,'UniformOutput',false));
+                    peakTimes_fs = allChan_peakTime_Fs(nonempty);
+                    [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
+                    %peakTimes_fs = detections;
+                else
+                    if isempty(extrachannelDetections)
+                        continue
+                    end
+                    nonempty = cell2mat(cellfun(@(x) ~isempty(x),extrachannelDetections,'UniformOutput',false));
+                    peakTimes_fs  = extrachannelDetections(nonempty);
+                    [detections] = cell2mat(cellfun(@(x) numel(x),peakTimes_fs,'UniformOutput',false));
+                    extrachannelDetections = [];
+                end
+                
+                detSum = sum(detections);
+                
+                if detSum == 0
+                    continue
+                    keyboard
+                elseif detSum == 1
+                    AllDetections{runs} = detChan_peakTimes_fs;
+                    continue
+                else
+                    
+                    [maxval, minds] = max(detections);
+                    
+                    detChan_peakTimes_fs = peakTimes_fs{minds};
+                    
+                    %allRois = INFO.allChanDataROI{minds};
+                    %allTimes = INFO.allChanDataROI_T_s{minds};
+                    %{
+for j = 1:maxval
+figure(100);clf
+    plot(allTimes{j}, allRois{j})
+    pause
+end
+                    %}
+                    %% Go over all the detections on other channels and see if this is within a 1 s range
+                    WinSizeL = 1*Fs;
+                    WinSizeR = 1*Fs;
+                    
+                    ROI_fs = [];
+                    for o = 1:numel(detChan_peakTimes_fs)
+                        thisDet = detChan_peakTimes_fs(o);
+                        ROI_fs{o} = thisDet-WinSizeL:thisDet+WinSizeR;
+                    end
+                    
+                    for q = 1:numel(peakTimes_fs)
+                        thisChanDets = peakTimes_fs{q};
+                        for o = 1:numel(thisChanDets)
+                            thisChanDet = thisChanDets(o);
+                            
+                            match = [];
+                            for oo = 1:numel(ROI_fs)
+                                
+                                match = [match ; double(ismember(thisChanDets, ROI_fs{oo}))];
+                                
+                            end
+                        end
+                        testCase = sum(match, 1);
+                        
+                        if sum(testCase) == numel(thisChanDets)
+                            
+                            disp('All detected')
+                            
+                        else
+                            
+                            nonmatch = find(testCase == 0);
+                            extrachannelDetections{q} = thisChanDets(nonmatch);
+                            
+                        end
+                    end
+                    
+                    %% All Detections
+                    AllDetections{runs} = detChan_peakTimes_fs;
+                end
+                %end
                 AllUniqueDetections  = sort(cell2mat(AllDetections));
                 
                 SWR_INFO.AllUniqueDetections = AllUniqueDetections;
@@ -1097,88 +1549,115 @@ end
                 return
             end
             
+            %             if isfile([swrAnalysisDetections_Dir name '-Detections.mat'])
+            %
+            %                 load([swrAnalysisDetections_Dir name '-Detections.mat'])
+            %                 disp(['Loaded previously saved file: ' [swrAnalysisDetections_Dir name '-Detections.mat']])
+            %
+            %                 obj.ANALYSIS.SWR_INFO = SWR_INFO;
+            %                 obj.ANALYSIS.Detections = D;
+            %
+            %             else
+            
+            
+            %% load the data
+            
+            fileToLoad = obj.ANALYSIS.h5_fileToLoad;
+            
+            data = McsHDF5.McsData(fileToLoad);
+            recordingDuration_s = double(data.Recording{1,1}.Duration/1e6);
+            
+            cfg = [];
+            cfg.window = [0 recordingDuration_s]; % time
+            
+            dataTmp= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+            
+            %% collect all SWR times for all channels:
+            AllUniqueDetections = SWR_INFO.AllUniqueDetections;
+            nUniqueDetections = numel(AllUniqueDetections);
+            
+            Fs = SWR_INFO.Fs;
+            Fss = SWR_INFO.Fss;
+            
+            WinSizeL = SWR_INFO.WinSizeL;
+            WinSizeR = SWR_INFO.WinSizeR;
+            
+            ROI_fs = []; ROI_fss = [];
+            
+            for o = 1:nUniqueDetections
+                thisDet = AllUniqueDetections(o);
+                thisDet_dss = AllUniqueDetections(o) * 20;
+                ROI_fs{o} = thisDet-WinSizeL:thisDet+WinSizeR;
+                ROI_fss{o} = thisDet_dss-WinSizeL:thisDet_dss+WinSizeR;
+            end
+            
+            %%
+            zscoreDet = 1;
+            if zscoreDet == 1
+                ROI_FS = ROI_fss;
+            else
+                ROI_FS = ROI_fs;
+            end
+            
+            plottingOrder = SWR_INFO.plottingOrder;
+            chanInds = SWR_INFO.chanInds;
+            
+            AllSWRDataOnChans = [];
+            SWR_Detection_fs = [];
+            SWR_Detection_s = [];
+            
+            for k = 1:numel(plottingOrder)
+                
+                disp(['Collecting SWRs ' num2str((k)) '/' num2str(numel(plottingOrder))])
+                thisChan = chanInds(k);
+                cfg.channel = [thisChan thisChan]; % channel index 5 to 15
+                
+                chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
+                ChanData = chanDataParital.ChannelData/1e6; %loads all data info
+                
+                for j = 1:numel(ROI_FS)
+                    thisROI = ROI_FS{j};
+                    
+                    % figure; plot(ChanData(thisROI))
+                    AllSWRDataOnChans{k,j} = ChanData(thisROI);
+                    SWR_Detection_fs(k,j) = AllUniqueDetections(j);
+                    SWR_Detection_s(k,j) = AllUniqueDetections(j)/Fss; % this needs to be Fss
+                end
+            end
+            
+            D.AllSWRDataOnChans = AllSWRDataOnChans;
+            D.SWR_Detection_fs = SWR_Detection_fs;
+            D.SWR_Detection_s = SWR_Detection_s;
+            D.plottingOrder = plottingOrder;
+            D.channelsNotToInclude = obj.ANALYSIS.SWR_Analysis_noisy_channels;
+            D.Fs = Fs;
+            %D.timepoints_s = timepoints_s;
+            disp('Saving detections...')
+            save([swrAnalysisDetections_Dir name '-Detections.mat'], 'D', '-v7.3')
+            disp('Saving completed...')
+            
+            obj.ANALYSIS.SWR_INFO = SWR_INFO;
+            obj.ANALYSIS.Detections = D;
+            %             end
+        end
+        %% Printing figures
+        
+        function obj =  plotSWRDetection(obj)
+            
+            swrAnalysisDetections_Dir = obj.PATH.swrAnalysisDetections_Dir;
+            name = obj.ANALYSIS.ExpName;
+            
             if isfile([swrAnalysisDetections_Dir name '-Detections.mat'])
                 
                 load([swrAnalysisDetections_Dir name '-Detections.mat'])
                 disp(['Loaded previously saved file: ' [swrAnalysisDetections_Dir name '-Detections.mat']])
                 
-                obj.ANALYSIS.SWR_INFO = SWR_INFO;
-                obj.ANALYSIS.Detections = D;
+                load([swrAnalysisDetections_Dir name '_RippleData.mat'])
                 
-            else
-                
-                
-                %% load the data
-                
-                fileToLoad = obj.ANALYSIS.h5_fileToLoad;
-                
-                data = McsHDF5.McsData(fileToLoad);
-                recordingDuration_s = double(data.Recording{1,1}.Duration/1e6);
-                
-                cfg = [];
-                cfg.window = [0 recordingDuration_s]; % time
-                
-                dataTmp= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
-                
-                %% collect all SWR times for all channels:
-                AllUniqueDetections = SWR_INFO.AllUniqueDetections;
-                nUniqueDetections = numel(AllUniqueDetections);
-                
-                Fs = SWR_INFO.Fs;
-                
-                WinSizeL = SWR_INFO.WinSizeL;
-                WinSizeR = SWR_INFO.WinSizeR;
-                
-                ROI_fs = [];
-                for o = 1:nUniqueDetections
-                    %thisDet = AllUniqueDetections(o);
-                    thisDet_dss = AllUniqueDetections(o) * 20;
-                    %ROI_fs{o} = thisDet-WinSizeL:thisDet+WinSizeR;
-                    ROI_fss{o} = thisDet_dss-WinSizeL:thisDet_dss+WinSizeR;
-                end
-                
-                plottingOrder = SWR_INFO.plottingOrder;
-                chanInds = SWR_INFO.chanInds;
-                
-                AllSWRDataOnChans = [];
-                SWR_Detection_fs = [];
-                SWR_Detection_s = [];
-                
-                for k = 1:numel(plottingOrder)
-                    
-                    disp(['Collecting SWRs ' num2str((k)) '/' num2str(numel(plottingOrder))])
-                    thisChan = chanInds(k);
-                    cfg.channel = [thisChan thisChan]; % channel index 5 to 15
-                    
-                    chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
-                    ChanData = chanDataParital.ChannelData/1e6; %loads all data info
-                    
-                    for j = 1:numel(ROI_fss)
-                        thisROI = ROI_fss{j};
-                        AllSWRDataOnChans{k,j} = ChanData(thisROI);
-                        SWR_Detection_fs(k,j) = AllUniqueDetections(j);
-                        SWR_Detection_s(k,j) = AllUniqueDetections(j)/Fs;
-                    end
-                end
-                
-                D.AllSWRDataOnChans = AllSWRDataOnChans;
-                D.SWR_Detection_fs = SWR_Detection_fs;
-                D.SWR_Detection_s = SWR_Detection_s;
-                D.plottingOrder = plottingOrder;
-                D.channelsNotToInclude = obj.ANALYSIS.SWR_Analysis_noisy_channels;
-                D.Fs = Fs;
-                %D.timepoints_s = timepoints_s;
-                disp('Saving detections...')
-                save([swrAnalysisDetections_Dir name '-Detections.mat'], 'D', '-v7.3')
-                disp('Saving completed...')
                 
                 obj.ANALYSIS.SWR_INFO = SWR_INFO;
                 obj.ANALYSIS.Detections = D;
             end
-        end
-        %% Printing figures
-        
-        function obj =  plotSWRDetection(obj)
             
             Fs = obj.ANALYSIS.SWR_INFO.Fs;
             WinSizeL = obj.ANALYSIS.SWR_INFO.WinSizeL;
@@ -1371,20 +1850,278 @@ end
             
         end
         
-        function obj = validateSWRDetections(obj)
+        
+        
+        function obj =  plotValidSWRDetections(textSave, SWRAnalysisDir, obj)
             
-            if ~isfield(obj.ANALYSIS.Detections, 'AllSWRDataOnChans')
-                if isfile([obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat'])
-                    load([obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat'])
-                else
-                    disp(['Could not find Detections file: ' [obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat']])
-                end
+            
+            dbstop if error
+            
+            title_Swr = 'Please select validated SWR.mat file';
+            [file_swr,path_swr] = uigetfile('*.mat', title_Swr);
+            load([path_swr file_swr])
+            
+            
+            title_Swr = 'Please select Ripple Data.mat file';
+            [file_rippleData,path_rippledata] = uigetfile('*.mat', title_Swr);
+            load([path_rippledata file_rippleData])
+            
+            
+            disp('')
+            
+            SWRs=allValidatedSWRS;
+            chansNotToPlot = obj.ANALYSIS.SWR_Analysis_noisy_channels;
+            %chansNotToPlot = [];
+            %plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
+            nonNoisyChanInds = ~ismember(plottingOrder, chansNotToPlot);
+            noisyChanInds = ismember(plottingOrder, chansNotToPlot);
+            
+            nSWRs = size(SWRs, 2);
+            
+            
+            %
+            %             swrAnalysisDetections_Dir = obj.PATH.swrAnalysisDetections_Dir;
+            %             name = obj.ANALYSIS.ExpName;
+            %
+            %             if isfile([swrAnalysisDetections_Dir name '-Detections.mat'])
+            %
+            %                 load([swrAnalysisDetections_Dir name '-Detections.mat'])
+            %                 disp(['Loaded previously saved file: ' [swrAnalysisDetections_Dir name '-Detections.mat']])
+            %
+            %                 load([swrAnalysisDetections_Dir name '_RippleData.mat'])
+            %
+            %
+            %                 obj.ANALYSIS.SWR_INFO = SWR_INFO;
+            %                 obj.ANALYSIS.Detections = D;
+            %             end
+            %
+            %   Fs = obj.ANALYSIS.SWR_INFO.Fs;
+            WinSizeL = SWR_INFO.WinSizeL;
+            
+            timepoints_s = (1:1:WinSizeL*2+1)/Fs;
+            xticks = 0:0.2:2;
+            xticklabs = -1:0.2:1;
+            
+            xlabs = [];
+            for j = 1:numel(xticklabs)
+                xlabs{j} = num2str(xticklabs(j));
             end
             
-            D = obj.ANALYSIS.Detections;
+            AllSWRDataOnChans = SWRs;
+            % plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
+            ChannelsToNoTIncludeInDetections = chansNotToPlot;
+            
+            fObj = SWR_INFO.fobj;
+            
+            
+            fobj.filt.FL=filterData(Fs);
+            fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.FL.lowPassStopCutoff=40;
+            fobj.filt.FL.attenuationInLowpass=20;
+            fobj.filt.FL=fobj.filt.FL.designLowPass;
+            fobj.filt.FL.padding=true;
+            
+            fobj.filt.BP=filterData(Fs);
+            fobj.filt.BP.highPassCutoff=1;
+            fobj.filt.BP.lowPassCutoff=2000;
+            fobj.filt.BP.filterDesign='butter';
+            fobj.filt.BP=fobj.filt.BP.designBandPass;
+            fobj.filt.BP.padding=true;
+            
+            fobj.filt.Ripple=filterData(Fs);
+            fobj.filt.Ripple.highPassCutoff=80;
+            fobj.filt.Ripple.lowPassCutoff=300;
+            fobj.filt.Ripple.filterDesign='butter';
+            fobj.filt.Ripple=fobj.filt.Ripple.designBandPass;
+            fobj.filt.Ripple.padding=true;
+            
+            fobj.filt.SW=filterData(Fs);
+            fobj.filt.SW.highPassCutoff=8;
+            fobj.filt.SW.lowPassCutoff=40;
+            fobj.filt.SW.filterDesign='butter';
+            fobj.filt.SW=fobj.filt.SW.designBandPass;
+            fobj.filt.SW.padding=true;
+            
+            name = obj.ANALYSIS.ExpName;
+            for j = 1: size(AllSWRDataOnChans, 2)
+                
+                offset = 0;
+                offsetFil = 0;
+                figH = figure (100);clf
+                figHH = figure (200);clf
+                hold on
+                
+                for k = 1:   size(AllSWRDataOnChans, 1)
+                    
+                    toPlot = AllSWRDataOnChans{k,j};
+                    thisChan = plottingOrder(k);
+                    match =  sum(ismember(ChannelsToNoTIncludeInDetections,thisChan));
+                    
+                    if match
+                        col = [0.9 0.9 0.9];
+                    else
+                        col = [0 0 0];
+                    end
+                    
+                    
+                    figure(figH)
+                    subplot(1, 3, 1)
+                    hold on
+                    plot(timepoints_s, toPlot+offset, 'color', col);
+                    thisChan = num2str(plottingOrder(k));
+                    text(0, toPlot(1)+offset, thisChan)
+                    
+                    %%
+                    [data_shift,nshifts] = shiftdim(toPlot',-2);
+                    
+                    % Sharp wave
+                    data_BP = (fobj.filt.BP.getFilteredData(data_shift));% 1-2000 BP
+                    data_FLBP = squeeze(fobj.filt.FL.getFilteredData(data_BP)); %30-40 LP
+                    
+                    subplot(1, 3, 2)
+                    hold on
+                    plot(timepoints_s, data_FLBP+offsetFil, 'color', col);
+                    text(0, toPlot(1)+offsetFil, thisChan)
+                    
+                    subplot(1, 3, 3)
+                    hold on
+                    data_rippleBP = squeeze(fobj.filt.Ripple.getFilteredData(data_BP)); %80-300 BP
+                    
+                    plot(timepoints_s, squeeze(data_rippleBP)+offsetFil, 'color', col);
+                    
+                    offset = offset+60;
+                    offsetFil = offsetFil+30;
+                    
+                    %%
+                    
+                    figure(figHH)
+                    
+                    if k == 1
+                        counter = 0;
+                        scnt = 2;
+                        
+                    elseif k == 7
+                        scnt = 9;
+                        counter = 1;
+                    elseif k == 31
+                        scnt = 34;
+                        counter = 2;
+                    elseif k == 54
+                        scnt = 58;
+                        counter = 3;
+                    else
+                        scnt = k+1+counter;
+                    end
+                    %scnt
+                    subplot(8, 8, scnt)
+                    
+                    %plot(timepoints_s, toPlot, 'k');
+                    plot(timepoints_s, data_FLBP, 'color', col);
+                    %plot(timepoints_s, squeeze(data_rippleBP), 'k');
+                    
+                    
+                    thisChan = num2str(plottingOrder(k));
+                    title(thisChan)
+                    grid('on')
+                    axis tight
+                    ylim([-40 20])
+                    %text(0, toPlot(1)+offset, thisChan)
+                    
+                    %   all_data_FLBP{k,j} = data_FLBP;
+                    
+                end
+                
+                figure(figH)
+                subplot(1, 3, 1)
+                title('Raw')
+                axis tight
+                set(gca, 'xtick', xticks)
+                set(gca, 'xticklabel', xlabs)
+                ylim([-50 3500])
+                line([1 1], [-50 3500],  'color', 'k', 'linestyle', ':')
+                xlabel('Time (s)')
+                
+                subplot(1, 3, 2)
+                title('Low Pass: 30-40 Hz')
+                axis tight
+                set(gca, 'xtick', xticks)
+                set(gca, 'xticklabel', xlabs)
+                ylim([-30 1750])
+                line([1 1], [-30 1750], 'color', 'k', 'linestyle', ':')
+                xlabel('Time (s)')
+                
+                subplot(1, 3, 3)
+                title('Ripple: 80-300 Hz')
+                axis tight
+                set(gca, 'xtick', xticks)
+                set(gca, 'xticklabel', xlabs)
+                ylim([-30 1750])
+                line([1 1], [-30 1750], 'color', 'k', 'linestyle', ':')
+                xlabel('Time (s)')
+                
+                textAnnotation = ['File: ' name ' | Validated SWR Detection: ' num2str(j) ' | t = '  num2str(allValidated_SWR_Detection_s(1, j)) 's'];
+                % Create textbox
+                annotation(figH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
+                
+                saveName = [obj.PATH.swrAnalysisDetections_plotDir '__' name '_Validated_SWR-stack_' textSave '_' sprintf('%03d',j)];
+                figure(figH)
+                plotpos = [0 0 25 25];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+                %%
+                figure(figHH)
+                textAnnotation = ['File: ' name ' | SWR Detection: '  num2str(j)];
+                % Create textbox
+                annotation(figHH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
+                
+                saveName = [obj.PATH.swrAnalysisDetections_plotDir '__'  name '_Validate_SWR-grid_' textSave '_' sprintf('%03d',j)];
+                figure(figHH)
+                plotpos = [0 0 25 25];
+                
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+            end
+            
+            close all
+            
+        end
+        
+        
+        
+        function obj = validateSWRDetections(obj)
+            
+            
+            %% Check if fields exist
+            
+            title_Detections = 'Please select Detections.mat file';
+            
+            
+            [file_detections,path_detections] = uigetfile('*.mat', title_Detections);
+            load([path_detections file_detections])
+            
+            %             if ~isfield(obj.ANALYSIS.Detections, 'AllSWRDataOnChans')
+            %                 if isfile([obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat'])
+            %                     load([obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat'])
+            %                 else
+            %                     disp(['Could not find Detections file: ' [obj.PATH.swrAnalysisDetections_Dir obj.ANALYSIS.ExpName '-Detections.mat']])
+            %                 end
+            %             end
+            %
+            %D = obj.ANALYSIS.Detections;
+            
+            
+            ExpName = file_detections(1:end-15);
+            % underscore = '_';
+            % bla = find(ExpName == underscore);
+            % ExpName(bla) = '-';
+            
+            
+            
             
             Fs = D.Fs;
             WinSizeL = 1*Fs;
+            
+            
             
             AllSWRDataOnChans = D.AllSWRDataOnChans;
             SWR_Detection_s = D.SWR_Detection_s;
@@ -1418,7 +2155,14 @@ end
             setappdata(spc, 'AllSWRDataOnChans', AllSWRDataOnChans);
             
             setappdata(spc, 'allSavedDetectionInds', allSavedDetectionInds);
-            setappdata(spc, 'SWRDetectionDir', obj.PATH.swrAnalysisDetections_Dir);
+            
+            %setappdata(spc, 'SWRDetectionDir', obj.PATH.swrAnalysisDetections_Dir);
+            setappdata(spc, 'SWRDetectionDir', path_detections);
+            %setappdata(spc, 'name', obj.ANALYSIS.ExpName);
+            
+            setappdata(spc, 'name',ExpName);
+            
+            
             
             updateGridPlotMEA_OBJ(obj, spc);
             
@@ -1434,6 +2178,7 @@ end
             detectionInd = getappdata(spc, 'detectionInd');
             nInds = getappdata(spc, 'nInds');
             Fs = getappdata(spc, 'Fs');
+            SWR_Detection_s = getappdata(spc, 'SWR_Detection_s');
             
             figure(spc); clf
             disp('Updating plot....')
@@ -1488,29 +2233,48 @@ end
             allSavedDetectionInds = getappdata(spc, 'allSavedDetectionInds');
             
             if ismember(detectionInd, allSavedDetectionInds)
-                textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) '-- Detected'];
+                textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | t = ' num2str(SWR_Detection_s(1, detectionInd)) 's | d-detection; r-remove detection; s-save file -- Detected'];
             else
-                textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds)];
+                textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | t = ' num2str(SWR_Detection_s(1, detectionInd)) 's | d-detection; r-remove detection; s-save file'];
             end
+        
             % Create textbox
-            annotation(spc,'textbox', [0.5 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
+            annotation(spc,'textbox', [0.2 0.95 0.5 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
             
             disp('Finished....')
         end
         
-        function obj = calculateDelaysfromValidSWRs_makePlots(obj)
+        function obj = calculateDelaysfromValidSWRs_makePlots(textSave, obj)
             
             
-            validSWRSFile = [obj.PATH.swrAnalysisDetections_Dir 'Validated_SWRs.mat'];
-            load(validSWRSFile);
+            title_Swr = 'Please select validated SWR.mat file';
+            [file_swr,path_swr] = uigetfile('*.mat', title_Swr);
+            load([path_swr file_swr])
             
             
-            figSaveDir = [obj.PATH.swrAnalysisDetections_plotDir];
+            %             title_Swr = 'Please select Ripple Data.mat file';
+            %             [file_rippleData,path_rippledata] = uigetfile('*.mat', title_Swr);
+            %             load([path_rippledata file_rippleData])
+            %
+            
+            
+            %validSWRSFile = [obj.PATH.swrAnalysisDetections_Dir 'Validated_SWRs.mat'];
+            %load(validSWRSFile);
+            
+            figSaveDir = [path_swr(1:end-15) 'Plots\'];
+            
+            if exist(figSaveDir, 'dir') ==0
+                mkdir(figSaveDir);
+                disp(['Created directory: ' figSaveDir])
+            end
+            
+            
+            
             
             SWRs=allValidatedSWRS;
             %chansNotToPlot = obj.ANALYSIS.SWR_Analysis_noisy_channels;
             chansNotToPlot = [];
-            plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
+            % plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
             NoDetChanInds = ismember(plottingOrder, chansNotToPlot);
             
             %% reorganizing the data in matrices and SWR trough detection
@@ -1549,6 +2313,7 @@ end
                 col_r = [1 .5 .6];
                 col_gr = [.9 .9 .9];
                 
+                %{
                 FigH = figure(100); clf
                 
                 for chnl=1:size(SWRs,1)
@@ -1599,6 +2364,13 @@ end
                     
                     
                 end
+                %}
+                ExpName = file_swr(1:end-19);
+                underscore = '_';
+                bla = find(ExpName == underscore);
+                ExpName(bla) = '-';
+                
+                %{
                 figure(FigH)
                 subplot(1,2,1)
                 axis tight
@@ -1609,7 +2381,7 @@ end
                 ylim([-600 0])
                 ylabel('channels')
                 xlabel('Time (sec)');
-                title(['Raw Data: ' obj.ANALYSIS.ExpName ' SWR: ' num2str(swr_count) ]);
+                title(['Raw Data: ' ExpName ' SWR: ' num2str(swr_count) ]);
                 
                 subplot(1,2,2)
                 % yticks(dist*(-chnl:4:-1));
@@ -1618,7 +2390,7 @@ end
                 xlim([.5 1.5])
                 ylim([-600 0])
                 xlabel('Time (sec)');
-                
+                %}
                 %%
                 
                 %
@@ -1696,7 +2468,7 @@ end
                 % ylim(dist*[chnls(1)-1 chnls(end)+1])
                 ylim([-1200 0])
                 xlabel('Time (sec)');
-                title(['Raw Data: ' obj.ANALYSIS.ExpName  ' SWR: ' num2str(swr_count) ]);
+                title(['Raw Data: ' ExpName  ' SWR: ' num2str(swr_count) ]);
                 
                 
                 subplot(1,4,2);
@@ -1712,23 +2484,33 @@ end
                 % threshold for ripple detection
                 %tr=median(up)+3.0*iqr(up);
                 
-                tr=median(up)+2*iqr(up);
-                t0=ones(1,length(chnls));
                 
                 hold on
                 % adding the threshold to the subplot 1
                 %for chnl=chnls
-                %searchROI = 25500:40000; % -.25s to +.25 s
-                searchROI = 30000:40000; % -.25s to +.25 s
+                searchROI = 20000:40000; % -.25s to +.25 s
+                %searchROI = 30000:40000; % -.25s to +.25 s
                 
+                baselineROI = 1:5000; % -.25s to +.25 s
+                
+                tr=median(up)+2*iqr(up);
+                %tr=median(up(baselineROI,:))+ 1*iqr(up(baselineROI,:));
+                t0=ones(1,length(chnls));
+                
+               % diffs = diff(up(baselineROI,:));
+             %   figure; plot(diffs(:,1));
                 for chnl=1:59
                     
                     thisChan = num2str(plottingOrder(chnl));
                     match =  NoDetChanInds(chnl); % we do not look for th
                     
+%                     maxSeg = max(up(searchROI,chnl));
+%                     if maxSeg > 2*tr(chnl)
+                        
+                        t_0=find(up(searchROI,chnl)>tr(chnl),1) +searchROI(1); % time index of the first supra threshold detection
+                        %t_0=find(up(:,chnl)>tr(chnl),1); % time index of the first supra threshold detection
+%                     end
                     
-                    t_0=find(up(searchROI,chnl)>tr(chnl),1) +searchROI(1); % time index of the first supra threshold detection
-                    %t_0=find(up(:,chnl)>tr(chnl),1); % time index of the first supra threshold detection
                     if ~isempty(t_0)
                         if t_0>.7*Fs && t_0<1.2*Fs
                             t0(chnl-chnls(1)+1)=t_0;  % fist supra-threshold sample for each channel
@@ -1860,14 +2642,14 @@ end
                 end
                 
                 
-                title([obj.ANALYSIS.ExpName ' SWR ' num2str(swr_count) ': Delay map']);
+                title([ExpName ' SWR ' num2str(swr_count) ': Delay map']);
                 %xlabel('x (\mu m)','fontweight','bold')
                 %ylabel('y (\mu m)','fontweight','bold')
                 a = colorbar;
                 a.Label.String = 'delay (sec)';
                 axis off
                 
-                saveName = [figSaveDir 'DataDelayMap__' sprintf('%03d', swr_count)];
+                saveName = [figSaveDir 'DataDelayMap_' textSave '__' sprintf('%03d', swr_count)];
                 plotpos = [0 0 30 15];
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
                 % print_in_A4(0, saveName, '-depsc', 0, plotpos);
@@ -1891,10 +2673,398 @@ end
                 Det.z = z;
                 Det.zToPlot = zToPlot;
                 
-                save([obj.PATH.swrAnalysisDetections_Dir '_DelayMap_' sprintf('%03d', swr_count) '.mat'], 'Det', '-v7.3')
+                save([path_swr '_DelayMap_' sprintf('%03d', swr_count) '.mat'], 'Det', '-v7.3')
                 
             end
         end
+        
+        function [obj] = calcSWRStatistics(SWRAnalysisDir, obj)
+            
+            dbstop if error
+            
+            cd(SWRAnalysisDir);
+            
+            title_Swr = 'Please select validated SWR .mat file';
+            
+            
+            [file_swr,path_swr] = uigetfile('*.mat', title_Swr);
+            
+            load([path_swr file_swr])
+            
+            disp('')
+            
+            SWRs=allValidatedSWRS;
+            chansNotToPlot = obj.ANALYSIS.SWR_Analysis_noisy_channels;
+            %chansNotToPlot = [];
+            plottingOrder = obj.ANALYSIS.SWR_INFO.plottingOrder;
+            nonNoisyChanInds = ~ismember(plottingOrder, chansNotToPlot);
+            noisyChanInds = ismember(plottingOrder, chansNotToPlot);
+            
+            nSWRs = size(SWRs, 2);
+            
+            
+            %% designing a filter for extraction of low frequenc ? component of each
+            % SWR, the sharp wave (e.g. 20-40 Hz)
+            
+            [b1,a1] = butter(2,[150 400]/(Fs/2)); % ripple burst spectral range
+            [b2,a2] = butter(2,[.2 20]/(Fs/2)); % sharp wave range
+            
+            %find Min value
+            for  j = 1:nSWRs
+                
+                SWR = [];
+                for chnl=1:size(SWRs,1)
+                    
+                    SWR  = cell2mat(SWRs(:,j))';
+                    %                     SWR(:,chnl)=SWRs{chnl,j};
+                end
+                
+                %figure; plot(SWR(:, 1))
+                
+                % we filter the data to just extract the low-frequency component,
+                % the Sharp Wave, and to detect the trough based on it
+                ripple=filtfilt(b1,a1,SWR);
+                sharp_wave=filtfilt(b2,a2,SWR);
+                
+                % ripples_mat(:,:,j)=ripple;
+                %  sharp_wave_mat(:,:,j)=sharp_wave;
+                
+                %%
+                
+                win_s = 0.150;
+                win_samp = win_s*Fs;
+                zeroPoint = round(size(SWR, 1)/2);
+                ROI = zeroPoint-win_samp-1: zeroPoint+ win_samp-1;
+                invertSW = -sharp_wave;
+                
+                minVal = []; minInd = [];
+                for chnl=1:size(SWRs,1)
+                    
+                    %plot(sharp_wave_mat(ROI,chnl))
+                    [minVal(chnl), minInd(chnl)] = min(sharp_wave(ROI,chnl));
+                    
+                end
+                
+                
+                validChansMinVals = minVal;
+                validChansMinVals(noisyChanInds) = nan;
+                
+                validChansMinValInds = minInd;
+                validChansMinValInds(noisyChanInds) = nan;
+                
+                %                 validChansMinVals = minVal(nonNoisyChanInds);
+                %                 validChansMinValInds = minInd(nonNoisyChanInds);
+                %
+                %                 validChanInds = plottingOrder(nonNoisyChanInds);
+                %
+                
+                [B,I] = sort(validChansMinVals, 'ascend');
+                
+                
+                MostNegChans = I(1:5);
+                
+                MostNegMinVals = validChansMinVals(MostNegChans );
+                MostNegMinValInds = validChansMinValInds(MostNegChans );
+                %%
+                ROI_s = ROI/Fs;
+                figure(102); clf
+                subplot(1, 3, 1)
+                LegTxt = []; peakWidths_ms  = [];
+                for oo = 1:numel(MostNegChans)
+                    hold on
+                    plot(ROI_s, sharp_wave(ROI, MostNegChans(oo)))
+                    LegTxt{oo} = ['Ch-' num2str(MostNegChans(oo))];
+                    
+                    [pks,locs,w,p] = findpeaks(-sharp_wave(ROI, MostNegChans(oo)), 'MinPeakHeight', 6, 'WidthReference','halfheight');
+                    
+                    %figure; plot(-sharp_wave(ROI, MostNegChans(oo)));
+                    if numel(locs) >1
+                        [maxProm, pind] = max(p);
+                        
+                        pks = pks(pind);
+                        locs = locs(pind);
+                        w = w(pind);
+                        p = p(pind);
+                    end
+                    
+                    peakWidths_ms(oo) =  (w/Fs)*1000;
+                    
+                end
+                
+                clr = get(gca,'colororder');
+                
+                axis tight
+                Xticks = get(gca, 'xtick');
+                xtickLabs = {'-150', '-100', '-50', '0', '50', '100', '150'};
+                set(gca, 'xticklabel', xtickLabs);
+                xlabel('Time (ms)')
+                %ylim([-30 0])
+                
+                legend(LegTxt, 'Location', 'southeast')
+                title([file_swr(1:end-19) ' | SWR-' num2str(j)])
+                
+                %%
+                subplot(1, 3, 2); cla
+                for k = 1:numel(MostNegChans)
+                    hold on
+                    plot(peakWidths_ms(k), MostNegMinVals(k), 'marker', '*', 'color', clr(k,:))
+                end
+                
+                legend(LegTxt, 'Location', 'best')
+                axis tight
+                xlim([30 120])
+                %ylim([-30 0])
+                xlabel('SW duration (ms)')
+                ylabel('SW negative peak value (uV)')
+                
+                %%
+                
+                
+                amplitudes_uV = [MostNegMinVals(1); MostNegMinVals(2); MostNegMinVals(3); MostNegMinVals(4); MostNegMinVals(5)];
+                durations_ms = [peakWidths_ms(1); peakWidths_ms(2); peakWidths_ms(3); peakWidths_ms(4); peakWidths_ms(5)];
+                
+                Name = LegTxt;
+                
+                T = table(amplitudes_uV,durations_ms,'RowNames',Name);
+                
+                ha = subplot(1, 3, 3);
+                pos = get(ha,'Position');
+                un = get(ha,'Units');
+                delete(ha)
+                
+                ht = uitable('Data',T{:,:},'ColumnName',T.Properties.VariableNames,...
+                    'RowName',T.Properties.RowNames,'Units', un, 'Position',pos);
+                ha = subplot(1, 3, 3);
+                
+                
+                
+                saveName = [path_swr file_swr(1:end-19) '_SWRStats_' sprintf('%03d', j)];
+                
+                plotpos = [0 0 50 12];
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                
+                %%
+                
+                allStats{j}.Chans = MostNegChans;
+                allStats{j}.Amplitudes_uV = MostNegMinVals;
+                allStats{j}.peakWidths_ms = peakWidths_ms;
+                
+                
+                disp('')
+            end
+            
+            
+            disp('')
+            
+        end
+        
+        
+        
+        function [obj] = calcSWRStatistics_SWR_Ind_And_Chan(textSave, SWRAnalysisDir,  SWR_Ind, SWR_Chans, obj)
+            
+            dbstop if error
+            
+            cd(SWRAnalysisDir);
+            title_Swr = 'Please select validated SWR .mat file';
+            [file_swr,path_swr] = uigetfile('*.mat', title_Swr);
+            load([path_swr file_swr])
+            
+            
+            
+            %             title_Swr = 'Please select Ripple Data.mat file';
+            %             [file_rippleData,path_rippledata] = uigetfile('*.mat', title_Swr);
+            %             load([path_rippledata file_rippleData])
+            %
+            
+            
+            
+            disp('')
+            
+            SWRs=allValidatedSWRS;
+            %chansNotToPlot = obj.ANALYSIS.SWR_Analysis_noisy_channels;
+            %chansNotToPlot = [];
+            %plottingOrder = plottingOrder;
+            %            nonNoisyChanInds = ~ismember(plottingOrder, chansNotToPlot);
+            %            noisyChanInds = ismember(plottingOrder, chansNotToPlot);
+            
+            nSWRs = size(SWRs, 2);
+            
+            
+            for k = 1:length(SWR_Chans)% 1:7
+                
+                thisChan = SWR_Chans(k);
+                
+                chanInd = find(plottingOrder == thisChan);
+                ChanSetInds(k) =  chanInd;
+            end
+            
+            
+            
+            %% designing a filter for extraction of low frequenc ? component of each
+            % SWR, the sharp wave (e.g. 20-40 Hz)
+            
+            [b1,a1] = butter(2,[150 400]/(Fs/2)); % ripple burst spectral range
+            [b2,a2] = butter(2,[.2 20]/(Fs/2)); % sharp wave range
+            
+            %find Min value
+            j = SWR_Ind;
+            
+            SWR = [];
+            for chnl=1:size(SWRs,1)
+                
+                SWR  = cell2mat(SWRs(:,j))';
+                %                     SWR(:,chnl)=SWRs{chnl,j};
+            end
+            
+            
+            
+            
+            %figure; plot(SWR(:, 1))
+            
+            % we filter the data to just extract the low-frequency component,
+            % the Sharp Wave, and to detect the trough based on it
+            ripple=filtfilt(b1,a1,SWR);
+            sharp_wave=filtfilt(b2,a2,SWR);
+            
+            % ripples_mat(:,:,j)=ripple;
+            %  sharp_wave_mat(:,:,j)=sharp_wave;
+            
+            %%
+            
+            win_s = 0.300;
+            win_samp = win_s*Fs;
+            zeroPoint = round(size(SWR, 1)/2);
+            ROI = zeroPoint-win_samp-1: zeroPoint+ win_samp-1;
+            invertSW = -sharp_wave;
+            
+            minVal = []; minInd = [];
+            
+            
+            
+            
+            for chnl=1:numel(ChanSetInds)
+                thisChanInd = ChanSetInds(chnl);
+                %plot(sharp_wave_mat(ROI,chnl))
+                [minVal(chnl), minInd(chnl)] = min(sharp_wave(ROI,thisChanInd));
+                
+            end
+            
+            %
+            %                 validChansMinVals = minVal;
+            %                 validChansMinVals(noisyChanInds) = nan;
+            %
+            %                 validChansMinValInds = minInd;
+            %                 validChansMinValInds(noisyChanInds) = nan;
+            
+            %                 validChansMinVals = minVal(nonNoisyChanInds);
+            %                 validChansMinValInds = minInd(nonNoisyChanInds);
+            %
+            %                 validChanInds = plottingOrder(nonNoisyChanInds);
+            %
+            
+            %  [B,I] = sort(validChansMinVals, 'ascend');
+            
+            
+            %  MostNegChans = I(1:5);
+            
+            %   MostNegMinVals = validChansMinVals(MostNegChans );
+            %   MostNegMinValInds = validChansMinValInds(MostNegChans );
+            %%
+            ROI_s = ROI/Fs;
+            figure(102); clf
+            subplot(1, 3, 1)
+            LegTxt = []; peakWidths_ms  = [];
+            for oo = 1:numel(minVal)
+                hold on
+                thisChanInd = ChanSetInds(oo);
+                
+                plot(ROI_s, sharp_wave(ROI, thisChanInd))
+                LegTxt{oo} = ['Ch-' num2str(SWR_Chans(oo))];
+                
+                [pks,locs,w,p] = findpeaks(-sharp_wave(ROI, thisChanInd), 'MinPeakHeight', 5, 'WidthReference','halfheight');
+                
+                % figure; plot(-sharp_wave(ROI, thisChanInd));
+                if numel(locs) >1
+                    [maxProm, pind] = max(p);
+                    
+                    pks = pks(pind);
+                    locs = locs(pind);
+                    w = w(pind);
+                    p = p(pind);
+                end
+                
+                peakWidths_ms(oo) =  (w/Fs)*1000;
+                
+            end
+            
+            clr = get(gca,'colororder');
+            
+            axis tight
+            %Xticks = get(gca, 'xtick');
+            
+            xtickss = [0.7500    0.8000    0.8500    0.9000    0.9500    1.0000    1.0500    1.1000    1.1500    1.2000    1.2500];
+            set(gca, 'xtick', xtickss);
+            
+            %xtickLabs = {'-150', '-100', '-50', '0', '50', '100', '150'};
+            xtickLabs = {'-250', '-200', '-150', '-100', '-50', '0', '50', '100', '150', '200', '250'};
+            set(gca, 'xticklabel', xtickLabs);
+            xlabel('Time (ms)')
+            %ylim([-30 0])
+            
+            legend(LegTxt, 'Location', 'best')
+            title([file_swr(1:end-19) ' | SWR-' num2str(j)])
+            
+            %%
+            subplot(1, 3, 2); cla
+            for k = 1:numel(minVal)
+                hold on
+                plot(peakWidths_ms(k), minVal(k), 'marker', '*', 'color', clr(k,:))
+            end
+            
+            legend(LegTxt, 'Location', 'best')
+            axis tight
+            xlim([30 120])
+            %ylim([-30 0])
+            xlabel('SW duration (ms)')
+            ylabel('SW negative peak value (uV)')
+            
+            %%
+            
+            
+            amplitudes_uV = [minVal]';
+            durations_ms = [peakWidths_ms]';
+            
+            Name = LegTxt;
+            
+            T = table(amplitudes_uV,durations_ms,'RowNames',Name);
+            
+            ha = subplot(1, 3, 3);
+            pos = get(ha,'Position');
+            un = get(ha,'Units');
+            delete(ha)
+            
+            ht = uitable('Data',T{:,:},'ColumnName',T.Properties.VariableNames,...
+                'RowName',T.Properties.RowNames,'Units', un, 'Position',pos);
+            ha = subplot(1, 3, 3);
+            
+            saveName = [path_swr file_swr(1:end-19) '_SWRStats_' textSave '_' sprintf('%03d', j)];
+            
+            plotpos = [0 0 50 12];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            
+            %%
+            
+            allStats{j}.Chans = SWR_Chans;
+            allStats{j}.Amplitudes_uV = minVal;
+            allStats{j}.peakWidths_ms = peakWidths_ms;
+            
+            writetable(T, [saveName '.xls'], 'WriteRowNames',true)
+            
+            disp('')
+        end
+        
+        
+        
         
         
         
@@ -2148,7 +3318,14 @@ end
                 
                 
                 %%
-                timeWin_s = 60;
+                
+                if expSwitch == 1
+                    timeWin_s = 60;
+                else
+                    timeWin_s = 30;
+                    
+                end
+                
                 tOn = 1:timeWin_s:minVal;
                 allSpks = [];
                 allFRs = [];
@@ -2192,7 +3369,9 @@ end
                 plot(dD_spikeWaveforms(1:end,:)', 'k');
                 axis tight
                 ylim([-5e4 5e4])
+                
                 if expSwitch == 1
+                    
                     title(['Drug: Ch-' num2str(thisChannel)])
                 else
                     title(['Stimulation: Ch-' num2str(thisChannel)])
@@ -2218,8 +3397,20 @@ end
                 line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
                 title(['n = ' num2str(size(bD_spikeWaveforms,1)) ' spikes']);
                 
+                if expSwitch ~= 1
+                    xtickss = get(gca, 'xtick');
+                    for g = 1:numel(xtickss)
+                        
+                        thisTick = xtickss(g)/2;
+                        xticklabs{g} = num2str(thisTick);
+                    end
+                        set(gca, 'xticklabel', xticklabs)
+                end
+                
+                
                 pre = allFRs{1}(1:5);
                 post = allFRs{1}(6:end);
+                
                 subplot(3, 6, 8);
                 toPlot = [mean(pre) ; mean(post)];
                 errs = [std(pre) ; std(post)];
@@ -2239,6 +3430,16 @@ end
                 ylabel('Firing Rate (Hz)')
                 line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
                 title(['n = ' num2str(size(dD_spikeWaveforms, 1)) ' spikes']);
+                
+                if expSwitch ~= 1
+                    xtickss = get(gca, 'xtick');
+                    for g = 1:numel(xtickss)
+                        
+                        thisTick = xtickss(g)/2;
+                        xticklabs{g} = num2str(thisTick);
+                    end
+                        set(gca, 'xticklabel', xticklabs)
+                end
                 
                 pre = allFRs{2}(1:5);
                 post = allFRs{2}(6:end);
@@ -2262,6 +3463,15 @@ end
                 line([5 5], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
                 title(['n = ' num2str(size(rD_spikeWaveforms, 1)) ' spikes']);
                 
+                if expSwitch ~= 1
+                    xtickss = get(gca, 'xtick');
+                    for g = 1:numel(xtickss)
+                        
+                        thisTick = xtickss(g)/2;
+                        xticklabs{g} = num2str(thisTick);
+                    end
+                        set(gca, 'xticklabel', xticklabs)
+                end
                 pre = allFRs{3}(1:5);
                 post = allFRs{3}(6:end);
                 subplot(3, 6, 12);
@@ -2384,7 +3594,11 @@ end
         end
         
         
-        function obj = FiringRateAnalysis_makeRasters(obj)
+        function obj = FiringRateAnalysis_makeRasters(obj, textSave)
+            
+            if nargin <2
+                textSave = '';
+            end
             
             dbstop if error
             %%
@@ -2560,7 +3774,7 @@ end
                 'LineStyle','none',...
                 'FitBoxToText','off');
             
-            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__FR'];
+            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__FR-' textSave];
             plotpos = [0 0 12 10];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
@@ -2572,7 +3786,7 @@ end
                 'LineStyle','none',...
                 'FitBoxToText','off');
             
-            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__Raster'];
+            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__Raster-' textSave];
             plotpos = [0 0 15 12];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             

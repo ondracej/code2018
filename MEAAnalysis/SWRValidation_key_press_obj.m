@@ -24,39 +24,9 @@ switch evnt.Key
     case 'd'
         %% Re-Saves the current spectrogram file to the BOS folder
         saveDetectionInd(spc)
-        
-    case 'escape'
-        %% Close the browser, save the files, and clear the data
-        saving_dialog()
-        
-    case 'c' %cut
-        
-        [wav_x,~] = ginput(2);
-        
-        line([wav_x(1) wav_x(1)], [0 15000], 'color', 'y');
-        hold on
-        line([wav_x(2) wav_x(2)], [0 15000], 'color', 'y');
-        disp('')
-        hold off
-        
-        setappdata(spc, 'LCut', wav_x(1));
-        setappdata(spc, 'RCut', wav_x(2));
-        
-    case 'q' %clear
-        
-        wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files, wav_file_dir)
-        
-        %         case 'd'
-        %             %% Change the wav directory
-        %             change_dir_prompt()
-        
-        %         case 'g'
-        %             %% Flag as a 'good' file (ie, > 3 motifs)
-        %             move_this_file(1);
-        
-        %         case 'b'
-        %             %% Flag as a 'bad' file (ie, < 3 motifs)
-        %             move_this_file(2);
+    
+    case 'r'
+    removeDetectionInd(spc)
         
 end
 
@@ -124,20 +94,35 @@ updateAnnotation(spc)
 
 end
 
+function [] = removeDetectionInd(spc)
+
+detectionInd = getappdata(spc, 'detectionInd');
+allSavedDetectionInds = getappdata(spc, 'allSavedDetectionInds');
+bla = allSavedDetectionInds == detectionInd;
+
+allSavedDetectionInds(bla) = [];
+
+setappdata(spc, 'allSavedDetectionInds', allSavedDetectionInds);
+
+updateAnnotation(spc)
+
+end
+
 function [] = updateAnnotation(spc)
 
 detectionInd = getappdata(spc, 'detectionInd');
 allSavedDetectionInds = getappdata(spc, 'allSavedDetectionInds');
 nInds = getappdata(spc, 'nInds');
+SWR_Detection_s = getappdata(spc, 'SWR_Detection_s');
 
 if ismember(detectionInd, allSavedDetectionInds)
-    
-    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) '-- Detected'];
+    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | t = ' num2str(SWR_Detection_s(1, detectionInd)) 's | d-detection; r-remove detection; s-save file -- Detected'];
 else
-    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds)];
+    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | t = ' num2str(SWR_Detection_s(1, detectionInd)) 's | d-detection; r-remove detection; s-save file'];
 end
+
 % Create textbox
-annotation(spc,'textbox', [0.5 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
+annotation(spc,'textbox', [0.2 0.95 0.5 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
 
 
 
@@ -148,11 +133,12 @@ function [] = updateGridPlotMEA_kp(spc)
 nInds = getappdata(spc, 'nInds');
 
 AllSWRDataOnChans = getappdata(spc, 'AllSWRDataOnChans');
-%timepoints_s = getappdata(spc, 'timepoints_s');
+timepoints_s = getappdata(spc, 'timepoints_s');
 plottingOrder = getappdata(spc, 'plottingOrder');
 detectionInd = getappdata(spc, 'detectionInd');
 Fs = getappdata(spc, 'Fs');
-
+SWR_Detection_s = getappdata(spc, 'SWR_Detection_s');
+            
 figure(spc); clf
 disp('Updating plot....')
 
@@ -213,13 +199,13 @@ end
 allSavedDetectionInds = getappdata(spc, 'allSavedDetectionInds');
 
 if ismember(detectionInd, allSavedDetectionInds)
-    
-    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) '-- Detected'];
+    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | t = ' num2str(SWR_Detection_s(1, detectionInd)) 's | d-detection; r-remove detection; s-save file -- Detected'];
 else
-    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds)];
+    textAnnotation = ['SWR Detection: ' num2str(detectionInd) '/' num2str(nInds) ' | t = ' num2str(SWR_Detection_s(1, detectionInd)) 's | d-detection; r-remove detection; s-save file'];
 end
+
 % Create textbox
-annotation(spc,'textbox', [0.5 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
+annotation(spc,'textbox', [0.2 0.95 0.5 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
 
 disp('Finished....')
 end
@@ -241,7 +227,9 @@ allValidated_SWR_Detection_fs = SWR_Detection_fs(:,allSavedDetectionInds);
 allValidatedSWRS = AllSWRDataOnChans(:,allSavedDetectionInds);
 plottingOrder = getappdata(spc, 'plottingOrder');
 
-saveName = [SWRDetectionDir 'Validated_SWRs.mat'];
+name = getappdata(spc, 'name');
+    
+saveName = [SWRDetectionDir name  '_Validated_SWRs.mat'];
 save(saveName, 'allValidatedSWRS', 'plottingOrder', 'Fs', 'allValidated_SWR_Detection_s', 'allValidated_SWR_Detection_fs', '-v7.3')
 disp(['Saved Validated SWRs: ' saveName])
 end
