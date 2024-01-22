@@ -44,9 +44,18 @@ addpath(genpath(pathToNSKToolbox))
 %dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190627\20190627_08-43\Ephys\2019-06-27_08-43-09';
 %dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190624\20190624_19-14\Ephys\2019-06-24_19-14-36';
 
+%dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190624-Ephys\20190624_19-14-36\Ephys\2019-06-24_19-14-36';
+%dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190624-Ephys\20190624_17-00-35\Ephys\CubanTF1_2019-06-24_17-00-35';
+%dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190624-Ephys\20190624_16-31-53\Ephys\CubanTF1_2019-06-24_16-31-53';
+dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190626-Ephys\20190626_23-50-16\Ephys\2019-06-26_23-50-16'
+%dir = '/home/janie/Data/TUM/SleepChicken/Ephys/Chick1/Chick1K-X_2018-04-27_16-43-53/';
+dir = 'H:\Grass\FrogSleep\CubanTreeFrog5\20190806-Ephys\CubanTF4_2019-08-06_22-18-01';
+dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190624-Ephys\20190624_17-53-42\Ephys\2019-06-24_17-53-42';
+dir = 'H:\Grass\FrogSleep\CubanTreeFrog1\20190624-Ephys\20190624_19-14-36\Ephys\2019-06-24_19-14-36';
+
+dir = 'X:\Janie-BilateralChronic\796\chronic_2023-11-15_20-40-32';
 
 
-dir = '/home/janie/Data/TUM/SleepChicken/Ephys/Chick1/Chick1K-X_2018-04-27_16-43-53/';
 dbstop if error
 dataRecordingObj = OERecordingMF(dir);
 

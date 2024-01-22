@@ -4,8 +4,14 @@ function h_trace = lfp_browser()
 % fdir_session = 'C:\Users\Corinna\Dropbox\colab_neurophys_of_sleep\data\j8v8\20200227_02';
 % birdname = 'j8v8';
 
-fdir_session = 'C:\Users\Corinna\Dropbox\colab_neurophys_of_sleep\data\g4r4\20190723_03';
-birdname = 'g4r4';
+%fdir_session = 'C:\Users\Corinna\Dropbox\colab_neurophys_of_sleep\data\g4r4\20190723_03';
+%birdname = 'g4r4';
+
+fdir_session = 'Z:\JanieData\Neuropixel\w047\raw_08_RH_P6 - SpontWAnasthesia_g0\';
+birdname = 'w047';
+
+
+
 
 % fdir_session = '\\zuperfinch\microdrive\birds\g4r4\Ephys\raw\20190718_02\raw_dark_01_g3\';
 % birdname = 'g4r4';
@@ -83,7 +89,7 @@ h_trace.UserData.twin = [105 110];
 h_trace.UserData.gain = 20000;
 
 % try
-h_trace.UserData.sel_units = load_and_add_spk_data(fdir);
+%h_trace.UserData.sel_units = load_and_add_spk_data(fdir);
 % catch
 %     warning('no spike data found \n')
 % end
@@ -160,7 +166,7 @@ end
 %%
 function updateAxes(src)
 
-update_spktevents(src);
+%update_spktevents(src);
 update_vtrace(src);
 
 end
@@ -196,14 +202,14 @@ ylim([-5 dat.chan_pos(end)+20]);
 
 ylabel(' Channel (~ Distance to tip [10um] )');
 box off;
-ax.XTick = [];
+%ax.XTick = [];
 
 
 % PLOT SCALE
 % v2u = 1/a ;
 % plot( [x(end) x(end)] ,  [0 v2u ] , 'color', 'k', 'LineWidth', 2);
 
-
+%{
 %%% overlap spikes optionally
 if dat.do_overlap
     
@@ -241,8 +247,11 @@ if dat.do_overlap
     %     sc.Color[:] = [sc.Color, 0.1];
 end
 
+%}
+
 %%% DEPTH OF SLEEP SCORE
 
+%{
 % return
 % detph of sleep plot
 ax = subplot(6,1, 6);
@@ -313,7 +322,7 @@ else
     xlabel(' Time [s] ')
 end
 
-
+%}
 
 fprintf('done\n');
 return

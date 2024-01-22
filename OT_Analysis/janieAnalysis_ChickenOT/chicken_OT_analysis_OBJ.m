@@ -62,14 +62,14 @@ classdef chicken_OT_analysis_OBJ < handle
                     
                     OT_Data_Path = '/media/dlc/Data8TB/TUM/OT/OTProject/OTData/Results/';
             
-                case 'LAPTOP-NFGB49PH'
+                case 'NEUROPIXELS'
                     dirD = '\';
                     
                     addpath(genpath('C:\Users\Janie\Documents\GitHub\code2018\'));
                     %addpath(genpath('/home/dlc/code/GitHub/code2018/OT_Analysis/'));
                     %addpath(genpath('/home/dlc/code/GitHub/UMS2K-master/'));
                     
-                    OT_Data_Path = 'D:\MLD\OTData\Results\';
+                    OT_Data_Path = 'F:\OT-MLD\OT_Project_2021-Final\OTData\Results\';
                     
             end
             

@@ -786,7 +786,7 @@ classdef videoAnalysis_OBJ < handle
             
             
             saveDir = [obj.PATH.editedVidPath];
-            saveName = [saveDir 'montage'];
+            saveName = [saveDir 'montageFrog'];
             %fileFormat = 1; % (1)- tif, (2) -.jpg
             
             %%
@@ -849,7 +849,7 @@ classdef videoAnalysis_OBJ < handle
             axis('off')
             pause
             %%
-            saveName = [obj.PATH.editedVidPath 'montage'];
+            saveName = [obj.PATH.editedVidPath 'montageFrog'];
             plotpos = [0 0 30 5];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
@@ -1024,7 +1024,7 @@ classdef videoAnalysis_OBJ < handle
             disp('Extracting frames and calculating the optic flow...')
             
             mov = struct('cdata',[],'colormap',[]);
-            for frame_ind = FrameOn+1 : FrameOff+1
+            for frame_ind = FrameOn : FrameOff
                 
                 mov(mCnt).cdata = read(VideoObj,frame_ind);
                 frame = mov(mCnt).cdata;
@@ -2731,7 +2731,7 @@ classdef videoAnalysis_OBJ < handle
         function [] = makeMoviesFromImages(obj, imageDir, movieName, saveDir)
             
             
-            fileFormat = 1; % (1)- tif, (2) -.jpg
+            fileFormat = 2; % (1)- tif, (2) -.jpg
             %playInReverse = 1; %(1) play the images from last to first
             
             %%
@@ -2759,7 +2759,7 @@ classdef videoAnalysis_OBJ < handle
             [bla, inds] = sort(endingTxt_dbl, 'ascend');
             
             resortedNames = imageNames(inds);
-            
+            resortedNames = imageNames;
             
             
             

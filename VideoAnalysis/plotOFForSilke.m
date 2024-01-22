@@ -51,7 +51,8 @@ bluecolor = [0 50 150];
 
 subplot(2, 2, 1)
 shapeInserter1 = vision.ShapeInserter('Shape','Rectangles','BorderColor','Custom','LineWidth',5.5,'CustomBorderColor',int32(bluecolor));
-img1 = step(shapeInserter1,of1.im,of1.rectim1); %insert the ROIs
+img1 = step(shapeInserter1,im,rectim1); %insert the ROIs
+%img1 = step(shapeInserter1,of1.im,of1.rectim1); %insert the ROIs
 image(img1)
 
 subplot(2, 2, 2)
@@ -68,9 +69,10 @@ subplot(2, 2, 4)
 shapeInserter1 = vision.ShapeInserter('Shape','Rectangles','BorderColor','Custom','LineWidth',5.5,'CustomBorderColor',int32(bluecolor));
 img1 = step(shapeInserter1,of4.im,of4.rectim1); %insert the ROIs
 image(img1)
-plotpos = [0 0 25 12];
+plotpos = [0 0 15 12];
             PlotDir = ['C:\Users\Janie\Dropbox\tmp\VideosForSilke\'];
             
+            plot_filename  = ['X:\Frog\OF\frogImg']
             plot_filename = [PlotDir 'ROIs'];
             %print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
             print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
