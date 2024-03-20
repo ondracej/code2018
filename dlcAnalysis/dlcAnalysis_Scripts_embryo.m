@@ -6,8 +6,8 @@
 %% 1) Define analysis directory and identify csv files
 % Make sure to put all the .csv files for one experiment into one directory
 
-analysisDir = 'Y:\JanieData\DLC-Analysis\ChickEmbryoTracking\NEW-July2022\ProbFiles\'; % path to the analysis directory, should contain the .csv files
-ExperimentName = 'ProbFiles';
+analysisDir = '/home/janie/Data/DLCChicken/'; % path to the analysis directory, should contain the .csv files
+ExperimentName = 'TestFiles';
 
 addpath(genpath('C:\Users\dlc\Documents\DLCEmbryoCode'));
 dlc_OBJ = dlcAnalysis_OBJ_embryo(analysisDir, ExperimentName);
@@ -23,12 +23,12 @@ toc
 
 %% plot detection clusters
 
-likelihood_cutoff  = 0.98;
-SaveNameTxt = 'BeakClusters-';
+likelihood_cutoff  = 0.75;
+SaveNameTxt = 'LegClusters3-';
 dlc_OBJ = plotDetectionClusters(dlc_OBJ, likelihood_cutoff, SaveNameTxt );
 
 %% Distance between beak parts
-likelihood_cutoff  = 0.98;
+likelihood_cutoff  = 0.75;
 dlc_OBJ = plotDistanceBetweenTwoPoints(dlc_OBJ, likelihood_cutoff);
 
 %% Distance between beak parts
@@ -37,7 +37,7 @@ likelihood_cutoff   = 0.98;
 
 %% Movement
 dbstop if error
-likelihood_cutoff  = 0.98;
+likelihood_cutoff  = 0.75
 [dlc_OBJ] = plotMovement(dlc_OBJ, likelihood_cutoff);
 
 %% Other analysis
