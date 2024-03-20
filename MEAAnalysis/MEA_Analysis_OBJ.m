@@ -1106,7 +1106,7 @@ end
             disp('Loading data and detecting SWRs....')
             
             dbstop if error
-            doPlot = 1; % will pause the analysis
+            doPlot = 0; % will pause the analysis
             
             fileToLoad = obj.ANALYSIS.h5_fileToLoad;
             
@@ -1852,7 +1852,7 @@ end
         
         
         
-        function obj =  plotValidSWRDetections(SWRAnalysisDir, obj)
+        function obj =  plotValidSWRDetections(textSave, SWRAnalysisDir, obj)
             
             
             dbstop if error
@@ -2063,7 +2063,7 @@ end
                 % Create textbox
                 annotation(figH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
                 
-                saveName = [obj.PATH.swrAnalysisDetections_plotDir '__' name '_Validated_SWR-stack_' sprintf('%03d',j)];
+                saveName = [obj.PATH.swrAnalysisDetections_plotDir '__' name '_Validated_SWR-stack_' textSave '_' sprintf('%03d',j)];
                 figure(figH)
                 plotpos = [0 0 25 25];
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
@@ -2074,7 +2074,7 @@ end
                 % Create textbox
                 annotation(figHH,'textbox', [0.01 0.95 0.36 0.03],'String',{textAnnotation}, 'LineStyle','none','FitBoxToText','off');
                 
-                saveName = [obj.PATH.swrAnalysisDetections_plotDir '__'  name '_Validate_SWR-grid_' sprintf('%03d',j)];
+                saveName = [obj.PATH.swrAnalysisDetections_plotDir '__'  name '_Validate_SWR-grid_' textSave '_' sprintf('%03d',j)];
                 figure(figHH)
                 plotpos = [0 0 25 25];
                 
@@ -2244,7 +2244,7 @@ end
             disp('Finished....')
         end
         
-        function obj = calculateDelaysfromValidSWRs_makePlots(obj)
+        function obj = calculateDelaysfromValidSWRs_makePlots(textSave, obj)
             
             
             title_Swr = 'Please select validated SWR.mat file';
@@ -2649,7 +2649,7 @@ end
                 a.Label.String = 'delay (sec)';
                 axis off
                 
-                saveName = [figSaveDir 'DataDelayMap__' sprintf('%03d', swr_count)];
+                saveName = [figSaveDir 'DataDelayMap_' textSave '__' sprintf('%03d', swr_count)];
                 plotpos = [0 0 30 15];
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
                 % print_in_A4(0, saveName, '-depsc', 0, plotpos);
@@ -2860,7 +2860,7 @@ end
         
         
         
-        function [obj] = calcSWRStatistics_SWR_Ind_And_Chan(SWRAnalysisDir,  SWR_Ind, SWR_Chans, obj)
+        function [obj] = calcSWRStatistics_SWR_Ind_And_Chan(textSave, SWRAnalysisDir,  SWR_Ind, SWR_Chans, obj)
             
             dbstop if error
             
@@ -3047,7 +3047,7 @@ end
                 'RowName',T.Properties.RowNames,'Units', un, 'Position',pos);
             ha = subplot(1, 3, 3);
             
-            saveName = [path_swr file_swr(1:end-19) '_SWRStats_' sprintf('%03d', j)];
+            saveName = [path_swr file_swr(1:end-19) '_SWRStats_' textSave '_' sprintf('%03d', j)];
             
             plotpos = [0 0 50 12];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);

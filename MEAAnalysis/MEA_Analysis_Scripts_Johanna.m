@@ -5,7 +5,7 @@
 addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
 cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
 
-analysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220503\'; % path to the analysis directory
+analysisDir = 'F:\Johanna_MEA_Data\20220603\'; % path to the analysis directory %% CHANGE THIS 
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -50,25 +50,26 @@ mea_OBJ = collectAllSWRDetections(mea_OBJ);
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  Analysis on SWRs 
 
-SWRAnalysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220503\SWR_Analysis\20220503_1538_SWR_Detections\';
+SWRAnalysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220503\SWR_Analysis\20220503_1538_SWR_Detections\'; %% CHANGE THIS 
 cd(SWRAnalysisDir);
 
 %% Validate detected SWRs
 mea_OBJ = validateSWRDetections(mea_OBJ);
 
 %% Plot valid SWRs 
-mea_OBJ = plotValidSWRDetections(SWRAnalysisDir, mea_OBJ);
+textSave = 'Baseline';
+mea_OBJ = plotValidSWRDetections(textSave , SWRAnalysisDir, mea_OBJ);
 
 %% Make delay plot
-
-mea_OBJ = calculateDelaysfromValidSWRs_makePlots(mea_OBJ);
+textSave = 'Baseline';
+mea_OBJ = calculateDelaysfromValidSWRs_makePlots(textSave, mea_OBJ);
 
 %% SWR statistics 
 
 SWR_Ind = 3;
 SWR_Chans = [32 33 34 35 36 37 38]; % Maximum 7 channels
-
-mea_OBJ = calcSWRStatistics_SWR_Ind_And_Chan(SWRAnalysisDir, SWR_Ind, SWR_Chans, mea_OBJ);
+textSave = 'Baseline';
+mea_OBJ = calcSWRStatistics_SWR_Ind_And_Chan(textSave, SWRAnalysisDir, SWR_Ind, SWR_Chans, mea_OBJ);
 
 
 %%

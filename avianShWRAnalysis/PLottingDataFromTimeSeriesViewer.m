@@ -4,6 +4,12 @@ thisData = zf71anaesth_M;
 time_ms = zf71_T;
 
 
+thisData = Noise2_M;
+time_ms = Noise2_T;
+
+
+thisData = Noise2_M(18:24,:,:);
+time_ms = Noise2_T;
 
 %%
 %thisData = zf71ch7sleep_M;
@@ -45,7 +51,7 @@ fobj.filt.FL=fobj.filt.FL.designLowPass;
 fobj.filt.FL.padding=true;
 
 fobj.filt.BP=filterData(Fs);
-fobj.filt.BP.highPassCutoff=1;
+fobj.filt.BP.highPassCutoff=2;
 fobj.filt.BP.lowPassCutoff=2000;
 fobj.filt.BP.filterDesign='butter';
 fobj.filt.BP=fobj.filt.BP.designBandPass;
@@ -81,20 +87,28 @@ fobj.filt.FN=fobj.filt.FN.designNotch;
 DataSeg_BP = fobj.filt.BP.getFilteredData(thisData);
 DataSeg_BP_N = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
 DataSegRipple = squeeze(fobj.filt.Ripple.getFilteredData(thisData));
+DataSegHP = squeeze(fobj.filt.FH2.getFilteredData(thisData));
 
+DataSeg_BP_raw = squeeze(fobj.filt.BP.getFilteredData(thisData));
 
 %%
 figure(100);clf
 subplot(2, 1, 1)
-plot(time_ms, DataSeg_BP_N, 'k');
-ylim([-300 300])
-subplot(2, 1, 2)
-plot(time_ms, DataSegRipple, 'k');
-ylim([-100 100])
-%%
-plotDir = 'D:\TUM\SWR-Project\Figs\';
+plot(time_ms/1000, DataSeg_BP_raw, 'k');
+%xlim([10. 10.5])
 
-saveName = [plotDir 'zf71sleepData'];
+ylim([-1000 1000])
+subplot(2, 1, 2)
+plot(time_ms/1000, DataSegRipple, 'k');
+
+ylim([-200 200])
+%xlim([10. 10.5])
+%%
+%plotDir = 'D:\TUM\SWR-Project\Figs\';
+plotDir = 'X:\Frog\'
+
+%saveName = [plotDir 'zf71sleepData'];
+saveName = [plotDir 'frogzoom'];
 plotpos = [0 0 12 10];
 
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
@@ -146,15 +160,16 @@ print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 print_in_A4(0, saveName, '-depsc', 0, plotpos);   
 
 %%
+nChans = 7;
 plotOffset = 0.025;
 plotWidth = 0.95;
 plotHeight = (1-plotOffset)/nChans;
-yss = [-300 200];
+yss = [-3000 2500];
 figure(25); clf
 cnt = 0;
 
             for chPlot = 1:nChans
-    thisChan = 16-cnt;
+    thisChan = nChans-cnt;
             
           %for chPlot = 1:32
             
@@ -173,7 +188,7 @@ cnt = 0;
             plot(time_ms,DataSeg_BP_N(thisChan,:), 'k')
             axis tight
             ylim(yss)
-            
+           % xlim([2000 16000]) 
             %xlabel(['Time [' timeUnitLabel ']']);
             %title (['Raw Data: ECoG Channel ' this_CSC_fileToLoad(1:end-4)]);
             %this_title = this_CSC_fileToLoad(1:end-4);
@@ -191,12 +206,12 @@ cnt = 0;
             % end
             end
               
-            
+           
          
-plotDir = 'D:\TUM\SWR-Project\Figs\';
+plotDir = 'E:\';
 
-saveName = [plotDir 'zf71_rawData10s-anesth'];
-plotpos = [0 0 12 10];
+saveName = [plotDir 'frogNoiseData2'];
+plotpos = [0 0 15 18];
 
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 print_in_A4(0, saveName, '-depsc', 0, plotpos);   

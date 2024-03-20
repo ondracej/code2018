@@ -118,7 +118,6 @@ close all
 clear all
 
 vidDir = 'C:\Users\Janie\Documents\Data\2box-hor\2012.06.22-E09\';
-
 vidsToAnalyze = {'Video 981.wmv', 'Video 982.wmv', 'Video 983.wmv', 'Video 984.wmv', 'Video 985.wmv', 'Video 986.wmv', 'Video 987.wmv', 'Video 988.wmv', 'Video 989.wmv', 'Video 990.wmv', 'Video 991.wmv'};
 
 allStartsStops = [62 1740; 94 2730; 50 3797;  68 4913; 110 1935; 66 5280; 37 3204; 44 4515; 66 1245; 64 7815; 52 33030];
@@ -159,9 +158,9 @@ end
  convert_and_compress_video_files(V_OBJ, FrameRateOverride, doDS, dsFrameRate, startFrame,endFrame)
  
  %%
- imageDir = {'F:\Grass\DataShare\20190705_12-22_10tadpoles-grp2\'};
- movieName = 'Basler_acA1300-60gmNIR__23037905__20190720_143455075';
- saveDir = {'F:\Grass\Tadpoles\'};
+ imageDir = {'E:\imgs\'};
+ movieName = 'grogBuccal';
+ saveDir = {'E:\'};
  makeMoviesFromImages(V_OBJ, imageDir, movieName, saveDir)
  
  %%
@@ -182,8 +181,12 @@ end
  createMontageFromVideo(V_OBJ)
  
  %%
+   V_OBJ = videoAnalysis_OBJ({['E:\frog-buccalpumping-2.avi']});
+    
+   
+   
  fileFormat = 2;  % (1)- tif, (2) -.jpg
- ImgDir = {'F:\Grass\eBUSData\20190619\20190619_17-09\editedVids\Eyes\'};
+ ImgDir = {'H:\Grass\FrogSleep\CubanTreeFrog1\20190619\20190619_17-09\Videos\editedVids\Eyes\'};
  cropImageCreateMontage(V_OBJ, ImgDir, fileFormat)
 
  %%
@@ -192,6 +195,13 @@ end
  clockRate_s = 10*30;
  makeFastMoviesWithClock(V_OBJ, startFrame, endFrame, clockRate_s)
  %%
+ 
+vidToAnalyze = 'E:\frogBuccal.avi';
+
+  V_OBJ = videoAnalysis_OBJ({vidToAnalyze});
+   
+ 
+
  
  calcOFOnDefinedRegion(V_OBJ)
  
