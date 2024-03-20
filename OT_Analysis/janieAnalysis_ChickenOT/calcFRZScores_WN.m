@@ -211,8 +211,7 @@ if oo == maxNum
     figure(102); clf
     h = scatterhist(zscores,jitterValuesX, 'Kernel','on', 'Location','NorthEast',...
         'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'Markersize', 20, 'color', 'k');
-    
-   
+       
     boxplot(h(2),zscores,'orientation','horizontal',...
         'label',{''},'color', 'k', 'plotstyle', 'compact', 'Whisker', 10);
     
