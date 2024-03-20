@@ -28,6 +28,8 @@ classdef frogSleepAnalysis_OBJ < handle
             
             %% Defining Path to data
             
+             nFrames = 135673;
+            SessionDir =  'H:\Grass\FrogSleep\CubanTreeFrog1\20190626-Ephys\20190626_23-50-16\Ephys\2019-06-26_23-50-16\';
             SessionDir = obj.DIR.ephysDir;
             
             videoCheck = obj.REC.hasVideo;
@@ -35,6 +37,7 @@ classdef frogSleepAnalysis_OBJ < handle
                 video = obj.Vid.Names{1};
                 nFrames= obj.Vid.nFrames(1);
             end
+            
             
             %VidObj = VideoReader([obj.DIR.videoDir video]);
             %nFrames = VidObj.NumberOfFrames;
@@ -521,6 +524,7 @@ classdef frogSleepAnalysis_OBJ < handle
                     ylim(obj.Plotting.hpYlim)
                     title( ['HF: ' obj.Plotting.titleTxt ' | ' sprintf('%03d', i)])
                     xlabel('Time [s]')
+                  
                     saveName = [PlotDir obj.Plotting.saveTxt '_HF_' sprintf('%03d', i)];
                     plotpos = [0 0 30 15];
                     print_in_A4(0, saveName, '-djpeg', 0, plotpos);

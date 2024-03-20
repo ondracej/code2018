@@ -9,13 +9,14 @@ addpath(genpath(pathToCodeRepository))
 
 % Define paths
 
-analysisDir = 'G:\EmbryoAnalysis\Analysis\';
-VidToAnalyze = 'Video 959.avi';
+analysisDir = 'E:\Frog\Analysis\';
+VidToAnalyze = 'CubanTF-1-shortFrogMoving.avi';
 dlc_OBJ = dlcAnalysis_OBJ(analysisDir, VidToAnalyze);
 
 % Load tracked data
 
-dlc_OBJ = loadTrackedData(dlc_OBJ);
+dlc_OBJ = loadTrackedData_generic(dlc_OBJ);
+%dlc_OBJ = loadTrackedData(dlc_OBJ);
 
 % Load Video data
 
@@ -31,7 +32,7 @@ dlc_Obj = plotTrajectories(dlc_OBJ);
 
 %% plot trajectories with likelihood cutoff
 
-likelihood_cutoff = 0.95;
+likelihood_cutoff = 0.65;
 
 [dlc_Obj ] = plotTrajectories_with_likelihood(dlc_OBJ, likelihood_cutoff);
 

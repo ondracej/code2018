@@ -27,9 +27,10 @@ function [] = wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files,
 
     % Plot the spectrogram
     specgram1((wav_file/spec_scale),512,fs,400,360);
-    ylim([0 15000])
+    ylim([0 10000])
     xlabel('Time (s)', 'fontsize', 12)
     ylabel('Frequency (Hz)', 'fontsize', 12)
+    %colormap(flipud(gray))
     
     underscore = '_';
     bla = find(this_file == underscore);

@@ -4,6 +4,9 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
 
     % Get directory information
     wav_file_dir = getappdata(spc, 'wav_file_dir');
+    
+    wav_file_dir_SaveDir  = getappdata(spc, 'wav_file_dir_SaveDir');
+    
 %     BOS_wav_dir = getappdata(spc, 'BOS_wav_dir');
 %     BOS_folder_name = getappdata(spc, 'BOS_folder_name');
 %     bad_wavs_dir = getappdata(spc, 'bad_wavs_dir');
@@ -30,7 +33,7 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
 
         case 's'
             %% Re-Saves the current spectrogram file to the BOS folder
-            save_this_file(spc, current_file, list_of_names, wav_file_dir)
+            save_this_file(spc, current_file, list_of_names, wav_file_dir_SaveDir, wav_file_dir)
 
         case 'escape'
             %% Close the browser, save the files, and clear the data
@@ -65,12 +68,18 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
 %             %% Flag as a 'bad' file (ie, < 3 motifs)
 %             move_this_file(2);
 
+        case 'k' %squelch
+              
+           wb_squelch_and_plot_wav_spec(spc, current_file, list_of_names, how_many_files, wav_file_dir)
+             
+           
+
     end
 
 %% Nested functions %%
 
     %% save_this_file
-    function save_this_file(spc, current_file, list_of_names, wav_file_dir)
+    function save_this_file(spc, current_file, list_of_names, wav_file_dir_SaveDir, wav_file_dir)
 
         
         
@@ -86,52 +95,60 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
         
         wav_file = getappdata(spc, 'wav_file');
         fs = getappdata(spc, 'fs');
-        bits = getappdata(spc, 'bits');
+        %bits = getappdata(spc, 'bits');
         
+        %% Filter file
+         [b1, a1] = butter(2, [300 10000]/(fs/2));
+         filWav = filtfilt(b1, a1, wav_file);
+    
+    
         LCut_samp = LCut*fs;
         
         duration_s = RCut-LCut;
         duration_samp = duration_s*fs;
         
-        newWav = wav_file(LCut_samp:LCut_samp+duration_samp);
+        newWav = filWav(round(LCut_samp):round(LCut_samp+duration_samp));
         
         
         YY = resample(newWav, 44100, fs);
         
-       prompt = 'Please enter save name:';
-       dlgtitle = 'Saving';
+       %prompt = 'Please enter save name:';
+       %dlgtitle = 'Saving';
        
-        answer = inputdlg(prompt,dlgtitle);
+        %answer = inputdlg(prompt,dlgtitle);
       
-        endingtxt = cell2mat(answer);
+        %endingtxt = cell2mat(answer);
         
-        newWavName = [wavName(1:end-4) '--' endingtxt '.wav'];
+        newWavName = [wavName(1:end-4) '--M' '.wav'];
         
         %wavwrite(YY,44100, [wav_file_dir newWavName])
-        audiowrite([wav_file_dir newWavName], YY,44100)
         
+        %% Save filed to M Directory
+        audiowrite([wav_file_dir_SaveDir newWavName], YY,44100)
         
-        
+       % audiowrite([wav_file_dir newWavName], YY,44100)
         %{
             % Make the BOS directory if it does not already exist
             if exist(BOS_wav_dir, 'dir') == 0
                 mkdir(BOS_wav_dir);
                 disp(['Created a  ' BOS_folder_name ' folder for this directory.'])
             end
+       %}
 
         % write file name to the command window
         this_file = list_of_names{current_file};
         exact_file_name = [wav_file_dir this_file];
         disp(this_file);
 
+        
         %  Save name
-        BOS_wav_dir = getappdata(spc, 'BOS_wav_dir');
+        %BOS_wav_dir = getappdata(spc, 'BOS_wav_dir');
 
         % We could squelch the file here...
-        %wav_file = squelch(wav_file,fs);
+      %  squelched_wav_file = squelch(wav_file,fs);
 
-        copyfile(exact_file_name, BOS_wav_dir)
-        %}
+      %  copyfile(exact_file_name, BOS_wav_dir)
+     
         %% In case we want to modify the wav file (ie, squelch)
         
         % Get info saved by the from wb_plot_wav_spec function
@@ -307,6 +324,16 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
 end
 
 %% Non-nested functions %%
+
+% 
+% function squelchWav(spc, current_file, list_of_names, wav_file_dir_SaveDir, wav_file_dir)
+% 
+%         squelched_wav_file = squelch(wav_file,fs);
+%         
+%         
+%     end
+    
+    
     %% move_to_right
     function move_left_or_right(spc, current_file, list_of_names, left_or_right, how_many_files)
 
