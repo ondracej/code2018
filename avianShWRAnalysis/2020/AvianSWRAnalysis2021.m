@@ -55,7 +55,7 @@
 %dataDir = 'G:\SWR\ZF-o3b7\20200117\17-56-38\Ephys';
 dataDir = 'G:\SWR\ZF-72-01\20210225\16-44-46\Ephys';
 
-
+dataDir = 'X:\EEG-LFP-songLearning\w042andw044\w044 and w042\chronic_2022-01-04_20-47-15';
 
 
 %dataDir = 'I:\Grass\FrogSleep\CubanTreeFrog2\20190729-Ephys\CubanTF2_2019-07-29_20-53-12';

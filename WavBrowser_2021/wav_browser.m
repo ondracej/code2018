@@ -3,7 +3,9 @@ function[] = wav_browser(wav_file_dir)
 if nargin <1
     %% Enter the directory path
     
-    wav_file_dir = 'Z:\JanieData\SongbirdSongs\Julia-makeSound\Data\w014\BOS\';
+    %wav_file_dir = 'Z:\hameddata2\JanieSongs\2021-07-24-dph59-First100Songs\';
+    wav_file_dir = 'Z:\hameddata2\JanieSongs\w038\2021-09-20-First100Songs\';
+    
 end
 
 %%
@@ -50,7 +52,8 @@ good_wavs_dir = [wav_file_dir 'Edited' dirD];
 %% Other parameters
 
 % Arbitrary spectrogram scale
-spec_scale = 0.2;
+%spec_scale = 0.00001;
+spec_scale = 0.02;
 
 % Set figure handle
 spc = figure(100);

@@ -553,7 +553,8 @@ classdef dlcAnalysis_OBJ_embryo < handle
             
             plotPath = obj.PATH.Plots;
             
-            savePath = [plotPath 'DetectionClusters\'];
+            %savePath = [plotPath 'DetectionClusters\'];
+            savePath = [plotPath 'DetectionClusters/'];
             
             if exist(savePath, 'dir') ==0
                 mkdir(savePath);
@@ -626,14 +627,24 @@ classdef dlcAnalysis_OBJ_embryo < handle
                     % liklihood
                     HL_inds = find(likelihood >= likelihood_cutoff);
                     n_inds = numel(HL_inds);
+                   
+                    if isempty(HL_inds)
+                    plot(1,nan, 'color', cols{j}, 'marker', '.', 'markersize', 10, 'linestyle', '-')    
+                    end
                     
                     % plot(coords_X, coords_Y, 'color', C(j,:), 'marker', '.', 'markersize', 10, 'linestyle', 'none')
                     plot(coords_X(HL_inds), coords_Y(HL_inds), 'color', cols{j}, 'marker', '.', 'markersize', 10, 'linestyle', '-')
                     trackedText = [trackedText '-' thisTrackedObject];
                     legText{j} = thisTrackedObject;
-                    
+                   
                 end
                 
+                % Changed this line to deal with empty clusters, not
+                % checked if it works with larger numbers of entries or
+                % multiple empty 
+%                 emt = cellfun(@(x) ~isempty(x),legText); % Find non-numeric cells
+%                 legText = legText(emt);
+%                   
                 xlim([0 vidWidth]);
                 ylim([0 vidHeight]);
                 legend(legText)
@@ -657,7 +668,8 @@ classdef dlcAnalysis_OBJ_embryo < handle
             
             plotPath = obj.PATH.Plots;
             
-            savePath = [plotPath 'DistanceBetweenPoints\'];
+            %savePath = [plotPath 'DistanceBetweenPoints\'];
+            savePath = [plotPath 'DistanceBetweenPoints/'];
             
             if exist(savePath, 'dir') ==0
                 mkdir(savePath);
