@@ -29,14 +29,14 @@ for E = 1:numel(EllRs)
     Rs = EllRs(E);
 
     %stimIDsToUse = [5 1];
-    stimIDsToUse = [5];
+    stimIDsToUse = [1];
 
     % 5 = WN
     % 1 = HRTF
     % 2 = Tuning
 
 
-    saveDir = 'F:\PlexonSpikesTest\';
+    saveDir = 'Z:\Janie-OT-MLD\PlexonData-HRTF\';
     [OT_DB] = OT_database();
 
     nExperiments = numel(OT_DB);

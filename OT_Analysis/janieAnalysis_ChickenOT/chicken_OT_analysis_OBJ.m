@@ -71,6 +71,13 @@ classdef chicken_OT_analysis_OBJ < handle
 
                     OT_Data_Path = 'F:\OT-MLD\OT_Project_2021-Final\OTData\Results\';
 
+                  case   'NEUROPIX-DAQ'
+                      dirD = '\';
+
+                    addpath(genpath('C:\Users\NeuroPix-DAQ\Documents\GitHub\code2018\'));
+                    
+                    OT_Data_Path = 'Z:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\OTData\Results\';
+                    
             end
 
 
@@ -958,7 +965,7 @@ classdef chicken_OT_analysis_OBJ < handle
             meanAll = nanmean(nanmean(allArraysCnt));
             stdAll = nanstd(nanstd(allArraysCnt));
 
-            %z = (X - μ) / σ where z is the z-score, X is the value of the element, μ is the population mean, and σ is the standard deviation.
+            %z = (X - ??) / ?? where z is the z-score, X is the value of the element, ?? is the population mean, and ?? is the standard deviation.
 
             preSpontWin_1_spkCntSort_Z = (preSpontWin_1_spkCntSort-meanAll)/stdAll;
             preSpontWin_2_spkCntSort_Z = (preSpontWin_2_spkCntSort-meanAll)/stdAll;
@@ -1437,7 +1444,7 @@ classdef chicken_OT_analysis_OBJ < handle
             meanAll = nanmean(nanmean(allArraysCnt));
             stdAll = nanstd(nanstd(allArraysCnt));
 
-            %z = (X - μ) / σ where z is the z-score, X is the value of the element, μ is the population mean, and σ is the standard deviation.
+            %z = (X - ??) / ?? where z is the z-score, X is the value of the element, ?? is the population mean, and ?? is the standard deviation.
 
             preSpontWin_1_spkCntSort_Z = (preSpontWin_1_spkCntSort-meanAll)/stdAll;
             preSpontWin_2_spkCntSort_Z = (preSpontWin_2_spkCntSort-meanAll)/stdAll;
