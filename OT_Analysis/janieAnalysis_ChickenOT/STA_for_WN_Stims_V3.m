@@ -3,9 +3,9 @@ dbstop if error
 
 %NeuronName = 'N-12';
 %Stim = 'WN';
-
-%experiment = 1; %efc
-%recSession = 12; %sFigSaveNamec
+% 
+% experiment = 1; %efc
+% recSession = 12; %
 
 C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 %%
@@ -27,6 +27,12 @@ switch gethostname
         SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/';
         addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/'
         FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN-Spectrogram/';
+        
+    case 'NEUROPIXELS'
+        SignalDir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\AllSignals\Signals\';
+       % addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/'
+        %FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN-Spectrogram/';
+        
 end
 
 %% Stimulus Protocol
@@ -152,11 +158,11 @@ end
 disp('')
 
 %% STA
-if size(ALL_LStimWins, 1) > 2 % must have atleast 2 spikes
+if size(ALL_LStimWins, 1) > 6 % must have atleast 6 spikes
     
     
     DT = 1/Fs;
-    
+    all_cfs = []; all_f = [];
     for j = 1:size(ALL_LStimWins, 1)
         
         thisData = ALL_LStimWins(j,:);
@@ -166,9 +172,9 @@ if size(ALL_LStimWins, 1) > 2 % must have atleast 2 spikes
         all_cfs{j} = cfs;
         all_f{j} = f;
         
-        figure(105);clf
-        pcolor(t,f,abs(cfs));shading flat
-        %pause
+%         figure(105);clf
+%         pcolor(t,f,abs(cfs));shading flat
+%         pause
         
         %figure
         %helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')

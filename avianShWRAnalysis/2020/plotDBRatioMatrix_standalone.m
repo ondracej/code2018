@@ -48,6 +48,10 @@ dbstop if error
 %ChanDataToLoad = 'H:\HamedsData\w038_w037\w038\chronic_2021-09-13_22-18-08\Ephys\150_CH26.continuous';
 %ChanDataToLoad = 'H:\HamedsData\w038_w037\w038\chronic_2021-09-12_20-26-52\Ephys\150_CH26.continuous';
 
+
+ChanDataToLoad = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\DATA_EPHYS\chronic_2021-08-31_21-59-35\Ephys\150_CH21.continuous';
+
+
 %% w044
 
 %ChanDataToLoad = 'H:\HamedsData\w042_w044\w044\chronic_2021-12-30_20-56-35\Ephys\150_CH10.continuous';
@@ -116,7 +120,8 @@ Fs = info.header.sampleRate;
 samples = size(data, 1);
 recordingDuration_s  = samples/Fs;
 totalTime = recordingDuration_s;
-batchDuration_s = 1*60*30; % 30 min
+%batchDuration_s = 1*60*30; % 30 min
+batchDuration_s = 1*60; % 1 min
 batchDuration_samp = batchDuration_s*Fs;
 
 tOn_s = 1:batchDuration_s:totalTime;
@@ -224,8 +229,8 @@ for i = 1:nBatches-1
     % run welch once to get frequencies for every bin (f) determine frequency bands
     [~,f] = pwelch(randn(1,movWinSamples),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
     
-    %                 deltaBandLowCutoff = 1;
-    %                 deltaBandHighCutoff = 4;
+                     deltaBandLowCutoff = 1;
+                     deltaBandHighCutoff = 4;
     %
     %                 thetaBandLowCutoff  = 4;
     %                 thetaBandHighCutoff  = 8;
@@ -247,7 +252,7 @@ for i = 1:nBatches-1
     gammaBandLowCutoff = 30;
     gammaBandHighCutoff = 80;
     
-    %  pfDeltaBand=find(f>=deltaBandLowCutoff & f<deltaBandHighCutoff);
+      pfDeltaBand=find(f>=deltaBandLowCutoff & f<deltaBandHighCutoff);
     %  pfThetaBand=find(f>=thetaBandLowCutoff & f<thetaBandHighCutoff);
     pfDeltaThetaBand=find(f>=deltaThetaLowCutoff & f<deltaThetaHighCutoff);
     %  pfAlphaBand=find(f>=alphaBandLowCutoff & f<alphaBandHighCutoff);
@@ -275,8 +280,8 @@ for i = 1:nBatches-1
     %                 deltaAlphRatioAll = zeros(1,numel(pValid));
     %                 deltaAlphRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfAlphaBand,:)))';
     %
-    %                 deltaGammaRatioAll = zeros(1,numel(pValid));
-    %                 deltaGammaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfGammBand,:)))';
+                    deltaGammaRatioAll = zeros(1,numel(pValid));
+                    deltaGammaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfGammBand,:)))';
     %
     %                 betaGammaRatioAll = zeros(1,numel(pValid));
     %                 betaGammaRatioAll (pValid)=(mean(pxx(pfBetaBand,:))./mean(pxx(pfGammBand,:)))';
@@ -305,7 +310,9 @@ for i = 1:nBatches-1
     %bufferedDeltaBetaRatio(i,:)=deltaBetaRatioAll;
     %bufferedDeltaAlphaRatio(i,:)=deltaAlphRatioAll;
     %bufferedDeltaThetaRatio(i,:)=deltaThetaRatioAll;
-    %bufferedDeltaGammaRatio(i,:)=deltaGammaRatioAll;
+    bufferedDeltaGammaRatio(i,:)=deltaGammaRatioAll;
+    bufferedDeltaGammaRatioCell{i}=deltaGammaRatioAll;
+    
     bufferedDeltaThetaOGammaRatio(i,:)=deltaThetaOGammaRatioAll;
     bufferedDeltaThetaOGammaRatioCell{i} = deltaThetaOGammaRatioAll;
     
@@ -319,13 +326,15 @@ for i = 1:nBatches-1
     
 end
 
+
 allBufferedData  = cell2mat(bufferedDeltaThetaOGammaRatioCell);
+allBufferedData_dg  = cell2mat(bufferedDeltaGammaRatioCell);
 
 figure(145);clf
 subplot(1, 2, 1)
 plot(smooth(allBufferedData, 300)) % 300  = 5 min smooth
 hold on
-%plot(smooth(allBufferedData, 1800)) % 300  = 5 min smooth
+plot(smooth(allBufferedData_dg, 300)) % 300  = 5 min smooth
 hold on
 plot(smooth(allBufferedData, 3600), 'linewidth', 2) % 300  = 5 min smooth
 %hold on

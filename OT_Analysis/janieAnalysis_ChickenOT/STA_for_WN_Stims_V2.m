@@ -27,6 +27,13 @@ switch gethostname
         SignalDir = '/media/dlc/Data8TB/TUM/OT/OTProject/AllSignals/Signals/';
         addpath '/home/dlc/Documents/MATLAB/Examples/R2019b/wavelet/TimeFrequencyAnalysisWithTheCWTExample'
         FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN/STA-TimeFreq/';
+        
+          case 'NEUROPIXELS'
+        SignalDir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\AllSignals\Signals\';
+        addpath 'C:\Program Files\MATLAB\R2019b\examples\wavelet\main'
+        FigSaveDir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\MLD\Figs\STAAnalysis\STA-2024\WN\';
+       
+        
 end
 
 %% Stimulus Protocol
@@ -70,7 +77,7 @@ StimStartTime_samp = StimStartTime_s* SamplingRate;
 PostStimStartTime_samp = PostStimStartTime_s* SamplingRate;
 
 
-TimeWindow_ms = 20;
+TimeWindow_ms = 30;
 TimeWindow_samp =TimeWindow_ms /1000*SamplingRate;
 %%
 
@@ -104,7 +111,7 @@ for j = 1:nRows
         nReps = numel(thisSpkResp);
         
         cnt = 1;
-        
+        allWins_L = [];
         for o = 1:nReps
             thisRep = thisSpkResp{1, o};
          
@@ -152,9 +159,12 @@ end
 disp('')
 
 %% STA
-if size(ALL_LStimWins, 1) > 2 % must have atleast 2 spikes
+if size(ALL_LStimWins, 1) > 6 % must have at least 6 spikes
     
 LStimWins_mean = mean(ALL_LStimWins);
+LStimWins_median = median(ALL_LStimWins);
+std_Lstim = std(ALL_LStimWins);
+sem_Lstim = std_Lstim  / sqrt(size(ALL_LStimWins, 1));
 timepoints_samp = 1:1:numel(LStimWins_mean);
 timepoints_ms = timepoints_samp/Fs*1000;
 
@@ -164,17 +174,22 @@ STA.meanSTA = LStimWins_mean;
 %%
 figure (103); clf
 subplot(2, 1, 1)
-plot(timepoints_ms, LStimWins_mean); axis tight
+hold on
+plot(timepoints_ms, LStimWins_mean+sem_Lstim, 'color', [0.5 0.5 0.5]); axis tight
+plot(timepoints_ms, LStimWins_mean-sem_Lstim, 'color', [0.5 0.5 0.5]); axis tight
+plot(timepoints_ms, LStimWins_mean, 'color', 'k', 'linewidth', 2); axis tight
+
+%plot(timepoints_ms, LStimWins_median); axis tight
 ylim([-.2 .2])
-title([NeuronName ': ' Stim ' STA'])
+title([NeuronName ': ' Stim ' STA; n = ' num2str(size(ALL_LStimWins, 1)) ' spikes'])
+%legend('Mean', 'Median')
+%xticks = 0:10:100;
+%set(gca, 'xtick', xticks)
+%xlim([70 100])
 
-xticks = 0:2:20;
-set(gca, 'xtick', xticks)
-xlim([0 20])
-
-line([20 20], [-.2 .2], 'Color' , 'k')
-xtickabs = {'-20', '-18', '-16', '-14', '-12', '-10', '-8', '-6', '-4', '-2', '0'};
-set(gca, 'xticklabel', xtickabs )
+%line([20 20], [-.2 .2], 'Color' , 'k')
+%xtickabs = {'-20', '-18', '-16', '-14', '-12', '-10', '-8', '-6', '-4', '-2', '0'};
+%set(gca, 'xticklabel', xtickabs )
 
 
 %% Wavelet
@@ -189,23 +204,30 @@ t = 0:Dt:(numel(RawData)*Dt)-Dt;
 figure(103);
 subplot(2, 1, 2)
 helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
+colorbar 'off'
+colorbar('location', 'northoutside')
 ylim([.5 8])
 title(titleTxt)
 
 STA.cfs = cfs;
 STA.f = f;
+STA.nSpikes =  size(ALL_LStimWins, 1);
 
-colorbar 'off'
-xlim([0 20])
-set(gca, 'xtick', xticks)
-set(gca, 'xticklabel', xtickabs )
+%xlim([70 100])
+%set(gca, 'xtick', xticks)
+%set(gca, 'xticklabel', xtickabs )
 
 %
 saveName = [FigSaveDir NeuronName '-STA-' Stim];
 plotpos = [0 0 10 15];
 
+% Restype 0 does not work for these wavelet images
 %print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 %print_in_A4(0, saveName, '-depsc', 0, plotpos);
+
+print_in_A4(0, saveName, '-djpeg', 1, plotpos); % 1 works for jpeg
+subplot(2, 1, 2);cla
+print_in_A4(0, saveName, '-depsc', 0, plotpos); % must clear the wavelet part to save as epsc
 
 %% STA
 figure(102); clf
@@ -215,10 +237,12 @@ figure(102); clf
 subplot(2, 2,3)
 helperCWTTimeFreqPlot(cfs,t*1e3,f./1e3,'surf',[Stim ' STA'],'Time [ms]','Frequency [kHz]')
 colorbar 'off'
-ylim([.5 8])
-set(gca, 'xtick', xticks)
-set(gca, 'xticklabel', xtickabs )
+%colorbar('location', 'northoutside')
 
+ylim([.5 8])
+%set(gca, 'xtick', xticks)
+%set(gca, 'xticklabel', xtickabs )
+title([NeuronName ': ' Stim ' STA; n = ' num2str(size(ALL_LStimWins, 1)) ' spikes'])
 
 %% Frequency
 subplot(2, 2,4)
@@ -268,7 +292,7 @@ negT = meant - semt;
 plot(t*1e3, posT, 'color', [0.5 0.5 0.5])
 hold on
 plot(t*1e3, negT, 'color', [0.5 0.5 0.5])
-plot(t*1e3, meant, 'k', 'linewidth', 2)
+plot(t*1e3, meant, 'k', 'linewidth', 1)
 axis tight
 
 STA.meant = meant;
@@ -286,14 +310,20 @@ line([xss(1) xss(2)], [scaleEstimator scaleEstimator] , 'color', 'r', 'linestyle
 
 [pks,locs,w,p] = findpeaks(meant, 'MinPeakHeight',scaleEstimator);
 
-STA.TDetections_ms = 20-t(locs)*1e3;
+STA.TDetections_ms = TimeWindow_ms-t(locs)*1e3;
+STA.TDetections_ms_abs = t(locs)*1e3;
+
+STA.TimeWindow_ms = TimeWindow_ms;
 
 ylabel('Power')
-set(gca, 'xtick', xticks)
-set(gca, 'xticklabel', xtickabs )
+%set(gca, 'xtick', xticks)
+%set(gca, 'xticklabel', xtickabs )
 
 %%
 plotpos = [0 0 15 10];
+print_in_A4(0, [saveName 'timeFreq'], '-djpeg', 1, plotpos);
+saveas(gcf,[saveName 'timeFreq'],'fig')
+subplot(2, 2,3); cla
 print_in_A4(0, [saveName 'timeFreq'], '-depsc', 0, plotpos);
 
 save([saveName 'STA_timeFreq.mat'], 'STA');

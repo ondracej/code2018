@@ -1,5 +1,10 @@
 %% OCtober 2020 - Final Analysis Scripts for OT Analysis
 
+
+%% converting to plexon
+ConvertAudioSpikeToPlexon()
+PlotSpikesShapesFromPlexonFiles
+
 %% OT Database
 OT_database.m
 OTDatabaseTemplate.m
@@ -15,7 +20,7 @@ HRTFAnalaysisAudSpikeData.m
 
 %% For paper
 
-plotMLDNeurons
+plotMLDNeurons % depth of neurons
 plotRawDataExample
 
 plotSpectrogramHRTFData
@@ -28,6 +33,7 @@ plotZScoresDPrimes_MLD
 calcFRZScores_WN
 analyzeWN_FR_responses
 PoolStatsOverWNSTAs
+RastersForAmplitudeEnvelopWN
 
 %% Population analaysis
 

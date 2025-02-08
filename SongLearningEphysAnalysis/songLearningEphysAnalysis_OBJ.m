@@ -1,22 +1,1330 @@
-classdef songLearningEphysAnalysis < handle
+classdef songLearningEphysAnalysis_OBJ < handle
     
     
     properties (Access = public)
         
-        HOST
-        INFO
-        Session
-        DIR
-        REC
-        Plotting
-        Vid
-        SWR
-        
-        ops
-        
+        PATH
+        ANALYSIS
+        DATA
+        PLOT
     end
     
     methods
+        
+        function obj = getPathInfo(obj)
+            
+            if ispc
+                dirD = '\';
+            else
+                dirD = '/';
+            end
+            
+            %% adding code paths
+            
+            code2018Path = 'C:\Users\Neuropix\Documents\GitHub\code2018\';
+            analysisToolsPath = 'C:\Users\Neuropix\Documents\GitHub\analysis-tools';
+            
+            if isfolder(code2018Path)
+                addpath(genpath(code2018Path));
+                addpath(genpath(analysisToolsPath));
+                
+            else
+                disp('Please check definition for code2018 path in "getPathInfo"')
+            end
+            
+            eegChan = obj.DATA.eegChan;
+            lfpChan = obj.DATA.lfpChan;
+            AnalysisDir = obj.PATH.AnalysisDir;
+            
+            ephys_path = [AnalysisDir 'Ephys' dirD];
+            
+            
+            % Ask user for binary file
+      %{
+            [eeg_name, eeg_path] = uigetfile('*.continuous', 'Select EEG channel to analyze');
+            [lfp_name, lfp_path] = uigetfile('*.continuous', 'Select LFP channel to analyze');
+            [vid_path] = uigetdir(obj.PATH.AnalysisDir, 'Select video directory');
+            
+            ephys_analysis_dir = [obj.PATH.AnalysisDir 'Ephys_Analysis' dirD];
+            if exist(ephys_analysis_dir, 'dir') ==0
+                mkdir(ephys_analysis_dir);
+                disp(['Created directory: ' ephys_analysis_dir])
+            end
+            
+            video_analysis_dir = [obj.PATH.AnalysisDir 'Video_Analysis' dirD];
+            if exist(video_analysis_dir , 'dir') ==0
+                mkdir(video_analysis_dir );
+                disp(['Created directory: ' video_analysis_dir ])
+            end
+            
+            video_analysis_dir = [obj.PATH.AnalysisDir 'Video_Analysis' dirD];
+            if exist(video_analysis_dir , 'dir') ==0
+                mkdir(video_analysis_dir );
+                disp(['Created directory: ' video_analysis_dir ])
+            end
+        
+            %}
+            obj.PATH.lfp_name = lfpChan;
+            obj.PATH.lfp_path = ephys_path;
+            
+            obj.PATH.eeg_name = eegChan;
+            obj.PATH.eeg_path = ephys_path;
+            
+            %obj.PATH.vid_path = [vid_path dirD];
+            %obj.PATH.vid_path = [vid_path dirD];
+            
+            %obj.PATH.ephys_analysis_dir = [ephys_analysis_dir ];
+            %obj.PATH.video_analysis_dir = [video_analysis_dir ];
+            
+            obj.PATH.dirD  = dirD ;
+            
+        end
+        
+        
+        
+        function obj = analyze_mvmt_in_video_frames(obj)
+            
+            
+            % Based on Hamed's birdvid_move_extract.m
+            
+            %function [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames, roi_y, roi_x)
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % This function gives the position (the r in polar coordinates) of the
+            % center of differences in two consecutive frames and also the overall
+            % accumulated differences across all frames.
+            % the input roi_range determines the area ([rows,columns]) of interest
+            % the values in the output var r_dif are zero for the frames number 1 to
+            % frames(1), and nonzero for frames(2) to frames(end)
+            % written by Hamed Yeganegi, yeganegih@gmail.com
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            
+            
+            vid_path = obj.PATH.vid_path;
+            
+            
+            %vid_path = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\DATA_VIDEO\converted_Imgs_1_frame_per_min\w038_01_09_21_00219-converted_img\';
+            
+            %vidroi=VideoReader(vid_path);
+            %disp('object was created for the video file. start of reading frames...');
+            %im1_=double(rgb2gray(read(vidroi, frames(1)))); % first x_old (in comparison)
+            
+            imageNames = dir(fullfile(vid_path, '*.png'));
+            imageNames = {imageNames.name}';
+            nImags = numel(imageNames);
+            
+            frames = 1:nImags;
+            
+            %app.roi_y=1:1024;  app.roi_x=1:1280;
+            % In case a smaller ROI needs to be defined
+            roi_y = 1:1024;
+            roi_x = 1:1280;
+            
+            img1 = imread([vid_path imageNames{frames(1)}]);
+            im1=double(img1(roi_y,roi_x));
+            acc_dif=zeros(size(im1)); % contains accumulated absolute value of consecutive differences
+            
+            % creating wait bar to display progress
+            %  f = waitbar(0,'Analysing frames...');
+            tic;
+            
+            % difining some variables that are used in the loop
+            y_pixls=1:size(im1,1);  y_vals=y_pixls'/sum(y_pixls); % a vector of values from 0 to 1 with ...
+            % a length equal to the height of the image. Also the same for length
+            x_pixls=1:size(im1,2);  x_vals=x_pixls'/sum(x_pixls);
+            % loop through frames
+            
+            for i= frames(2:end)
+                % this section of the lop generates the r_dif variable,
+                
+                img2 = imread([vid_path imageNames{i}]);
+                im2=double(img2(roi_y,roi_x));
+                
+                dif=abs(im2-im1);   % difference computation
+                y_dif=sum(dif,2); % difference along vertical axis
+                x_dif=sum(dif,1); % difference along horizontal axis
+                % computing the weighted average of moved pixels (dif) along y and x:
+                y_dif_mean=y_dif'*y_vals;
+                x_dif_mean=x_dif*x_vals;
+                r_dif(i)=sqrt(x_dif_mean^2 + y_dif_mean^2); % position of the center of changes in the current ...
+                % following frames (r in polar coordinates)
+                
+                
+                % this section of the loop is for the acc_diff (accumulated differences) that shows all of the
+                % movements occuring during the specific frames of the video. It just
+                % does not accumulate the whole differences in all single frames because
+                % there are many speckle random points that are different in two
+                % following frames. So we also make a mask and filter out the single
+                % points thatt their change doesnt seem to be consistent in time. To do
+                % that we compare the current difference matrix with the previous one and
+                % consider a point as REAL difference only if it appears in both of these
+                % matrices
+                %if i==frames(2), dif_old=zeros(size(dif)); end
+                if i==frames(2), dif_old=zeros(size(dif)); end
+                avg_dif=(dif+dif_old)/2;
+                dif_thresh=median(avg_dif) + 5*iqr(abs(avg_dif)); % threshold for considering a point as..
+                % a consistant difference
+                mask=avg_dif>dif_thresh; % to make sure that these points are constantly changing, ...
+                % at least in 2 consecutive frames, not just speckle noise spots
+                acc_dif=acc_dif+mask.*abs(dif); % accumulated absolute value of consecutive differences
+                im1=im2; % consider x_new as x_old for the next comparison
+                dif_old=dif;
+                
+                %{
+                      % update waitbar
+                      if rem(i,20)==0
+                          x=(length(frames)-(i-frames(1)))*toc/(i-frames(1));
+                          waitbar((i-frames(1))/length(frames),f,['Remaining time: ' num2str(ceil(x/60)) ' min...']);
+                      end
+                %}
+                if rem(i,1000)==0
+                    disp([ 'frame number being read: ' num2str(i) ' ...']); % disply the current frame value
+                end
+                
+            end
+            last_im=im1;
+            last_dif=dif;
+            % waitbar(1,f,'Video read completely!');
+            
+            %figure; plot(r_dif)
+            %axis tight
+            %ylim([0 60000])
+            
+            %xlabel('Time (s)')
+            obj.ANALYSIS.VID.r_dif = r_dif;
+            
+        end
+        
+        
+        
+        function [alignment_s] = calc_offset_alignment_time(obj, ephysTimeOn, AlignmentTime)
+            
+            
+            sInMin = 60;
+            minInHr = 60;
+            hoursInDay = 24;
+            
+            % Calc diff between seconds
+            if AlignmentTime(:,3) < ephysTimeOn(:,3)
+                sCnt_s = sInMin - ephysTimeOn(:,3) + AlignmentTime(:,3) ;
+                AlignmentTime(:,2) =  AlignmentTime(:,2)-1;
+            else
+                sCnt_s = (AlignmentTime(:,3) - ephysTimeOn(:,3));
+                %sCnt_s = sInMin - ephysTimeOn(:,3);
+            end
+            
+            % Calc diff between minutes
+            if AlignmentTime(:,2) < ephysTimeOn(:,2)
+                minCnt_s = (minInHr - ephysTimeOn(:,2) + AlignmentTime(:,2)) *sInMin;
+                AlignmentTime(:,1) =  AlignmentTime(:,1)-1;
+            else
+                %minCnt_s = minInHr - ephysTimeOn(:,2);
+                minCnt_s = (AlignmentTime(:,2)  -  ephysTimeOn(:,2))*sInMin;
+            end
+            
+            % Calc diff between hours
+            if AlignmentTime(:,1) == ephysTimeOn(:,1)
+                total_time_hrs_s = 0;
+                % nothing more to do
+            elseif AlignmentTime(:,1) > ephysTimeOn(:,1)
+                total_time_hrs = AlignmentTime(:,1) - ephysTimeOn(:,1);
+                total_time_hrs_s = total_time_hrs*minInHr*sInMin;
+            elseif AlignmentTime(:,1) < ephysTimeOn(:,1) % this will be the case for the light on the next day
+                
+                time_hrs_night = hoursInDay - ephysTimeOn(:,1);
+                time_hrs_day = AlignmentTime(:,1);
+                
+                total_time_hrs_s = (time_hrs_night + time_hrs_day)*sInMin*minInHr;
+                
+            end
+            
+            alignment_s = minCnt_s+sCnt_s+total_time_hrs_s;
+            
+            
+            
+        end
+        
+        
+        function obj = load_ephys_data(obj, fileName)
+            
+            downsamp_ratio = 1; % Not downsampling
+            
+          tic
+            disp('Loading data...')
+            [data, timestamps, info] = load_open_ephys_data(fileName);
+            %[data2, timestamps2, info2] = load_open_ephys_data_adv(fileName,1,1);
+            disp('Finished loading data...')
+            toc
+            
+            sampleRate = info.header.sampleRate;
+            fs_new = sampleRate/downsamp_ratio;
+            thisSegData_s = timestamps(1:end) - timestamps(1);
+            samples = numel(data);
+            
+           % samples/sampleRate/3600
+            
+            obj.DATA.sampleRate_orig = sampleRate;
+            obj.DATA.sampleRate_ds = fs_new;
+            obj.DATA.samples = samples;
+            obj.DATA.EEG_data_full = data;
+            obj.DATA.EEG_timstamps_seg_s = thisSegData_s;
+            obj.DATA.EEG_filename = fileName;
+            
+        end
+        
+        
+        
+        %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        function obj = load_and_downsample_ephys_data(obj, fileName)
+            % uses the analysis tool code form openEphys = analysis-tools
+            
+            downsamp_ratio=64;
+            file_dev = 1;
+            
+            disp('Loading data...')
+            %[data, timestamps, info] = load_open_ephys_data(fileName);
+            [data, timestamps, info] = load_open_ephys_data_adv(fileName,downsamp_ratio,file_dev);
+            disp('Finished loading data...')
+            
+            sampleRate = info.header.sampleRate;
+            
+            fs_new = sampleRate/downsamp_ratio;
+            
+            thisSegData_s = timestamps(1:end) - timestamps(1);
+            samples = numel(data);
+            
+            %%
+            obj.DATA.sampleRate_orig = sampleRate;
+            obj.DATA.sampleRate_ds = fs_new;
+            obj.DATA.samples = samples;
+            obj.DATA.EEG_data = data;
+            obj.DATA.EEG_timstamps_seg_s = thisSegData_s;
+            obj.DATA.EEG_filename = fileName;
+        end
+        
+        
+        function obj = cut_data_to_alignment_points(obj)
+        
+            % from Hamed's "automated_sleep_staging":  github\Lab Code\code_LFP_EEG_paper
+            fs = obj.DATA.sampleRate_orig;
+            
+            % Here we will examine only the middle 10 hours of sleep
+            DataROI_1hrAfterLightsOff_s = obj.ANALYSIS.Alignment_1hrAfterLightsOff_s;
+            DataROI_1hrbeforeLightsOn_s = obj.ANALYSIS.Alignment_1hrbeforeLightsOn_s;
+            
+            % should be around 10 hours
+            difCheck = (DataROI_1hrbeforeLightsOn_s - DataROI_1hrAfterLightsOff_s)/3600;
+            
+            DataROI_1hrAfterLightsOff_samp = DataROI_1hrAfterLightsOff_s*fs;
+            DataROI_1hrbeforeLightsOn_samp = DataROI_1hrbeforeLightsOn_s*fs;
+            
+            dataToAnalyze = obj.DATA.EEG_data_full;
+            dataToAnalyze = dataToAnalyze(DataROI_1hrAfterLightsOff_samp:DataROI_1hrbeforeLightsOn_samp);
+            
+            nSamps = numel(dataToAnalyze);
+            dataToAnalzye_dur_hr = (nSamps/fs)/3600;
+            
+            disp('********************************************')
+            disp(['Analyzing ' num2str(dataToAnalzye_dur_hr) ' hrs of data...'])
+            disp('********************************************')
+            
+            
+            timestamps = obj.DATA.EEG_timstamps_seg_s;
+            dataToAnalyze_timestamps = timestamps(DataROI_1hrAfterLightsOff_samp:DataROI_1hrbeforeLightsOn_samp);
+            
+            obj.DATA.eeg_data_cut_to_alignment = dataToAnalyze;
+             obj.DATA.eeg_timepoints_cut_to_alignment = dataToAnalyze_timestamps;
+            
+        end
+        
+        
+        function obj = preprocessData_find_30Hz_artifacts(obj)
+            
+            
+            % from Hamed's "automated_sleep_staging":  github\Lab Code\code_LFP_EEG_paper
+            fs = obj.DATA.sampleRate_ds;
+            
+            % Here we will examine only the middle 10 hours of sleep
+            DataROI_1hrAfterLightsOff_s = obj.ANALYSIS.Alignment_1hrAfterLightsOff_s;
+            DataROI_1hrbeforeLightsOn_s = obj.ANALYSIS.Alignment_1hrbeforeLightsOn_s;
+            
+            % should be around 10 hours
+            difCheck = (DataROI_1hrbeforeLightsOn_s - DataROI_1hrAfterLightsOff_s)/3600;
+            
+            DataROI_1hrAfterLightsOff_samp = DataROI_1hrAfterLightsOff_s*fs;
+            DataROI_1hrbeforeLightsOn_samp = DataROI_1hrbeforeLightsOn_s*fs;
+            
+            dataToAnalyze = obj.DATA.EEG_data;
+            dataToAnalyze = dataToAnalyze(DataROI_1hrAfterLightsOff_samp:DataROI_1hrbeforeLightsOn_samp);
+            
+            nSamps = numel(dataToAnalyze);
+            dataToAnalzye_dur_hr = (nSamps/fs)/3600;
+            
+            disp('********************************************')
+            disp(['Analyzing ' num2str(dataToAnalzye_dur_hr) ' hrs of data...'])
+            disp('********************************************')
+            
+            
+            timestamps = obj.DATA.EEG_timstamps_seg_s;
+            dataToAnalyze_timestamps = timestamps(DataROI_1hrAfterLightsOff_samp:DataROI_1hrbeforeLightsOn_samp);
+            
+            %%
+            
+            % Im not sure wha tthis is used for...
+            %bpFilt = designfilt('bandpassiir','FilterOrder',4,'HalfPowerFrequency1',1,'HalfPowerFrequency2',48, 'SampleRate',fs);
+            
+            [b,a] = butter(3,30/(fs/2),'high');
+            tic
+            ref_over30=filtfilt(b,a,dataToAnalyze);
+            toc
+            %
+            % [b,a] = butter(3,30/(fs/2),'high');
+            % ref_over30=filtfilt(b,a,data.ephys(:,ref_chnl));
+            %
+            %
+            % win_len=floor(3*fs);
+            % for current_win=1: (length(chnl_filt)/win_len)
+            % inds=(current_win-1)*win_len +(1:win_len);
+            %     wave_binned(current_win,:)=chnl_filt(inds);
+            %     ref_binned(current_win,:)=ref_filt(inds);
+            %     t_bin(current_win)=data.time(inds(round(fs*1.5))); % the middle time point of a bin
+            %     pow_30hz(current_win)=rms(ref_over30(inds))^2; % power of high freq in the ref chnl for sleep/wake deliniation
+            % end
+            
+            
+            disp('Analyzing data for artifacts...')
+            win_len_s = 60;
+            win_len_samp=floor(win_len_s*fs);
+            tic
+            
+            for current_win=1: (length(dataToAnalyze)/win_len_samp)
+                inds=(current_win-1)*win_len_samp +(1:win_len_samp);
+                %wave_binned(current_win,:)=dataToAnalyze(inds);
+                eeg_binned(current_win,:)=dataToAnalyze(inds);
+                t_bin(current_win)=dataToAnalyze_timestamps(inds(round(fs*1.5))); % the middle time point of a bin
+                pow_30hz(current_win)=rms(ref_over30(inds))^2; % power of high freq in the ref chnl for sleep/wake deliniation
+            end
+            toc
+            
+            figure; plot(pow_30hz)
+            
+            move_artef_thresh=median(pow_30hz)+5*iqr(pow_30hz);
+            % artefact windows:
+            inds_wake=pow_30hz>move_artef_thresh;
+            % Sleep staging feature extraction
+            %clear Delta_ref Gamma_ref feat_ref sleep_wake t_feat Delta Gamma feat bin_label_ref bin_label
+            % for the reference channel and the other channel
+            n_bins=length(eeg_binned);
+            
+            %%
+            obj.DATA.eeg_dataToAnalyze = dataToAnalyze;
+            
+            obj.DATA.eeg_data_binned = eeg_binned;
+            obj.DATA.bin_win_len_samp = win_len_samp;
+            obj.DATA.bin_win_len_s = win_len_s;
+            
+            obj.ANALYSIS.dgAnalysis.t_bin = t_bin;
+            obj.ANALYSIS.dgAnalysis.n_bins = n_bins;
+            obj.ANALYSIS.dgAnalysis.inds_wake = inds_wake;
+            obj.ANALYSIS.dgAnalysis.fs = fs;
+            
+            
+        end
+        
+        
+        
+        
+        function [obj]  = calc_delta_gamma(obj)
+            
+            
+            data = obj.DATA.eeg_data_cut_to_alignment;
+            Fs = obj.DATA.sampleRate_orig;
+            
+            samples = size(data, 1);
+            recordingDuration_s  = samples/Fs;
+            totalTime = recordingDuration_s;
+            
+            
+            batchDuration_s = 1*60; % 1 min
+            batchDuration_samp = batchDuration_s*Fs;
+            
+            tOn_s = 1:batchDuration_s:totalTime;
+            tOn_samp = tOn_s*Fs;
+            nBatches = numel(tOn_samp);
+            
+            %Plotting.titleTxt = [params.BirdName ' | ' params.DateTime];
+            %Plotting.saveTxt = [params.BirdName '_' params.DateTime];
+            
+            %% Filters
+            
+            disp('Filtering data...')
+            fObj = filterData(Fs);
+            
+            fobj.filt.F=filterData(Fs);
+            %fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
+            fobj.filt.F.downSamplingFactor=100; % original is 128 for 32k
+            fobj.filt.F=fobj.filt.F.designDownSample;
+            fobj.filt.F.padding=true;
+            fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
+            
+            %fobj.filt.FL=filterData(Fs);
+            %fobj.filt.FL.lowPassPassCutoff=4.5;
+            %fobj.filt.FL.lowPassStopCutoff=6;
+            %fobj.filt.FL.attenuationInLowpass=20;
+            %fobj.filt.FL=fobj.filt.FL.designLowPass;
+            %fobj.filt.FL.padding=true;
+            
+            fobj.filt.FL=filterData(Fs);
+            fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.FL.lowPassStopCutoff=40;
+            fobj.filt.FL.attenuationInLowpass=20;
+            fobj.filt.FL=fobj.filt.FL.designLowPass;
+            fobj.filt.FL.padding=true;
+            
+            fobj.filt.BP=filterData(Fs);
+            fobj.filt.BP.highPassCutoff=1;
+            fobj.filt.BP.lowPassCutoff=2000;
+            fobj.filt.BP.filterDesign='butter';
+            fobj.filt.BP=fobj.filt.BP.designBandPass;
+            fobj.filt.BP.padding=true;
+            
+            fobj.filt.FH2=filterData(Fs);
+            fobj.filt.FH2.highPassCutoff=100;
+            fobj.filt.FH2.lowPassCutoff=2000;
+            fobj.filt.FH2.filterDesign='butter';
+            fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+            fobj.filt.FH2.padding=true;
+            
+            %             fobj.filt.FN =filterData(Fs);
+            %             fobj.filt.FN.filterDesign='cheby1';
+            %             fobj.filt.FN.padding=true;
+            %             fobj.filt.FN=fobj.filt.FN.designNotch;
+            
+            %%
+            
+            
+              %% Raw Data  - Parameters from data=getDelta2BetaRatio(obj,varargin)
+                
+                % This is all in ms
+                %             addParameter(parseObj,'movLongWin',1000*60*30,@isnumeric); %max freq. to examine
+                %             addParameter(parseObj,'movWin',10000,@isnumeric);
+                %             addParameter(parseObj,'movOLWin',9000,@isnumeric);
+                %             addParameter(parseObj,'segmentWelch',1000,@isnumeric);
+                %             addParameter(parseObj,'dftPointsWelch',2^10,@isnumeric);
+                %             addParameter(parseObj,'OLWelch',0.5);
+                %
+              
+                reductionFactor = 1; % No reduction
+                
+                movWin_Var = 10*reductionFactor; % 10 s
+                movOLWin_Var = 9*reductionFactor; % 9 s
+                
+                segmentWelch = 1*reductionFactor;
+                OLWelch = 0.5*reductionFactor;
+                
+                dftPointsWelch =  2^10;
+                
+                segmentWelchSamples = round(segmentWelch*fobj.filt.FFs);
+                samplesOLWelch = round(segmentWelchSamples*OLWelch);
+                
+                movWinSamples=round(movWin_Var*fobj.filt.FFs);%obj.filt.FFs in Hz, movWin in samples
+                movOLWinSamples=round(movOLWin_Var*fobj.filt.FFs);
+                
+                % run welch once to get frequencies for every bin (f) determine frequency bands
+                [~,f] = pwelch(randn(1,movWinSamples),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
+                
+                deltaBandLowCutoff = 1;
+                deltaBandHighCutoff = 4;
+                %
+                %                 thetaBandLowCutoff  = 4;
+                %                 thetaBandHighCutoff  = 8;
+                
+                %                 alphaBandLowCutoff  = 8;
+                %                 alphaBandHighCutoff  = 12;
+                
+                deltaThetaLowCutoff = 1;
+                deltaThetaHighCutoff = 8;
+                
+                %                 betaBandLowCutoff = 12;
+                %                 betaBandHighCutoff = 30;
+                
+                %gammaBandLowCutoff = 30;
+                %gammaBandHighCutoff = 100;
+                
+                %gammaBandLowCutoff = 25;
+                %gammaBandHighCutoff = 140;
+                gammaBandLowCutoff = 30;
+                gammaBandHighCutoff = 80;
+                
+                pfDeltaBand=find(f>=deltaBandLowCutoff & f<deltaBandHighCutoff);
+                %  pfThetaBand=find(f>=thetaBandLowCutoff & f<thetaBandHighCutoff);
+                pfDeltaThetaBand=find(f>=deltaThetaLowCutoff & f<deltaThetaHighCutoff);
+                %  pfAlphaBand=find(f>=alphaBandLowCutoff & f<alphaBandHighCutoff);
+                %  pfBetaBand=find(f>=betaBandLowCutoff & f<betaBandHighCutoff);
+                pfGammaBand=find(f>=gammaBandLowCutoff & f<gammaBandHighCutoff);
+                
+                
+                %%
+            bufferedDeltaGammaRatio = [];
+            bufferedDelta= [];
+            bufferedGamma= [];
+            allV_DS = [];
+            alldsData = [];
+            disp('Calculating d/y...')
+            for i = 1:nBatches-1
+                
+                if i == nBatches
+                    thisData = data(tOn_samp(i):samples);
+                else
+                    thisData = data(tOn_samp(i):tOn_samp(i)+batchDuration_samp);
+                end
+                
+                
+                %% Noise artifact
+                  [b,a] = butter(3,30/(Fs/2),'high');
+            
+            ref_over30=filtfilt(b,a,thisData);
+            pow_30hz{i}=rms(ref_over30)^2; % power of high freq in the ref chnl for sleep/wake deliniation
+            
+            
+                %%
+                
+                [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                thisSegData = V_uV_data_full(:,:,:);
+                
+                %  [DataSeg_Notch, ~] = fobj.filt.FN.getFilteredData(thisSegData); % t_DS is in ms
+                [DataSeg_BP, ~] = fobj.filt.BP.getFilteredData(thisSegData); % t_DS is in ms
+                [DataSeg_F, t_DS] = fobj.filt.F.getFilteredData(DataSeg_BP); % t_DS is in ms
+                
+                t_DS_s = t_DS/1000;
+                
+              
+                
+                %%
+                %%
+                tmp_V_DS = buffer(DataSeg_F,movWinSamples,movOLWinSamples,'nodelay');
+                pValid=all(~isnan(tmp_V_DS));
+                
+                [pxx,f] = pwelch(tmp_V_DS(:,pValid),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
+                
+                %% Ratios
+                %                 deltaBetaRatioAll=zeros(1,numel(pValid));
+                %                 deltaBetaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfBetaBand,:)))';
+                %
+                %                 deltaThetaRatioAll = zeros(1,numel(pValid));
+                %                 deltaThetaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfThetaBand,:)))';
+                
+                %deltaTheta_GammaRatioAll = zeros(1,numel(pValid));
+                %deltaTheta_GammaRatioAll(pValid)=(mean(pxx(pfDeltaThetaBand,:))./mean(pxx(pfGammaBand,:)))';
+                
+                %                 deltaAlphRatioAll = zeros(1,numel(pValid));
+                %                 deltaAlphRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfAlphaBand,:)))';
+                %
+                deltaGammaRatioAll = zeros(1,numel(pValid));
+                deltaGammaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfGammaBand,:)))';
+                %
+                %                 betaGammaRatioAll = zeros(1,numel(pValid));
+                %                 betaGammaRatioAll (pValid)=(mean(pxx(pfBetaBand,:))./mean(pxx(pfGammBand,:)))';
+                %
+                %                 thetaGammaRatioAll = zeros(1,numel(pValid));
+                %                 thetaGammaRatioAll (pValid)=(mean(pxx(pfThetaBand,:))./mean(pxx(pfGammBand,:)))';
+                
+                %% single elements
+                %                 deltaAll=zeros(1,numel(pValid));
+                %                 deltaAll(pValid)=mean(pxx(pfDeltaBand,:))';
+                %
+                %                 thetaAll=zeros(1,numel(pValid));
+                %                 thetaAll(pValid)=mean(pxx(pfThetaBand,:))';
+                %
+                %                 alphaAll=zeros(1,numel(pValid));
+                %                 alphaAll(pValid)=mean(pxx(pfAlphaBand,:))';
+                %
+                %                 betaAll=zeros(1,numel(pValid));
+                %                 betaAll(pValid)=mean(pxx(pfBetaBand,:))';
+                %
+                %                 gammaAll=zeros(1,numel(pValid));
+                %                 gammaAll(pValid)=mean(pxx(pfGammBand,:))';
+                %
+                
+                %%
+                %bufferedDeltaBetaRatio(i,:)=deltaBetaRatioAll;
+                %bufferedDeltaAlphaRatio(i,:)=deltaAlphRatioAll;
+                %bufferedDeltaThetaRatio(i,:)=deltaThetaRatioAll;
+                bufferedDeltaGammaRatio(i,:)=deltaGammaRatioAll;
+                bufferedDeltaGammaRatioCell{i}=deltaGammaRatioAll;
+                
+              %  bufferedDeltaThetaOGammaRatio(i,:)=deltaThetaOGammaRatioAll;
+              %  bufferedDeltaThetaOGammaRatioCell{i} = deltaThetaOGammaRatioAll;
+                
+                %bufferedDelta(i,:)=deltaAll;
+                %bufferedBeta(i,:)=betaAll;
+                %bufferedTheta(i,:)=thetaAll;
+                %bufferedGamma(i,:)=gammaAll;
+                %bufferedAlpha(i,:)=alphaAll;
+                
+                alldsData{i} = squeeze(DataSeg_F)';
+                allV_DS{i} = squeeze(tmp_V_DS);
+                
+            end
+            disp('Finished...')
+            pow_30hz_all = cell2mat(pow_30hz);
+            move_artef_thresh=median(pow_30hz_all)+5*iqr(pow_30hz_all);
+            % artefact windows:
+            inds_wake=pow_30hz_all>move_artef_thresh;
+            
+            timepoints_wake_inds = find(inds_wake ==1);
+            
+            timepoints_wake_samp_cell = [];
+            for oo = 1:numel(timepoints_wake_inds)
+                timepoints_wake_samp_cell{oo} = timepoints_wake_inds(oo)*size(deltaGammaRatioAll, 2)-size(deltaGammaRatioAll, 2)+1:timepoints_wake_inds(oo)*size(deltaGammaRatioAll, 2)+1;
+            end
+                
+                
+            timepoints_wake_samp = cell2mat(timepoints_wake_samp_cell);
+            
+            nWakedetections = numel(timepoints_wake_inds);
+            detections = ones(1, numel(timepoints_wake_samp))*200;
+            
+            allBufferedData  = cell2mat(bufferedDeltaGammaRatioCell);
+            %allBufferedData_dg  = cell2mat(bufferedDeltaGammaRatioCell);
+            
+            %% Look at normalized values disregarding putative movments
+            
+            bufferedDeltaGammaRatioCell_nan = [];
+            for oo = 1:size(bufferedDeltaGammaRatioCell, 2)
+                thisdgcell = bufferedDeltaGammaRatioCell{oo};
+                if ismember(oo, timepoints_wake_inds)
+                    bufferedDeltaGammaRatioCell_nan{oo} = nan(1, size(thisdgcell, 2));
+                else
+                    bufferedDeltaGammaRatioCell_nan{oo} = thisdgcell;
+                end
+            end
+            
+            
+            bufferedDeltaGammaRatioCell_nan_vals = cell2mat(bufferedDeltaGammaRatioCell_nan);
+            bufferedDeltaGammaRatioCell_nan_vals_smooth = smooth(bufferedDeltaGammaRatioCell_nan_vals, 260); % 2 min smooth
+            
+            maxVal = max(bufferedDeltaGammaRatioCell_nan_vals_smooth);
+            minVal = min(bufferedDeltaGammaRatioCell_nan_vals_smooth);
+            
+            bufferedDeltaGammaRatioCell_nan_norm_smooth = (bufferedDeltaGammaRatioCell_nan_vals_smooth-minVal)./(maxVal-minVal);
+            
+            
+            %% 
+            alldsData_plot = cell2mat(alldsData);
+            %%
+            disp('Plotting...')
+            figure(145);clf
+            
+            subplot(3, 1, 1)
+            plot(alldsData_plot, 'k')
+            
+            nPoints = size(alldsData_plot, 2);
+           pointsPerHr = round(nPoints/10); % assuming we are analyzing 10 hours of data
+           
+           
+           xticksNew = pointsPerHr:pointsPerHr:10*pointsPerHr; 
+           xticksNew_lab = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'} ;
+           axis tight 
+           set(gca, 'xtick', xticksNew)
+             set(gca, 'xticklabel', xticksNew_lab)
+             
+           
+           
+            
+            ylim([-500 500])
+             %ylim([-1000 1000])
+            title(obj.DATA.RecName)
+            
+            subplot(3, 1, 2)
+            hold on
+            yyaxis left
+            plot(allBufferedData, 'color', [0.5 0.5 0.5]) % 250  = 5 min smooth
+            %plot(smooth(allBufferedData, 250)) % 250  = 5 min smooth
+            %plot(smooth(allBufferedData, 3000), 'linewidth', 2) % 1 hour
+            
+            %plot(Mic, 'linestyle', 'none', 'marker', '.', 'color', 'r')
+            plot(timepoints_wake_samp, detections, 'linestyle', 'none', 'marker', '.', 'color', 'r')
+            
+            ylim([0 300])
+            
+            yyaxis right
+              plot(bufferedDeltaGammaRatioCell_nan_norm_smooth, 'color', 'k', 'linewidth', 2)
+           
+              nPoints = size(bufferedDeltaGammaRatioCell_nan_norm_smooth, 1);
+           pointsPerHr = round(nPoints/10); % assuming we are analyzing 10 hours of data
+           
+           
+           xticksNew = pointsPerHr:pointsPerHr:10*pointsPerHr; 
+           
+             set(gca, 'xtick', xticksNew)
+             set(gca, 'xticklabel', xticksNew_lab)
+             
+           line([0 nPoints], [.5 .5], 'color', 'k', 'linestyle', '--')   
+            %hold on
+            %plot(smooth(allBufferedData, 7200)) % 300  = 5 min smooth
+            axis tight
+
+            
+            
+            
+            
+%               xticks_s = get(gca, 'xtick');
+%               xtick_hr = round(xticks_s/3120); % 52 * 60 = 3120
+%                
+%                xlabs = [];
+%             for j = 1:numel(xtick_hr)
+%                 xlabs{j} = num2str(xtick_hr(j));
+%             end
+%                  set(gca, 'xticklabel', xlabs)
+           
+    
+           title('Raw and normalized d/y ratio')
+           
+           %%
+           
+           subplot(3, 1, 3)
+          
+           plot(obj.ANALYSIS.VID.r_dif)
+           
+           nFrames = size(obj.ANALYSIS.VID.r_dif, 2);
+           framesPerHr = round(nFrames/10); % assuming we are analyzing 10 hours of data
+           
+           
+           xticksNew = 40:40:10*40; 
+           
+           axis tight
+           set(gca, 'xtick', xticksNew)
+             set(gca, 'xticklabel', xticksNew_lab)
+           ylim([0 20000])
+           title('Movement, approx 1 frame / minute')
+         xlabel('Time (Hr)');
+           
+           %%
+           plotpos = [0 0 35 15];
+           
+           plotDir =   'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\';
+           RecName_save = obj.DATA.RecName_save;
+           
+           plot_filename = [plotDir RecName_save '__dg'];
+           print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+           print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+           
+           D.bufferedDeltaGammaRatioCell_nan_norm_smooth = bufferedDeltaGammaRatioCell_nan_norm_smooth;
+           D.bufferedDeltaGammaRatioCell = bufferedDeltaGammaRatioCell;
+           D.allBufferedData = allBufferedData;
+           D.alldsData_plot = alldsData_plot;
+           D.inds_wake = inds_wake;
+           D.RecName_save = RecName_save;
+           D.r_dif = obj.ANALYSIS.VID.r_dif;
+           
+           save([plotDir RecName_save '__DeltaGamma.mat'], 'D', '-v7.3')
+            
+            %{
+            axis tight
+            xticks_s = 0:size(tmp_V_DS,2)*2: size(allBufferedData, 2);
+            set(gca, 'xtick', xticks_s)
+            xlabs = [];
+            for j = 1:numel(xticks_s)
+                xlabs{j} = num2str(j-1);
+            end
+            
+            set(gca, 'xticklabel', xlabs)
+            ylim([0 1200])
+            xlabel('Time (hr)')
+            
+            dataToPlot  = bufferedDeltaThetaOGammaRatio;
+            dbScale = 50000;
+            
+            
+            %%
+            subplot(1, 2, 2)
+            
+            imagesc(dataToPlot, [0 1200])
+            %imagesc(dataToPlot, [0 300])
+            % imagesc(dataToPlot(2:29, :), [0 1200])
+            %imagesc(dataToPlot(2:29, :))
+            
+            if batchDuration_s == 1800
+                %xtics = get(gca, 'xtick');
+                xticks_s = 0:5*60:30*60;
+                xticks_min = xticks_s/60;
+                
+                xticklabs = xticks_min;
+                
+                ytics = get(gca, 'ytick');
+                ytics_Hr = ytics/2;
+                
+            end
+            xlabs = [];
+            for j = 1:numel(xticklabs)
+                xlabs{j} = num2str(xticklabs(j));
+            end
+            
+            ytics_Hr_round = [];
+            for j = 1:numel(ytics_Hr)
+                %ytics_Hr_round{j} = num2str(round(ytics_Hr(j)));
+                ytics_Hr_round{j} = num2str(ytics_Hr(j));
+            end
+            
+            set(gca, 'xtick', xticks_s)
+            set(gca, 'xticklabel', xlabs)
+            set(gca, 'yticklabel', ytics_Hr_round)
+            
+            xlabel('Time (min)')
+            ylabel('Time (hr)')
+            %title([params.DateTime ' | ' titletxt])
+            colorbar
+            %}
+            
+            %%
+            
+            
+            
+        end
+        
+        
+        
+        
+        function [obj]  = sleep_feature_extract_obj(obj)
+            
+            
+%{
+ T = 1/fs;                     % Sample time
+    L = numel(EEG_data);
+    NFFT = 2^nextpow2(L); % Next power of 2 from length of y
+    Y = fft(squeeze(EEG_data),NFFT)/L;
+    f = Fs/2*linspace(0,1,NFFT/2+1);
+    
+    % Plot single-sided amplitude spectrum.
+    
+    plot(f,2*abs(Y(1:NFFT/2+1)))
+    hold on
+    smoothY = smooth(2*abs(Y(1:NFFT/2+1)));
+    plot(f/1000,smoothY, 'k')
+    
+    xlim([0 7.5])
+    title('FFT WN')
+    xlabel('Frequency (kHz)')
+%}
+%{
+            %Wo = 60/(300/2);  BW = Wo/35;
+            
+            Wo = 50/(fs/2);  BW = Wo/35;
+            [b,a] = iirnotch(Wo,BW);
+            
+            eeg_binned_notch = filter(b,a,EEG_data);
+%}
+            
+            %%
+            
+            eeg_binned = obj.ANALYSIS.sleepStaging.eeg_binned;
+            
+            t_bin = obj.ANALYSIS.sleepStaging.t_bin;
+            n_bins = obj.ANALYSIS.sleepStaging.n_bins;
+            inds_wake = obj.ANALYSIS.sleepStaging.inds_wake;
+            fs = obj.ANALYSIS.sleepStaging.fs;
+            
+            %gammaBandLowCutoff = 25;
+            %gammaBandHighCutoff = 140;
+            
+            %[Delta_ref, Gamma_ref, feat_ref,  t_feat_ref]=sleep_feature_extract(ref_binned, t_bin, n_bins, fs);
+           
+            disp('Calculating spectral features...')
+            k=1;
+            for bin=2:n_bins-1
+                Delta(k)=bandpower(eeg_binned(bin,:),fs,[1 4]);
+                Gamma(k)=bandpower(eeg_binned(bin,:),fs,[30 140]);
+                Delta_before=bandpower(eeg_binned(bin-1,:),fs,[1 4]);
+                Gamma_before=bandpower(eeg_binned(bin-1,:),fs,[30 140]);
+                Delta_after=bandpower(eeg_binned(bin+1,:),fs,[1 4]);
+                Gamma_after=bandpower(eeg_binned(bin+1,:),fs,[30 140]);
+                
+                feat(k,1)=log10(Delta(k));
+                feat(k,2)=Gamma(k)/(eps+Delta(k));
+                feat(k,3)=Delta_after-Delta_before;
+                feat(k,4)=Gamma_after/(eps+Delta_after)-Gamma_before/(eps+Delta_before);
+                feat(k,5)=length(findpeaks(eeg_binned(bin,:)));
+                feat(k,6)=max(abs(eeg_binned(bin,:)));
+                feat(k,7)=std(eeg_binned(bin,:));
+                t_feat(k)=t_bin(bin);
+                k=k+1;
+            end
+
+            obj.ANALYSIS.sleepStaging.Delta = Delta;
+            obj.ANALYSIS.sleepStaging.Gamma = Gamma;
+            obj.ANALYSIS.sleepStaging.feat = feat;
+            obj.ANALYSIS.sleepStaging.t_feat = t_feat;
+            
+        end
+        
+        function [obj] = cluster_sleep_obj(obj, arte_factor)
+            %cluster_sleep(feat, t_feat, sleep_wake, Delta, Gamma, t_dark )
+            %feat, t_feat, ~inds_wake, Delta, Gamma, t_dark, arte_factor
+            %[bin_label, valid_bin_inds]=cluster_sleep(feat, t_feat, ~inds_wake, Delta, Gamma, t_dark, arte_factor ); %%%%%%%%% is_wake or ~is_wake
+            
+            feat = obj.ANALYSIS.sleepStaging.feat;
+            t_feat = obj.ANALYSIS.sleepStaging.t_feat;
+            sleep_wake = ~obj.ANALYSIS.sleepStaging.inds_wake;
+            Delta = obj.ANALYSIS.sleepStaging.Delta;
+            Gamma = obj.ANALYSIS.sleepStaging.Gamma;
+            
+           
+            m=median(feat);
+            d=arte_factor*iqr(feat);
+            comp1=repmat(m+d,length(feat),1);
+            in_range_ind=sum(feat<comp1 ,2)==size(feat,2);
+            valid_inds=~isinf(sum(feat,2)) & in_range_ind;
+            
+            feat=feat(valid_inds,:);
+            sleep_wake=sleep_wake(valid_inds);
+            Delta=Delta(valid_inds);
+            Gamma=Gamma(valid_inds);
+            
+            sleep_ind=logical(sleep_wake);
+            % first clustering, for SWS/nSWS
+            SWS_nSWS = kmeans(zscore(feat(sleep_ind,[1 3 4 5 6 7])),2);  % clustering only for sleep bins
+            % comparing Dlta across clusters to find the SWS one
+            sleep_delta=Delta(sleep_ind);
+            delta_class_1=mean(sleep_delta(SWS_nSWS==1));
+            delta_class_2=mean(sleep_delta(SWS_nSWS==2));
+            if delta_class_1>delta_class_2
+                SWS_label=1; % label of cluster 1 indicates SWS
+                nSWS_label=2;
+            else
+                SWS_label=2; % label of cluster 2 indicates nSWS
+                nSWS_label=1;
+            end
+            
+            % second clustering, for REM/nREM
+            
+            REM_nREM = kmeans(zscore(feat(sleep_ind,[2 3 4 5 7])),2);  % clustering only for sleep bins
+            % comparing Gamma across clusters to find the REM one
+            sleep_gamma=Gamma(sleep_ind);
+            gamma_class_1=mean(sleep_gamma(REM_nREM==1));
+            gamma_class_2=mean(sleep_gamma(REM_nREM==2));
+            if gamma_class_1>gamma_class_2
+                REM_label=1; % label of cluster 1 indicates REM
+                nREM_label=2;
+            else
+                REM_label=2; % label of cluster 2 indicates nREM
+                nREM_label=1;
+            end
+            
+            % assigning labels based on these 2 clusterings results
+            bin_label=cell(1);
+            sleep_bin=1; % counter for only sleep bins among all bins
+            for k=1: length(sleep_ind)
+                % if wake
+                if sleep_wake(k)==0
+                    bin_label{k}='Wake'; % wake
+                    continue;
+                    % so bin k is a sleep one, therefore:
+                    % if REM=1, and SWS=0
+                elseif REM_nREM(sleep_bin)==REM_label & SWS_nSWS(sleep_bin)==nSWS_label
+                    bin_label{k}='REM'; % REM
+                    sleep_bin=sleep_bin+1;
+                    
+                    % if REM=1, and SWS=1
+                elseif REM_nREM(sleep_bin)==REM_label & SWS_nSWS(sleep_bin)==SWS_label
+                    bin_label{k}='a'; % artefact
+                    sleep_bin=sleep_bin+1;
+                    
+                    % if REM=0, and SWS=1
+                elseif REM_nREM(sleep_bin)==nREM_label & SWS_nSWS(sleep_bin)==SWS_label
+                    bin_label{k}='SWS'; % SWS
+                    sleep_bin=sleep_bin+1;
+                    
+                    % if REM=0, and SWS=0
+                elseif REM_nREM(sleep_bin)==nREM_label & SWS_nSWS(sleep_bin)==nSWS_label
+                    bin_label{k}='IS'; % IS
+                    sleep_bin=sleep_bin+1;
+                    
+                end
+            end
+            
+            % correcting for the artefacts
+            % determining how many artefacts occured
+            c=0;
+            for k=1:length(bin_label)
+                if bin_label{k}=='a'
+                    c=c+1;
+                end
+            end
+            artefact_proportion=c/length(bin_label)
+            
+            % correction
+            for k=6:length(bin_label)
+                if bin_label{k}=='a'
+                    score=[];
+                    for neighbor=1:5
+                        label=bin_label{k-neighbor};
+                        
+                        if strcmp(label,'Wake')
+                            score(neighbor)=-100;
+                        elseif strcmp(label,'REM')
+                            score(neighbor)=0;
+                        elseif strcmp(label,'IS')
+                            score(neighbor)=1;
+                        elseif strcmp(label,'SWS')
+                            score(neighbor)=2;
+                        end
+                    end
+                    
+                    neighbours_consent=round(mean(score));
+                    
+                    if neighbours_consent==0
+                        bin_label{k}='REM';
+                    elseif neighbours_consent==1
+                        bin_label{k}='IS';
+                    elseif neighbours_consent==2
+                        bin_label{k}='SWS';
+                    elseif neighbours_consent<0
+                        bin_label{k}='Wake';
+                    end
+                end
+            end
+            for k=1:5
+                if bin_label{k}=='a'
+                    bin_label{k}='IS';
+                end
+            end
+            
+            obj.ANALYSIS.clusters.bin_label = bin_label;
+            obj.ANALYSIS.clusters.valid_inds = valid_inds;
+           
+        end
+        
+        
+        function [obj] = plot_cluster_results(obj)
+            
+            valid_inds = obj.ANALYSIS.clusters.valid_inds;
+            Delta = obj.ANALYSIS.sleepStaging.Delta;
+            Gamma = obj.ANALYSIS.sleepStaging.Gamma;
+            t_feat = obj.ANALYSIS.sleepStaging.t_feat;
+            bin_label= obj.ANALYSIS.clusters.bin_label;
+            
+            obj.ANALYSIS.clusters.Delta_valid =Delta(valid_inds);
+            obj.ANALYSIS.clusters.Gamma_valid =Gamma(valid_inds);
+            obj.ANALYSIS.clusters.t_bin_label=t_feat(valid_inds);
+
+            Delta_valid = obj.ANALYSIS.clusters.Delta_valid;
+            Gamma_valid  =obj.ANALYSIS.clusters.Gamma_valid;
+            t_bin_label  =obj.ANALYSIS.clusters.t_bin_label;
+            
+            % visualization of bins in the feature space
+            % colors for each stage
+            
+            % color for each stage, might need to be updated each time
+            %%%%%%%%%%%%%%
+            %             r=[253 145 33]/256;
+            %             s=[.4 .4 1];
+            %             i=[.2 1 1];
+            %             w=[.9 .9 .3];
+            %
+            r= [0.6350, 0.0780, 0.1840];
+            s=[0, 0.4470, 0.7410];
+            i= [0.3010, 0.7450, 0.9330];
+            w=[.5 .5 .5];
+            
+            color_order=[r; s; i; w]; %%%%%%%%%%%%%%
+            
+            obj.PLOT.r = r;
+            obj.PLOT.r = s;
+            obj.PLOT.i = i;
+            obj.PLOT.w = w;
+            obj.PLOT.color_order = color_order;
+            
+            rng(1)
+            % second plot for other chnl
+            figure
+            plot_inds=randsample(length(bin_label),2000);
+            x_vals=log10(Delta_valid(plot_inds))';
+            y_vals=log10(Gamma_valid(plot_inds))';
+            group_label=bin_label(plot_inds)';
+            scatterhist(x_vals,y_vals,'Group',group_label,'Kernel','on','Location','SouthEast',...
+                'Direction','out','Color',color_order,'LineStyle',{'-','-','-','-'},...
+                'LineWidth',[2,2,2,2],'Marker','....','MarkerSize',.6*[10, 10, 10, 10]);
+            % ylim(median(y_vals)+3*iqr(y_vals)*[-.9 1.5]);
+            % xlim(median(x_vals)+2.5*iqr(x_vals)*[-1 1.]);
+            title('eeg channel')
+            xlabel('log Delta'); ylabel('log Gamma')
+            
+        end
+        
+        
+        
+        function [obj] = check_staging_in_eeg(obj)
+            
+            
+            t_bin_label  =obj.ANALYSIS.clusters.t_bin_label;
+            bin_label  = obj.ANALYSIS.clusters.bin_label;
+            fs=obj.DATA.sampleRate_ds;
+            
+            t_lim=4.1*3600+[2060 2090]; %randsample(36000,1)+3600+[0 30]; % t lim for visualization
+            t_lim_samp = t_lim*fs;
+            
+            eeg_snippet = obj.DATA.EEG_data(t_lim_samp(1):t_lim_samp(2));
+            
+            %inds=data.time<t_lim(2) & data.time>t_lim(1);
+            % filtering
+            %fs=30000/downsamp_ratio;
+            timestamps = 1:1:numel(eeg_snippet);
+            timestamps_s = timestamps/fs + t_lim(1);
+            
+            bpFilt = designfilt('bandpassiir','FilterOrder',8,'HalfPowerFrequency1',1,'HalfPowerFrequency2',45,'SampleRate',fs);
+            ephys_filt=filtfilt(bpFilt,eeg_snippet);
+            
+            h=figure;
+            set(h,'position',[100 400 1700 250]);
+            subplot(2,1,1)
+            %chnl_to_plot=chnl_to_bin; %chnl_to_bin; %%%%%%%%%% determine the chnl number to be plotted
+            plot(timestamps_s,ephys_filt,'color',.1*[1 1 1]); hold on % scale coeff for vizualization
+            %ylim([-350 350]);
+            axis tight
+            
+            r= [0.6350, 0.0780, 0.1840];
+            s=[0, 0.4470, 0.7410];
+            i= [0.3010, 0.7450, 0.9330];
+            w=[.5 .5 .5];
+            
+            subplot(2, 1, 2)
+            % adding colored shades indicating stage of sleep for any 2-sec bin
+            color_order_= [r; s; i; w];
+            color_order_= [color_order_ .7*ones(4,1)];
+            t_bin_plot = t_bin_label (t_bin_label>=(t_lim(1)-1) & t_bin_label<=(t_lim(2)+1));
+            label_plot=bin_label (t_bin_label>=(t_lim(1)-1) & t_bin_label<=(t_lim(2)+1)); %%%%%%%%%% bin_label or bin_label_ref
+            for bin=1:length(t_bin_plot)
+                stage=strcmp(label_plot(bin),{'REM','SWS','IS','Wake'});
+                line([t_bin_plot(bin)-1.5 t_bin_plot(bin)+1.5],-300+[0 0],'color',color_order_(stage,:),'linewidth',10 );
+            end
+            xlim(t_lim)
+            ylabel('Amp (\muV)')
+            
+            
+            
+            subplot(2,1,2)
+            chnl_to_plot=ref_chnl; %chnl_to_bin; %%%%%%%%%% determine the chnl number to be plotted
+            plot(data.time(inds),ephys_filt(:,chnl_to_plot),'color',.1*[1 1 1]); hold on % scale coeff for vizualization
+            ylim([-115 100]);
+            
+            % adding colored shades indicating stage of sleep for any 2-sec bin
+            
+            t_bin_plot=t_bin_label_ref (t_bin_label_ref>=(t_lim(1)-1) & t_bin_label_ref<=(t_lim(2)+1));
+            label_plot=bin_label_ref (t_bin_label_ref>=(t_lim(1)-1) & t_bin_label_ref<=(t_lim(2)+1)); %%%%%%%%%% bin_label or bin_label_ref
+            for bin=1:length(t_bin_plot)
+                stage=strcmp(label_plot(bin),{'REM','SWS','IS','Wake'});
+                line([t_bin_plot(bin)-1.5 t_bin_plot(bin)+1.5],-90+[0 0],'color',color_order_(stage,:),'linewidth',10 );
+            end
+            xlim(t_lim)
+            xlabel('Time (sec)');
+            ylabel('Amp (\muV)')
+            
+            
+        end
+        
+        
+        function [obj]  = plot_delta_gamma_across_nights(obj)
+        
+        
+delta_gamma_Dir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\';
+
+            
+   textSearch = '*.mat*'; % text search for ripple detection file
+   dy_files = dir(fullfile(delta_gamma_Dir,textSearch));
+nfiles = size(dy_files, 1);
+
+All_dy_smooth_norm = [];
+figure(100); clf
+hold on
+for j = 1:nfiles
+    dy{j} = load([delta_gamma_Dir dy_files(j).name]);
+    All_dy_smooth_norm(j, :) = dy{1,j}.D.bufferedDeltaGammaRatioCell_nan_norm_smooth;
+    plot(All_dy_smooth_norm(j,:));
+end
+
+        
+     mean_smooth_norm = nanmean(All_dy_smooth_norm, 1);
+     median_smooth_norm = nanmedian(All_dy_smooth_norm, 1);
+     std_smooth_norm = std(All_dy_smooth_norm, 1);
+     sem_smooth_norm =  std_smooth_norm/(sqrt(size(All_dy_smooth_norm, 1)));       
+            
+     figure(101); clf
+     plot(median_smooth_norm, 'color', 'b', 'linewidth', 2);
+     plot(mean_smooth_norm, 'color', 'k', 'linewidth', 2);
+     
+     
+     hold on
+     plot(mean_smooth_norm + sem_smooth_norm, 'k');
+     plot(mean_smooth_norm - sem_smooth_norm, 'k');
+     
+            axis tight
+            ylim([0 1])
+        
+        end
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         function [obj] = getTriggers(obj)
@@ -2623,8 +3931,8 @@ classdef songLearningEphysAnalysis < handle
         
         
         
-        function [obj = validateSWRs(obj)
-        
+        function [obj] = validateSWRs(obj)
+            
             
             doPlot = 1;
             
@@ -2645,308 +3953,308 @@ classdef songLearningEphysAnalysis < handle
             
             
             
-%% Acute
-
-%% Chronic
-% pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190917\09-00-29\Analysis\09-00-29__SWR-Detections';
-% fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190917\09-00-29\Ephys\106_CH15.continuous';
-% plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190917\09-00-29\Plots\';
-% saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190917\09-00-29\Analysis\';
-
-% pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190918\18-04-28\Analysis\18-04-28__SWR-Detections';
-% fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190918\18-04-28\Ephys\106_CH15.continuous';
-% plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190918\18-04-28\Plots\';
-% saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190918\18-04-28\Analysis\';
-
-% pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190923\18-21-42\Analysis\18-21-42__SWR-Detections';
-% fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190923\18-21-42\Ephys\106_CH15.continuous';
-% plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190923\18-21-42\Plots\';
-% saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190923\18-21-42\Analysis\';
-
-% pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190920\18-37-00\Analysis\18-37-00__SWR-Detections';
-% fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190920\18-37-00\Ephys\106_CH15.continuous';
-% plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190920\18-37-00\Plots\';
-% saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190920\18-37-00\Analysis\';
-
-% pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190916\18-05-58\Analysis\18-05-58__SWR-Detections';
-% fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190916\18-05-58\Ephys\106_CH15.continuous';
-% plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190916\18-05-58\Plots\';
-% saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190916\18-05-58\Analysis\';
-
-% pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Analysis\17-51-46__SWR-Detections';
-% fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Ephys\106_CH15.continuous';
-% plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Plots\';
-% saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Analysis\';
-
-% pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190917\16-05-11\Analysis\16-05-11__SWR-Detections.mat';
-% fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190917\16-05-11\Ephys\106_CH15.continuous';
-% plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190917\16-05-11\Plots\';
-% saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190917\16-05-11\Analysis\';
-
-dirD = '\';
-
-
-s = load(pathToSWRDetections);
-
-Ripple = s.Ripple;
-SW = s.SW;
-
-
-[pathstr,name,ext] = fileparts(fileName);
-bla = find(fileName == dirD);
-dataName = fileName(bla(end-1)+1:bla(end)-1);
-%saveName = [pathstr dirD dataName '-fullData'];
-[data, timestamps, info] = load_open_ephys_data(fileName);
-Fs = info.header.sampleRate;
-disp('Fininshed loading...')
-fObj = filterData(Fs);
-thisSegData_s = timestamps(1:end) - timestamps(1);
-
-timeRangeOn = round(1.9*3600*Fs);
-timeRangeOff = round(2.5*3600*Fs);
-
-dataRange = data(timeRangeOn:timeRangeOff);
-dataSeg_S = thisSegData_s(timeRangeOn:timeRangeOff);
-figure; plot(dataSeg_S, dataRange)
-axis tight
-
-%% Filters
-
-% fobj.filt.FL=filterData(Fs);
-% %fobj.filt.FL.lowPassPassCutoff=4.5;
-% fobj.filt.FL.lowPassPassCutoff=8;
-% fobj.filt.FL.lowPassStopCutoff=10;
-% fobj.filt.FL.attenuationInLowpass=20;
-% fobj.filt.FL=fobj.filt.FL.designLowPass;
-% fobj.filt.FL.padding=true;
-
-fobj.filt.FH2=filterData(Fs);
-fobj.filt.FH2.highPassCutoff=100;
-fobj.filt.FH2.lowPassCutoff=2000;
-fobj.filt.FH2.filterDesign='butter';
-fobj.filt.FH2=fobj.filt.FH2.designBandPass;
-fobj.filt.FH2.padding=true;
-
-fobj.filt.BP=filterData(Fs);
-fobj.filt.BP.highPassCutoff=1;
-fobj.filt.BP.lowPassCutoff=2000;
-fobj.filt.BP.filterDesign='butter';
-fobj.filt.BP=fobj.filt.BP.designBandPass;
-fobj.filt.BP.padding=true;
-
-fobj.filt.FN =filterData(Fs);
-fobj.filt.FN.filterDesign='cheby1';
-fobj.filt.FN.padding=true;
-fobj.filt.FN=fobj.filt.FN.designNotch;
-
-%%
-
-%% SWs
-
-sw_peakH_1 = SW.peakSW_H;
-sw_peakTime_fs_1 = SW.absPeakTime_SW_fs; % first detection
-sw_peakW_fs_1 = SW.peakSW_W; % at half prominence
-
-% Use the verified 2nd detections
-sw_peakTime_fs_2 = SW.absPeakTime_Fs_LF; % second detection
-sw_peakH_2 = SW.peakH_SWcheck; % second detection
-sw_peakW_2 = SW.peakW_SWcheck; % at half width
-
-[C,UInds,ic] = unique(sw_peakTime_fs_2); % since we have an overlap, we have to get rid of all the double detections
-
-sw_peakW = sw_peakW_2(UInds);
-sw_peakH = sw_peakH_2(UInds);
-sw_peakTime_fs = sw_peakTime_fs_2(UInds);
-
-Fs = 30000;
-
-%% Ripples
-
-Rip_peakH_1 = Ripple.peakH;
-Rip_peakTime_fs_1 = Ripple.asPeakTime_fs; % first detection
-Rip_peakW_fs_1 = Ripple.peakW; % at half prominence
-
-% Use the verified 2nd detections
-rip_peakH_2 = Ripple.peakH_ripcheck; % second detection
-rip_peakTime_fs_2 = Ripple.absPeakTime_Fs_LF; % second detection
-rip_peakW_2 = Ripple.peakW_ripcheck; % at half width
-
-[C,UInds,ic] = unique(rip_peakTime_fs_2); % since we have an overlap, we have to get rid of all the double detections
-
-rip_peakW = rip_peakW_2(UInds);
-rip_peakH = rip_peakH_2(UInds);
-rip_peakTime_fs = rip_peakTime_fs_2(UInds);
-
-%% Get rid of 10 ms overlaps ripples
-FsWin = 10/1000 *Fs;
-
-peakDiffs = diff(rip_peakTime_fs);
-smallDiffs = find(peakDiffs <= FsWin);
-
-rip_peakW_nDD  = rip_peakW;
-rip_peakH_nDD  = rip_peakH;
-rip_peakfs_nDD  = rip_peakTime_fs;
-
-rip_peakW_nDD(smallDiffs+1) = [];
-rip_peakH_nDD(smallDiffs+1) = [];
-rip_peakfs_nDD(smallDiffs+1) = [];
-
-%% Get rid of very large ripple peaks and small 
-
-
-outliers_h_ind = find(rip_peakH_nDD >1500);
-
-rip_peakH_nDD(outliers_h_ind) = [];
-rip_peakW_nDD(outliers_h_ind) = [];
-rip_peakfs_nDD(outliers_h_ind) = [];
-
-outliers_h_ind = find(rip_peakH_nDD <115);
-
-rip_peakH_nDD(outliers_h_ind) = [];
-rip_peakW_nDD(outliers_h_ind) = [];
-rip_peakfs_nDD(outliers_h_ind) = [];
-
-
-%%
-
-
-figure(102);clf
-
-subplot(3, 1, 1); plot(rip_peakfs_nDD/Fs/3600, rip_peakH_nDD, 'k.'); axis tight; title('Ripple height')
-subplot(3, 1, 2); plot(rip_peakfs_nDD/Fs/3600, rip_peakW_nDD/Fs*1000, 'k.'); axis tight; title('Ripple width')
-subplot(3, 1, 3); plot(rip_peakH_nDD, rip_peakW_nDD/Fs*1000, 'k.'); axis tight; title('Ripple height vs width') 
-
-%% Find all peaks that are within 10 ms of eachother;
-FsWin = 10/1000 *Fs;
-
-peakDiffs = diff(sw_peakTime_fs);
-smallDiffs = find(peakDiffs <= FsWin);
-    
-    
-    sw_peakW_nDD  = sw_peakW;
-    sw_peakH_nDD  = sw_peakH;
-    sw_peakfs_nDD  = sw_peakTime_fs;
-    
-    sw_peakW_nDD(smallDiffs+1) = [];
-    sw_peakH_nDD(smallDiffs+1) = [];
-    sw_peakfs_nDD(smallDiffs+1) = [];
-    
-   %% test for normal distribution
-
-   [h, p] = kstest(sw_peakH);
-   [h, p] = kstest(sw_peakW);
-   
-%% Find height and width outliers
-
-outliers_h_ind = find(sw_peakH_nDD >430);
-
-sw_peakH_nDD(outliers_h_ind) = [];
-sw_peakW_nDD(outliers_h_ind) = [];
-sw_peakfs_nDD(outliers_h_ind) = [];
-
-
-outliers_h_ind = find(sw_peakH_nDD <85);
-
-sw_peakH_nDD(outliers_h_ind) = [];
-sw_peakW_nDD(outliers_h_ind) = [];
-sw_peakfs_nDD(outliers_h_ind) = [];
-
-
-%% Also look for SHWs smaller than 80 uV
-
-outliers_w_ind = find(sw_peakW_nDD >= 0.120*Fs);
-sw_peakH_nDD(outliers_w_ind) = [];
-sw_peakW_nDD(outliers_w_ind) = [];
-sw_peakfs_nDD(outliers_w_ind) = [];
-
-%% Outliers
-outliers_H_m = find(isoutlier(sw_peakH_nDD, 'median', 'ThresholdFactor', 6));
-outliers_H_fs = sw_peakfs_nDD(outliers_H_m);
-outliers_H_vals = sw_peakH_nDD(outliers_H_m);
-outliers_H_Wvals = sw_peakW_nDD(outliers_H_m);
-
-figure; plot(outliers_H_Wvals, outliers_H_vals, 'k*');
-
-outliers_W_m = find(isoutlier(sw_peakW_nDD, 'median', 'ThresholdFactor', 5));
-outliers_W_fs = sw_peakfs_nDD(outliers_W_m);
-outliers_W_vals = sw_peakW_nDD(outliers_W_m);
-outliers_W_Hvals = sw_peakH_nDD(outliers_W_m);
-
-figure; plot(outliers_W_vals, outliers_W_Hvals, 'k*');
-
-medianH = median(sw_peakH);
-medianW_ms = median(sw_peakW/Fs)*1000;
-stdH = std(sw_peakH)*6;
-stdW = std((sw_peakW/Fs)*1000)*6;
-
-%%
-
-finalPeakTimes_fs = sw_peakfs_nDD;
-finalPeakH = sw_peakH_nDD;
-finalPeakW_fs = sw_peakW_nDD;
-
-rip_peakTime_fs = rip_peakfs_nDD;
-
-
-%% Go over all Shs and look for ripples
-
-peakWinL = 0.03*Fs;
-peakWinR = 0.03*Fs;
-
-allSW_fs = []; allSWR_H = []; allSWR_W_fs = [];
-allSWR_fs = []; allSW_H = []; allSW_W_fs = [];
-allSWR_rips_fs = []; allSWR_rips_H = []; allSWR_rips_W = [];
-cnt = 1;
-cnnt = 1;
-
-for j = 1:numel(finalPeakTimes_fs)
-    
-    sw_thisPeak_fs = finalPeakTimes_fs(j);
-    
-    checkL = sw_thisPeak_fs-peakWinL;
-    checkR = sw_thisPeak_fs+peakWinR;
-    
-    match = numel(rip_peakTime_fs(rip_peakTime_fs >= checkL & rip_peakTime_fs <= checkR));
-    if match == 1
-        thisRipple_fs = rip_peakTime_fs(rip_peakTime_fs >= checkL & rip_peakTime_fs <= checkR);
-        rippleInd = find(rip_peakTime_fs == thisRipple_fs(1));
-    end
-    if match == 1 % 1 SW, 1 ripple
-        
-        allSWR_fs(cnt) = sw_thisPeak_fs;
-        allSWR_H(cnt) = finalPeakH(j);
-        allSWR_W_fs(cnt) = finalPeakW_fs(j);
-        
-        allSWR_rips_fs(cnt) = thisRipple_fs;
-        allSWR_rips_H(cnt) = rip_peakH_nDD(rippleInd);
-        allSWR_rips_W(cnt) = rip_peakW_nDD(rippleInd);
-        cnt = cnt+1;
-        
-    elseif match > 1
-        times_fs = rip_peakTime_fs(rip_peakTime_fs >= checkL & rip_peakTime_fs <= checkR);
-        diffTimes_ms= (diff(times_fs)/Fs)*1000;
-        
-        if diffTimes_ms <50 % take the first time
-            peakTodelete =times_fs(2);
-            bla = find(rip_peakTime_fs ==peakTodelete);
-            rip_peakTime_fs(bla) = [];
-
-            allSWR_fs(cnt) = sw_thisPeak_fs;
-            allSWR_H(cnt) = finalPeakH(j);
-            allSWR_W_fs(cnt) = finalPeakW_fs(j);
+            %% Acute
             
-            allSWR_rips_fs(cnt) = thisRipple_fs;
-            allSWR_rips_H(cnt) = rip_peakH_nDD(rippleInd);
-            allSWR_rips_W(cnt) = rip_peakW_nDD(rippleInd);
-            cnt = cnt+1;
+            %% Chronic
+            % pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190917\09-00-29\Analysis\09-00-29__SWR-Detections';
+            % fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190917\09-00-29\Ephys\106_CH15.continuous';
+            % plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190917\09-00-29\Plots\';
+            % saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190917\09-00-29\Analysis\';
             
-        else
+            % pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190918\18-04-28\Analysis\18-04-28__SWR-Detections';
+            % fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190918\18-04-28\Ephys\106_CH15.continuous';
+            % plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190918\18-04-28\Plots\';
+            % saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190918\18-04-28\Analysis\';
             
-            disp('')
+            % pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190923\18-21-42\Analysis\18-21-42__SWR-Detections';
+            % fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190923\18-21-42\Ephys\106_CH15.continuous';
+            % plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190923\18-21-42\Plots\';
+            % saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190923\18-21-42\Analysis\';
             
-        end
-        
-        %{
+            % pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190920\18-37-00\Analysis\18-37-00__SWR-Detections';
+            % fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190920\18-37-00\Ephys\106_CH15.continuous';
+            % plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190920\18-37-00\Plots\';
+            % saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190920\18-37-00\Analysis\';
+            
+            % pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190916\18-05-58\Analysis\18-05-58__SWR-Detections';
+            % fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190916\18-05-58\Ephys\106_CH15.continuous';
+            % plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190916\18-05-58\Plots\';
+            % saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190916\18-05-58\Analysis\';
+            
+            % pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Analysis\17-51-46__SWR-Detections';
+            % fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Ephys\106_CH15.continuous';
+            % plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Plots\';
+            % saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Analysis\';
+            
+            % pathToSWRDetections = 'D:\TUM\SWR-Project\ZF-71-76\20190917\16-05-11\Analysis\16-05-11__SWR-Detections.mat';
+            % fileName = 'D:\TUM\SWR-Project\ZF-71-76\20190917\16-05-11\Ephys\106_CH15.continuous';
+            % plotDir =  'D:\TUM\SWR-Project\ZF-71-76\20190917\16-05-11\Plots\';
+            % saveDir = 'D:\TUM\SWR-Project\ZF-71-76\20190917\16-05-11\Analysis\';
+            
+            dirD = '\';
+            
+            
+            s = load(pathToSWRDetections);
+            
+            Ripple = s.Ripple;
+            SW = s.SW;
+            
+            
+            [pathstr,name,ext] = fileparts(fileName);
+            bla = find(fileName == dirD);
+            dataName = fileName(bla(end-1)+1:bla(end)-1);
+            %saveName = [pathstr dirD dataName '-fullData'];
+            [data, timestamps, info] = load_open_ephys_data(fileName);
+            Fs = info.header.sampleRate;
+            disp('Fininshed loading...')
+            fObj = filterData(Fs);
+            thisSegData_s = timestamps(1:end) - timestamps(1);
+            
+            timeRangeOn = round(1.9*3600*Fs);
+            timeRangeOff = round(2.5*3600*Fs);
+            
+            dataRange = data(timeRangeOn:timeRangeOff);
+            dataSeg_S = thisSegData_s(timeRangeOn:timeRangeOff);
+            figure; plot(dataSeg_S, dataRange)
+            axis tight
+            
+            %% Filters
+            
+            % fobj.filt.FL=filterData(Fs);
+            % %fobj.filt.FL.lowPassPassCutoff=4.5;
+            % fobj.filt.FL.lowPassPassCutoff=8;
+            % fobj.filt.FL.lowPassStopCutoff=10;
+            % fobj.filt.FL.attenuationInLowpass=20;
+            % fobj.filt.FL=fobj.filt.FL.designLowPass;
+            % fobj.filt.FL.padding=true;
+            
+            fobj.filt.FH2=filterData(Fs);
+            fobj.filt.FH2.highPassCutoff=100;
+            fobj.filt.FH2.lowPassCutoff=2000;
+            fobj.filt.FH2.filterDesign='butter';
+            fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+            fobj.filt.FH2.padding=true;
+            
+            fobj.filt.BP=filterData(Fs);
+            fobj.filt.BP.highPassCutoff=1;
+            fobj.filt.BP.lowPassCutoff=2000;
+            fobj.filt.BP.filterDesign='butter';
+            fobj.filt.BP=fobj.filt.BP.designBandPass;
+            fobj.filt.BP.padding=true;
+            
+            fobj.filt.FN =filterData(Fs);
+            fobj.filt.FN.filterDesign='cheby1';
+            fobj.filt.FN.padding=true;
+            fobj.filt.FN=fobj.filt.FN.designNotch;
+            
+            %%
+            
+            %% SWs
+            
+            sw_peakH_1 = SW.peakSW_H;
+            sw_peakTime_fs_1 = SW.absPeakTime_SW_fs; % first detection
+            sw_peakW_fs_1 = SW.peakSW_W; % at half prominence
+            
+            % Use the verified 2nd detections
+            sw_peakTime_fs_2 = SW.absPeakTime_Fs_LF; % second detection
+            sw_peakH_2 = SW.peakH_SWcheck; % second detection
+            sw_peakW_2 = SW.peakW_SWcheck; % at half width
+            
+            [C,UInds,ic] = unique(sw_peakTime_fs_2); % since we have an overlap, we have to get rid of all the double detections
+            
+            sw_peakW = sw_peakW_2(UInds);
+            sw_peakH = sw_peakH_2(UInds);
+            sw_peakTime_fs = sw_peakTime_fs_2(UInds);
+            
+            Fs = 30000;
+            
+            %% Ripples
+            
+            Rip_peakH_1 = Ripple.peakH;
+            Rip_peakTime_fs_1 = Ripple.asPeakTime_fs; % first detection
+            Rip_peakW_fs_1 = Ripple.peakW; % at half prominence
+            
+            % Use the verified 2nd detections
+            rip_peakH_2 = Ripple.peakH_ripcheck; % second detection
+            rip_peakTime_fs_2 = Ripple.absPeakTime_Fs_LF; % second detection
+            rip_peakW_2 = Ripple.peakW_ripcheck; % at half width
+            
+            [C,UInds,ic] = unique(rip_peakTime_fs_2); % since we have an overlap, we have to get rid of all the double detections
+            
+            rip_peakW = rip_peakW_2(UInds);
+            rip_peakH = rip_peakH_2(UInds);
+            rip_peakTime_fs = rip_peakTime_fs_2(UInds);
+            
+            %% Get rid of 10 ms overlaps ripples
+            FsWin = 10/1000 *Fs;
+            
+            peakDiffs = diff(rip_peakTime_fs);
+            smallDiffs = find(peakDiffs <= FsWin);
+            
+            rip_peakW_nDD  = rip_peakW;
+            rip_peakH_nDD  = rip_peakH;
+            rip_peakfs_nDD  = rip_peakTime_fs;
+            
+            rip_peakW_nDD(smallDiffs+1) = [];
+            rip_peakH_nDD(smallDiffs+1) = [];
+            rip_peakfs_nDD(smallDiffs+1) = [];
+            
+            %% Get rid of very large ripple peaks and small
+            
+            
+            outliers_h_ind = find(rip_peakH_nDD >1500);
+            
+            rip_peakH_nDD(outliers_h_ind) = [];
+            rip_peakW_nDD(outliers_h_ind) = [];
+            rip_peakfs_nDD(outliers_h_ind) = [];
+            
+            outliers_h_ind = find(rip_peakH_nDD <115);
+            
+            rip_peakH_nDD(outliers_h_ind) = [];
+            rip_peakW_nDD(outliers_h_ind) = [];
+            rip_peakfs_nDD(outliers_h_ind) = [];
+            
+            
+            %%
+            
+            
+            figure(102);clf
+            
+            subplot(3, 1, 1); plot(rip_peakfs_nDD/Fs/3600, rip_peakH_nDD, 'k.'); axis tight; title('Ripple height')
+            subplot(3, 1, 2); plot(rip_peakfs_nDD/Fs/3600, rip_peakW_nDD/Fs*1000, 'k.'); axis tight; title('Ripple width')
+            subplot(3, 1, 3); plot(rip_peakH_nDD, rip_peakW_nDD/Fs*1000, 'k.'); axis tight; title('Ripple height vs width')
+            
+            %% Find all peaks that are within 10 ms of eachother;
+            FsWin = 10/1000 *Fs;
+            
+            peakDiffs = diff(sw_peakTime_fs);
+            smallDiffs = find(peakDiffs <= FsWin);
+            
+            
+            sw_peakW_nDD  = sw_peakW;
+            sw_peakH_nDD  = sw_peakH;
+            sw_peakfs_nDD  = sw_peakTime_fs;
+            
+            sw_peakW_nDD(smallDiffs+1) = [];
+            sw_peakH_nDD(smallDiffs+1) = [];
+            sw_peakfs_nDD(smallDiffs+1) = [];
+            
+            %% test for normal distribution
+            
+            [h, p] = kstest(sw_peakH);
+            [h, p] = kstest(sw_peakW);
+            
+            %% Find height and width outliers
+            
+            outliers_h_ind = find(sw_peakH_nDD >430);
+            
+            sw_peakH_nDD(outliers_h_ind) = [];
+            sw_peakW_nDD(outliers_h_ind) = [];
+            sw_peakfs_nDD(outliers_h_ind) = [];
+            
+            
+            outliers_h_ind = find(sw_peakH_nDD <85);
+            
+            sw_peakH_nDD(outliers_h_ind) = [];
+            sw_peakW_nDD(outliers_h_ind) = [];
+            sw_peakfs_nDD(outliers_h_ind) = [];
+            
+            
+            %% Also look for SHWs smaller than 80 uV
+            
+            outliers_w_ind = find(sw_peakW_nDD >= 0.120*Fs);
+            sw_peakH_nDD(outliers_w_ind) = [];
+            sw_peakW_nDD(outliers_w_ind) = [];
+            sw_peakfs_nDD(outliers_w_ind) = [];
+            
+            %% Outliers
+            outliers_H_m = find(isoutlier(sw_peakH_nDD, 'median', 'ThresholdFactor', 6));
+            outliers_H_fs = sw_peakfs_nDD(outliers_H_m);
+            outliers_H_vals = sw_peakH_nDD(outliers_H_m);
+            outliers_H_Wvals = sw_peakW_nDD(outliers_H_m);
+            
+            figure; plot(outliers_H_Wvals, outliers_H_vals, 'k*');
+            
+            outliers_W_m = find(isoutlier(sw_peakW_nDD, 'median', 'ThresholdFactor', 5));
+            outliers_W_fs = sw_peakfs_nDD(outliers_W_m);
+            outliers_W_vals = sw_peakW_nDD(outliers_W_m);
+            outliers_W_Hvals = sw_peakH_nDD(outliers_W_m);
+            
+            figure; plot(outliers_W_vals, outliers_W_Hvals, 'k*');
+            
+            medianH = median(sw_peakH);
+            medianW_ms = median(sw_peakW/Fs)*1000;
+            stdH = std(sw_peakH)*6;
+            stdW = std((sw_peakW/Fs)*1000)*6;
+            
+            %%
+            
+            finalPeakTimes_fs = sw_peakfs_nDD;
+            finalPeakH = sw_peakH_nDD;
+            finalPeakW_fs = sw_peakW_nDD;
+            
+            rip_peakTime_fs = rip_peakfs_nDD;
+            
+            
+            %% Go over all Shs and look for ripples
+            
+            peakWinL = 0.03*Fs;
+            peakWinR = 0.03*Fs;
+            
+            allSW_fs = []; allSWR_H = []; allSWR_W_fs = [];
+            allSWR_fs = []; allSW_H = []; allSW_W_fs = [];
+            allSWR_rips_fs = []; allSWR_rips_H = []; allSWR_rips_W = [];
+            cnt = 1;
+            cnnt = 1;
+            
+            for j = 1:numel(finalPeakTimes_fs)
+                
+                sw_thisPeak_fs = finalPeakTimes_fs(j);
+                
+                checkL = sw_thisPeak_fs-peakWinL;
+                checkR = sw_thisPeak_fs+peakWinR;
+                
+                match = numel(rip_peakTime_fs(rip_peakTime_fs >= checkL & rip_peakTime_fs <= checkR));
+                if match == 1
+                    thisRipple_fs = rip_peakTime_fs(rip_peakTime_fs >= checkL & rip_peakTime_fs <= checkR);
+                    rippleInd = find(rip_peakTime_fs == thisRipple_fs(1));
+                end
+                if match == 1 % 1 SW, 1 ripple
+                    
+                    allSWR_fs(cnt) = sw_thisPeak_fs;
+                    allSWR_H(cnt) = finalPeakH(j);
+                    allSWR_W_fs(cnt) = finalPeakW_fs(j);
+                    
+                    allSWR_rips_fs(cnt) = thisRipple_fs;
+                    allSWR_rips_H(cnt) = rip_peakH_nDD(rippleInd);
+                    allSWR_rips_W(cnt) = rip_peakW_nDD(rippleInd);
+                    cnt = cnt+1;
+                    
+                elseif match > 1
+                    times_fs = rip_peakTime_fs(rip_peakTime_fs >= checkL & rip_peakTime_fs <= checkR);
+                    diffTimes_ms= (diff(times_fs)/Fs)*1000;
+                    
+                    if diffTimes_ms <50 % take the first time
+                        peakTodelete =times_fs(2);
+                        bla = find(rip_peakTime_fs ==peakTodelete);
+                        rip_peakTime_fs(bla) = [];
+                        
+                        allSWR_fs(cnt) = sw_thisPeak_fs;
+                        allSWR_H(cnt) = finalPeakH(j);
+                        allSWR_W_fs(cnt) = finalPeakW_fs(j);
+                        
+                        allSWR_rips_fs(cnt) = thisRipple_fs;
+                        allSWR_rips_H(cnt) = rip_peakH_nDD(rippleInd);
+                        allSWR_rips_W(cnt) = rip_peakW_nDD(rippleInd);
+                        cnt = cnt+1;
+                        
+                    else
+                        
+                        disp('')
+                        
+                    end
+                    
+                    %{
         %roi = times_fs(1)-.1*Fs: times_fs(2)+.1*Fs;
         roi = sw_thisPeak_fs(1)-.1*Fs: sw_thisPeak_fs(1)+.1*Fs;
         
@@ -2964,50 +4272,50 @@ for j = 1:numel(finalPeakTimes_fs)
         plot(DataSeg_FNotch);
         axis tight
        
-        %}
-        disp('')
-    elseif match == 0
-        
-        allSW_fs(cnnt) = sw_thisPeak_fs;
-        allSW_H(cnnt) = finalPeakH(j);
-        allSW_W_fs(cnnt) = finalPeakW_fs(j);
-        cnnt = cnnt+1;
-        
-    end
-    
-end
-
-
-allSWR.allSWR_fs = allSWR_fs;
-allSWR.allSWR_H = allSWR_H;
-allSWR.allSWR_W_fs = allSWR_W_fs;
-
-allSWR_rips.allSWR_rips_fs = allSWR_rips_fs;
-allSWR_rips.allSWR_rips_H = allSWR_rips_H;
-allSWR_rips.allSWR_rips_W = allSWR_rips_W;
-
-allSW.allSW_fs = allSW_fs;
-allSW.allSW_H = allSW_H;
-allSW.allSW_W_fs = allSW_W_fs;
-
-saveName = 'vDetections.mat';
-save([saveDir saveName], 'allSWR', 'allSWR_rips', 'allSW')
-    
-%% Plot of SWR over time
-
-figure(103);clf
-
-subplot(7, 1, [2 3] ); plot(allSWR_fs/Fs/3600, allSWR_H, 'k.'); axis tight; xlabel('Time (hr)'); ylabel('SWR amplitude (uV)')
-ylim([80 450])
-subplot(7, 1, [5 6]); plot(allSWR_fs/Fs/3600, allSWR_W_fs/Fs*1000, 'k.'); axis tight; xlabel('Time (hr)'); ylabel('SWR width (ms)')
-ylim([1 150])
-
-%subplot(13, 1, [8 9] ); plot(allSWR_rips_fs/Fs/3600, allSWR_rips_H, 'k.'); axis tight; xlabel('Time (hr)'); ylabel('Ripple amplitude (uV)')
-%subplot(13, 1, [11 12]); plot(allSWR_rips_fs/Fs/3600, allSWR_rips_W/Fs*1000, 'k.'); axis tight; xlabel('Time (hr)'); ylabel('SWR width (ms)')
-
-% Histograms
-% Height
-%{
+                    %}
+                    disp('')
+                elseif match == 0
+                    
+                    allSW_fs(cnnt) = sw_thisPeak_fs;
+                    allSW_H(cnnt) = finalPeakH(j);
+                    allSW_W_fs(cnnt) = finalPeakW_fs(j);
+                    cnnt = cnnt+1;
+                    
+                end
+                
+            end
+            
+            
+            allSWR.allSWR_fs = allSWR_fs;
+            allSWR.allSWR_H = allSWR_H;
+            allSWR.allSWR_W_fs = allSWR_W_fs;
+            
+            allSWR_rips.allSWR_rips_fs = allSWR_rips_fs;
+            allSWR_rips.allSWR_rips_H = allSWR_rips_H;
+            allSWR_rips.allSWR_rips_W = allSWR_rips_W;
+            
+            allSW.allSW_fs = allSW_fs;
+            allSW.allSW_H = allSW_H;
+            allSW.allSW_W_fs = allSW_W_fs;
+            
+            saveName = 'vDetections.mat';
+            save([saveDir saveName], 'allSWR', 'allSWR_rips', 'allSW')
+            
+            %% Plot of SWR over time
+            
+            figure(103);clf
+            
+            subplot(7, 1, [2 3] ); plot(allSWR_fs/Fs/3600, allSWR_H, 'k.'); axis tight; xlabel('Time (hr)'); ylabel('SWR amplitude (uV)')
+            ylim([80 450])
+            subplot(7, 1, [5 6]); plot(allSWR_fs/Fs/3600, allSWR_W_fs/Fs*1000, 'k.'); axis tight; xlabel('Time (hr)'); ylabel('SWR width (ms)')
+            ylim([1 150])
+            
+            %subplot(13, 1, [8 9] ); plot(allSWR_rips_fs/Fs/3600, allSWR_rips_H, 'k.'); axis tight; xlabel('Time (hr)'); ylabel('Ripple amplitude (uV)')
+            %subplot(13, 1, [11 12]); plot(allSWR_rips_fs/Fs/3600, allSWR_rips_W/Fs*1000, 'k.'); axis tight; xlabel('Time (hr)'); ylabel('SWR width (ms)')
+            
+            % Histograms
+            % Height
+            %{
 maxH = max(allSWR_H);
 minH = min(allSWR_H);
 
@@ -3022,7 +4330,7 @@ plot(medianH, 0, 'rv')
 plot(meanH, 0, 'bv')
 title('SWR amplitude(uV)')
 
-subplot(7, 5, [15 20]); 
+subplot(7, 5, [15 20]);
 [cx,cy]=hist(allSWR_H,binsC_H);
 bla = cumsum(cx) ./ sum(cx);
 hold on
@@ -3036,7 +4344,7 @@ maxH = max(peakW_ms);
 minH = min(peakW_ms);
 
 binsC_W = minH:2:maxH;
-subplot(7, 5, [24 29]); 
+subplot(7, 5, [24 29]);
 histogram(peakW_ms, binsC_W, 'FaceColor', 'k', 'EdgeColor', 'k');
 meanW = mean(peakW_ms);
 medianW = median(peakW_ms);
@@ -3045,306 +4353,306 @@ plot(medianW, 0, 'rv')
 plot(meanW, 0, 'bv')
 title('SWR width (ms)')
 
-subplot(7, 5, [25 30]); 
+subplot(7, 5, [25 30]);
 [cx,cy]=hist(peakW_ms,binsC_W);
 bla = cumsum(cx) ./ sum(cx);
 hold on
 plot(cy, (bla), 'linewidth', 2)
 clear('cx','cy');
-%}
-
-%% Plots of means over time
-
-binSize_s = 1*60;
-binSize_Fs = binSize_s*Fs;
-
-TOns = 1:binSize_Fs:numel(data);
-for j = 1:numel(TOns)-1
-    theseV_inds =  find(allSWR_fs >= TOns(j) & allSWR_fs < TOns(j)+binSize_Fs);    
-    theseV_vals = allSWR_H(theseV_inds);
-    theseW_vals = allSWR_W_fs(theseV_inds);
-    ShWMeanAmp(j) = mean(theseV_vals);
-    ShWMeanWidth(j) = mean(theseW_vals)/Fs*1000;
-    nWRs(j) = numel(theseV_inds);
-end
-
-SWR_rate = nWRs/binSize_s;
-
-smoothWin = 5;
-subplot(7, 1, [1] );
-plot(smooth(ShWMeanAmp, smoothWin));
-%plot(ShWMeanAmp);
-axis tight
-
-subplot(7, 1, [4] );
-plot(smooth(ShWMeanWidth, smoothWin));
-axis tight
-
-subplot(7, 1, [7] );
-plot(smooth(SWR_rate));
-axis tight
-
-
-
-%% plotting lines for the awake vs sleep
-
-TimeROi_awake_fs = [1 1*3600*Fs];
-%TimeROi_sleep_s = [6*3600 7*3600];
-TimeROi_sleep_s = [3*3600 4*3600];
-TimeROi_sleep_fs = TimeROi_sleep_s*Fs;
-
-subplot(7, 1, [2 3] ); 
-hold on
-yss = ylim;
-line([TimeROi_awake_fs(1)/Fs/3600 TimeROi_awake_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
-line([TimeROi_awake_fs(2)/Fs/3600 TimeROi_awake_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
-line([TimeROi_sleep_fs(2)/Fs/3600 TimeROi_sleep_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
-line([TimeROi_sleep_fs(1)/Fs/3600 TimeROi_sleep_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
-
-subplot(7, 1, [5 6]);
-yss = ylim;
-line([TimeROi_awake_fs(1)/Fs/3600 TimeROi_awake_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
-line([TimeROi_awake_fs(2)/Fs/3600 TimeROi_awake_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
-line([TimeROi_sleep_fs(2)/Fs/3600 TimeROi_sleep_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
-line([TimeROi_sleep_fs(1)/Fs/3600 TimeROi_sleep_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
-
-%% Print plot
-
-saveName = [plotDir  'SWRAmplWidthScatterTimePLots'];
-plotpos = [0 0 40 20];
-
-print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-print_in_A4(0, saveName, '-depsc', 0, plotpos);
-
-
-%% Collecting awake vs Sleep data
-  theseV_awake_inds =  find(allSWR_fs >= TimeROi_awake_fs(1) & allSWR_fs < TimeROi_awake_fs(2)); 
-  theseV_sleep_inds =  find(allSWR_fs >= TimeROi_sleep_fs(1) & allSWR_fs < TimeROi_sleep_fs(2));
-
-  awakeVs = allSWR_H(theseV_awake_inds);
- awakeWs = allSWR_W_fs(theseV_awake_inds);
-
- sleepVs = allSWR_H(theseV_sleep_inds);
- sleepWs = allSWR_W_fs(theseV_sleep_inds);
- 
-  
-
-%% Scatter Hist plots all data
-
-figure(310);clf; 
-
-% subplot(2, 1, 1)
-% plot(allSWR_H, allSWR_W_fs/Fs*1000, 'k.'); axis tight; xlabel('SWR amplitude (uV)');ylabel('SWR width (ms)')
-% ylim([0 150])
-% xlim([80 450])
-
-scatterhist(allSWR_H,allSWR_W_fs/Fs*1000,'Kernel','on', 'Location','SouthEast',...
-    'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..')
-
-saveName = [plotDir  'SWRAmplWidthScatterPLots'];
-
-plotpos = [0 0 12 10];
-
-print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-print_in_A4(0, saveName, '-depsc', 0, plotpos);
-
-%% Scatter Hist plots awake sleep data
-
-figure(311);clf; 
-
-group1 = ones(1, numel(awakeVs))*1;
-group2 = ones(1, numel(sleepVs))*2;
-
-groups = [group1 group2];
-xes = [awakeVs sleepVs];
-yes = [awakeWs/Fs*1000 sleepWs/Fs*1000];
-scatterhist(xes,yes,'Group',groups,'Kernel','on', 'Location','SouthEast',...
-    'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..')
-
-saveName = [plotDir  'SWRAmplWidthScatterPLots_AwakeSleep'];
-
-plotpos = [0 0 12 10];
-
-print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-print_in_A4(0, saveName, '-depsc', 0, plotpos);
-
-%% Statistics
-
-  [h, p] = ttest2(awakeVs, sleepVs);
-    [pp, hh] = ranksum(awakeVs, sleepVs);
-  
-  subplot(6, 5, [9 14]); 
-     boxplot(awakeVs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'Awake Amplitude')
-  ylim([80 450])  
-  title(['n=' num2str(numel(awakeVs))])
-  subplot(6, 5, [10 15]); 
-     boxplot(sleepVs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'sleep Amplitude')
-  title(['n=' num2str(numel(sleepVs))])
-     ylim([80 450])
-  
-  
-    [h, p] = ttest2(awakeWs, sleepWs);
-    [pp, hh] = ranksum(awakeWs, sleepWs);
-  
-    subplot(6, 5, [24 29]); 
-     boxplot(awakeWs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'Awake Width')
- % ylim([80 450])  
-  title(['n=' num2str(numel(awakeVs))])
-  subplot(6, 5, [25 30]); 
-     boxplot(sleepWs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'sleep Width')
-  title(['n=' num2str(numel(sleepVs))])
-   %  ylim([80 450])
-
-
-  %%
-%   plot(awakeVs, awakeWs/Fs*1000, 'r.');
-%   hold on
-%   plot(-sleepVs, sleepWs/Fs*1000, 'b.');
-%   hold on
-%   
-  
-  
-%% Histograms
-% Height
-  figure(310);clf; 
-
-maxH = max(awakeVs);
-minH = min(awakeVs);
-
-binsC_H = minH:5:maxH;
-
-subplot(2, 2, [1]); 
-histogram(awakeVs, binsC_H, 'FaceColor', 'k', 'EdgeColor', 'k');
-meanH = mean(awakeVs);
-medianH = median(awakeVs);
-hold on
-plot(medianH, 0, 'rv')
-plot(meanH, 0, 'bv')
-title('SWR amplitude(uV)')
-
-subplot(2, 2, [3]); 
-histogram(sleepVs, binsC_H, 'FaceColor', 'k', 'EdgeColor', 'k');
-meanH = mean(sleepVs);
-medianH = median(sleepVs);
-hold on
-plot(medianH, 0, 'rv')
-plot(meanH, 0, 'bv')
-
-
-[cx,cy]=hist(allSWR_H,binsC_H);
-bla = cumsum(cx) ./ sum(cx);
-hold on
-plot(cy, (bla), 'linewidth', 2)
-clear('cx','cy');
-
-% Width
-peakW_ms = (allSWR_W_fs/Fs)*1000;
-
-maxH = max(peakW_ms);
-minH = min(peakW_ms);
-
-binsC_W = minH:2:maxH;
-subplot(7, 5, [24 29]); 
-histogram(peakW_ms, binsC_W, 'FaceColor', 'k', 'EdgeColor', 'k');
-meanW = mean(peakW_ms);
-medianW = median(peakW_ms);
-hold on
-plot(medianW, 0, 'rv')
-plot(meanW, 0, 'bv')
-title('SWR width (ms)')
-
-subplot(7, 5, [25 30]); 
-[cx,cy]=hist(peakW_ms,binsC_W);
-bla = cumsum(cx) ./ sum(cx);
-hold on
-plot(cy, (bla), 'linewidth', 2)
-clear('cx','cy');
-
-
-%% Checcking outliers
-
-outlierToCheck_fs = outliers_W_fs;
-valsToUse = outliers_W_vals/Fs*1000;
-
-for j = 1:numel(outlierToCheck_fs)
-    
-    
-    peakWinL = 0.1*Fs;
-    peakWinR = 0.1*Fs;
-    
-    %currentPeakInd = TF(j);
-    
-    currentPeak = outlierToCheck_fs(j);
-    
-    %roi = peaks(currentPeakInd)-peakWinL:peaks(currentPeakInd)+peakWinR;
-    roi = currentPeak-peakWinL:currentPeak+peakWinR;
-    roi_s = thisSegData_s(roi);
-    thisData = data(roi);
-    [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
-    DataSeg_BP = fobj.filt.BP.getFilteredData(V_uV_data_full);
-    DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
-    DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(V_uV_data_full));
-    
-    
-    figH = figure(300);
-    figure(figH); clf;
-    
-    subplot(1, 3, 1)
-    plot(roi_s, DataSeg_FNotch)
-    hold on;
-    plot(roi_s, DataSeg_HF, 'k')
-    
-    %line([ thisSegData_s(peaks(currentPeakInd)) thisSegData_s(peaks(currentPeakInd))], [-300 100])
-    line([ thisSegData_s(currentPeak) thisSegData_s(currentPeak)], [-500 500], 'color', 'r')
-    %text(roi_s(4000), 80, num2str(currentPeakInd), 'color', 'r')
-    axis tight
-    
-    %allPeakInds = getappdata(figH, 'allPeakInds');
-    %currentPeakInd = getappdata(figH, 'currentPeakInd');
-    
-    %if ismember(currentPeakInd,  allPeakInds)
-    %    title('Saved')
-    %else
-    %    title('Not Saved')
-    %end
-    
-    LongRoi =currentPeak-10*peakWinL:currentPeak+10*peakWinR;
-    
-    roi_s = thisSegData_s(LongRoi);
-    thisData = data(LongRoi);
-    [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
-    DataSeg_BP = fobj.filt.BP.getFilteredData(V_uV_data_full);
-    DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
-    DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(V_uV_data_full));
-    
-    
-    if LongRoi(1) >0
-        %         FNotch_LongRoi = DataSeg_FNotch(LongRoi);
-        %         HF_LongRoi = DataSeg_HF(LongRoi);
-        %         roi_LongRoi_s = thisSegData_s(LongRoi);
+            %}
+            
+            %% Plots of means over time
+            
+            binSize_s = 1*60;
+            binSize_Fs = binSize_s*Fs;
+            
+            TOns = 1:binSize_Fs:numel(data);
+            for j = 1:numel(TOns)-1
+                theseV_inds =  find(allSWR_fs >= TOns(j) & allSWR_fs < TOns(j)+binSize_Fs);
+                theseV_vals = allSWR_H(theseV_inds);
+                theseW_vals = allSWR_W_fs(theseV_inds);
+                ShWMeanAmp(j) = mean(theseV_vals);
+                ShWMeanWidth(j) = mean(theseW_vals)/Fs*1000;
+                nWRs(j) = numel(theseV_inds);
+            end
+            
+            SWR_rate = nWRs/binSize_s;
+            
+            smoothWin = 5;
+            subplot(7, 1, [1] );
+            plot(smooth(ShWMeanAmp, smoothWin));
+            %plot(ShWMeanAmp);
+            axis tight
+            
+            subplot(7, 1, [4] );
+            plot(smooth(ShWMeanWidth, smoothWin));
+            axis tight
+            
+            subplot(7, 1, [7] );
+            plot(smooth(SWR_rate));
+            axis tight
+            
+            
+            
+            %% plotting lines for the awake vs sleep
+            
+            TimeROi_awake_fs = [1 1*3600*Fs];
+            %TimeROi_sleep_s = [6*3600 7*3600];
+            TimeROi_sleep_s = [3*3600 4*3600];
+            TimeROi_sleep_fs = TimeROi_sleep_s*Fs;
+            
+            subplot(7, 1, [2 3] );
+            hold on
+            yss = ylim;
+            line([TimeROi_awake_fs(1)/Fs/3600 TimeROi_awake_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+            line([TimeROi_awake_fs(2)/Fs/3600 TimeROi_awake_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+            line([TimeROi_sleep_fs(2)/Fs/3600 TimeROi_sleep_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+            line([TimeROi_sleep_fs(1)/Fs/3600 TimeROi_sleep_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+            
+            subplot(7, 1, [5 6]);
+            yss = ylim;
+            line([TimeROi_awake_fs(1)/Fs/3600 TimeROi_awake_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+            line([TimeROi_awake_fs(2)/Fs/3600 TimeROi_awake_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+            line([TimeROi_sleep_fs(2)/Fs/3600 TimeROi_sleep_fs(2)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+            line([TimeROi_sleep_fs(1)/Fs/3600 TimeROi_sleep_fs(1)/Fs/3600], [yss(1) yss(2)], 'color', 'r')
+            
+            %% Print plot
+            
+            saveName = [plotDir  'SWRAmplWidthScatterTimePLots'];
+            plotpos = [0 0 40 20];
+            
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            print_in_A4(0, saveName, '-depsc', 0, plotpos);
+            
+            
+            %% Collecting awake vs Sleep data
+            theseV_awake_inds =  find(allSWR_fs >= TimeROi_awake_fs(1) & allSWR_fs < TimeROi_awake_fs(2));
+            theseV_sleep_inds =  find(allSWR_fs >= TimeROi_sleep_fs(1) & allSWR_fs < TimeROi_sleep_fs(2));
+            
+            awakeVs = allSWR_H(theseV_awake_inds);
+            awakeWs = allSWR_W_fs(theseV_awake_inds);
+            
+            sleepVs = allSWR_H(theseV_sleep_inds);
+            sleepWs = allSWR_W_fs(theseV_sleep_inds);
+            
+            
+            
+            %% Scatter Hist plots all data
+            
+            figure(310);clf;
+            
+            % subplot(2, 1, 1)
+            % plot(allSWR_H, allSWR_W_fs/Fs*1000, 'k.'); axis tight; xlabel('SWR amplitude (uV)');ylabel('SWR width (ms)')
+            % ylim([0 150])
+            % xlim([80 450])
+            
+            scatterhist(allSWR_H,allSWR_W_fs/Fs*1000,'Kernel','on', 'Location','SouthEast',...
+                'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..')
+            
+            saveName = [plotDir  'SWRAmplWidthScatterPLots'];
+            
+            plotpos = [0 0 12 10];
+            
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            print_in_A4(0, saveName, '-depsc', 0, plotpos);
+            
+            %% Scatter Hist plots awake sleep data
+            
+            figure(311);clf;
+            
+            group1 = ones(1, numel(awakeVs))*1;
+            group2 = ones(1, numel(sleepVs))*2;
+            
+            groups = [group1 group2];
+            xes = [awakeVs sleepVs];
+            yes = [awakeWs/Fs*1000 sleepWs/Fs*1000];
+            scatterhist(xes,yes,'Group',groups,'Kernel','on', 'Location','SouthEast',...
+                'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..')
+            
+            saveName = [plotDir  'SWRAmplWidthScatterPLots_AwakeSleep'];
+            
+            plotpos = [0 0 12 10];
+            
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            print_in_A4(0, saveName, '-depsc', 0, plotpos);
+            
+            %% Statistics
+            
+            [h, p] = ttest2(awakeVs, sleepVs);
+            [pp, hh] = ranksum(awakeVs, sleepVs);
+            
+            subplot(6, 5, [9 14]);
+            boxplot(awakeVs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'Awake Amplitude')
+            ylim([80 450])
+            title(['n=' num2str(numel(awakeVs))])
+            subplot(6, 5, [10 15]);
+            boxplot(sleepVs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'sleep Amplitude')
+            title(['n=' num2str(numel(sleepVs))])
+            ylim([80 450])
+            
+            
+            [h, p] = ttest2(awakeWs, sleepWs);
+            [pp, hh] = ranksum(awakeWs, sleepWs);
+            
+            subplot(6, 5, [24 29]);
+            boxplot(awakeWs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'Awake Width')
+            % ylim([80 450])
+            title(['n=' num2str(numel(awakeVs))])
+            subplot(6, 5, [25 30]);
+            boxplot(sleepWs, 'whisker', 0, 'symbol', 'k.', 'outliersize', 2,  'jitter', 0.3, 'colors', [0 0 0], 'labels', 'sleep Width')
+            title(['n=' num2str(numel(sleepVs))])
+            %  ylim([80 450])
+            
+            
+            %%
+            %   plot(awakeVs, awakeWs/Fs*1000, 'r.');
+            %   hold on
+            %   plot(-sleepVs, sleepWs/Fs*1000, 'b.');
+            %   hold on
+            %
+            
+            
+            %% Histograms
+            % Height
+            figure(310);clf;
+            
+            maxH = max(awakeVs);
+            minH = min(awakeVs);
+            
+            binsC_H = minH:5:maxH;
+            
+            subplot(2, 2, [1]);
+            histogram(awakeVs, binsC_H, 'FaceColor', 'k', 'EdgeColor', 'k');
+            meanH = mean(awakeVs);
+            medianH = median(awakeVs);
+            hold on
+            plot(medianH, 0, 'rv')
+            plot(meanH, 0, 'bv')
+            title('SWR amplitude(uV)')
+            
+            subplot(2, 2, [3]);
+            histogram(sleepVs, binsC_H, 'FaceColor', 'k', 'EdgeColor', 'k');
+            meanH = mean(sleepVs);
+            medianH = median(sleepVs);
+            hold on
+            plot(medianH, 0, 'rv')
+            plot(meanH, 0, 'bv')
+            
+            
+            [cx,cy]=hist(allSWR_H,binsC_H);
+            bla = cumsum(cx) ./ sum(cx);
+            hold on
+            plot(cy, (bla), 'linewidth', 2)
+            clear('cx','cy');
+            
+            % Width
+            peakW_ms = (allSWR_W_fs/Fs)*1000;
+            
+            maxH = max(peakW_ms);
+            minH = min(peakW_ms);
+            
+            binsC_W = minH:2:maxH;
+            subplot(7, 5, [24 29]);
+            histogram(peakW_ms, binsC_W, 'FaceColor', 'k', 'EdgeColor', 'k');
+            meanW = mean(peakW_ms);
+            medianW = median(peakW_ms);
+            hold on
+            plot(medianW, 0, 'rv')
+            plot(meanW, 0, 'bv')
+            title('SWR width (ms)')
+            
+            subplot(7, 5, [25 30]);
+            [cx,cy]=hist(peakW_ms,binsC_W);
+            bla = cumsum(cx) ./ sum(cx);
+            hold on
+            plot(cy, (bla), 'linewidth', 2)
+            clear('cx','cy');
+            
+            
+            %% Checcking outliers
+            
+            outlierToCheck_fs = outliers_W_fs;
+            valsToUse = outliers_W_vals/Fs*1000;
+            
+            for j = 1:numel(outlierToCheck_fs)
+                
+                
+                peakWinL = 0.1*Fs;
+                peakWinR = 0.1*Fs;
+                
+                %currentPeakInd = TF(j);
+                
+                currentPeak = outlierToCheck_fs(j);
+                
+                %roi = peaks(currentPeakInd)-peakWinL:peaks(currentPeakInd)+peakWinR;
+                roi = currentPeak-peakWinL:currentPeak+peakWinR;
+                roi_s = thisSegData_s(roi);
+                thisData = data(roi);
+                [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                DataSeg_BP = fobj.filt.BP.getFilteredData(V_uV_data_full);
+                DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
+                DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(V_uV_data_full));
+                
+                
+                figH = figure(300);
+                figure(figH); clf;
+                
+                subplot(1, 3, 1)
+                plot(roi_s, DataSeg_FNotch)
+                hold on;
+                plot(roi_s, DataSeg_HF, 'k')
+                
+                %line([ thisSegData_s(peaks(currentPeakInd)) thisSegData_s(peaks(currentPeakInd))], [-300 100])
+                line([ thisSegData_s(currentPeak) thisSegData_s(currentPeak)], [-500 500], 'color', 'r')
+                %text(roi_s(4000), 80, num2str(currentPeakInd), 'color', 'r')
+                axis tight
+                
+                %allPeakInds = getappdata(figH, 'allPeakInds');
+                %currentPeakInd = getappdata(figH, 'currentPeakInd');
+                
+                %if ismember(currentPeakInd,  allPeakInds)
+                %    title('Saved')
+                %else
+                %    title('Not Saved')
+                %end
+                
+                LongRoi =currentPeak-10*peakWinL:currentPeak+10*peakWinR;
+                
+                roi_s = thisSegData_s(LongRoi);
+                thisData = data(LongRoi);
+                [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                DataSeg_BP = fobj.filt.BP.getFilteredData(V_uV_data_full);
+                DataSeg_FNotch = squeeze(fobj.filt.FN.getFilteredData(DataSeg_BP));
+                DataSeg_HF = squeeze(fobj.filt.FH2.getFilteredData(V_uV_data_full));
+                
+                
+                if LongRoi(1) >0
+                    %         FNotch_LongRoi = DataSeg_FNotch(LongRoi);
+                    %         HF_LongRoi = DataSeg_HF(LongRoi);
+                    %         roi_LongRoi_s = thisSegData_s(LongRoi);
+                    
+                    subplot(1, 3, [2 3])
+                    plot(roi_s, DataSeg_FNotch)
+                    hold on;
+                    plot(roi_s, DataSeg_HF, 'k')
+                    
+                    line([ thisSegData_s(currentPeak) thisSegData_s(currentPeak)], [-500 500], 'color', 'r')
+                    axis tight
+                    title(['Val = ' num2str(valsToUse(j))])
+                else
+                    subplot(1, 3, [2 3])
+                end
+                
+                pause
+            end
+            
+            
+            
+        end
         
-        subplot(1, 3, [2 3])
-        plot(roi_s, DataSeg_FNotch)
-        hold on;
-        plot(roi_s, DataSeg_HF, 'k')
         
-        line([ thisSegData_s(currentPeak) thisSegData_s(currentPeak)], [-500 500], 'color', 'r')
-        axis tight
-        title(['Val = ' num2str(valsToUse(j))])
-    else
-        subplot(1, 3, [2 3])
-    end
-    
-    pause
-end
-
-
-
-end
-
-
-
-
+        
+        
         
         
         function [obj] = detectSWRs_ripple_SW_Band(obj)
@@ -4417,7 +5725,7 @@ end
         end
         
         function [] = plotPowerSpectrum(obj)
-         chanToUse = obj.REC.bestChs(1);
+            chanToUse = obj.REC.bestChs(1);
             SessionDir = obj.DIR.ephysDir;
             
             search = ['*CH' num2str(chanToUse) '*'];
@@ -4655,7 +5963,7 @@ end
                 d.V_uV_data_full = V_uV_data_full;
                 d.tOn = tOn_samp(b);
                 d.batchDuration_samp = batchDuration_samp;
-                PlotDir = [obj.DIR.plotDir]; 
+                PlotDir = [obj.DIR.plotDir];
                 plot_filename = [PlotDir 'data' sprintf('%02d',b) '.mat'];
                 save(plot_filename, 'd')
                 
@@ -4848,7 +6156,7 @@ end
                 %plot(smooth(betaAll_norm), 'color', Betacolor, 'linewidth', 1)
                 plot(smooth(gammaAll_norm), 'color', 'b', 'linewidth', 1)
                 plot(smooth(lowAll_norm), 'color', 'k', 'linewidth', 1)
-                 plot(smooth(highAll_norm), 'color', Alphacolor, 'linewidth', 1)
+                plot(smooth(highAll_norm), 'color', Alphacolor, 'linewidth', 1)
                 
                 axis tight
                 %                 legTxt = [{['Delta: ' num2str(deltaBandLowCutoff) '-' num2str(deltaBandHighCutoff) ' Hz']},...
@@ -4859,8 +6167,8 @@ end
                 %
                 legTxt = [{['Delta: ' num2str(deltaBandLowCutoff) '-' num2str(deltaBandHighCutoff) ' Hz']},...
                     {['Gamma: ' num2str(gammaBandLowCutoff) '-' num2str(gammaBandHighCutoff) ' Hz']},...
-                {['Low: ' num2str(lowBandLowCutoff) '-' num2str(lowBandHighCutoff) ' Hz']},...
-                {['High: ' num2str(highBandLowCutoff) '-' num2str(highBandHighCutoff) ' Hz']}];
+                    {['Low: ' num2str(lowBandLowCutoff) '-' num2str(lowBandHighCutoff) ' Hz']},...
+                    {['High: ' num2str(highBandLowCutoff) '-' num2str(highBandHighCutoff) ' Hz']}];
                 
                 legend(legTxt)
                 
@@ -5580,10 +6888,13 @@ end
     
     methods (Hidden)
         %class constructor
-        function obj = songLearningEphysAnalysis(rfc)
+        function obj = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChan, lfpChan)
             
-            obj = getSessionInfo(obj, rfc);
-            %obj = findSessionDir(obj);
+            obj.PATH.AnalysisDir = AnalysisDir;
+            obj.DATA.eegChan = eegChan;
+            obj.DATA.lfpChan = lfpChan;
+            
+            obj = getPathInfo(obj);
             
         end
     end

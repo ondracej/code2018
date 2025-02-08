@@ -9,6 +9,9 @@ switch gethostname
         
         STADir = '/home/janie/Data/OTProject/MLD/Figs/STA-WN/RasterSTA/WNSTAs/';
         
+    case 'NEUROPIXELS'
+        STADir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\MLD\Figs\STAAnalysis\STA-2024\WN\WN-STA-matFiles\';
+        
 end
 
 trialSeach = ['*.mat*'];
@@ -49,10 +52,13 @@ for s = 1:nTrials
    end
    
    
+   nSpikes(s) = d.STA.nSpikes;
+   
+   
 end
 
 
-highTs = find(alldetsT <2.0);
+highTs = find(alldetsT >2.0);
 alldetswOutLowTs = alldetsT(highTs);
     
 minTime = min(alldetsT);
@@ -82,7 +88,7 @@ minF = min(alldetsF);
     
     axis(h(2),'auto');  % Sync axes
     
-    FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/Figs/STA-WN/STA-TimeFreq/';
+    FigSaveDir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\MLD\Figs\STAAnalysis\STA-2024\WN\PopulationFigures/';
     
     
     plotpos = [0 0 12 10];
@@ -113,5 +119,8 @@ alldetsT = alldetsT;
     line([2 2], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
     
      plotpos = [0 0 12 10];
-    print_in_A4(0, [FigSaveDir 'Tdetections_nolows'], '-depsc', 0, plotpos);
+    %print_in_A4(0, [FigSaveDir 'Tdetections_nolows'], '-depsc', 0, plotpos);
+    %print_in_A4(0, [FigSaveDir 'Tdetections_nolows'], '-djpeg', 0, plotpos);
+    print_in_A4(0, [FigSaveDir 'Tdetections_wlows'], '-depsc', 0, plotpos);
+     print_in_A4(0, [FigSaveDir 'Tdetections_wlows'], '-djpeg', 0, plotpos);
 end

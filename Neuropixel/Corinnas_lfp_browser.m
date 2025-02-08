@@ -7,7 +7,7 @@ function h_trace = lfp_browser()
 %fdir_session = 'C:\Users\Corinna\Dropbox\colab_neurophys_of_sleep\data\g4r4\20190723_03';
 %birdname = 'g4r4';
 
-fdir_session = 'Z:\JanieData\Neuropixel\w047\raw_08_RH_P6 - SpontWAnasthesia_g0\';
+fdir_session = 'X:\Janie-NeuropixelData\w047\raw_07_RH_P5_g0\';
 birdname = 'w047';
 
 

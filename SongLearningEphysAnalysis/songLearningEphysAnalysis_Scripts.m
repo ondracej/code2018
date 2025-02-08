@@ -1,3 +1,114 @@
+
+%%
+
+close all 
+clear all 
+
+[rec_DB] = recDatabase();
+
+for rec = 5:9
+    
+    disp(['Recording: ' num2str(rec)])
+    
+    AnalysisDir = rec_DB(rec).AnalysisDir;
+    VideoDir  = rec_DB(rec).VideoDir;
+    RecName = rec_DB(rec).RecName;
+    RecName_save = rec_DB(rec).RecName_save;
+    ephys_On_s = rec_DB(rec).ephys_On_s;
+    lightOff_s = rec_DB(rec).lightOff_s;
+    lightOn_s = rec_DB(rec).lightOn_s;
+    CamOnOff_10Hr = rec_DB(rec).CamOnOff_10Hr;
+    
+    eegChan = rec_DB(rec).eegChan;
+    lfpChan = rec_DB(rec).lfpChan;
+    
+    %% Check data
+    
+    %{
+dataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w027\DATA_EPHYS\chronic_2021-07-23_22-43-29\Ephys';
+dataRecordingObj = OERecordingMF(dataDir);
+dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
+
+timeSeriesViewer(dataRecordingObj); % loads all the channels
+    %}
+    %%
+    cd(AnalysisDir)
+    
+    clear('data_OBJ')
+    
+    data_OBJ = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChan, lfpChan);
+    data_OBJ.DATA.RecName = RecName;
+    data_OBJ.DATA.RecName_save = RecName_save;
+    
+    %%
+    
+    %% Analyze Videos
+    
+    data_OBJ.PATH.vid_path = [VideoDir];
+    data_OBJ = analyze_mvmt_in_video_frames(data_OBJ);
+    
+    %% Load EEG
+    
+    ChanToLoad_path = [data_OBJ.PATH.eeg_path data_OBJ.PATH.eeg_name];
+    data_OBJ = load_ephys_data(data_OBJ, ChanToLoad_path);
+    %data_OBJ = load_and_downsample_ephys_data(data_OBJ, ChanToLoad_path);
+    
+    %% Calculated alignment points
+    
+    Alignment_LightOff_s = calc_offset_alignment_time(data_OBJ, ephys_On_s, lightOff_s);
+    Alignment_LightOn_s = calc_offset_alignment_time(data_OBJ, ephys_On_s, lightOn_s);
+    
+    data_OBJ.ANALYSIS.Alignment_LightOff_s = Alignment_LightOff_s;
+    data_OBJ.ANALYSIS.Alignment_LightOn_s = Alignment_LightOn_s;
+    
+    data_OBJ.ANALYSIS.Alignment_1hrAfterLightsOff_s = Alignment_LightOff_s + 3600;
+    %data_OBJ.ANALYSIS.Alignment_1hrbeforeLightsOn_s = Alignment_LightOn_s - 3600;
+    data_OBJ.ANALYSIS.Alignment_1hrbeforeLightsOn_s = data_OBJ.ANALYSIS.Alignment_1hrAfterLightsOff_s + 10*3600; % Change this to 10 hours exactly
+    
+    data_OBJ = cut_data_to_alignment_points(data_OBJ);
+    
+    %%
+    %% Run Sleep Analysis
+    
+    [data_OBJ]  = calc_delta_gamma(data_OBJ);
+    
+    
+end
+%%
+
+[data_OBJ]  = plot_delta_gamma_across_nights(data_OBJ);
+
+
+
+
+ %% Clustering
+
+%data_OBJ = preprocessData_find_30Hz_artifacts(data_OBJ);
+%data_OBJ = sleep_feature_extract_obj(data_OBJ);
+
+%arte_factor = 7;
+%data_OBJ = cluster_sleep_obj(data_OBJ, arte_factor);
+%data_OBJ = plot_cluster_results(data_OBJ);
+%data_OBJ = check_staging_in_eeg(data_OBJ);
+ %%
+ 
+ 
+ 
+ %%
+ 
+ 
+ 
+%{
+
+
+
+
+
+
+
+
+
+
 %avianSWRAnalysis_SCRIPTS
 
 close all
@@ -414,3 +525,5 @@ ClustType = 1;
 [D_OBJ] = getFreqBandDetection(D_OBJ);
 
 [D_OBJ] = plotDBRatio(D_OBJ);
+ 
+ %}

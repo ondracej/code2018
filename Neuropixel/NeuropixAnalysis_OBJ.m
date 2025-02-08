@@ -1,4 +1,4 @@
-classdef NeuropixAnalysis_OBJ < handle
+classdef Song_EEG_Analysis_OBJ < handle
     
     
     properties (Access = public)

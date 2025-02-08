@@ -22,7 +22,9 @@ disp(Stim);
 %audSelInd = 2; % SpikesThis is the index, spikesnot the stim number!!!
 
 %FigSaveDir = '/media/janie/300GBPassport/OTProject/MLD/';
-FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/';
+%FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/';
+
+FigSaveDir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\MLD\Figs\WN-Analysis\';
 
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
@@ -104,6 +106,10 @@ meanPreStimFR = mean(FR_Spont);
 meanStimFR = mean(FR_Stim);
 meanPostStimFR = mean(FR_Spont_post);
 
+medianPreStimFR = median(FR_Spont);
+medianStimFR = median(FR_Stim);
+medianPostStimFR = median(FR_Spont_post);
+
 stdFRStim = std(FR_Stim);
 stdFRSpont = std(FR_Spont);
 stdFRSpontPost = std(FR_Spont_post);
@@ -115,6 +121,8 @@ semFRSpontPost = stdFRSpontPost / (sqrt(numel(FR_Spont_post)));
 covar = cov(FR_Stim, FR_Spont);
 z_score_cov = (meanStimFR - meanPreStimFR) / sqrt((stdFRStim^2 + stdFRSpont^2) - 2*covar(1, 2));
 
+WN.neuronName{oo} = NeuronName;
+
 WN.FR_Spont(oo,:) = FR_Spont;
 WN.FR_Stim(oo,:) = FR_Stim;
 WN.FR_Spont_post(oo,:) = FR_Spont_post;
@@ -122,6 +130,11 @@ WN.FR_Spont_post(oo,:) = FR_Spont_post;
 WN.meanPreStimFR(oo) = meanPreStimFR;
 WN.meanStimFR(oo) = meanStimFR;
 WN.meanPostStimFR(oo) = meanPostStimFR;
+
+
+WN.medianPreStimFR(oo) = medianPreStimFR;
+WN.medianStimFR(oo) = medianStimFR;
+WN.medianPostStimFR(oo)  = medianPostStimFR;
 
 WN.stdFRSpont(oo) = stdFRSpont;
 WN.stdFRStim(oo) = stdFRStim;
@@ -133,11 +146,21 @@ WN.semFRSpontPost(oo) = semFRSpontPost;
 
 WN.z_score_cov(oo) = z_score_cov;
 
+
+bla  = find (WN.z_score_cov >=0.5)
+bla  = find (WN.z_score_cov <=-0.5)
 %%
 if oo == maxNum
     
-    [p h] = ttest(WN.meanPreStimFR,WN.meanStimFR);
-    [p h] = ttest(WN.meanPostStimFR,WN.meanStimFR);
+    [h p] = ttest(WN.meanPreStimFR,WN.meanStimFR);
+    [h p] = ttest(WN.meanPostStimFR,WN.meanStimFR);
+    
+    [p h] = ranksum(WN.meanPreStimFR,WN.meanStimFR);
+       
+    
+    [p h] = ranksum(WN.meanPostStimFR,WN.meanStimFR);
+    [p h] = ranksum(WN.meanPostStimFR,WN.meanPreStimFR);
+    
     
     allWNSpontMeans = mean(WN.meanPreStimFR);
     allWNStimMeans = mean(WN.meanStimFR);

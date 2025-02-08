@@ -65,7 +65,7 @@ classdef chicken_OT_analysis_OBJ < handle
                 case 'NEUROPIXELS'
                     dirD = '\';
 
-                    addpath(genpath('C:\Users\Janie\Documents\GitHub\code2018\'));
+                    addpath(genpath('C:\Users\Neuropix\Documents\GitHub\code2018\'));
                     %addpath(genpath('/home/dlc/code/GitHub/code2018/OT_Analysis/'));
                     %addpath(genpath('/home/dlc/code/GitHub/UMS2K-master/'));
 

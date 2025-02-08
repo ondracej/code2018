@@ -54,13 +54,14 @@ disp('Finished...');
 dbstop if error
 %WN_ExpInds = [1 3 5 6 7 8 9 10 11 13 14 15 18 19 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 38 39 40 44 47]; %WN, 2, 4 12 16 17 20 21 37 42 43 are inhibited by sound
 %AllWN_ExpInds = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 42 43 44 47]; %WN, 2, 4 12 16 17 20 21 37 42 43 are inhibited by sound
-AllWN_ExpInds = [3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 19 20 21 23 25 27 28 29 30 31 33 34 35 36 37 38 39 40 42 43 44 ]; %WN, 2, 4 12 16 17 20 21 37 42 43 are inhibited by sound
+AllWN_ExpInds = [3 5 6 7 8 9 10 11 12 13 14 15 16 17 19 20 21 23 25 27 28 29 30 31 33 34 35 36 37 38 39 40 42 43 44]; %WN, 2, 4 12 16 17 20 21 37 42 43 are inhibited by sound
 %WNRasterInd = [ 10  28 42 23 33 27 29  25 44 34  40 39 31  3   17 43 21  ]; %WN, 2, 4 12 16 17 20 21 37 42 43 are inhibited by sound
 
 %STARasterInds = [10 28 23 33 27 29  25 44 34  40 39 31  3 ];
 %WNRasterInd = fliplr(WNRasterInd);
 figure(406); clf
-%nInds = numel(WN_ExpInds);
+
+
 nInds = numel(AllWN_ExpInds);
 WN = [];
 WnCCs = [];
@@ -79,15 +80,17 @@ for j = 1:nInds
     recSession = recs(thisInd);
     NeuronName = ['N-' num2str(Neurons(thisInd))];
     
-    
-   % WN = calcFRZScores_WN(experiment, recSession, NeuronName, j, 36, WN);
-    
+    %% WN Analysis
+   % WN = calcFRZScores_WN(experiment, recSession, NeuronName, j, 35, WN);
+   
+    %% STA Analysis
    %STA_for_WN_Stims(experiment, recSession, NeuronName)
-   %STA_for_WN_Stims_V2(experiment, recSession, NeuronName)
-   %STA_for_WN_Stims_V3(experiment, recSession, NeuronName)
+   STA_for_WN_Stims_V2(experiment, recSession, NeuronName)
+   %STA_for_WN_Stims_V3(experiment, recSession, NeuronName) % this seems to collect all the stim spike triggered windows and then calc the a 1-d wavelet on all those windows individually
    %STA_for_WN_Stims_Envs(experiment, recSession, NeuronName)
     
-   binSpikeTimesAndAnalyze(experiment, recSession, NeuronName)
+   %% Other
+  % binSpikeTimesAndAnalyze(experiment, recSession, NeuronName)
    %RastersForAmplitudeEnvelopWN(experiment, recSession, NeuronName, j)
     %EnvCalc_for_WN_Stims(experiment, recSession, NeuronName)
    %WnCCs =  EnvCalc_for_WN_Stims_V2(experiment, recSession, NeuronName, j, 36, WnCCs);
