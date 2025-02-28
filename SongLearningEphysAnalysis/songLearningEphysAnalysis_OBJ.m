@@ -21,9 +21,19 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
             %% adding code paths
             
-            code2018Path = 'C:\Users\Neuropix\Documents\GitHub\code2018\';
-            analysisToolsPath = 'C:\Users\Neuropix\Documents\GitHub\analysis-tools';
-            
+            switch gethostname
+                case 'DESKTOP-PBLRH65'
+
+                    code2018Path = 'G:\code\Github\code2018\SongLearningEphysAnalysis\';
+                    analysisToolsPath = 'G:\code\Github\analysis-tools';
+
+                case 'NEUROPIXELS'
+
+                    code2018Path = 'C:\Users\Neuropix\Documents\GitHub\code2018\';
+                    analysisToolsPath = 'C:\Users\Neuropix\Documents\GitHub\analysis-tools';
+
+            end
+
             if isfolder(code2018Path)
                 addpath(genpath(code2018Path));
                 addpath(genpath(analysisToolsPath));
@@ -32,12 +42,12 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 disp('Please check definition for code2018 path in "getPathInfo"')
             end
             
-            eegChan = obj.DATA.eegChan;
-            lfpChan = obj.DATA.lfpChan;
+            eegChans = obj.DATA.eegChans;
+            %lfpChan = obj.DATA.lfpChan;
             AnalysisDir = obj.PATH.AnalysisDir;
-            
             ephys_path = [AnalysisDir 'Ephys' dirD];
             
+            obj.PATH.ephys_path = ephys_path;
             
             % Ask user for binary file
       %{
@@ -64,11 +74,8 @@ classdef songLearningEphysAnalysis_OBJ < handle
             end
         
             %}
-            obj.PATH.lfp_name = lfpChan;
-            obj.PATH.lfp_path = ephys_path;
-            
-            obj.PATH.eeg_name = eegChan;
-            obj.PATH.eeg_path = ephys_path;
+            %obj.PATH.lfp_name = lfpChan;
+            %obj.PATH.lfp_path = ephys_path;
             
             %obj.PATH.vid_path = [vid_path dirD];
             %obj.PATH.vid_path = [vid_path dirD];
@@ -82,7 +89,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
         
         
         
-        function obj = analyze_mvmt_in_video_frames(obj)
+        function obj = analyze_mvmt_in_video_frames(obj, framesOffOn)
             
             
             % Based on Hamed's birdvid_move_extract.m
@@ -191,6 +198,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
             %xlabel('Time (s)')
             obj.ANALYSIS.VID.r_dif = r_dif;
+            obj.ANALYSIS.VID.framesOffOn = framesOffOn;
             
         end
         
@@ -202,7 +210,8 @@ classdef songLearningEphysAnalysis_OBJ < handle
             sInMin = 60;
             minInHr = 60;
             hoursInDay = 24;
-            
+            alignment_s = [];
+        
             % Calc diff between seconds
             if AlignmentTime(:,3) < ephysTimeOn(:,3)
                 sCnt_s = sInMin - ephysTimeOn(:,3) + AlignmentTime(:,3) ;
@@ -237,9 +246,18 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 
             end
             
-            alignment_s = minCnt_s+sCnt_s+total_time_hrs_s;
-            
-            
+             alignment_s = minCnt_s+sCnt_s+total_time_hrs_s;
+         % CalcOffset_s = obj.ANALYSIS.CalcOffset_s;
+         % 
+         % if  alignment_s ~=   CalcOffset_s
+         % 
+         %     if alignment_s/3600 > 11
+         % 
+         %     else
+         %     keyboard
+         %     end
+         % end
+
             
         end
         
@@ -257,7 +275,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
             sampleRate = info.header.sampleRate;
             fs_new = sampleRate/downsamp_ratio;
-            thisSegData_s = timestamps(1:end) - timestamps(1);
+            %thisSegData_s = timestamps(1:end) - timestamps(1);
             samples = numel(data);
             
            % samples/sampleRate/3600
@@ -265,9 +283,9 @@ classdef songLearningEphysAnalysis_OBJ < handle
             obj.DATA.sampleRate_orig = sampleRate;
             obj.DATA.sampleRate_ds = fs_new;
             obj.DATA.samples = samples;
-            obj.DATA.EEG_data_full = data;
-            obj.DATA.EEG_timstamps_seg_s = thisSegData_s;
-            obj.DATA.EEG_filename = fileName;
+            obj.DATA.data_full = data;
+            %obj.DATA.timstamps_seg_s = thisSegData_s;
+            obj.DATA.filename = fileName;
             
         end
         
@@ -317,7 +335,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             DataROI_1hrAfterLightsOff_samp = DataROI_1hrAfterLightsOff_s*fs;
             DataROI_1hrbeforeLightsOn_samp = DataROI_1hrbeforeLightsOn_s*fs;
             
-            dataToAnalyze = obj.DATA.EEG_data_full;
+            dataToAnalyze = obj.DATA.data_full;
             dataToAnalyze = dataToAnalyze(DataROI_1hrAfterLightsOff_samp:DataROI_1hrbeforeLightsOn_samp);
             
             nSamps = numel(dataToAnalyze);
@@ -328,11 +346,11 @@ classdef songLearningEphysAnalysis_OBJ < handle
             disp('********************************************')
             
             
-            timestamps = obj.DATA.EEG_timstamps_seg_s;
-            dataToAnalyze_timestamps = timestamps(DataROI_1hrAfterLightsOff_samp:DataROI_1hrbeforeLightsOn_samp);
+          %  timestamps = obj.DATA.timstamps_seg_s;
+          %  dataToAnalyze_timestamps = timestamps(DataROI_1hrAfterLightsOff_samp:DataROI_1hrbeforeLightsOn_samp);
             
-            obj.DATA.eeg_data_cut_to_alignment = dataToAnalyze;
-             obj.DATA.eeg_timepoints_cut_to_alignment = dataToAnalyze_timestamps;
+            obj.DATA.data_cut_to_alignment = dataToAnalyze;
+           % obj.DATA.timepoints_cut_to_alignment = dataToAnalyze_timestamps;
             
         end
         
@@ -433,10 +451,10 @@ classdef songLearningEphysAnalysis_OBJ < handle
         
         
         
-        function [obj]  = calc_delta_gamma(obj)
+        function [obj]  = calc_delta_gamma_EEG(obj, plotDir, thisChan, AnalysisHrs)
+           
             
-            
-            data = obj.DATA.eeg_data_cut_to_alignment;
+            data = obj.DATA.data_cut_to_alignment;
             Fs = obj.DATA.sampleRate_orig;
             
             samples = size(data, 1);
@@ -719,11 +737,12 @@ classdef songLearningEphysAnalysis_OBJ < handle
             plot(alldsData_plot, 'k')
             
             nPoints = size(alldsData_plot, 2);
-           pointsPerHr = round(nPoints/10); % assuming we are analyzing 10 hours of data
+           pointsPerHr = round(nPoints/AnalysisHrs); % assuming we are analyzing 10 hours of data
            
            
-           xticksNew = pointsPerHr:pointsPerHr:10*pointsPerHr; 
-           xticksNew_lab = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'} ;
+           %xticksNew = pointsPerHr:pointsPerHr:10*pointsPerHr; 
+           xticksNew = pointsPerHr:pointsPerHr:AnalysisHrs*pointsPerHr; 
+           xticksNew_lab = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'} ;
            axis tight 
            set(gca, 'xtick', xticksNew)
              set(gca, 'xticklabel', xticksNew_lab)
@@ -733,7 +752,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
             ylim([-500 500])
              %ylim([-1000 1000])
-            title(obj.DATA.RecName)
+            title([obj.DATA.RecName ' EEG-' num2str(thisChan)])
             
             subplot(3, 1, 2)
             hold on
@@ -745,16 +764,16 @@ classdef songLearningEphysAnalysis_OBJ < handle
             %plot(Mic, 'linestyle', 'none', 'marker', '.', 'color', 'r')
             plot(timepoints_wake_samp, detections, 'linestyle', 'none', 'marker', '.', 'color', 'r')
             
-            ylim([0 300])
+            ylim([0 500])
             
             yyaxis right
               plot(bufferedDeltaGammaRatioCell_nan_norm_smooth, 'color', 'k', 'linewidth', 2)
            
               nPoints = size(bufferedDeltaGammaRatioCell_nan_norm_smooth, 1);
-           pointsPerHr = round(nPoints/10); % assuming we are analyzing 10 hours of data
+           pointsPerHr = round(nPoints/AnalysisHrs); % assuming we are analyzing 10 hours of data
            
            
-           xticksNew = pointsPerHr:pointsPerHr:10*pointsPerHr; 
+           xticksNew = pointsPerHr:pointsPerHr:AnalysisHrs*pointsPerHr; 
            
              set(gca, 'xtick', xticksNew)
              set(gca, 'xticklabel', xticksNew_lab)
@@ -778,26 +797,543 @@ classdef songLearningEphysAnalysis_OBJ < handle
 %                  set(gca, 'xticklabel', xlabs)
            
     
-           title('Raw and normalized d/y ratio')
+           title(['Raw and normalized d/y ratio - EEG-' num2str(thisChan)])
            
            %%
            
-           subplot(3, 1, 3)
+           subplot(3, 1, 3); cla
           
-           plot(obj.ANALYSIS.VID.r_dif)
            
            nFrames = size(obj.ANALYSIS.VID.r_dif, 2);
-           framesPerHr = round(nFrames/10); % assuming we are analyzing 10 hours of data
+           framesPerHr = round(nFrames/12); % assuming we are analyzing 10 hours of data
+           hold on
+           widthFrame = obj.ANALYSIS.VID.framesOffOn(2)-obj.ANALYSIS.VID.framesOffOn(1);
+           r = rectangle('Position',[obj.ANALYSIS.VID.framesOffOn(1) 0 widthFrame 50000], 'Facecolor', [0.8 0.8 0.8], 'linestyle', 'none');
+           plot(obj.ANALYSIS.VID.r_dif, 'k')
            
-           
-           xticksNew = 40:40:10*40; 
+           xticksNew = framesPerHr:framesPerHr:12*nFrames ; 
            
            axis tight
            set(gca, 'xtick', xticksNew)
              set(gca, 'xticklabel', xticksNew_lab)
-           ylim([0 20000])
+           ylim([0 100000])
            title('Movement, approx 1 frame / minute')
          xlabel('Time (Hr)');
+           
+           %%
+           plotpos = [0 0 35 15];
+           
+           %plotDir =   'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038-12Hr_EEG\';
+           RecName_save = obj.DATA.RecName_save;
+           
+           plot_filename = [plotDir RecName_save '__dg__EEG-' num2str(thisChan)];
+           print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+          % print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+           
+           D.bufferedDeltaGammaRatioCell_nan_norm_smooth = bufferedDeltaGammaRatioCell_nan_norm_smooth;
+           D.bufferedDeltaGammaRatioCell = bufferedDeltaGammaRatioCell;
+           D.allBufferedData = allBufferedData;
+           D.alldsData_plot = alldsData_plot;
+           D.inds_wake = inds_wake;
+           D.timepoints_wake_samp = timepoints_wake_samp;
+           D.detections = detections;
+           D.RecName_save = RecName_save;
+           D.r_dif = obj.ANALYSIS.VID.r_dif;
+           
+           obj.ANALYSIS.EEG_inds_wake = inds_wake;
+           obj.ANALYSIS.EEG_timepoints_wake_samp = timepoints_wake_samp;
+           obj.ANALYSIS.EEG_detections = detections;
+                             
+                             
+           save([plotDir RecName_save '__DeltaGamma__EEG-' num2str(thisChan) '.mat'], 'D', '-v7.3')
+           clear 'D' 'obj.DATA.data_full' 'obj.DATA.data_cut_to_alignment'
+
+            %{
+            axis tight
+            xticks_s = 0:size(tmp_V_DS,2)*2: size(allBufferedData, 2);
+            set(gca, 'xtick', xticks_s)
+            xlabs = [];
+            for j = 1:numel(xticks_s)
+                xlabs{j} = num2str(j-1);
+            end
+            
+            set(gca, 'xticklabel', xlabs)
+            ylim([0 1200])
+            xlabel('Time (hr)')
+            
+            dataToPlot  = bufferedDeltaThetaOGammaRatio;
+            dbScale = 50000;
+            
+            
+            %%
+            subplot(1, 2, 2)
+            
+            imagesc(dataToPlot, [0 1200])
+            %imagesc(dataToPlot, [0 300])
+            % imagesc(dataToPlot(2:29, :), [0 1200])
+            %imagesc(dataToPlot(2:29, :))
+            
+            if batchDuration_s == 1800
+                %xtics = get(gca, 'xtick');
+                xticks_s = 0:5*60:30*60;
+                xticks_min = xticks_s/60;
+                
+                xticklabs = xticks_min;
+                
+                ytics = get(gca, 'ytick');
+                ytics_Hr = ytics/2;
+                
+            end
+            xlabs = [];
+            for j = 1:numel(xticklabs)
+                xlabs{j} = num2str(xticklabs(j));
+            end
+            
+            ytics_Hr_round = [];
+            for j = 1:numel(ytics_Hr)
+                %ytics_Hr_round{j} = num2str(round(ytics_Hr(j)));
+                ytics_Hr_round{j} = num2str(ytics_Hr(j));
+            end
+            
+            set(gca, 'xtick', xticks_s)
+            set(gca, 'xticklabel', xlabs)
+            set(gca, 'yticklabel', ytics_Hr_round)
+            
+            xlabel('Time (min)')
+            ylabel('Time (hr)')
+            %title([params.DateTime ' | ' titletxt])
+            colorbar
+            %}
+            
+            %%
+            
+            
+            
+        end
+
+
+        
+        function [obj]  = calc_delta_gamma_LFP(obj)
+           
+            
+            data = obj.DATA.data_cut_to_alignment;
+            Fs = obj.DATA.sampleRate_orig;
+            
+            samples = size(data, 1);
+            recordingDuration_s  = samples/Fs;
+            totalTime = recordingDuration_s;
+            
+            
+            batchDuration_s = 1*60; % 1 min
+            batchDuration_samp = batchDuration_s*Fs;
+            
+            tOn_s = 1:batchDuration_s:totalTime;
+            tOn_samp = tOn_s*Fs;
+            nBatches = numel(tOn_samp);
+            
+            %Plotting.titleTxt = [params.BirdName ' | ' params.DateTime];
+            %Plotting.saveTxt = [params.BirdName '_' params.DateTime];
+            
+            %% Filters
+            
+            disp('Filtering data...')
+            fObj = filterData(Fs);
+            
+            fobj.filt.F=filterData(Fs);
+            %fobj.filt.F.downSamplingFactor=120; % original is 128 for 32k
+            fobj.filt.F.downSamplingFactor=100; % original is 128 for 32k
+            fobj.filt.F=fobj.filt.F.designDownSample;
+            fobj.filt.F.padding=true;
+            fobj.filt.FFs=fobj.filt.F.filteredSamplingFrequency;
+            
+            %fobj.filt.FL=filterData(Fs);
+            %fobj.filt.FL.lowPassPassCutoff=4.5;
+            %fobj.filt.FL.lowPassStopCutoff=6;
+            %fobj.filt.FL.attenuationInLowpass=20;
+            %fobj.filt.FL=fobj.filt.FL.designLowPass;
+            %fobj.filt.FL.padding=true;
+            
+            fobj.filt.FL=filterData(Fs);
+            fobj.filt.FL.lowPassPassCutoff=30;% this captures the LF pretty well for detection
+            fobj.filt.FL.lowPassStopCutoff=40;
+            fobj.filt.FL.attenuationInLowpass=20;
+            fobj.filt.FL=fobj.filt.FL.designLowPass;
+            fobj.filt.FL.padding=true;
+            
+            fobj.filt.BP=filterData(Fs);
+            fobj.filt.BP.highPassCutoff=1;
+            fobj.filt.BP.lowPassCutoff=2000;
+            fobj.filt.BP.filterDesign='butter';
+            fobj.filt.BP=fobj.filt.BP.designBandPass;
+            fobj.filt.BP.padding=true;
+            
+            fobj.filt.FH2=filterData(Fs);
+            fobj.filt.FH2.highPassCutoff=100;
+            fobj.filt.FH2.lowPassCutoff=2000;
+            fobj.filt.FH2.filterDesign='butter';
+            fobj.filt.FH2=fobj.filt.FH2.designBandPass;
+            fobj.filt.FH2.padding=true;
+            
+            %             fobj.filt.FN =filterData(Fs);
+            %             fobj.filt.FN.filterDesign='cheby1';
+            %             fobj.filt.FN.padding=true;
+            %             fobj.filt.FN=fobj.filt.FN.designNotch;
+            
+              %% Raw Data  - Parameters from data=getDelta2BetaRatio(obj,varargin)
+                
+                % This is all in ms
+%                 addParameter(parseObj,'movLongWin',1000*60*30,@isnumeric); %max freq. to examine
+%                 addParameter(parseObj,'movWin',10000,@isnumeric);
+%                 addParameter(parseObj,'movOLWin',9000,@isnumeric);
+%                 addParameter(parseObj,'segmentWelch',1000,@isnumeric);
+%                 addParameter(parseObj,'dftPointsWelch',2^10,@isnumeric);
+%                 addParameter(parseObj,'OLWelch',0.5);
+                
+              
+                reductionFactor = 1; % No reduction
+                
+                movWin_Var = 10*reductionFactor; % 10 s
+                movOLWin_Var = 9*reductionFactor; % 9 s
+                
+                segmentWelch = 1*reductionFactor;
+                OLWelch = 0.5*reductionFactor;
+                
+                dftPointsWelch =  2^10;
+                
+                segmentWelchSamples = round(segmentWelch*fobj.filt.FFs);
+                samplesOLWelch = round(segmentWelchSamples*OLWelch);
+                
+                movWinSamples=round(movWin_Var*fobj.filt.FFs);%obj.filt.FFs in Hz, movWin in samples
+                movOLWinSamples=round(movOLWin_Var*fobj.filt.FFs);
+                
+                % run welch once to get frequencies for every bin (f) determine frequency bands
+                [~,f] = pwelch(randn(1,movWinSamples),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
+                
+                deltaBandLowCutoff = 1;
+                deltaBandHighCutoff = 4;
+               
+                gammaBandLowCutoff = 30;
+                gammaBandHighCutoff = 80;
+                
+                %{
+                deltaThetaLowCutoff = 1;
+                deltaThetaHighCutoff = 8;
+                
+                thetaBandLowCutoff  = 4;
+                thetaBandHighCutoff  = 8;
+                
+                alphaBandLowCutoff  = 8;
+                alphaBandHighCutoff  = 12;
+                
+                
+                betaBandLowCutoff = 12;
+                betaBandHighCutoff = 30;
+                
+                gammaBandLowCutoff = 30;
+                gammaBandHighCutoff = 100;
+                
+                gammaBandLowCutoff = 25;
+                gammaBandHighCutoff = 140;
+                %}
+                
+               %%
+                
+                pfDeltaBand=find(f>=deltaBandLowCutoff & f<deltaBandHighCutoff);
+                pfGammaBand=find(f>=gammaBandLowCutoff & f<gammaBandHighCutoff);
+
+                %{
+                pfDeltaThetaBand=find(f>=deltaThetaLowCutoff & f<deltaThetaHighCutoff);
+                pfAlphaBand=find(f>=alphaBandLowCutoff & f<alphaBandHighCutoff);
+                pfBetaBand=find(f>=betaBandLowCutoff & f<betaBandHighCutoff);
+                pfThetaBand=find(f>=thetaBandLowCutoff & f<thetaBandHighCutoff);
+                %}
+                
+                %%
+                bufferedDeltaGammaRatio = [];
+                bufferedDelta= [];
+                bufferedGamma= [];
+                allV_DS = [];
+                alldsData = [];
+                
+              
+                v_thresh = 550;
+                artifact = [];
+                
+                
+                disp('Calculating d/y...')
+                
+            for i = 1:nBatches-1
+                
+                if i == nBatches
+                    thisData = data(tOn_samp(i):samples);
+                else
+                    thisData = data(tOn_samp(i):tOn_samp(i)+batchDuration_samp);
+                end
+                
+               
+                % Noise artifact
+               % [b,a] = butter(3,200/(Fs/2),'high');
+               % ref_over200=filtfilt(b,a,thisData);
+               % figure(103); clf; plot(abs(ref_over200))
+               % pause
+                
+                
+               % pow_200hz{i}=ref_over200; % power of high freq in the ref chnl for sleep/wake deliniation
+                
+                
+                %%
+                
+                [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                thisSegData = V_uV_data_full(:,:,:);
+                
+                %  [DataSeg_Notch, ~] = fobj.filt.FN.getFilteredData(thisSegData); % t_DS is in ms
+                [DataSeg_BP, ~] = fobj.filt.BP.getFilteredData(thisSegData); % t_DS is in ms
+                [DataSeg_F, t_DS] = fobj.filt.F.getFilteredData(DataSeg_BP); % t_DS is in ms
+                
+                
+                thisData_DS = squeeze(DataSeg_F)';
+                inds_wake=sum(thisData_DS>v_thresh);
+                
+                if inds_wake~= 0
+                    artifact(i) = 1;
+                    % figure(103); clf; plot(abs(thisData))
+                    % figure(103); clf; plot(thisData)
+                    disp('')
+                else
+                    artifact(i) = 0;
+                end
+                
+                
+                %thisDataF = squeeze(DataSeg_F);
+                %figure; plot(thisDataF)
+                t_DS_s = t_DS/1000;
+                
+                %%
+                tmp_V_DS = buffer(DataSeg_F,movWinSamples,movOLWinSamples,'nodelay');
+                pValid=all(~isnan(tmp_V_DS));
+                
+                [pxx,f] = pwelch(tmp_V_DS(:,pValid),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fobj.filt.FFs);
+                
+                %% Ratios
+                
+                deltaGammaRatioAll = zeros(1,numel(pValid));
+                deltaGammaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfGammaBand,:)))';
+                
+                %{
+                deltaBetaRatioAll=zeros(1,numel(pValid));
+                deltaBetaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfBetaBand,:)))';
+                
+                deltaThetaRatioAll = zeros(1,numel(pValid));
+                deltaThetaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfThetaBand,:)))';
+                
+                deltaTheta_GammaRatioAll = zeros(1,numel(pValid));
+                deltaTheta_GammaRatioAll(pValid)=(mean(pxx(pfDeltaThetaBand,:))./mean(pxx(pfGammaBand,:)))';
+                
+                deltaAlphRatioAll = zeros(1,numel(pValid));
+                deltaAlphRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfAlphaBand,:)))';
+                
+                betaGammaRatioAll = zeros(1,numel(pValid));
+                betaGammaRatioAll (pValid)=(mean(pxx(pfBetaBand,:))./mean(pxx(pfGammBand,:)))';
+                
+                thetaGammaRatioAll = zeros(1,numel(pValid));
+                thetaGammaRatioAll (pValid)=(mean(pxx(pfThetaBand,:))./mean(pxx(pfGammBand,:)))';
+                %}
+                %% single elements
+%{                
+                deltaAll=zeros(1,numel(pValid));
+                deltaAll(pValid)=mean(pxx(pfDeltaBand,:))';
+                
+                thetaAll=zeros(1,numel(pValid));
+                thetaAll(pValid)=mean(pxx(pfThetaBand,:))';
+                
+                alphaAll=zeros(1,numel(pValid));
+                alphaAll(pValid)=mean(pxx(pfAlphaBand,:))';
+                
+                betaAll=zeros(1,numel(pValid));
+                betaAll(pValid)=mean(pxx(pfBetaBand,:))';
+                
+                gammaAll=zeros(1,numel(pValid));
+                gammaAll(pValid)=mean(pxx(pfGammBand,:))';
+  %}              
+                
+                %%
+                
+                bufferedDeltaGammaRatio(i,:)=deltaGammaRatioAll;
+                bufferedDeltaGammaRatioCell{i}=deltaGammaRatioAll;
+                
+%{                
+                bufferedDeltaBetaRatio(i,:)=deltaBetaRatioAll;
+                bufferedDeltaAlphaRatio(i,:)=deltaAlphRatioAll;
+                bufferedDeltaThetaRatio(i,:)=deltaThetaRatioAll;
+                
+                bufferedDeltaThetaOGammaRatio(i,:)=deltaThetaOGammaRatioAll;
+                bufferedDeltaThetaOGammaRatioCell{i} = deltaThetaOGammaRatioAll;
+                
+                bufferedDelta(i,:)=deltaAll;
+                bufferedBeta(i,:)=betaAll;
+                bufferedTheta(i,:)=thetaAll;
+                bufferedGamma(i,:)=gammaAll;
+                bufferedAlpha(i,:)=alphaAll;
+  %}              
+                %%
+                alldsData{i} = squeeze(DataSeg_F)';
+                allV_DS{i} = squeeze(tmp_V_DS);
+               % allRawData{i} = thisData';
+                
+            end
+            
+            disp('Finished...')
+            
+            
+            %% Identify artifacts
+            
+          %  pow_200hz_all = cell2mat(pow_200hz);
+          %  move_artef_thresh=median(pow_200hz_all)+3*iqr(pow_200hz_all);
+            
+           % figure; plot(pow_200hz_all);
+           % line([0 size(pow_200hz_all, 2)], [move_artef_thresh move_artef_thresh], 'color', 'r')
+            % artefact windows:
+           
+            %inds_wake=pow_200hz_all>move_artef_thresh;
+            
+            timepoints_V_artifacts_inds = find(artifact ==1);
+            EEG_inds_wake = obj.ANALYSIS.EEG_inds_wake;
+            timepoints_wake_inds_EEG = find(EEG_inds_wake  ==1);
+            
+            allArtifacts = unique(sort([timepoints_V_artifacts_inds timepoints_wake_inds_EEG]));
+            nPointsInBuffer = size(deltaGammaRatioAll, 2);
+            
+            alldsData_nan = [];
+            bufferedDeltaGammaRatioCell_nan = [];
+            for oo = 1:size(bufferedDeltaGammaRatioCell, 2)
+                thisdgcell = bufferedDeltaGammaRatioCell{oo};
+                thisVdatacell = alldsData{oo};
+                if ismember(oo, allArtifacts)
+                    bufferedDeltaGammaRatioCell_nan{oo} = nan(1, nPointsInBuffer);
+                    alldsData_nan{oo} = nan(1, size(thisVdatacell, 2));
+                else
+                    
+                    alldsData_nan{oo} = thisVdatacell;
+                    bufferedDeltaGammaRatioCell_nan{oo} = thisdgcell;
+                    
+                end
+            end
+            
+            bufferedDeltaGammaRatioCell_nan_vals = cell2mat(bufferedDeltaGammaRatioCell_nan);
+            Vdata_nan_vals = cell2mat(alldsData_nan);
+            
+            %figure(134); clf; subplot(2, 1, 1); plot(diff(Vdata_nan_vals));
+            %subplot(2, 1, 2); plot(Vdata_nan_vals);
+            %subplot(2, 1, 2); plot(bufferedDeltaGammaRatioCell_nan_vals);
+            
+            %% Getting artifact timepointsi n samples
+            
+            
+             timepoints_wake_EEG_samp_cell = [];
+            for oo = 1:numel(timepoints_wake_inds_EEG)
+                timepoints_wake_EEG_samp_cell{oo} = timepoints_wake_inds_EEG(oo)*nPointsInBuffer-nPointsInBuffer+1:timepoints_wake_inds_EEG(oo)*nPointsInBuffer+1;
+            end
+            
+            timepoints_wake_EEG_samp = unique(cell2mat(timepoints_wake_EEG_samp_cell));
+            
+            
+            timepoints_V_artifacts_cell = [];
+            for oo = 1:numel(timepoints_V_artifacts_inds)
+                timepoints_V_artifacts_cell{oo} = timepoints_V_artifacts_inds(oo)*nPointsInBuffer-nPointsInBuffer+1:timepoints_V_artifacts_inds(oo)*nPointsInBuffer+1;
+            end
+                
+            timepoints_V_artifacts_samp = unique(cell2mat(timepoints_V_artifacts_cell));
+          
+            
+            detections_EEG = ones(1, numel(timepoints_wake_EEG_samp))*200;
+            detections_V_artifacts = ones(1, numel(timepoints_V_artifacts_samp))*500;
+            
+            allBufferedData  = cell2mat(bufferedDeltaGammaRatioCell);
+            
+            %% Look at normalized values disregarding putative movments
+            
+            bufferedDeltaGammaRatioCell_nan_vals_smooth = smooth(bufferedDeltaGammaRatioCell_nan_vals, 260); % 2 min smooth
+            
+            maxVal = max(bufferedDeltaGammaRatioCell_nan_vals_smooth);
+            minVal = min(bufferedDeltaGammaRatioCell_nan_vals_smooth);
+            
+            bufferedDeltaGammaRatioCell_nan_norm_smooth = (bufferedDeltaGammaRatioCell_nan_vals_smooth-minVal)./(maxVal-minVal);
+            
+            alldsData_plot = cell2mat(alldsData);
+            
+            %% Making plot
+            disp('Plotting...')
+            figure(145);clf
+            
+%             subplot(2, 1, 1)
+%             plot(alldsData_plot, 'k')
+%             subplot(2, 1, 2)
+%               plot(allRawData, 'b')
+%                line([0 size(allRawData, 2)], [v_thresh v_thresh], 'color', 'r')
+            
+            subplot(3, 1, 1)
+            plot(alldsData_plot, 'k')
+            hold on
+            line([0 size(alldsData_plot, 2)], [v_thresh v_thresh], 'color', 'r')
+            
+            nPoints = size(alldsData_plot, 2);
+            pointsPerHr = round(nPoints/10); % assuming we are analyzing 10 hours of data
+            
+            
+            xticksNew = pointsPerHr:pointsPerHr:10*pointsPerHr;
+            xticksNew_lab = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'} ;
+            axis tight
+            set(gca, 'xtick', xticksNew)
+            set(gca, 'xticklabel', xticksNew_lab)
+             
+            ylim([-800 800])
+            title([obj.DATA.RecName ' LFP' ])
+            
+            %%
+            subplot(3, 1, 2)
+            hold on
+            yyaxis left
+            plot(allBufferedData, 'color', [0.5 0.5 0.5]) % 250  = 5 min smooth
+            %plot(smooth(allBufferedData, 250)) % 250  = 5 min smooth
+            %plot(smooth(allBufferedData, 3000), 'linewidth', 2) % 1 hour
+            %plot(Mic, 'linestyle', 'none', 'marker', '.', 'color', 'r')
+            
+            %plot(timepoints_wake_samp, detections, 'linestyle', 'none', 'marker', '.', 'color', 'r')
+            
+            plot(timepoints_wake_EEG_samp, detections_EEG, 'linestyle', 'none', 'marker', '.', 'color', 'r')
+            plot(timepoints_V_artifacts_samp, detections_V_artifacts, 'linestyle', 'none', 'marker', '.', 'color', 'b')
+            
+            ylim([0 800])
+            
+            yyaxis right
+            plot(bufferedDeltaGammaRatioCell_nan_norm_smooth, 'color', 'k', 'linewidth', 2)
+            
+            nPoints = size(bufferedDeltaGammaRatioCell_nan_norm_smooth, 1);
+            pointsPerHr = round(nPoints/10); % assuming we are analyzing 10 hours of data
+            xticksNew = pointsPerHr:pointsPerHr:10*pointsPerHr;
+            set(gca, 'xtick', xticksNew)
+            set(gca, 'xticklabel', xticksNew_lab)
+            line([0 nPoints], [.5 .5], 'color', 'k', 'linestyle', '--')
+            axis tight
+            
+            title('Raw and normalized d/y ratio - LFP')
+            
+            %%
+            subplot(3, 1, 3)
+            
+            plot(obj.ANALYSIS.VID.r_dif)
+            
+            nFrames = size(obj.ANALYSIS.VID.r_dif, 2);
+            framesPerHr = round(nFrames/10); % assuming we are analyzing 10 hours of data
+            
+            xticksNew = framesPerHr:framesPerHr:10*framesPerHr;
+            
+            axis tight
+            set(gca, 'xtick', xticksNew)
+            set(gca, 'xticklabel', xticksNew_lab)
+            ylim([0 20000])
+            title('Movement, approx 1 frame / minute')
+            xlabel('Time (Hr)');
            
            %%
            plotpos = [0 0 35 15];
@@ -805,19 +1341,27 @@ classdef songLearningEphysAnalysis_OBJ < handle
            plotDir =   'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\';
            RecName_save = obj.DATA.RecName_save;
            
-           plot_filename = [plotDir RecName_save '__dg'];
+           plot_filename = [plotDir RecName_save '__dg__LFP' ];
            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
            print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
            
            D.bufferedDeltaGammaRatioCell_nan_norm_smooth = bufferedDeltaGammaRatioCell_nan_norm_smooth;
            D.bufferedDeltaGammaRatioCell = bufferedDeltaGammaRatioCell;
-           D.allBufferedData = allBufferedData;
+           D.allBufferedDataDeltaGamma = allBufferedData;
            D.alldsData_plot = alldsData_plot;
-           D.inds_wake = inds_wake;
+           
+                
+           D.timepoints_wake_EEG_samp = timepoints_wake_EEG_samp;
+           D.timepoints_V_artifacts_samp = timepoints_V_artifacts_samp;
+           
+           D.timepoints_wake_inds_EEG = timepoints_wake_inds_EEG;
+           D.timepoints_V_artifacts_inds = timepoints_V_artifacts_inds;
+           
+       
            D.RecName_save = RecName_save;
            D.r_dif = obj.ANALYSIS.VID.r_dif;
            
-           save([plotDir RecName_save '__DeltaGamma.mat'], 'D', '-v7.3')
+           save([plotDir RecName_save '__DeltaGamma__LFP.mat'], 'D', '-v7.3')
             
             %{
             axis tight
@@ -881,10 +1425,820 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
             
         end
+
+
+        
+        function [obj] = import_song_analysis_data_from_xls(obj, songDataDir, searchTerm)
+
+            %fileNames = dir(fullfile(songDataDir, '*.xls'));
+            fileNames = dir(fullfile(songDataDir, ['*' searchTerm '*']));
+            fileNames = {fileNames.name}';
+            nFiles = numel(fileNames);
+
+            for j = 1:nFiles
+                thisFile = fileNames{j};
+                thisFilePath = [songDataDir thisFile];
+
+                %% Set up the Import Options and import the data
+                opts = spreadsheetImportOptions("NumVariables", 24);
+
+                % Specify sheet and range
+                opts.Sheet = "Sheet1";
+                opts.DataRange = "B3:Y350";
+
+                % Specify column names and types
+                opts.VariableNames = ["name", "duration", "start", "amplitude", "pitch1", "FM", "AM_2", "entropy1", "pitchGoodness", "meanFreq", "pitch2", "FM1", "entropy2", "pitchGoodness1", "meanFreq1", "AM", "month1", "day1", "hour1", "minute1", "second1", "cluster1", "fileName", "comments"];
+                opts.VariableTypes = ["string", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "categorical", "string"];
+
+                % Specify variable properties
+                opts = setvaropts(opts, ["name", "comments"], "WhitespaceRule", "preserve");
+                opts = setvaropts(opts, ["name", "fileName", "comments"], "EmptyFieldRule", "auto");
+
+                % Import the data
+                xlsData = readtable(thisFilePath, opts, "UseExcel", false);
+
+                %% Convert to output type
+                name = xlsData.name;
+                duration = xlsData.duration;
+                start = xlsData.start;
+                amplitude = xlsData.amplitude;
+                pitch1 = xlsData.pitch1;
+                FM = xlsData.FM;
+                AM_2 = xlsData.AM_2;
+                entropy1 = xlsData.entropy1;
+                pitchGoodness = xlsData.pitchGoodness;
+                meanFreq = xlsData.meanFreq;
+                pitch2 = xlsData.pitch2;
+                FM1 = xlsData.FM1;
+                entropy2 = xlsData.entropy2;
+                pitchGoodness1 = xlsData.pitchGoodness1;
+                meanFreq1 = xlsData.meanFreq1;
+                AM = xlsData.AM;
+                month1 = xlsData.month1;
+                day1 = xlsData.day1;
+                hour1 = xlsData.hour1;
+                minute1 = xlsData.minute1;
+                second1 = xlsData.second1;
+                cluster1 = xlsData.cluster1;
+                fileName = xlsData.fileName;
+                comments = xlsData.comments;
+
+                %% Clear temporary variables
+                %clear opts xlsData
+
+                %% Organize all data and find out size of all data
+
+
+                validRowsInds = ~isnan(duration);
+                clusterInds = cluster1(validRowsInds);
+                clusterIds = unique(clusterInds);
+                nClusters = numel(clusterIds);
+
+                sortedSongData = [];
+
+                % sortedSongData is sorted by the different cluster, such
+                % that the first structure is cluster 1 and the following
+                % structures are the other clusters
+
+                for oo = 1:nClusters
+
+                    thisCLusterID = clusterIds(oo);
+                    inds = find(clusterInds == thisCLusterID);
+
+                    sortedSongData{oo}.name = name(inds);
+                    sortedSongData{oo}.fileName = fileName(inds);
+                    sortedSongData{oo}.start = start(inds); % syllable start
+                    sortedSongData{oo}.duration = duration(inds); %syllable duration
+                    sortedSongData{oo}.amplitude = amplitude(inds); % mean amplitude
+                    sortedSongData{oo}.FM = FM(inds); % mean FM
+                    sortedSongData{oo}.FM1 = FM1(inds);
+                    sortedSongData{oo}.AM = AM(inds); % variance AM
+                    sortedSongData{oo}.AM_2 = AM_2(inds); % mean AM^2
+                    sortedSongData{oo}.entropy1 = entropy1(inds); % mean entropy
+                    sortedSongData{oo}.entropy2 = entropy2(inds); % variance entropy
+                    sortedSongData{oo}.pitchGoodness = pitchGoodness(inds); % mean pitch goodness
+                    sortedSongData{oo}.pitchGoodness1 = pitchGoodness1(inds); %variance pitch goodness
+                    sortedSongData{oo}.meanFreq = meanFreq(inds); % mean mean freq
+                    sortedSongData{oo}.meanFreq1 = meanFreq1(inds); % variance mean freq
+                    sortedSongData{oo}.pitch1 = pitch1(inds);  % mean pitch
+                    sortedSongData{oo}.pitch2 = pitch2(inds); % variance pitch
+
+                end
+
+                % AllSongDataThisDay is the data from the morning (first)
+                % and then the data from the evening (last)
+
+                AllSongDataThisDay{j} = sortedSongData;
+
+
+                %% Find outliers - couldnt figure out a good method
+                %{
+                thisClusterDuration = sortedSongData{oo}.duration;
+                thisClusterStart = sortedSongData{oo}.start;
+                thisClusterMedianDuration = median(thisClusterDuration);
+                DurationThresh_std = 3*std(thisClusterDuration);
+
+                [r, q] = iqr(thisClusterDuration);
+
+                TF = isoutlier(thisClusterDuration);
+                toCluster = [thisClusterDuration thisClusterStart];
+                rng = 1;
+
+                [idx,C] = kmeans(toCluster, nClusters, 'Distance', 'cityblock', 'Replicates', 5);
+
+                [B,I] = sort(C(:,1),'ascend');
+
+                figure;
+                plot(toCluster(idx==1,1),toCluster(idx==1,2),'r.','MarkerSize',12)
+                hold on
+                plot(toCluster(idx==2,1),toCluster(idx==2,2),'b.','MarkerSize',12)
+                plot(C(:,1),C(:,2),'kx',...
+                    'MarkerSize',15,'LineWidth',3)
+                legend('Cluster 1','Cluster 2','Centroids',...
+                    'Location','NW')
+                title 'Cluster Assignments and Centroids'
+                hold off
+                %}
+
+            end
+
+            obj.ANALYSIS.AllSongDataThisDay = AllSongDataThisDay;
+
+        end
+
         
         
+        function obj = metaAnalysis_analyze_wEntropy_acrossDays(obj, songDataDir)
+            
+            
+            fileNames = dir(fullfile(songDataDir, '*.mat'));
+            fileNames = {fileNames.name}';
+            nFiles = numel(fileNames);
+            
+            %% 
+            
+            
+            for j = 1:nFiles
+                thisFile = fileNames{j};
+                thisFilePath = [songDataDir thisFile];
+                
+                data = load(thisFilePath);
+                nSyls = numel(data.E.all_mean_mean_wEntropy);
+                
+                all_mean_mean_wEntropy = [];
+                all_var_wEntropy = [];
+                
+                for oo = 1:nSyls
+                    A{oo}.all_mean_mean_wEntropy(j) = data.E.all_mean_mean_wEntropy{1,oo};
+                    A{oo}.all_var_wEntropy(j) = data.E.all_mean_var_wEntropy{1,oo};
+                    A{oo}.all_means_wEntropy{j} = data.E.all_means_wEntropy{1,oo};
+                    A{oo}.all_vars_wEntropy{j} = data.E.all_vars_wEntropy{1,oo};
+                    A{oo}.allDirnames{j} = thisFile;
+                end
+                
+            end
+            
+            nValsPerCell = cellfun(@numel, A{1,1}.all_means_wEntropy);
+            
+            inds = find(nValsPerCell == 100)
+            
+            data100 = A{1,1}.all_means_wEntropy(inds);
+            data100 = A{1,1}.all_vars_wEntropy(inds);
+            
+dataToplot = cell2mat(data100');
+dataToplot = cell2mat(A{1,1}.all_vars_wEntropy');
+
+
+            figure; boxplot(dataToplot, 'plotstyle', 'compact')
+            
+            
+            %% Sleep Comparisons
+            % Here we assume that the first file is the morning, the second
+            % file is the night of the same day, and the third file is the
+            % morning of the following day...We are looking at comparisons
+            % from night to following day
+            
+            
+              cnt = 1;
+            for j = 2:2:nFiles % starting on the night file
+                
+                
+                for k = 1:2 %night and day
+                    
+                    if k ==1
+                thisFile = fileNames{j};
+                    elseif k ==2
+                    thisFile = fileNames{j+1};
+                    end
+                
+                thisFilePath = [songDataDir thisFile];
+                
+                data = load(thisFilePath);
+                nSyls = numel(data.E.all_mean_mean_wEntropy);
+                
+                for oo = 1:nSyls
+                    S{oo}.all_mean_mean_wEntropy(k) = data.E.all_median_median_wEntropy{1,oo};
+                    S{oo}.all_median_median_wEntropy(k) = data.E.all_mean_mean_wEntropy{1,oo};
+                    
+                    S{oo}.all_mean_var_wEntropy(k) = data.E.all_mean_var_wEntropy{1,oo};
+                    S{oo}.all_median_var_wEntropy(k) = data.E.all_median_var_wEntropy{1,oo};
+                    
+                    S{oo}.all_means_wEntropy{k} = data.E.all_means_wEntropy{1,oo};
+                    S{oo}.all_medians_wEntropy{k} = data.E.all_medians_wEntropy{1,oo};
+                   
+                    S{oo}.all_vars_wEntropy{k} = data.E.all_vars_wEntropy{1,oo};
+                    S{oo}.allDirnames{k} = thisFile;
+                end
+                
+                end
+                
+                allNightDayComparisons{cnt} = S;
+                cnt = cnt+1;
+            end
+            
+            %% Plot the differences across nights
+            
+            Syl = 2;
+            for q = 1:numel(allNightDayComparisons)
+                
+                
+                thisComparison_means = allNightDayComparisons{1,q}{1,Syl}.all_mean_mean_wEntropy;
+                thisComparison_medians = allNightDayComparisons{1,q}{1,Syl}.all_median_median_wEntropy;
+            
+            Diff_mean_mean_wEntropy(q) = thisComparison_means(2) - thisComparison_means(1);
+            Diff_median_median_wEntropy(q) = thisComparison_medians(2) - thisComparison_medians(1);
+            
+                thisComparison_meanVar = allNightDayComparisons{1,q}{1,Syl}.all_mean_var_wEntropy;
+                thisComparison_medianVar = allNightDayComparisons{1,q}{1,Syl}.all_median_var_wEntropy;
+            
+                Diff_mean_Var_wEntropy(q) = thisComparison_meanVar(2) - thisComparison_meanVar(1);
+            Diff_median_Var_wEntropy(q) = thisComparison_medianVar(2) - thisComparison_medianVar(1);
+            
+            %positive entropy diff means that the morning had lower entropy
+            %than the night (what we would expect = that entropy decreases
+            %over the night
+            
+            Names{q} = allNightDayComparisons{1,q}{1,Syl}.allDirnames{1,1};
+            legs{q} = Names{q}(1:10);
+            end
+            
+            figure(202);clf
+            
+            subplot(2, 1, 1)
+            plot(Diff_mean_mean_wEntropy, 'k*')
+            hold on
+            plot(Diff_median_median_wEntropy, 'r*')
+            title('Wiener Entropy')
+            
+            xticks = 1:1:numel(Names);
+           set(gca, 'xtick',xticks) 
+           set(gca, 'xticklabel', '')
+           %set(gca,'XTickLabelRotation',90)
+            
+            ylim([-.2 .2])
+            xlim([0 numel(Names)+1])
+            line([0 numel(Names)+1], [0 0] , 'color',  'k')
+           % legend('Means', 'Medians')
+            
+            %%
+              subplot(2, 1, 2)
+            plot(Diff_mean_Var_wEntropy, 'k*')
+            hold on
+            plot(Diff_median_Var_wEntropy, 'r*')
+            title(' Wiener Entropy Variance')
+            
+            xticks = 1:1:numel(Names);
+            set(gca, 'xtick',xticks) 
+            set(gca, 'xticklabel', legs)
+            set(gca,'XTickLabelRotation',90)
+            
+            ylim([-.2 .2])
+            xlim([0 numel(Names)+1])
+            line([0 numel(Names)+1], [0 0] , 'color',  'k')
+            legend('Means', 'Medians')
+            
+            
+            %%
+            
+            
+            for j = 1:nFiles
+                thisFile = fileNames{j};
+                thisFilePath = [songDataDir thisFile];
+                
+                data = load(thisFilePath);
+                nSyls = numel(data.E.all_mean_mean_wEntropy);
+                
+                all_mean_mean_wEntropy = [];
+                all_var_wEntropy = [];
+                
+                for oo = 1:nSyls
+                    S{oo}.all_mean_mean_wEntropy(j) = data.E.all_mean_mean_wEntropy{1,oo};
+                    S{oo}.all_var_wEntropy(j) = data.E.all_mean_var_wEntropy{1,oo};
+                    S{oo}.all_means_wEntropy{j} = data.E.all_means_wEntropy{1,oo};
+                    S{oo}.all_vars_wEntropy{j} = data.E.all_vars_wEntropy{1,oo};
+                    S{oo}.allDirnames{j} = thisFile;
+                end
+                
+                
+            end
+            
+            toPlot = S{1,2}.all_means_wEntropy;
+            
+            figure; 
+         boxplotGroup(toPlot)
+            
+            
+            
+            toPlot = S{1,1}.all_mean_mean_wEntropy;
+            toPlot = S{1,1}.all_var_wEntropy;
+            
+            figure; plot(toPlot(1:2:numel(toPlot)), '*k')
+            hold on; plot(toPlot(2:2:numel(toPlot)), '*r')
+            figure; plot(S{1,1}.all_var_wEntropy, 'k*')
+            
+        end
+
         
         
+
+        function obj = metaAnalysis_import_song_analysis_data_from_xls(obj, songDataDir)
+
+
+            fileNames = dir(fullfile(songDataDir, '*.xls'));
+            fileNames = {fileNames.name}';
+            nFiles = numel(fileNames);
+
+            for j = 1:nFiles
+                thisFile = fileNames{j};
+                thisFilePath = [songDataDir thisFile];
+
+                %% Set up the Import Options and import the data
+                opts = spreadsheetImportOptions("NumVariables", 24);
+
+                % Specify sheet and range
+                opts.Sheet = "Sheet1";
+                opts.DataRange = "B3:Y350";
+
+                % Specify column names and types
+                opts.VariableNames = ["name", "duration", "start", "amplitude", "pitch1", "FM", "AM_2", "entropy1", "pitchGoodness", "meanFreq", "pitch2", "FM1", "entropy2", "pitchGoodness1", "meanFreq1", "AM", "month1", "day1", "hour1", "minute1", "second1", "cluster1", "fileName", "comments"];
+                opts.VariableTypes = ["string", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "categorical", "string"];
+
+                % Specify variable properties
+                opts = setvaropts(opts, ["name", "comments"], "WhitespaceRule", "preserve");
+                opts = setvaropts(opts, ["name", "fileName", "comments"], "EmptyFieldRule", "auto");
+
+                % Import the data
+                xlsData = readtable(thisFilePath, opts, "UseExcel", false);
+
+                %% Convert to output type
+                name = xlsData.name;
+                duration = xlsData.duration;
+                start = xlsData.start;
+                amplitude = xlsData.amplitude;
+                pitch1 = xlsData.pitch1;
+                FM = xlsData.FM;
+                AM_2 = xlsData.AM_2;
+                entropy1 = xlsData.entropy1;
+                pitchGoodness = xlsData.pitchGoodness;
+                meanFreq = xlsData.meanFreq;
+                pitch2 = xlsData.pitch2;
+                FM1 = xlsData.FM1;
+                entropy2 = xlsData.entropy2;
+                pitchGoodness1 = xlsData.pitchGoodness1;
+                meanFreq1 = xlsData.meanFreq1;
+                AM = xlsData.AM;
+                month1 = xlsData.month1;
+                day1 = xlsData.day1;
+                hour1 = xlsData.hour1;
+                minute1 = xlsData.minute1;
+                second1 = xlsData.second1;
+                cluster1 = xlsData.cluster1;
+                fileName = xlsData.fileName;
+                comments = xlsData.comments;
+
+                %% Clear temporary variables
+                %clear opts xlsData
+
+                %% Organize all data and find out size of all data
+
+
+                validRowsInds = ~isnan(duration);
+                clusterInds = cluster1(validRowsInds);
+                clusterIds = unique(clusterInds);
+                nClusters = numel(clusterIds);
+
+                sortedSongData = [];
+
+                % sortedSongData is sorted by the different cluster, such
+                % that the first structure is cluster 1 and the following
+                % structures are the other clusters
+
+                for oo = 1:nClusters
+
+                    thisCLusterID = clusterIds(oo);
+                    inds = find(clusterInds == thisCLusterID);
+
+                    sortedSongData{oo}.name = name(inds);
+                    sortedSongData{oo}.fileName = fileName(inds);
+                    sortedSongData{oo}.start = start(inds); % syllable start
+                    sortedSongData{oo}.duration = duration(inds); %syllable duration
+                    sortedSongData{oo}.amplitude = amplitude(inds); % mean amplitude
+                    %sortedSongData{oo}.FM = FM(inds); % mean FM
+                    %sortedSongData{oo}.FM1 = FM1(inds);
+                    %sortedSongData{oo}.AM = AM(inds); % variance AM
+                    %sortedSongData{oo}.AM_2 = AM_2(inds); % mean AM^2
+                    sortedSongData{oo}.entropy1 = entropy1(inds); % mean entropy
+                    sortedSongData{oo}.entropy2 = entropy2(inds); % variance entropy
+                    %sortedSongData{oo}.pitchGoodness = pitchGoodness(inds); % mean pitch goodness
+                    %sortedSongData{oo}.pitchGoodness1 = pitchGoodness1(inds); %variance pitch goodness
+                    %sortedSongData{oo}.meanFreq = meanFreq(inds); % mean mean freq
+                    %sortedSongData{oo}.meanFreq1 = meanFreq1(inds); % variance mean freq
+                    %sortedSongData{oo}.pitch1 = pitch1(inds);  % mean pitch
+                    %sortedSongData{oo}.pitch2 = pitch2(inds); % variance pitch
+
+                end
+
+
+                AllData_MetaAnalysis{j} = sortedSongData;
+
+
+            end
+
+            disp('')
+
+
+            save([songDataDir 'MetaAnalysis_SongData.mat'], 'AllData_MetaAnalysis', '-v7.3')
+
+
+        end
+
+        
+        function obj = plotMotifExamples(obj, motifDataDir, plotDir)
+            
+            
+            fileNames = dir(fullfile(motifDataDir, '*.wav'));
+            f = filesep;
+            [filepath,name,ext] = fileparts(motifDataDir);
+            
+            dateName_inds = find(filepath == f);
+            dateName = filepath(dateName_inds(end)+1:end);
+            
+            fileNames = {fileNames.name}';
+            nFiles = numel(fileNames);
+            stringsearch = 'f';
+            
+            for j = 1:nFiles
+                SText{j} = fileNames{j,:}(1:2);
+                
+                bla = find(fileNames{j,:} == stringsearch);
+                NText(j) = str2double(fileNames{j,:}(bla+1:end-4));
+                
+            end
+            
+            uniqueSyls = unique(SText);
+            
+            nSyls = numel(uniqueSyls);
+            
+            for oo = 1:nSyls
+                
+                allFilesThisSyl = ismember(SText, uniqueSyls{oo});
+                allfileInds = find(allFilesThisSyl ==1);
+                
+                
+                thisSylFiles = allfileInds;
+                
+                
+                
+                spec_scale = 0.08;
+                motiv_count =  35;
+                height = 1/motiv_count;
+                
+                width = 0.9 /3;
+                L_edge = 0.05;
+                file_cnt = 1;
+                
+                figH = figure(104); clf
+                % Assume 35 syllables per column, 3 columns for ~ 100 syllables
+                for j = 1:3
+                    
+                    if j == 1
+                        cnt =0;
+                        for k = 1: motiv_count
+                             if file_cnt > numel(thisSylFiles)
+                                break
+                            end
+                            thisFile = fileNames{thisSylFiles(file_cnt)};
+                            thisFilePath = [motifDataDir thisFile];
+                            [y,Fs] = audioread(thisFilePath);
+                            axes('position', [L_edge (cnt)*height width height]);
+                            specgram1((y/spec_scale),512,Fs,400,360);
+                            ylim ([0 8000]);
+                            axis off
+                            annotation(figH ,'textbox',[0 (cnt)*height+.01 0.02 0.02],'String',num2str(file_cnt),'FitBoxToText','off', 'linestyle', 'none');
+                            
+                            cnt = cnt+1;
+                            file_cnt = file_cnt+1;
+                        end
+                        L_edge = L_edge+ width;
+                    else
+                        cnt =0;
+                        for k = 1: motiv_count
+                            if file_cnt > numel(thisSylFiles)
+                                break
+                            end
+                            thisFile = fileNames{thisSylFiles(file_cnt)};
+                            thisFilePath = [motifDataDir thisFile];
+                            [y,Fs] = audioread(thisFilePath);
+                            axes('position', [L_edge (cnt)*height width height]);
+                            specgram1((y/spec_scale),512,Fs,400,360);
+                            ylim ([0 8000]);
+                            axis off
+                            cnt = cnt+1;
+                            file_cnt = file_cnt+1;
+                           
+                        end
+                        L_edge = L_edge+ width;
+                    end
+                    
+                end
+                
+                plotpos = [0 0 15 45];
+                
+                saveName = [dateName '-' num2str(oo)];
+                
+                plot_filename = [motifDataDir saveName];
+                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                %print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+                
+                %plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\ANALYSIS\SongAnalysis\allMotifPlots\';
+                plot_filename = [plotDir  saveName];
+                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                %print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+                
+                
+            end
+            
+        end
+        
+        function obj = calc_wienerEntropy_on_syllables(obj, syllableDir, AllEntropyDataDir)
+            
+            
+            % From fb_plugin_WienerEntropy
+            
+            % obj.Name = 'Wiener entropy (500Hz-7kHz)';
+            % obj.Description = 'Wiener entropy in frequency range 500Hz - 7 kHz';
+            % obj.Author = 'Alexei Vyssotski';
+            % obj.plot_color = 'r';
+            % obj.buffersize = 512;
+            % obj.nonoverlap = 32;
+            % obj.samplestart = obj.buffersize;
+            % obj.b = fir1(320, [500 7000]/(obj.Scanrate/2));
+            
+            % From f_hmm_zebrafinch
+            %data = calc_wEntropy(Data_t, samplestart, nonoverlap, buffersize, Scanrate)
+            
+            
+            %%
+            
+            
+            fileNames = dir(fullfile(syllableDir, '*.wav'));
+            f = filesep;
+            [filepath,name,ext] = fileparts(syllableDir);
+            
+            dateName_inds = find(filepath == f);
+            dateName = filepath(dateName_inds(end)+1:end);
+            
+            fileNames = {fileNames.name}';
+            nFiles = numel(fileNames);
+            stringsearch = 'f';
+            
+            for j = 1:nFiles
+                SText{j} = fileNames{j,:}(1:2);
+                
+                bla = find(fileNames{j,:} == stringsearch);
+                NText(j) = str2double(fileNames{j,:}(bla+1:end-4));
+                
+            end
+            
+            uniqueSyls = unique(SText);
+            
+            nSyls = numel(uniqueSyls);
+            
+            for oo = 1:nSyls
+                
+                allFilesThisSyl = ismember(SText, uniqueSyls{oo});
+                allfileInds = find(allFilesThisSyl ==1);
+                
+                
+                thisSylFiles = allfileInds;
+                
+                cnt = 1;
+                mean_wEntropy = [];
+                variance_wEntropy = [];
+                wEntropy = [];
+                filenames_Syls = [];
+                syllables_num  =[];
+                
+                
+                for  j =thisSylFiles
+                    
+                    thisFile = fileNames{j};
+                    thisFilePath = [syllableDir thisFile];
+                    [y,Fs] = audioread(thisFilePath);
+                    
+                    syllables_num(cnt) = NText(j);
+                    
+                    
+                    
+                    %                 X = y;
+                    %                 N = size(y, 1);
+                    %
+                    %                 Y = fft(X, N);
+                    %                 Y = abs(Y(1:N/2+1));
+                    %                 fftResult_dB = (10 * log10(Y)); % covert into dB
+                    
+                    %%
+                    Data_t = y';
+                    nonoverlap = 32;
+                    samplestart = 1;
+                    buffersize = 512;
+                    
+                    %specgram1((Data_t/.08),512,Fs,400,360);
+                    
+                    %{
+                %% ID onsets
+                YY = abs(y).^2;
+                YY_smooth = smooth(YY, 64);
+               % figure; plot(YY_smooth)
+                
+                iqrSmoothThresh = (iqr(YY_smooth))*2;
+                line([0 size(YY, 1)], [iqrSmoothThresh  iqrSmoothThresh], 'color', 'r')
+               
+                bla = find(YY_smooth > iqrSmoothThresh);
+                
+                sylStart = bla(1)-0.01*Fs; % 10 ms
+                if sylStart <0
+                    sylStart = bla(2)-0.01*Fs; % 10 ms
+                end
+                
+                sylStop = bla(end) +0.02*Fs; % 20 ms
+                
+              %   line([sylStart sylStart], [0 1e-3], 'color', 'r')
+              %   line([sylStop sylStop], [0 1e-3], 'color', 'r')
+                 
+                    %}
+                    sylStart = 1;
+                    sylStop = numel(Data_t);
+                    
+                    Data_t = Data_t(sylStart:sylStop);
+                    
+                    
+                    size_Data = size(Data_t, 2);
+                    %data = zeros(1, ceil((size_Data-samplestart)/nonoverlap));
+                    %  data = zeros(1, 1+floor((size_Data-samplestart)/nonoverlap));
+                    
+                    data = zeros(1, floor((size_Data-buffersize)/nonoverlap));
+                    
+                    nbr_buffers = size(data, 2);
+                    Scanrate = Fs;
+                    
+                    for i = 1: nbr_buffers
+                        
+                        start = 1 + (i-1)*nonoverlap;
+                        stop = start+buffersize;
+                        
+                        starts(i) = start;
+                        stops(i) = stop;
+                        
+                        % TEMPORARY FIX: make sure we don't try access samples
+                        % beyond Data's size
+                        if i == nbr_buffers
+                            stop = size_Data;
+                        end
+                        
+                        F = fft(Data_t(start:stop-1));    %the lowerst code is written in assumption of one channel
+                        F1 = F(1+(round(300/(Scanrate/buffersize)):round(8000/(Scanrate/buffersize))));
+                        %bottom frequency - about 500Hz, top frequency - 7kHz
+                        %1 is added because the first fft coefficient
+                        %corresponds to zero frequency
+                        P = abs(F1.*conj(F1));
+                        m_SumLog = sum(log(P+1e-8));    %epsilon - 1e-8
+                        m_LogSum = sum(P);
+                        if (m_LogSum==0)
+                            m_LogSum = size(P,2);
+                        end
+                        
+                        m_LogSum = log(m_LogSum/size(P,2));
+                        m_Entropy = m_SumLog/size(P,2)-m_LogSum;
+                        
+                        if (m_LogSum==0)
+                            m_Entropy = 0;
+                        end
+                        
+                        data(i) = m_Entropy;
+                        
+                    end
+                    
+                    mean_wEntropy(cnt) = mean(data);
+                    median_wEntropy(cnt) = median(data);
+                    variance_wEntropy(cnt) = var(data);
+                    wEntropy{cnt} = data;
+                    filenames_Syls{cnt} =  thisFile;
+                    
+                    cnt = cnt +1;
+                    
+                    %{
+                figure(103); clf
+                subplot(3, 1, 1)
+                specgram1((Data_t/.08),512,Fs,400,360);
+                ylim ([0 8000]);
+                axis off
+                subplot(3, 1, 2)
+                plot(Data_t)
+                axis tight
+                subplot(3, 1, 3)
+                plot(data)
+                axis tight
+                    %}
+                end
+                
+                %xes = 1:1:numel(mean_wEntropy);
+                %figure(105); clf
+                %scatter(xes,mean_wEntropy)
+                
+                mean_mean_wEntropy = mean(mean_wEntropy);
+                median_median_wEntropy  = median(median_wEntropy);
+                mean_var_wEntropy = mean(variance_wEntropy);
+                median_var_wEntropy = median(variance_wEntropy);
+                
+                E.all_means_wEntropy{oo} = mean_wEntropy;
+                E.all_medians_wEntropy{oo} = median_wEntropy;
+                E.all_vars_wEntropy{oo} = variance_wEntropy;
+                
+                E.all_mean_mean_wEntropy{oo} = mean_mean_wEntropy;
+                E.all_median_median_wEntropy{oo} = median_median_wEntropy;
+                
+                E.all_mean_var_wEntropy{oo} = mean_var_wEntropy;
+                E.all_median_var_wEntropy{oo} = median_var_wEntropy;
+                
+                E.allFilenames{oo} = filenames_Syls;
+                E.allFilenamesNums{oo} = syllables_num;
+                
+                disp('')
+                
+                
+            end
+            
+            %AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\ANALYSIS\SongAnalysis\allWienerEntropyFiles\';
+            save([AllEntropyDataDir dateName '_wEntropy.mat'], 'E', '-v7.3')
+            
+            
+        end
+        function  obj = combined_metaAnalysis_analyze_dy_values_across_nights(obj, meta_dyDataFile, meta_songDataFile)
+
+disp('')
+
+songData = load(meta_songDataFile);
+dyData = load(meta_dyDataFile);
+
+nDates = numel(songData.AllData_MetaAnalysis);
+
+
+for j = 1:nDates
+
+
+
+ev_mean(j) = mean(songData.AllData_MetaAnalysis{1,j}{1,1}.entropy2);
+ev_median(j) = median(songData.AllData_MetaAnalysis{1,j}{1,1}.entropy2);
+ev_std(j) = std(songData.AllData_MetaAnalysis{1,j}{1,1}.entropy2);
+ev_sem(j)  = ev_std(j)/sqrt(numel(ev_median));
+
+end
+
+
+    dy_mean = dyData.meta_buffered_dy_mean;
+    dy_median = dyData.meta_buffered_dy_median;
+    dy_std = dyData.meta_buffered_dy_sem;
+    dy_sem = dyData.meta_buffered_dy_std;
+
+correcoef
+
+
+%% unpack song data
+
+[R, P] = corrcoef(ev_mean,dy_mean)
+
+[R, P] = corrcoef(ev_median,dy_median)
+
+figure
+scatter(ev_median, dy_median)
+
+
+
+        end
+
+
+
         function [obj]  = sleep_feature_extract_obj(obj)
             
             
@@ -1266,6 +2620,52 @@ end
         
         
         
+        function [obj]  = metaAnalysis_analyze_dy_values_across_nights(obj, dyDataDir)
+
+dbstop if error
+
+            textSearch = '*.mat*'; % text search for ripple detection file
+            dy_files = dir(fullfile(dyDataDir,textSearch));
+            nfiles = size(dy_files, 1);
+
+            
+            for j = 1:nfiles
+                dy = load([dyDataDir dy_files(j).name]);
+
+                all_dy_data = dy.D.bufferedDeltaGammaRatioCell;
+
+                timepoints_wake_inds = find(dy.D.inds_wake ==1);
+
+                % Get rid of outlier mvmt data
+                bufferedDeltaGammaRatioCell_nan = [];
+                for oo = 1:size(all_dy_data, 2)
+                    thisdgcell = all_dy_data{oo};
+                    if ismember(oo, timepoints_wake_inds)
+                        bufferedDeltaGammaRatioCell_nan{oo} = nan(1, size(thisdgcell, 2));
+                    else
+                        bufferedDeltaGammaRatioCell_nan{oo} = thisdgcell;
+                    end
+                end
+
+                
+                bufferedDeltaGammaRatioCell_nan = cell2mat(bufferedDeltaGammaRatioCell_nan);
+                meta_bufferedDeltaGammaRatioCell_nan{j} = bufferedDeltaGammaRatioCell_nan;
+                meta_buffered_dy_median(j) = nanmedian(bufferedDeltaGammaRatioCell_nan);
+                meta_buffered_dy_mean(j) = nanmean(bufferedDeltaGammaRatioCell_nan);
+                meta_buffered_dy_std(j) = nanstd(bufferedDeltaGammaRatioCell_nan);
+                meta_buffered_dy_sem(j) = meta_buffered_dy_std(j) / sqrt(numel(bufferedDeltaGammaRatioCell_nan));
+
+
+            end
+
+              save([dyDataDir 'MetaAnalysis_dyData.mat'], 'meta_bufferedDeltaGammaRatioCell_nan','meta_buffered_dy_median', 'meta_buffered_dy_mean', 'meta_buffered_dy_std', 'meta_buffered_dy_sem',  '-v7.3')
+
+
+
+        end
+
+
+
         
         
         
@@ -6888,11 +8288,11 @@ clear('cx','cy');
     
     methods (Hidden)
         %class constructor
-        function obj = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChan, lfpChan)
+        function obj = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChans)
             
             obj.PATH.AnalysisDir = AnalysisDir;
-            obj.DATA.eegChan = eegChan;
-            obj.DATA.lfpChan = lfpChan;
+            obj.DATA.eegChans = eegChans;
+            
             
             obj = getPathInfo(obj);
             

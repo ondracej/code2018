@@ -1,27 +1,45 @@
 
 %%
 
-close all 
-clear all 
+close all
+clear all
 
 [rec_DB] = recDatabase();
 
-for rec = 5:9
+RecSet = [1:17]; %w038
+%RecSet = [18:39]; %w027
+%RecSet = [40:69]; %w025
+%RecSet = [70:92]; %w037
+
+RecSet  = 1:92;
+
+dbstop if error
+
+for rec = RecSet
     
     disp(['Recording: ' num2str(rec)])
     
     AnalysisDir = rec_DB(rec).AnalysisDir;
     VideoDir  = rec_DB(rec).VideoDir;
-    RecName = rec_DB(rec).RecName;
+    
     RecName_save = rec_DB(rec).RecName_save;
+    
     ephys_On_s = rec_DB(rec).ephys_On_s;
     lightOff_s = rec_DB(rec).lightOff_s;
     lightOn_s = rec_DB(rec).lightOn_s;
-    CamOnOff_10Hr = rec_DB(rec).CamOnOff_10Hr;
     
-    eegChan = rec_DB(rec).eegChan;
-    lfpChan = rec_DB(rec).lfpChan;
+    underscore = '_';
     
+    bla = find(RecName_save == underscore);
+    RecName_Title = RecName_save;
+    RecName_Title(bla) = ' ';
+    
+    % CalcOffset_s = rec_DB(rec).CalcOffset_s;
+    
+    eegChans = rec_DB(rec).eegChans;
+    %lfpChan = rec_DB(rec).lfpChan;
+    
+    framesOffOn = rec_DB(rec).framesOffOn;
     %% Check data
     
     %{
@@ -32,56 +50,168 @@ dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecording
 timeSeriesViewer(dataRecordingObj); % loads all the channels
     %}
     %%
-    cd(AnalysisDir)
+    %cd(AnalysisDir)
     
     clear('data_OBJ')
     
-    data_OBJ = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChan, lfpChan);
-    data_OBJ.DATA.RecName = RecName;
-    data_OBJ.DATA.RecName_save = RecName_save;
+    data_OBJ = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChans);
     
+    data_OBJ.DATA.RecName = RecName_Title;
+    data_OBJ.DATA.RecName_save = RecName_save;
+    % data_OBJ.ANALYSIS.CalcOffset_s  = CalcOffset_s ;
     %%
     
     %% Analyze Videos
-    
-    data_OBJ.PATH.vid_path = [VideoDir];
-    data_OBJ = analyze_mvmt_in_video_frames(data_OBJ);
+    if ~isempty(framesOffOn)
+        
+        data_OBJ.PATH.vid_path = [VideoDir];
+        data_OBJ = analyze_mvmt_in_video_frames(data_OBJ, framesOffOn);
+    end
     
     %% Load EEG
+    allEEGChans = reshape(eegChans', [1,4]);
+    allValidChans = ~isnan(reshape(eegChans', [1,4])); % order is be L_ant, R-ant, L-post, R-post
+    nValidChans_inds = find(allValidChans == 1);
+    for j = 1:numel(nValidChans_inds)
+        
+        thisChan = num2str(allEEGChans(nValidChans_inds(j)));
+        chanNames = dir(fullfile(data_OBJ.PATH.ephys_path, '*.continuous'));
+        index = strfind({chanNames.name}, thisChan);
+        idx = find(~cellfun(@isempty,index));
+        chanPath = [data_OBJ.PATH.ephys_path chanNames(idx).name ];
+        
+        data_OBJ = load_ephys_data(data_OBJ, chanPath);
+        %data_OBJ = load_and_downsample_ephys_data(data_OBJ, ChanToLoad_path);
+        
+        %% Calculated alignment points
+        
+        AnalysisHrs = 11;
+        
+        Alignment_LightOff_s = calc_offset_alignment_time(data_OBJ, ephys_On_s, lightOff_s);
+        Alignment_LightOn_s = calc_offset_alignment_time(data_OBJ, ephys_On_s, lightOn_s);
+        
+        data_OBJ.ANALYSIS.Alignment_LightOff_s = Alignment_LightOff_s;
+        data_OBJ.ANALYSIS.Alignment_LightOn_s = Alignment_LightOn_s;
+        
+        % data_OBJ.ANALYSIS.Alignment_1hrAfterLightsOff_s = Alignment_LightOff_s + 3600;
+        data_OBJ.ANALYSIS.Alignment_1hrAfterLightsOff_s = Alignment_LightOff_s +1800;
+        %data_OBJ.ANALYSIS.Alignment_1hrbeforeLightsOn_s = Alignment_LightOn_s - 3600;
+        data_OBJ.ANALYSIS.Alignment_1hrbeforeLightsOn_s = data_OBJ.ANALYSIS.Alignment_1hrAfterLightsOff_s + AnalysisHrs*3600; % Change this to 10 hours exactly
+         
+        data_OBJ .DATA.data_cut_to_alignment = [];
+        
+        data_OBJ = cut_data_to_alignment_points(data_OBJ);
+        
+        %%
+        %% Run Sleep Analysis
+        
+        plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\';
+        [data_OBJ]  = calc_delta_gamma_EEG(data_OBJ, plotDir, thisChan, AnalysisHrs); % from this we get the movement artifacts
+    end
+    %% Load LFP
+    %  ChanToLoad_path = [data_OBJ.PATH.eeg_path data_OBJ.PATH.lfp_name];
+    %  data_OBJ = load_ephys_data(data_OBJ, ChanToLoad_path);
     
-    ChanToLoad_path = [data_OBJ.PATH.eeg_path data_OBJ.PATH.eeg_name];
-    data_OBJ = load_ephys_data(data_OBJ, ChanToLoad_path);
-    %data_OBJ = load_and_downsample_ephys_data(data_OBJ, ChanToLoad_path);
+    %  data_OBJ = cut_data_to_alignment_points(data_OBJ);
     
-    %% Calculated alignment points
-    
-    Alignment_LightOff_s = calc_offset_alignment_time(data_OBJ, ephys_On_s, lightOff_s);
-    Alignment_LightOn_s = calc_offset_alignment_time(data_OBJ, ephys_On_s, lightOn_s);
-    
-    data_OBJ.ANALYSIS.Alignment_LightOff_s = Alignment_LightOff_s;
-    data_OBJ.ANALYSIS.Alignment_LightOn_s = Alignment_LightOn_s;
-    
-    data_OBJ.ANALYSIS.Alignment_1hrAfterLightsOff_s = Alignment_LightOff_s + 3600;
-    %data_OBJ.ANALYSIS.Alignment_1hrbeforeLightsOn_s = Alignment_LightOn_s - 3600;
-    data_OBJ.ANALYSIS.Alignment_1hrbeforeLightsOn_s = data_OBJ.ANALYSIS.Alignment_1hrAfterLightsOff_s + 10*3600; % Change this to 10 hours exactly
-    
-    data_OBJ = cut_data_to_alignment_points(data_OBJ);
-    
-    %%
-    %% Run Sleep Analysis
-    
-    [data_OBJ]  = calc_delta_gamma(data_OBJ);
+    % [data_OBJ]  = calc_delta_gamma_LFP(data_OBJ); % from this we get the movement artifacts
     
     
 end
 %%
 
+
 [data_OBJ]  = plot_delta_gamma_across_nights(data_OBJ);
 
 
+songDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\w038_SongDevelopment\';
+searchTerm = 'dph51';
+data_OBJ = import_song_analysis_data_from_xls(data_OBJ, songDataDir, searchTerm);
 
 
- %% Clustering
+%% w038
+
+%
+%  SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w038_Analysis\Data\';
+%  plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038\Motifs\';
+%  AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038\Entropy\';
+
+
+%% w037
+SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w037_Analysis\Data\';
+plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Motifs\';
+AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Entropy\';
+
+
+
+%% w027
+% SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w027_Analysis\Data\';
+% plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Motifs\';
+% AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Entropy\';
+
+%% w025
+SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w025_Analysis\Data\';
+plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w025\Motifs\';
+AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w025\Entropy\';
+
+
+
+
+d = dir(SongDataDir);
+% remove all files (isdir property is 0)
+dfolders = d([d(:).isdir]);
+
+
+dfolders = dfolders(~ismember({dfolders(:).name},{'.','..'}));
+for j = 1:numel(dfolders)
+    thisName = dfolders(j).name;
+    %SylInds(j) = sum(strfind(thisName, 'Syllables'));
+    SylInds(j) = sum(strfind(thisName, 'Motifs'));
+end
+
+dirsToLoad_inds = find(SylInds ~=0);
+
+
+for k = 1:numel(dirsToLoad_inds)
+    
+    thisDirInd = dirsToLoad_inds(k);
+    thisDirToLoad = [SongDataDir dfolders(thisDirInd).name '\'];
+    
+    disp(['Loading files: ' thisDirToLoad])
+    
+    
+    data_OBJ = plotMotifExamples(data_OBJ, thisDirToLoad, plotDir );
+    
+    data_OBJ = calc_wienerEntropy_on_syllables(data_OBJ, thisDirToLoad, AllEntropyDataDir);
+    
+end
+
+
+entropyFilesDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Entropy\';
+
+entropyFilesDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038\Entropy\';
+
+data_OBJ = metaAnalysis_analyze_wEntropy_acrossDays(data_OBJ, entropyFilesDir);
+
+
+
+%%
+songDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\ANALYSIS\SongAnalysis\First\';
+data_OBJ = metaAnalysis_import_song_analysis_data_from_xls(data_OBJ, songDataDir);
+
+dyDataDir  = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\ANALYSIS\dy\';
+data_OBJ = metaAnalysis_analyze_dy_values_across_nights(data_OBJ, dyDataDir);
+
+meta_dyDataFile  = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\ANALYSIS\dy\MetaAnalysis_dyData.mat';
+meta_songDataFile = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\ANALYSIS\SongAnalysis\First\MetaAnalysis_SongData.mat';
+
+data_OBJ = combined_metaAnalysis_analyze_dy_values_across_nights(data_OBJ, meta_dyDataFile, meta_songDataFile);
+
+
+
+
+
+%% Clustering
 
 %data_OBJ = preprocessData_find_30Hz_artifacts(data_OBJ);
 %data_OBJ = sleep_feature_extract_obj(data_OBJ);
@@ -90,14 +220,14 @@ end
 %data_OBJ = cluster_sleep_obj(data_OBJ, arte_factor);
 %data_OBJ = plot_cluster_results(data_OBJ);
 %data_OBJ = check_staging_in_eeg(data_OBJ);
- %%
- 
- 
- 
- %%
- 
- 
- 
+%%
+
+
+
+%%
+
+
+
 %{
 
 
@@ -121,8 +251,8 @@ pathToOpenEphysAnalysisTools = 'C:\Users\NeuroPix-DAQ\Documents\GitHub\analysis-
 %pathToNSKToolbox = 'C:\Users\Administrator\Documents\code\GitHub\code2018\NSKToolBox\';
 pathToNSKToolbox = 'C:\Users\Administrator\Documents\code\GitHub\NET\';
 
-addpath(genpath(pathToCodeRepository)) 
-addpath(genpath(pathToOpenEphysAnalysisTools)) 
+addpath(genpath(pathToCodeRepository))
+addpath(genpath(pathToOpenEphysAnalysisTools))
 addpath(genpath(pathToNSKToolbox))
 %% Define Session
 
@@ -169,7 +299,7 @@ DiffS = LightsOff_initClockS - Rec_initClockS;
 TotalDiff_S = DiffHrs*3600+DiffMins*60+DiffS;
 LightOff_samples = TotalDiff_S*Fs;
 
-%% 2 hours after lights off, 8 hour recording samples 
+%% 2 hours after lights off, 8 hour recording samples
 
 X_HourWin = 8*3600*Fs;
 
@@ -179,7 +309,7 @@ figure; plot(data(ROI(1): ROI(1)+10000000))
 figure; plot(ROIData(1:10000000))
 
 ROIData = data(ROI(1): ROI(2));
-clear('data') 
+clear('data')
 
 totalSamples = size(ROIData, 1);
             recordingDuration_s  = totalSamples/Fs;
@@ -251,9 +381,9 @@ pfGammBand=find(f>=gammaBandLowCutoff & f<gammaBandHighCutoff);
 %% Open Trigger File
 extSearch = ['*' TriggerChan '*'];
 TrigFileExactName =dir(fullfile(dataDir,extSearch));
-% 
-% 
-            tic            
+%
+%
+            tic
             fix_open_ephys_data([dataDir TrigFileExactName.name])
             
             [data, timestamps, info] = load_open_ephys_data([dataDir TrigFileExactName.name]);
@@ -280,7 +410,7 @@ frameCut_frames = frameCut_s*frameRate;
 
 nMovies = ceil(nFrames/frameCut_frames);
 tic
-VidObj = VideoReader(VidPath);            
+VidObj = VideoReader(VidPath);
 toc
             vidHeight = VidObj.Height;
             vidWidth = VidObj.Width;
@@ -340,12 +470,12 @@ toc
                 img1 = read(VidObj, k);
                 grayImage1 = rgb2gray(img1);
                 
-                %imshow(grayImage1) 
+                %imshow(grayImage1)
                 img2 = read(VidObj, k+1);
                 grayImage2 = rgb2gray(img2);
                   
                 diffImg = grayImage2-grayImage1;
-                %imshow(diffImg) 
+                %imshow(diffImg)
                 
                 difVal = sum(sum(diffImg));
                 allDiffs(cnt) = difVal;
@@ -370,7 +500,7 @@ plot(timeScale_hr,allDiffs)
 %recSession = 76; %(76) ZF-72-81 | 16.05.2019 - 19-18-21
 recSession = 81; %(81) ZF-72-81 | 16.05.2019 - 21-26-59 - Overnight
 
-D_OBJ = avianSWRAnalysis_OBJ(recSession); 
+D_OBJ = avianSWRAnalysis_OBJ(recSession);
 disp([D_OBJ.INFO.birdName ': ' D_OBJ.Session.time])
 %%
 dataDir = D_OBJ.Session.SessionDir;
@@ -399,7 +529,7 @@ D_OBJ = batchPlotDataForOpenEphys_singleChannel(D_OBJ); % default is doPlot, 40s
 %% FullFile - creates a "_py_fullFile"
 
 %chanOverride = 7;
-%D_OBJ = prepareDataForShWRDetection_FullFile_Python(D_OBJ, chanOverride); 
+%D_OBJ = prepareDataForShWRDetection_FullFile_Python(D_OBJ, chanOverride);
 [D_OBJ] = prepareDataForShWRDetection_FullFile_Python(D_OBJ);
 %% Do NOT USE - use fullfile option for now
 
@@ -437,19 +567,19 @@ binSize_s = 15;
 %% Spikesorting with KiloSort
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Make sure the Phy is closed before running!!!
-% pathToKiloSort = 'C:\Users\Administrator\Documents\code\GitHub\KiloSort\'; 
+% pathToKiloSort = 'C:\Users\Administrator\Documents\code\GitHub\KiloSort\';
 % pathToNumpy = 'C:\Users\Administrator\Documents\code\GitHub\npy-matlab\';
-% 
+%
 % addpath(genpath(pathToKiloSort)) addpath(genpath(pathToNumpy))
-% 
-% pathToYourConfigFile = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\'; 
-% 
-% % Config Files - check that the channel map is set correctly there! %nameOfConfigFile 
-% = 'StandardConfig_avian16Chan_ZF_6088.m'; nameOfConfigFile = 'StandardConfig_avian16Chan_ZF_5915.m'; 
-% %nameOfConfigFile = 'StandardConfig_avian16Chan_ZF_7281.m'; %nameOfConfigFile 
-% = 'StandardConfig_avian16Chan_Chick10'; runKilosortFromConfigFile(D_OBJ, pathToYourConfigFile, 
+%
+% pathToYourConfigFile = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\';
+%
+% % Config Files - check that the channel map is set correctly there! %nameOfConfigFile
+% = 'StandardConfig_avian16Chan_ZF_6088.m'; nameOfConfigFile = 'StandardConfig_avian16Chan_ZF_5915.m';
+% %nameOfConfigFile = 'StandardConfig_avian16Chan_ZF_7281.m'; %nameOfConfigFile
+% = 'StandardConfig_avian16Chan_Chick10'; runKilosortFromConfigFile(D_OBJ, pathToYourConfigFile,
 % nameOfConfigFile)
-% 
+%
 % disp(['Finished Processing ' D_OBJ.Session.SessionDir])
 
 %pathToKiloSort = 'C:\Users\Administrator\Documents\code\GitHub\KiloSort2\';
@@ -459,7 +589,7 @@ pathToNumpy = 'C:\Users\Administrator\Documents\code\GitHub\npy-matlab\';
 addpath(genpath(pathToKiloSort))
 addpath(genpath(pathToNumpy))
             
-pathToYourConfigFile = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles'; 
+pathToYourConfigFile = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles';
 
 % Config Files - check that the channel map is set correctly there!
 %nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_5915.m';
@@ -477,7 +607,7 @@ nameOfConfigFile =  'StandardConfig_avian16Chan_ZF_5915_K2.m';
 
 %root = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_21-05-36';
 %root = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_18-07-21';
-%root = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_18-48-02'; 
+%root = 'F:\TUM\SWR-Project\ZF-59-15\Ephys\2019-04-28_18-48-02';
 
 %chanMap = 'C:\Users\Administrator\Documents\code\GitHub\code2018\KiloSortProj\KiloSortConfigFiles\chanMap16ChanSilicon.mat';
 
@@ -510,7 +640,7 @@ ClustType = 1;
 if ~isfield(D_OBJ.REC, 'GoodClust_2') || ~isfield(D_OBJ.REC, 'MUAClust_1')
     disp('***Make sure to set the cluster information in the database before running!***')
 else
-    [D_OBJ]  = loadClustTypesAndMakeSpikePlots(D_OBJ, ClustType);    
+    [D_OBJ]  = loadClustTypesAndMakeSpikePlots(D_OBJ, ClustType);
 end
 disp('Finished plotting...')
 %%
@@ -526,4 +656,4 @@ ClustType = 1;
 
 [D_OBJ] = plotDBRatio(D_OBJ);
  
- %}
+%}
