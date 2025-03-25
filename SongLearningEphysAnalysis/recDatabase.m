@@ -913,7 +913,7 @@ rec = rec+1;
 
 %% w025, 2021-07-27, EEG = 12 (R Ant) LFP = 10
 rec_DB(rec).AnalysisDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w025\DATA_EPHYS\chronic_2021-07-27_21-49-20\';
-rec_DB(rec).VideoDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w025\DATA_VIDEO\w25-27-07-2021_00183_converted_img';
+rec_DB(rec).VideoDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w025\DATA_VIDEO\w25-27-07-2021_00183_converted_img\';
 rec_DB(rec).RecName_save = 'w025__2021-07-27_21-49-20';
 rec_DB(rec).ephys_On_s = [21 49 20]; %start of recording
 
@@ -1043,7 +1043,7 @@ rec = rec+1;
 
 %% w025, 2021-08-05, EEG = 12 (R Ant) LFP = 10
 rec_DB(rec).AnalysisDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w025\DATA_EPHYS\chronic_2021-08-05_22-06-10\';
-rec_DB(rec).VideoDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w025\DATA_VIDEO\w25-05-08-2021_00197_converted_img';
+rec_DB(rec).VideoDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w025\DATA_VIDEO\w25-05-08-2021_00197_converted_img\';
 rec_DB(rec).RecName_save = 'w025__2021-08-05_22-06-10';
 rec_DB(rec).ephys_On_s = [22 06 10]; %start of recording
 
