@@ -33,6 +33,14 @@ classdef MEA_Analysis_OBJ < handle
                     code2018Path = '/home/janie/Documents/code/code2018/';
                     NETCode = '/home/janie/Documents/code/NeuralElectrophysilogyTools/';
                     
+                    
+                case 'TUWZU5Y-2021-5'
+                    McsCodePath = 'D:\Github\MCSTools\';
+                    code2018Path = 'D:\Github\code2018\';
+                    NETCode = 'D:\Github\code2018\NSKToolBox\';
+                    
+                    
+                    
                 case 'DESKTOP-PBLRH65' %Zalamander
                     McsCodePath = 'G:\code\Github\McsMatlabDataTools\';
                     code2018Path = 'G:\code\Github\code2018\';
