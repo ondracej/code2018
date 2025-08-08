@@ -2,7 +2,10 @@
 %% [1] Initialize the program
 % *** To run a cell, type STRG + Enter
 
-analysisDir = '/home/janie/Data/Esra/20250717/'; % path to the analysis directory
+close all
+clear all
+
+analysisDir = 'D:\Esra\20250717\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 % 
 %                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -43,17 +46,19 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 
 mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
 
-%mea_OBJ = doAnalysisFiringRateComparison(mea_OBJ);
+spikeDir = 'D:\Esra\20250717\Firing_Rate_Analysis\';
+doAnalysisFiringRateComparison(spikeDir, mea_OBJ, 2);
+
 
 %%
 %checkSpikesOnSortedData()
  
-makeSummaryPlotFiringRatePharmacology
+%makeSummaryPlotFiringRatePharmacology
 % Compare baseline and recover firing rates
 
 %% Make a plot of overall spiking activity on array
 
-fileToLoad = '/home/janie/Data/Esra/20250717/_h5_files/20250717-1524.h5'; % .h5 file to load
+fileToLoad = 'D:\Esra\20250717\_h5_files\20250717-1524.h5'; % .h5 file to load
 saveDir = mea_OBJ.PATH.spikeAnalysis_plotDir;            
 ChannelsToNoTIncludeInDetections = [];  % numbers of noisy channles, otherwise leave empty: [] 
 
@@ -64,7 +69,7 @@ dbstop if error
 
 % Z = (x - mean(pop))/std(pop)
 
-
+warning('off','all')
 MEA_Analysis__loadingMCSData_calculate_spatial_spike_amplitude(fileToLoad, saveDir, ChannelsToNoTIncludeInDetections)
 
 

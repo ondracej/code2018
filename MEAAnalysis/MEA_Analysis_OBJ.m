@@ -33,6 +33,10 @@ classdef MEA_Analysis_OBJ < handle
                     code2018Path = '/home/janie/Documents/code/code2018/';
                     NETCode = '/home/janie/Documents/code/NeuralElectrophysilogyTools/';
                     
+                case 'DESKTOP-PBLRH65' %Zalamander
+                    McsCodePath = 'G:\code\Github\McsMatlabDataTools\';
+                    code2018Path = 'G:\code\Github\code2018\';
+                    NETCode = 'G:\code\Github\code2018\NSKToolBox\';
                     
                 otherwise
                     
@@ -76,15 +80,15 @@ classdef MEA_Analysis_OBJ < handle
                 disp(['Created directory: ' obj.PATH.mcdFiles ])
             end
             
-%             if exist(obj.PATH.h5Files, 'dir') ==0
-%                 mkdir(obj.PATH.h5Files );
-%                 disp(['Created directory: ' obj.PATH.h5Files ])
-%             end
-            
-            if exist(obj.PATH.swrAnalysis, 'dir') ==0
-                mkdir(obj.PATH.swrAnalysis );
-                disp(['Created directory: ' obj.PATH.swrAnalysis ])
+            if exist(obj.PATH.h5Files, 'dir') ==0
+                mkdir(obj.PATH.h5Files );
+                disp(['Created directory: ' obj.PATH.h5Files ])
             end
+            
+%             if exist(obj.PATH.swrAnalysis, 'dir') ==0
+%                 mkdir(obj.PATH.swrAnalysis );
+%                 disp(['Created directory: ' obj.PATH.swrAnalysis ])
+%             end
             
             if exist(obj.PATH.spikeAnalysis, 'dir') ==0
                 mkdir(obj.PATH.spikeAnalysis );
@@ -2453,13 +2457,16 @@ end
                 
                 allTimestamps_s  = [];
                 meanWaveform = [];
-                allSpikeWaveforms = [];
+                allWaveforms = [];
                 for o = 1:nUnits
                     thisUnit = uniqueUnits(o);
                     allTimestamps_inds = find(units == thisUnit);
                     allTimestamps_s{o} = timestamps_s(allTimestamps_inds);
                     allSpikeWaveforms{o} = spikeWaveforms(allTimestamps_inds,:);
-                     meanWaveform{o} = nanmedian(spikeWaveforms(allTimestamps_inds,:), 1);
+                    allWaveforms{o} = spikeWaveforms(allTimestamps_inds,:);
+                     %bD_spikeWaveforms = bD_spikeWaveforms(bD_chan1_inds,:);
+
+                     %meanWaveform{o} = nanmedian(spikeWaveforms(allTimestamps_inds,:), 1);
                 end
                 
                 if j ==1
@@ -2469,7 +2476,7 @@ end
                 end
                 
                 TimestampsOverChans{j} = allTimestamps_s;
-                meanWaveformOverChans{j} = meanWaveform; 
+                allWaveformsOverChans{j} = allWaveforms; 
             end
             
             
@@ -2498,7 +2505,7 @@ end
             p = numSubplots(numel(TimestampsFinal));
             figH = figure(102); clf
             figHH = figure(103); clf
-            
+            figHHC = figure(104); clf;
             
             for i=1:numel(TimestampsFinal)
                 
@@ -2524,6 +2531,7 @@ end
                 xlim([0 timeBlock_s]);
                 set(gca, 'YDir','reverse')
                 title(['Ch-' ChanNamesFinal{i} ' | n = ' num2str(numel(timestampsToPlot))])
+                legText{i} = ['Ch-' ChanNamesFinal{i} ' | n = ' num2str(numel(timestampsToPlot))];
                 yticks = get(gca, 'ytick');
                 yticklabs = yticks*timeBlock_s;
                 ytickLabs = num2cell(yticklabs);
@@ -2534,14 +2542,29 @@ end
                 
                 %%
                 figure(figHH);
-                subplot(1, 2, 1)
+                %subplot(1, 2, 1)
+                colorOrder = get(gca, 'ColorOrder');
+                
                 hold on
                 plot(smooth(allSpksFR), 'linewidth', 2)
-                subplot(1, 2, 2)
+                
+                figure(figHHC)
+                subplot(1, size(allWaveforms,2), i)
                 hold on
-                plot(smooth(meanWaveform{i}), 'linewidth', 2)
+                plot(allWaveforms{i}', 'color', colorOrder(i,:))
+                axis tight   
+                ylim([-5e4 5e4])
+                 legend(legText{i})
+                   legend boxoff
+                  xlabel('Samples')
+    ylabel('Waveform Amplitue (AU)')
+      
+            
+            title('Waveform')
             end
+            
             figure(figHH);
+             
             axis tight
             xticks = get(gca, 'xtick');
             xticklabs = xticks*timeBlock_s;
@@ -2550,10 +2573,14 @@ end
             set(gca, 'Xticklabel',xtickLabs)
             xlabel('Time (s)')
             ylabel('Firing rate (Hz)')
-            legend(ChanNamesFinal)
+            legend(legText)
             legend boxoff
             title('Firing Rate')
             
+            
+           
+    
+               
             %% Printing figures
             
             %             ctext  ='C';
@@ -2569,7 +2596,7 @@ end
                 'FitBoxToText','off');
             
             saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__FR'];
-            plotpos = [0 0 12 10];
+            plotpos = [0 0 12 6];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
             figure(figH);
@@ -2581,9 +2608,20 @@ end
                 'FitBoxToText','off');
             
             saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__Raster'];
-            plotpos = [0 0 15 12];
+            plotpos = [0 0 15 6];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
+             figure(figHHC);
+            % Create textbox
+            annotation(figH,'textbox',...
+                [0.015 0.98 0.20 0.03],...
+                'String',{obj.ANALYSIS.ExpName},...
+                'LineStyle','none',...
+                'FitBoxToText','off');
+            
+            saveName = [obj.PATH.spikeAnalysis_plotDir '_CH' ChanText '__Waveforms'];
+            plotpos = [0 0 15 10];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
             
             
             

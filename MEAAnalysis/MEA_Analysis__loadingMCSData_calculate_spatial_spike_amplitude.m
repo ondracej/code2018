@@ -14,14 +14,14 @@ doPlot = 0; % will pause the analysis
 
 data = McsHDF5.McsData(fileToLoad);
 [filepath,name,ext] = fileparts(fileToLoad);
-
-plotDir = [saveDir name '\'];
-
-
-if exist(plotDir, 'dir') == 0
-    mkdir(plotDir);
-    disp(['Created: '  plotDir])
-end
+% 
+% plotDir = [saveDir name '\'];
+% 
+% 
+% if exist(plotDir, 'dir') == 0
+%     mkdir(plotDir);
+%     disp(['Created: '  plotDir])
+% end
 
 %% For getting the correct channel order
 
@@ -193,6 +193,12 @@ for k = 1:numel(ChansForDetection)
     
 end
 
+Spatial_FR_INFO.mean_data_rms = mean_data_rms;
+Spatial_FR_INFO.std_rms = std_rms;
+Spatial_FR_INFO.allChanName = allChanName;
+Spatial_FR_INFO.allChanInd = allChanInd;
+
+
 figure(103); clf
 for j = 1:2
     if j == 1
@@ -274,11 +280,11 @@ title(titleText)
 end
 
 
-saveName = [saveDir 'FiringRateRMS-SpatialMap'];
+saveName = [saveDir 'FiringRateRMS-SpatialMap_' name];
 plotpos = [0 0 22 12];
 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
 
-
+save([saveDir 'Spatial_FR_INFO_' name], 'Spatial_FR_INFO', '-v7.3')
 
 
 end
