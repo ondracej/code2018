@@ -5,8 +5,9 @@
 close all
 clear all
 
-analysisDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\20250717\'; % path to the analysis directory
+analysisDir = 'D:\Esra-MEA\20250723\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
+
 % 
 %                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
 %                 %% Save object - to save the object in the middle of the analysis
@@ -19,7 +20,7 @@ mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 %% Before continuing this analysis
 
 % 0) Move the files into the newly created directorie
-% 1) Use the "Analyzer rack" to identify:
+% 1) Use the "DataViewer Rack rack" to identify:
     %1a) All channles that have large amplitude spikes for the firing rate == "Firing_Rate_Analysis_channels_with_spikes"    
 % 2) Convert the .mcs file into a HDF5 (.h5) file 
 
@@ -32,6 +33,7 @@ mea_OBJ = addAnalysisInfoToObj_noSWR(mea_OBJ);
 %% Firing Rate Analysis
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%cd(mea_OBJ.PATH.h5Files)
 mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 
 %% Spike sort the files using the plexon offline sorter
@@ -47,7 +49,7 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
 
 %%
-spikeDir = 'D:\Esra-MEA\20250721\Firing_Rate_Analysis\';
+spikeDir = 'D:\Esra-MEA\20250723\Firing_Rate_Analysis\';
 doAnalysisFiringRateComparison(spikeDir, mea_OBJ, 2);
 
 %%

@@ -55,7 +55,7 @@ classdef MEA_Analysis_OBJ < handle
             
             
             if isfolder(McsCodePath)
-                addpath(genpath('C:\Users\dlc\Documents\GitHub\McsMatlabDataTools'));
+                addpath(genpath(McsCodePath));
             else
                 disp('Please check definition for MCS path in "getPathInfo"')
             end
@@ -1983,6 +1983,7 @@ end
             %%
             
             fileToLoad = obj.ANALYSIS.h5_fileToLoad;
+            
             data = McsHDF5.McsData(fileToLoad);
             [filepath,name,ext] = fileparts(fileToLoad);
             
@@ -2448,7 +2449,7 @@ end
             %% Load files
             
             timeBlock_s = 30;
-            spikeLimit = 60;
+            spikeLimit = 30;
             
             for j = 1:nChansToLoad
                 
