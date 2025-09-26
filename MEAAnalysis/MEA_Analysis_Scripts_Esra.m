@@ -5,7 +5,7 @@
 close all
 clear all
 
-analysisDir = 'Z:\hameddata2\Janie-MEA-Data\Esra-MEA2025\20250729\'; % path to the analysis directory
+analysisDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\20250729\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
 % 
@@ -48,32 +48,35 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% After spike sorting
 
-spikeDir = 'Z:\hameddata2\Janie-MEA-Data\Esra-MEA2025\20250729\Firing_Rate_Analysis\';
 
-%mea_OBJ = FiringRateAnalysis_makeRasters(spikeDir, mea_OBJ);
+
+%% (1) %% Firing rate analysis on 1 file
+spikeDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\20250729\Firing_Rate_Analysis\';
 
 mea_OBJ = FiringRateAnalysis_singleChannel(spikeDir, mea_OBJ);
 
-%%
+%% (1) Firing rate analysis across 3 files (baseline, drug, and recovery)
+
+cd(spikeDir)
+
 mea_OBJ = FiringRateAnalysis_singleChannel_Base_Drug_Rec(spikeDir, mea_OBJ);
 
-%%
+%%  (2) To combine clusters in a file
 
-fileToCombineSpikes = '20250729-1401DrugNRecoverE_CH-87-_SpikeData-recovery__87.mat'; % make sure to include .mat
-Spike_Counts_To_Combine = [1973 803 56];
+fileToCombineSpikes = '20250729-1401_CH-87-_SpikeData__87.mat'; % make sure to include .mat
+Spike_Counts_To_Combine = [99 2936 741]; % enter the spike numbers (read from the other figure)
 
-combineSpikesInFile_PlotNewFiringRateAnalysis(spikeDir, fileToCombineSpikes,Spike_Counts_To_Combine, mea_OBJ);
-
+combineSpikesInFile_PlotNewFiringRateAnalysis(spikeDir, fileToCombineSpikes,Spike_Counts_To_Combine, mea_OBJ); % this will give unit ID 5
 
 %% View the spike sorting statistics for a single channel
 
-UnitsIDs_base_drug_rec = [5 5 5];
+UnitsIDs_base_drug_rec = [5 5 5]; % Baseline, drug, recovery Cluster IDs
 
 doAnalysis_Base_Drug_Rec_Comparison(spikeDir, UnitsIDs_base_drug_rec, mea_OBJ);
 
 %% Combine the spikes from a sorted single channel 
 
-
+%mea_OBJ = FiringRateAnalysis_makeRasters(spikeDir, mea_OBJ);
 
 
 %%
