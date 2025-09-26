@@ -5,7 +5,7 @@
 close all
 clear all
 
-analysisDir = 'D:\Esra-MEA\20250723\'; % path to the analysis directory
+analysisDir = 'Z:\hameddata2\Janie-MEA-Data\Esra-MEA2025\20250729\'; % path to the analysis directory
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
 % 
@@ -44,13 +44,37 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 % - make sure to name the file with '__71 (the channel number) at the end
 % 2. When you are all done sorting all the channels, export to New .PLX - this takes a long time
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% After spike sorting
 
-mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ);
+spikeDir = 'Z:\hameddata2\Janie-MEA-Data\Esra-MEA2025\20250729\Firing_Rate_Analysis\';
+
+%mea_OBJ = FiringRateAnalysis_makeRasters(spikeDir, mea_OBJ);
+
+mea_OBJ = FiringRateAnalysis_singleChannel(spikeDir, mea_OBJ);
 
 %%
-spikeDir = 'D:\Esra-MEA\20250723\Firing_Rate_Analysis\';
-doAnalysisFiringRateComparison(spikeDir, mea_OBJ, 2);
+mea_OBJ = FiringRateAnalysis_singleChannel_Base_Drug_Rec(spikeDir, mea_OBJ);
+
+%%
+
+fileToCombineSpikes = '20250729-1401DrugNRecoverE_CH-87-_SpikeData-recovery__87.mat'; % make sure to include .mat
+Spike_Counts_To_Combine = [1973 803 56];
+
+combineSpikesInFile_PlotNewFiringRateAnalysis(spikeDir, fileToCombineSpikes,Spike_Counts_To_Combine, mea_OBJ);
+
+
+%% View the spike sorting statistics for a single channel
+
+UnitsIDs_base_drug_rec = [5 5 5];
+
+doAnalysis_Base_Drug_Rec_Comparison(spikeDir, UnitsIDs_base_drug_rec, mea_OBJ);
+
+%% Combine the spikes from a sorted single channel 
+
+
+
 
 %%
 %checkSpikesOnSortedData()

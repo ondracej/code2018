@@ -2058,7 +2058,7 @@ end
             
         end
         
-        function obj = doAnalysisFiringRateComparison(spikeDir, obj, expSwitch)
+        function obj = doAnalysis_Base_Drug_Rec_Comparison(spikeDir, UnitsToAnalyze, obj)
             
             cd(spikeDir);
             
@@ -2071,6 +2071,8 @@ end
             [file_exp,path_exp] = uigetfile('*.mat', title_exp);
             [file_rec,path_rec] = uigetfile('*.mat', title_rec);
             
+            
+                
             %% Find which channel is selected for each file
             
             underscore = '_';
@@ -2088,6 +2090,9 @@ end
             bladot = find(file_rec == dot);
             recChan = str2double(file_rec(bla(end)+1:bladot-1));
             
+             PlotDirName = [baseFileName '__BaseDrugRecCommparison_NewPlots'];
+                PlotDir = [spikeDir PlotDirName '\'];
+                
             
             if ~isequal(basChan,expChan,recChan)
                 disp('You did not select the same channels to compare...!')
@@ -2136,9 +2141,9 @@ end
                 %     dD_chan1_inds = find(dD_units ==1);
                 %     rD_chan1_inds = find(rD_units ==1);
                 
-                bD_chan1_inds = find(bD_units ==1);
-                dD_chan1_inds = find(dD_units ==1);
-                rD_chan1_inds = find(rD_units ==1);
+                bD_chan1_inds = find(ismember(bD_units,UnitsToAnalyze(1)));
+                dD_chan1_inds = find(ismember(dD_units,UnitsToAnalyze(2)));
+                rD_chan1_inds = find(ismember(rD_units,UnitsToAnalyze(3)));
                 
                 %bD_chan1_inds = 1:1:numel(bD_units);
                 %dD_chan1_inds = 1:1:numel(dD_units);
@@ -2196,38 +2201,123 @@ end
                 end
                 
                 allFRMax = ceil(max(cell2mat(allFRs)));
+                datapointsToCompare = size(spks, 2);
+                %% Firing Rates per channel max time
+                 
+                timeWin_s = 60;
+                 allFRs_max = [];
+                    allSpks_max = [];
+                    
+                for j = 1:3
+                    switch j
+                        case 1
+                            data = bD_timestamps_s;
+                            maxT = bD_timestamps_s_max;
+                        case 2
+                            data = dD_timestamps_s;
+                            maxT = dD_timestamps_s_max;
+                        case 3
+                            data = rD_timestamps_s;
+                            maxT = rD_timestamps_s_max;
+                    end
+                    
+                    
+                    tOn = 1:timeWin_s:maxT;
+                   
+                   
+                   spks_max = [];
+                    for k = 1:numel(tOn)-1
+                        
+                        roi_start = tOn(k);
+                        roi_stop = tOn(k)+timeWin_s-1;
+                        spks_max(k) = numel(find(data >= roi_start & data <=roi_stop));
+                        
+                    end
+                    
+                    allSpks_max{j} = spks_max;
+                    allFRs_max{j} = spks_max./timeWin_s;
+                    
+                    allFRMaxMax(j) = max(allFRs_max{j});
+                    allMaxTimes(j) = maxT;
+                end
+                
+               FRMaxMax = ceil(max(allFRMaxMax));
+                
                 
                 %% Plotting waveforms
                 figH = figure(103); clf
-                subplot(3, 6, [1 2])
-                plot(bD_spikeWaveforms(1:end,:)', 'k');
-                axis tight
-                ylim([-5e4 5e4])
-                title(['Baseline: Ch-' num2str(thisChannel)])
-                xlabel('Samples')
-                ylabel('Waveform')
-                subplot(3, 6, [3 4])
-                plot(dD_spikeWaveforms(1:end,:)', 'k');
-                axis tight
-                ylim([-5e4 5e4])
-                if expSwitch == 1
-                    title(['Drug: Ch-' num2str(thisChannel)])
-                else
-                    title(['Stimulation: Ch-' num2str(thisChannel)])
-                end
-                xlabel('Samples')
-                ylabel('Waveform')
-                subplot(3, 6, [5 6])
-                plot(rD_spikeWaveforms(1:end,:)', 'k');
-                axis tight
-                ylim([-5e4 5e4])
-                title(['Recovery: Ch-' num2str(thisChannel)])
-                xlabel('Samples')
-                ylabel('Waveform')
-                %% PLotting firing rates
+                subplot(3, 6, [1])
+                spikeaxis_samp = 1:1:size(bD_spikeWaveforms, 2);
+                spikeaxis_ms = spikeaxis_samp/30000*1000;
                 
-                subplot(3, 6, 7)
+                plot(spikeaxis_ms, bD_spikeWaveforms(1:end,:)', 'k');
+                
+                
+                axis tight
+                ylim([-4e4 4e4])
+                title(['Baseline: Ch-' num2str(thisChannel) ' ID: ' num2str(UnitsToAnalyze(1))])
+                xlabel('Time (ms)')
+                ylabel('Waveform')
+                legend(['n = ' num2str(size(bD_spikeWaveforms, 1))])
+                legend('boxoff')
+                
+                subplot(3, 6, [7])
+                plot(spikeaxis_ms, dD_spikeWaveforms(1:end,:)', 'color',  [0 .5 .5]);
+                axis tight
+                ylim([-4e4 4e4]) 
+                    title(['Drug: Ch-' num2str(thisChannel) ' ID: ' num2str(UnitsToAnalyze(2))])
+                xlabel('Time (ms)')
+                ylabel('Waveform')
+                legend(['n = ' num2str(size(dD_spikeWaveforms, 1))])
+                legend('boxoff')
+                
+                subplot(3, 6, [13])
+                plot(spikeaxis_ms, rD_spikeWaveforms(1:end,:)', 'k');
+                axis tight
+                ylim([-4e4 4e4])
+                title(['Recovery: Ch-' num2str(thisChannel) ' ID: ' num2str(UnitsToAnalyze(3))])
+                xlabel('Time (ms)')
+                ylabel('Waveform')
+                legend(['n = ' num2str(size(rD_spikeWaveforms, 1))])
+                legend('boxoff')
+                
+                %% plotting ISI
+                
+                binEdges = 0:10:500;
+                binCenters = binEdges(1:end-1) + diff(binEdges)/2;
+                
+                subplot(3, 6, [2]) 
+                isi_bD = diff(bD_timestamps_s_all);
+                isi_bD_ms = isi_bD*1000;
+                [counts_bD, ~] = histcounts(isi_bD_ms, binEdges);
+                bar(binCenters, counts_bD, 'FaceAlpha', 0.9, 'FaceColor', 'k');
+                xlabel('Duration(ms)')
+                ylabel('Count')
+               title(['Baseline: Ch-' num2str(thisChannel) ' ID: ' num2str(UnitsToAnalyze(1))])
+                
+                subplot(3, 6, [8]) 
+                isi_dD = diff(dD_timestamps_s_all);
+                isi_dD_ms = isi_dD*1000;
+                [counts_dD, ~] = histcounts(isi_dD_ms, binEdges);
+                bar(binCenters, counts_dD, 'FaceAlpha', 0.9, 'FaceColor', [0 .5 .5]);
+                xlabel('Duration(ms)')
+                ylabel('Count')
+                 title(['Drug: Ch-' num2str(thisChannel) ' ID: ' num2str(UnitsToAnalyze(2))])
+                
+                subplot(3, 6, [14]) 
+                isi_rD = diff(rD_timestamps_s_all);
+                isi_rD_ms = isi_rD*1000;
+                [counts_rD, ~] = histcounts(isi_rD_ms, binEdges);
+                bar(binCenters, counts_rD, 'FaceAlpha', 0.9, 'FaceColor', 'k');
+                xlabel('Duration(ms)')
+                ylabel('Count')
+               title(['Recovery: Ch-' num2str(thisChannel) ' ID: ' num2str(UnitsToAnalyze(3))])
+                %% PLotting firing rates - Old
+              
+                %{
+                subplot(3, 6, 2)
                 plot(allFRs{1}, 'k.', 'linestyle', '-')
+                
                 axis tight
                 ylim([0 allFRMax])
                 xlim([0 11])
@@ -2238,7 +2328,7 @@ end
                 
                 pre = allFRs{1}(1:5);
                 post = allFRs{1}(6:end);
-                subplot(3, 6, 8);
+                subplot(3, 6, 3);
                 toPlot = [mean(pre) ; mean(post)];
                 errs = [std(pre) ; std(post)];
                 bar(toPlot, 'FaceColor','k')
@@ -2248,7 +2338,7 @@ end
                 ylabel('Firing Rate (Hz)')
                 ylim([0 allFRMax])
                 %%
-                subplot(3, 6, 9)
+                subplot(3, 6, 8)
                 plot(allFRs{2}, 'k.', 'linestyle', '-')
                 axis tight
                 ylim([0 allFRMax])
@@ -2260,7 +2350,7 @@ end
                 
                 pre = allFRs{2}(1:5);
                 post = allFRs{2}(6:end);
-                subplot(3, 6, 10);
+                subplot(3, 6, 9);
                 toPlot = [mean(pre) ; mean(post)];
                 errs = [std(pre) ; std(post)];
                 bar(toPlot, 'FaceColor',[0 .5 .5])
@@ -2270,7 +2360,7 @@ end
                 ylabel('Firing Rate (Hz)')
                 ylim([0 allFRMax])
                 %%
-                subplot(3, 6, 11)
+                subplot(3, 6, 14)
                 plot(allFRs{3}, 'k.', 'linestyle', '-')
                 axis tight
                 ylim([0 allFRMax])
@@ -2282,7 +2372,7 @@ end
                 
                 pre = allFRs{3}(1:5);
                 post = allFRs{3}(6:end);
-                subplot(3, 6, 12);
+                subplot(3, 6, 15);
                 toPlot = [mean(pre) ; mean(post)];
                 errs = [std(pre) ; std(post)];
                 bar(toPlot, 'FaceColor','k')
@@ -2292,8 +2382,47 @@ end
                 ylabel('Firing Rate (Hz)')
                 ylim([0 allFRMax])
                 
+                %}
                 %%
-                subplot(3, 6, [15 16])
+                
+                %% PLotting firing rates - NEW
+                subplot(3, 6, 3)
+                
+                plot(allFRs_max{1}, 'k.', 'linestyle', '-')
+                
+                axis tight
+                ylim([0 FRMaxMax])
+                xlim([0 11])
+                xlabel('Time (min)')
+                ylabel('Firing Rate (Hz)')
+                line([datapointsToCompare datapointsToCompare], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
+                title(['Recording Time = ' num2str(round(allMaxTimes(1))) 's']);
+                
+                %%
+                subplot(3, 6, 9)
+                plot(allFRs_max{2}, 'k.', 'linestyle', '-')
+                axis tight
+                ylim([0 FRMaxMax])
+                xlim([0 11])
+                xlabel('Time (min)')
+                ylabel('Firing Rate (Hz)')
+                line([datapointsToCompare datapointsToCompare], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
+                title(['Recording Time = ' num2str(round(allMaxTimes(2))) 's']);
+                
+                %%
+                subplot(3, 6, 15)
+                plot(allFRs_max{3}, 'k.', 'linestyle', '-')
+                axis tight
+                ylim([0 FRMaxMax])
+                xlim([0 11])
+                xlabel('Time (min)')
+                ylabel('Firing Rate (Hz)')
+                line([datapointsToCompare datapointsToCompare], [0 allFRMax], 'color', [0.5 0.5 0.5], 'linestyle', ':')
+                title(['Recording Time = ' num2str(round(allMaxTimes(3))) ' s']);
+               
+                
+                %%
+                subplot(3, 6, [4 5 6])
                 
                 xes_n = numel(allFRs{1});
                 xes = ones(1, xes_n);
@@ -2306,11 +2435,8 @@ end
                 plot(xes*2, allFRs{2}, 'r.')
                 plot(xes*3, allFRs{3}, 'k.')
                 set(gca, 'xtick', [1 2 3])
-                if expSwitch == 1
-                    set(gca, 'xticklabel', {'Baseline', 'Experiment', 'Recovery'})
-                else
-                    set(gca, 'xticklabel', {'Baseline', 'Stimulation', 'Recovery'})
-                end
+                
+                    set(gca, 'xticklabel', {'Baseline', 'Drug', 'Recovery'})
                 
                 xlim([0 4])
                 ylim([0 allFRMax])
@@ -2321,18 +2447,14 @@ end
                 [h2, p2] = ttest(allFRs{3},  allFRs{2});
                 [h3, p3] = ttest(allFRs{1},  allFRs{3});
                 
-                if expSwitch == 1
                     Name = {'Baseline-Drug';'Recovery-Drug';'Baseline-Recovery'};
-                else
-                    Name = {'Baseline-Stim.';'Recovery-Stim.';'Baseline-Recovery'};
-                end
                 
                 h = [h1;h2;h3];
                 p = [p1;p2;p3];
                 T = table(h,p,'RowNames',Name);
                 
                 
-                ha = subplot(3, 6, [17 18]);
+                ha = subplot(3, 6, [10 11 12 16 17 18]);
                 pos = get(ha,'Position');
                 un = get(ha,'Units');
                 delete(ha)
@@ -2344,11 +2466,11 @@ end
                 axis off
                 %%
                 
-                saveName = [spikeDir SaveName];
+                plotsaveName = [PlotDir SaveName];
                 
-                plotpos = [0 0 40 15];
+                plotpos = [0 0 40 25];
                 
-                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                print_in_A4(0, plotsaveName, '-djpeg', 0, plotpos);
             end
             
         end
@@ -2402,7 +2524,7 @@ end
         end
         
         
-        function obj = FiringRateAnalysis_makeRasters(obj)
+        function obj = FiringRateAnalysis_makeRasters(spikeDir, obj)
             
             dbstop if error
             %%
@@ -2414,7 +2536,8 @@ end
             %             obj.PATH.spikeAnalysis_plotDir = spikeAnalysis_plotDir;
             %
             
-            spikeDir = obj.PATH.spikeAnalysis;
+            %spikeDir = obj.PATH.spikeAnalysis;
+            
             files = dir(fullfile(spikeDir));
             nFiles = numel(files);
             
@@ -2449,7 +2572,7 @@ end
             %% Load files
             
             timeBlock_s = 30;
-            spikeLimit = 30;
+            spikeLimit = 0;
             
             for j = 1:nChansToLoad
                 
@@ -2634,15 +2757,773 @@ end
             
             
             
+        end
+    
+    
+        function obj = FiringRateAnalysis_singleChannel(spikeDir, obj)
+            
+            dbstop if error
+            %%
+            
+            %             [filepath,name,ext] = fileparts(obj.ANALYSIS.h5_fileToLoad);
+            %
+            %             spikeAnalysis_plotDir = [obj.PATH.spikeAnalysis name '_Plots' obj.PATH.dirD];
+            %
+            %             obj.PATH.spikeAnalysis_plotDir = spikeAnalysis_plotDir;
+            %
+            
+            %spikeDir = obj.PATH.spikeAnalysis;
+            
+            files = dir(fullfile(spikeDir));
+            nFiles = numel(files);
+            
+            for j = 1:nFiles
+                fileNames{j} = files(j).name;
+            end
+            
+            searchString = ['.mat']; % look for the .csv file
+            
+            matchInds = cellfun(@(x) strfind(x, searchString), fileNames, 'UniformOutput', 0);
+            matchIndsPlace = cell2mat(matchInds);
+            matchInds_nonempty = find(cellfun(@(x) ~isempty(x), matchInds)==1);
+            
+            varNames = fileNames(matchInds_nonempty);
+            
+            list = {varNames{1:end}};
+            [indx,tf] = listdlg('PromptString','Choose the spike files to analyze:', 'ListString',list, 'ListSize', [360 100]);
+            
+            nChansToLoad = numel(indx);
+            for j = 1:nChansToLoad
+                allChoices{j} = list{indx(j)};
+            end
+            
+            ChanText = [];
+            for j = 1:nChansToLoad
+                
+                thisName = allChoices{j};
+                ChanName{j} = thisName(end-5:end-4);
+                ChanText = [ChanText '-' thisName(end-5:end-4)];
+            end
+            
+            
+            PlotDirName = [thisName(1:end-4) '_NewPlots'];
+            PlotDir = [spikeDir PlotDirName '\'];
+            
+             if exist(PlotDir, 'dir') ==0
+                mkdir(PlotDir);
+                disp(['Created directory: ' PlotDir])
+            end
+            
+            
+            %% Load files
+            
+            timeBlock_s = 30;
+            spikeLimit = 0;
+            
+            for j = 1:nChansToLoad
+                
+                d = load([spikeDir allChoices{j}]);
+                
+                fields = fieldnames(d);
+                
+                %eval(['dataLength = size(d.' cell2mat(fields) ',2)'])
+                eval(['units = d.' cell2mat(fields) '(:,2);']);
+                eval(['timestamps_s = d.' cell2mat(fields) '(:,3);']);
+                eval(['spikeWaveforms = d.' cell2mat(fields) '(:,4:end);']);
+                uniqueUnits = unique(units);
+                nUnits = numel(uniqueUnits);
+                
+                allTimestamps_s  = [];
+                meanWaveform = [];
+                allWaveforms = [];
+                for o = 1:nUnits
+                    thisUnit = uniqueUnits(o);
+                    allTimestamps_inds = find(units == thisUnit);
+                    allTimestamps_s{o} = timestamps_s(allTimestamps_inds);
+                    allSpikeWaveforms{o} = spikeWaveforms(allTimestamps_inds,:);
+                    allWaveforms{o} = spikeWaveforms(allTimestamps_inds,:);
+                     %bD_spikeWaveforms = bD_spikeWaveforms(bD_chan1_inds,:);
+
+                     %meanWaveform{o} = nanmedian(spikeWaveforms(allTimestamps_inds,:), 1);
+                end
+                
+                if j ==1
+                    maxTimestamp = max(timestamps_s);
+                    maxTime_s = ceil(maxTimestamp);
+                    TOn=0:timeBlock_s:maxTime_s;
+                end
+                
+                TimestampsOverChans{j} = allTimestamps_s;
+                allWaveformsOverChans{j} = allWaveforms; 
+            end
+            
+            
+            %%
+            cnt = 1;
+            TimestampsFinal = []; ChanNamesFinal = [];
+            for j = 1:nChansToLoad
+                
+                theseTimestamps = TimestampsOverChans{j};
+                
+                nSpikes = [];
+                for k = 1: size(theseTimestamps, 2)
+                    timestamps = theseTimestamps{1,k};
+                    nSpikes = numel(timestamps);
+                    
+                    
+                    if nSpikes > spikeLimit
+                        TimestampsFinal{cnt} = timestamps;
+                        ChanNamesFinal{cnt} = ChanName{j};
+                        cnt = cnt+1;
+                    end
+                end
+                
+            end
+            
+            p = numSubplots(numel(TimestampsFinal));
+         
+            figH = figure(102); clf
+            
+            colorOrder = get(gca, 'ColorOrder');
+            offset = 0;
+            legText = [];
+            for i=1:numel(TimestampsFinal)
+                
+                subplot(2, 4, [1 3])
+                
+                timestampsToPlot = TimestampsFinal{i};
+                cnt = 1;
+                
+                %figure(figH);
+                
+                
+                % subplot(p(1),p(2),i)
+                hold on
+                allSpksFR = [];
+                col =  colorOrder(i,:);
+                for q = 1:size(TOn, 2)-1
+                    spks = timestampsToPlot(find(timestampsToPlot >= TOn(q) & timestampsToPlot <= TOn(q+1)))-TOn(q)';
+                    ypoints = ones(1, numel(spks))*cnt;
+                    hold on
+                    plot(spks, ypoints, 'k.', 'linestyle', 'none', 'MarkerFaceColor',col,'MarkerEdgeColor',col)
+                    
+                    allSpksFR(q) = numel(spks)/timeBlock_s;
+                    
+                    cnt = cnt +1;
+                end
+                
+                legText{i} = ['Ch-' ChanNamesFinal{i} ' | n = ' num2str(numel(timestampsToPlot))];
+                
+                if i == numel(TimestampsFinal)
+                    
+                    axis tight
+                    xlim([0 timeBlock_s]);
+                    set(gca, 'YDir','reverse')
+                    % title(['Ch-' ChanNamesFinal{i} ' | n = ' num2str(numel(timestampsToPlot))])
+                    
+                    
+                    yticks = get(gca, 'ytick');
+                    yticklabs = yticks*timeBlock_s;
+                    ytickLabs = num2cell(yticklabs);
+                    %B=cellfun(@num2str,ytickLabs,'un',0);
+                    set(gca, 'Yticklabel',ytickLabs)
+                    xlabel('Time (s)')
+                    ylabel('Time (s)')
+                    title('Spiking raster')
+                    %  legend(legText)
+                end
+                
+                %%
+                %figure(figHH);
+                subplot(2, 4, [5 6])
+                %colorOrder = get(gca, 'ColorOrder');
+                
+                hold on
+                plot(smooth(allSpksFR), 'linewidth', 2, 'color', col)
+                
+                if i == numel(TimestampsFinal)
+                    legend(legText)
+                    axis tight
+                    xticks = get(gca, 'xtick');
+                    xticklabs = xticks*timeBlock_s;
+                    xtickLabs = num2cell(xticklabs);
+                    
+                    set(gca, 'Xticklabel',xtickLabs)
+                    xlabel('Time (s)')
+                    ylabel('Firing rate (Hz)')
+                    legend(legText)
+                    legend boxoff
+                    title('Firing Rate')
+                end
+                %%
+                %figure(figHHC)
+                subplot(2, 4, [4])
+                %subplot(1, size(allWaveforms,2), i)
+                hold on
+                plot(allWaveforms{i}' +offset, 'color', col)
+                %axis tight
+                %ylim([-5e4 5e4])
+                %legend(legText{i})
+                %legend boxoff
+                
+                text(5, offset, ['n = ' num2str(numel(timestampsToPlot))])
+                offset = offset +25000;
+                
+                if i == numel(TimestampsFinal)
+                    axis tight
+                    xlabel('Samples')
+                    ylabel('Waveform Amplitue (AU)')
+                    title('Spike Waveforms')
+                    %      legend(legText)
+                end
+                
+                %%
+                binEdges = 0:10:1000;
+                binCenters = binEdges(1:end-1) + diff(binEdges)/2;
+                
+                subplot(2, 4, [7 8]);
+                isi = diff(TimestampsFinal{i});
+                isi_ms = isi*1000;
+                [counts, ~] = histcounts(isi_ms, binEdges);
+                
+                hold on
+                bar(binCenters, counts, 'FaceAlpha', 0.9, 'FaceColor', col);
+                
+                if i == numel(TimestampsFinal)
+                    legend(legText)
+                    title('Inter-spike Interval')
+                    ylabel('Count')
+                    xlabel('Duration (ms)')
+                end
+                
+            end
+            
+         
+            % Create textbox
+            annotation(figH,'textbox',...
+                [0.015 0.95 0.20 0.03],...
+                'String',{thisName},...
+                'LineStyle','none',...
+                'FitBoxToText','off');
+            
+            saveName = [PlotDir 'CH' ChanText '_ChanStats'];
+            plotpos = [0 0 20 25];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            
+          
+            
+        end  
+        
+        function obj = combineSpikesInFile_PlotNewFiringRateAnalysis(spikeDir, fileToCombineSpikes, Spike_Counts_To_Combine, obj)
+            
+            dbstop if error
+            %%
+            
+            fileToLoad = [spikeDir fileToCombineSpikes];
+            
+            
+            PlotDirName = [fileToCombineSpikes(1:end-4) '_CombinedNewPlots'];
+            PlotDir = [spikeDir PlotDirName '\'];
+            
+            if exist(PlotDir, 'dir') ==0
+                mkdir(PlotDir);
+                disp(['Created directory: ' PlotDir])
+            end
+            
+            
+            %% Load files
+            
+            timeBlock_s = 30;
+            spikeLimit = 0;
+            
+            
+            d = load(fileToLoad);
+            
+            fields = fieldnames(d);
+            
+            %eval(['dataLength = size(d.' cell2mat(fields) ',2)'])
+            eval(['units = d.' cell2mat(fields) '(:,2);']);
+            eval(['timestamps_s = d.' cell2mat(fields) '(:,3);']);
+            eval(['spikeWaveforms = d.' cell2mat(fields) '(:,4:end);']);
+            uniqueUnits = unique(units);
+            nUnits = numel(uniqueUnits);
+            
+            
+            UnitsToUse = [];
+            for o = 1:nUnits
+                thisUnit = uniqueUnits(o);
+                allTimestamps_inds = find(units == thisUnit);
+                nSpikes = numel(allTimestamps_inds);
+                match = ismember(nSpikes, Spike_Counts_To_Combine);
+                
+                if match == 1
+                    
+                    UnitsToUse(o) = thisUnit;
+                end
+                
+            end
+            
+            
+            %% combine all data;
+            
+            allTimestamps_inds_new = find(ismember(units, UnitsToUse));
+            
+            allTimestamps_s = timestamps_s(allTimestamps_inds_new);
+            allSpikeWaveforms = spikeWaveforms(allTimestamps_inds_new,:);
+            allWaveforms = spikeWaveforms(allTimestamps_inds_new,:);
             
             
             
+            
+            maxTimestamp = max(timestamps_s);
+            maxTime_s = ceil(maxTimestamp);
+            TOn=0:timeBlock_s:maxTime_s;
+            
+            
+            TimestampsOverChans = {allTimestamps_s};
+            allWaveformsOverChans = {allWaveforms};
+            
+            nChansToLoad = 1;
+            
+            %%
+            
+            figH = figure(102); clf
+            
+            colorOrder = get(gca, 'ColorOrder');
+            offset = 0;
+            legText = [];
+            for i=1:numel(TimestampsOverChans)
+                
+                subplot(2, 4, [1 3])
+                
+                timestampsToPlot = TimestampsOverChans{i};
+                cnt = 1;
+                
+                %figure(figH);
+                
+                
+                % subplot(p(1),p(2),i)
+                hold on
+                allSpksFR = [];
+                col =  colorOrder(i,:);
+                for q = 1:size(TOn, 2)-1
+                    spks = timestampsToPlot(find(timestampsToPlot >= TOn(q) & timestampsToPlot <= TOn(q+1)))-TOn(q)';
+                    ypoints = ones(1, numel(spks))*cnt;
+                    hold on
+                    plot(spks, ypoints, 'k.', 'linestyle', 'none', 'MarkerFaceColor',col,'MarkerEdgeColor',col)
+                    
+                    allSpksFR(q) = numel(spks)/timeBlock_s;
+                    
+                    cnt = cnt +1;
+                end
+                
+                %  legText{i} = ['Ch-' ChanNamesFinal{i} ' | n = ' num2str(numel(timestampsToPlot))];
+                
+                if i == numel(TimestampsOverChans)
+                    
+                    axis tight
+                    xlim([0 timeBlock_s]);
+                    set(gca, 'YDir','reverse')
+                    % title(['Ch-' ChanNamesFinal{i} ' | n = ' num2str(numel(timestampsToPlot))])
+                    
+                    
+                    yticks = get(gca, 'ytick');
+                    yticklabs = yticks*timeBlock_s;
+                    ytickLabs = num2cell(yticklabs);
+                    %B=cellfun(@num2str,ytickLabs,'un',0);
+                    set(gca, 'Yticklabel',ytickLabs)
+                    xlabel('Time (s)')
+                    ylabel('Time (s)')
+                    title('Spiking raster')
+                    %  legend(legText)
+                end
+                
+                %%
+                %figure(figHH);
+                subplot(2, 4, [5 6])
+                %colorOrder = get(gca, 'ColorOrder');
+                
+                hold on
+                plot(smooth(allSpksFR), 'linewidth', 2, 'color', col)
+                
+                if i == numel(TimestampsOverChans)
+                    legend(legText)
+                    axis tight
+                    xticks = get(gca, 'xtick');
+                    xticklabs = xticks*timeBlock_s;
+                    xtickLabs = num2cell(xticklabs);
+                    
+                    set(gca, 'Xticklabel',xtickLabs)
+                    xlabel('Time (s)')
+                    ylabel('Firing rate (Hz)')
+                    %  legend(legText)
+                    %  legend boxoff
+                    title('Firing Rate')
+                end
+                %%
+                %figure(figHHC)
+                subplot(2, 4, [4])
+                %subplot(1, size(allWaveforms,2), i)
+                hold on
+                plot(allWaveforms(:,:)' +offset, 'color', col)
+                %axis tight
+                %ylim([-5e4 5e4])
+                %legend(legText{i})
+                %legend boxoff
+                
+                text(5, offset, ['n = ' num2str(numel(timestampsToPlot))])
+                offset = offset +25000;
+                
+                if i == numel(TimestampsOverChans)
+                    axis tight
+                    xlabel('Samples')
+                    ylabel('Waveform Amplitue (AU)')
+                    title('Spike Waveforms')
+                    %      legend(legText)
+                end
+                
+                %%
+                binEdges = 0:10:1000;
+                binCenters = binEdges(1:end-1) + diff(binEdges)/2;
+                
+                subplot(2, 4, [7 8]);
+                isi = diff(TimestampsOverChans{i});
+                isi_ms = isi*1000;
+                [counts, ~] = histcounts(isi_ms, binEdges);
+                
+                hold on
+                bar(binCenters, counts, 'FaceAlpha', 0.9, 'FaceColor', col);
+                
+                if i == numel(TimestampsOverChans)
+                    % legend(legText)
+                    title('Inter-spike Interval')
+                    ylabel('Count')
+                    xlabel('Duration (ms)')
+                end
+                
+            end
+            
+            thisName = ['CombinedSpikes-' fileToCombineSpikes(1:end-4)];
+            % Create textbox
+            annotation(figH,'textbox',...
+                [0.015 0.95 0.20 0.03],...
+                'String',{thisName},...
+                'LineStyle','none',...
+                'FitBoxToText','off');
+            
+            saveName = [PlotDir thisName '_ChanStats'];
+            plotpos = [0 0 20 25];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            
+            
+            
+            %% Save new spike data
+            D = [];
+            
+            newUnitNumber = (ones(1, numel(allTimestamps_s))*5)';
+            
+            %eval(['D.' fields{:} '(:,1)= d.' fields{:} '(:,1);'])
+            %eval(['D.' fields{:} '(:,2)=newUnitNumber'])
+            %eval(['D.' fields{:} '(:,3)=allTimestamps_s'])
+            %eval(['D.' fields{:} '(:,4:86)=allWaveforms'])
+            
+            eval(['CSpikes (:,1)= d.' fields{:} '(:,1);'])
+            eval('CSpikes(:,2)=newUnitNumber;')
+            eval('CSpikes(:,3)=allTimestamps_s;')
+            eval('CSpikes(:,4:86)=allWaveforms;')
+            
+            underscore = '_';
+            dot = '.';
+            bla = find(fileToCombineSpikes == underscore); % last one will be the channel number
+            bladot = find(fileToCombineSpikes == dot);
+            basChan = str2double(fileToCombineSpikes(bla(end)+1:bladot-1));
+            
+            savename = [fileToCombineSpikes(1:bla(3)) 'NewCombined__' num2str(basChan) '.mat'];
+            save([spikeDir savename], 'CSpikes', '-v7.3');
             
             
             
         end
         
+        
+        
+    
+        function obj = FiringRateAnalysis_singleChannel_Base_Drug_Rec(spikeDir, obj)
+            
+            
+            dbstop if error
+            
+            title_bas = 'Please select baseline file:';
+            title_exp = 'Please select drug file:';
+            title_rec = 'Please select recovery file:';
+            
+            
+            [file_bas,path_bas] = uigetfile('*.mat', title_bas);
+            [file_exp,path_exp] = uigetfile('*.mat', title_exp);
+            [file_rec,path_rec] = uigetfile('*.mat', title_rec);
+            
+            %% Find which channel is selected for each file
+            
+            underscore = '_';
+            dot = '.';
+            bla = find(file_bas == underscore); % last one will be the channel number
+            bladot = find(file_bas == dot);
+            basChan = str2double(file_bas(bla(end)+1:bladot-1));
+            baseFileName = file_bas(1:bla(1)-1);
+            
+            bla = find(file_exp == underscore); % last one will be the channel number
+            bladot = find(file_exp == dot);
+            expChan = str2double(file_exp(bla(end)+1:bladot-1));
+            
+            bla = find(file_rec == underscore); % last one will be the channel number
+            bladot = find(file_rec == dot);
+            recChan = str2double(file_rec(bla(end)+1:bladot-1));
+            
+            %%
+            
+            if ~isequal(basChan,expChan,recChan)
+                disp('You did not select the same channels to compare...!')
+                keyboard
+            else
+               
+                PlotDirName = [baseFileName '__BaseDrugRecCommparison_NewPlots'];
+                PlotDir = [spikeDir PlotDirName '\'];
+                
+                if exist(PlotDir, 'dir') ==0
+                    mkdir(PlotDir);
+                    disp(['Created directory: ' PlotDir])
+                end
+                
+                
+                %% Load files
+                
+                allChoices = {file_bas file_exp file_rec};
+                nChansToLoad = numel(allChoices);
+                 
+                timeBlock_s = 30;
+                spikeLimit = 0;
+                chanNames = [basChan expChan recChan];
+                for a = 1:nChansToLoad
+                    
+                    d = load([spikeDir allChoices{a}]);
+                    
+                    fields = fieldnames(d);
+                    
+                    %eval(['dataLength = size(d.' cell2mat(fields) ',2)'])
+                    eval(['units = d.' cell2mat(fields) '(:,2);']);
+                    eval(['timestamps_s = d.' cell2mat(fields) '(:,3);']);
+                    eval(['spikeWaveforms = d.' cell2mat(fields) '(:,4:end);']);
+                    uniqueUnits = unique(units);
+                    nUnits = numel(uniqueUnits);
+                    allUniqueUnits{a} = uniqueUnits;
+                    
+                    allTimestamps_s  = [];
+                    meanWaveform = [];
+                    allWaveforms = [];
+                    for o = 1:nUnits
+                        thisUnit = uniqueUnits(o);
+                        allTimestamps_inds = find(units == thisUnit);
+                        allTimestamps_s{o} = timestamps_s(allTimestamps_inds);
+                        allSpikeWaveforms{o} = spikeWaveforms(allTimestamps_inds,:);
+                        allWaveforms{o} = spikeWaveforms(allTimestamps_inds,:);
+                        %bD_spikeWaveforms = bD_spikeWaveforms(bD_chan1_inds,:);
+                        
+                        %meanWaveform{o} = nanmedian(spikeWaveforms(allTimestamps_inds,:), 1);
+                    end
+                    
+                    if a ==1
+                        maxTimestamp = max(timestamps_s);
+                        maxTime_s = ceil(maxTimestamp);
+                        TOn=0:timeBlock_s:maxTime_s;
+                    end
+                    
+                    TimestampsOverChans{a} = allTimestamps_s;
+                    allWaveformsOverChans{a} = allWaveforms;
+                    
+                end
+                
+                %%
+                %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                for j = 1:nChansToLoad
+                    cnt = 1;
+                    TimestampsFinal = [];
+                    
+                    theseTimestamps = TimestampsOverChans{j};
+                    
+                    nSpikes = [];
+                    for k = 1: size(theseTimestamps, 2)
+                        timestamps = theseTimestamps{1,k};
+                        nSpikes = numel(timestamps);
+                        
+                        
+                        if nSpikes > spikeLimit
+                            TimestampsFinal{cnt} = timestamps;
+                            %  ChanNamesFinal{cnt} = ChanName{j};
+                            cnt = cnt+1;
+                        end
+                    end
+                    
+                    figH = figure(100+j); clf
+                    
+                    colorOrder = get(gca, 'ColorOrder');
+                    offset = 0;
+                    legText = [];
+                    
+                    for i=1:numel(TimestampsFinal)
+                        
+                        chanUnitIDs = allUniqueUnits{j};
+                        thisUnitID = chanUnitIDs(i,:);
+                        subplot(2, 4, [1 3])
+                        
+                        timestampsToPlot = TimestampsFinal{1, i};
+                        cnt = 1;
+                        
+                        %figure(figH);
+                        
+                        
+                        % subplot(p(1),p(2),i)
+                        hold on
+                        allSpksFR = [];
+                        col =  colorOrder(i,:);
+                        for q = 1:size(TOn, 2)-1
+                            spks = timestampsToPlot(find(timestampsToPlot >= TOn(q) & timestampsToPlot <= TOn(q+1)))-TOn(q)';
+                            ypoints = ones(1, numel(spks))*cnt;
+                            hold on
+                            plot(spks, ypoints, 'k.', 'linestyle', 'none', 'MarkerFaceColor',col,'MarkerEdgeColor',col)
+                            
+                            allSpksFR(q) = numel(spks)/timeBlock_s;
+                            
+                            cnt = cnt +1;
+                        end
+                        
+                        legText{i} = ['Ch-' num2str(chanNames(i)) ' | n = ' num2str(numel(timestampsToPlot)) '| ID = ' num2str(thisUnitID) ];
+                        
+                        if i == numel(TimestampsFinal)
+                            
+                            axis tight
+                            xlim([0 timeBlock_s]);
+                            set(gca, 'YDir','reverse')
+                            % title(['Ch-' ChanNamesFinal{i} ' | n = ' num2str(numel(timestampsToPlot))])
+                            
+                            
+                            yticks = get(gca, 'ytick');
+                            yticklabs = yticks*timeBlock_s;
+                            ytickLabs = num2cell(yticklabs);
+                            %B=cellfun(@num2str,ytickLabs,'un',0);
+                            set(gca, 'Yticklabel',ytickLabs)
+                            xlabel('Time (s)')
+                            ylabel('Time (s)')
+                            title('Spiking raster')
+                            %  legend(legText)
+                        end
+                        
+                        %%
+                        %figure(figHH);
+                        subplot(2, 4, [5 6])
+                        %colorOrder = get(gca, 'ColorOrder');
+                        
+                        hold on
+                        plot(smooth(allSpksFR), 'linewidth', 2, 'color', col)
+                        
+                        if i == numel(TimestampsFinal)
+                            legend(legText)
+                            axis tight
+                            xticks = get(gca, 'xtick');
+                            xticklabs = xticks*timeBlock_s;
+                            xtickLabs = num2cell(xticklabs);
+                            
+                            set(gca, 'Xticklabel',xtickLabs)
+                            xlabel('Time (s)')
+                            ylabel('Firing rate (Hz)')
+                            legend(legText)
+                            legend boxoff
+                            title('Firing Rate')
+                        end
+                        %%
+                        %figure(figHHC)
+                        subplot(2, 4, [4])
+                        %subplot(1, size(allWaveforms,2), i)
+                        hold on
+                        theseWaveforms = allWaveformsOverChans{j};
+                        
+                        theseWaveformsToPlot = theseWaveforms{1,i};
+                        plot(theseWaveformsToPlot' +offset, 'color', col)
+                        %axis tight
+                        %ylim([-5e4 5e4])
+                        %legend(legText{i})
+                        %legend boxoff
+                        
+                        text(5, offset, ['n = ' num2str(numel(timestampsToPlot))])
+                        offset = offset+15000;
+                        
+                        if i == numel(TimestampsFinal)
+                            axis tight
+                            ylim([-30000 40000])
+                            xlabel('Samples')
+                            ylabel('Waveform Amplitue (AU)')
+                            title('Spike Waveforms')
+                            %      legend(legText)
+                        end
+                        
+                        %%
+                        binEdges = 0:10:1000;
+                        binCenters = binEdges(1:end-1) + diff(binEdges)/2;
+                        
+                        subplot(2, 4, [7 8]);
+                        isi = diff(TimestampsFinal{i});
+                        isi_ms = isi*1000;
+                        [counts, ~] = histcounts(isi_ms, binEdges);
+                        
+                        hold on
+                        bar(binCenters, counts, 'FaceAlpha', 0.9, 'FaceColor', col);
+                        
+                        if i == numel(TimestampsFinal)
+                            legend(legText)
+                            title('Inter-spike Interval')
+                            ylabel('Count')
+                            xlabel('Duration (ms)')
+                        end
+                        
+                    end
+                    
+                    switch j
+                        case 1
+                            thisName = ['Baseline: ' allChoices{j}];
+                            
+                            desc = 'Baseline';
+                        case 2
+                            thisName = ['Drug: ' allChoices{j}];
+                            desc = 'Drug';
+                            
+                        case 3
+                            thisName = ['Recovery: ' allChoices{j}];
+                            desc = 'Rec';
+                    end
+                    
+                    saveNametxt = allChoices{j}(1:end-4);
+                    
+                    % Create textbox
+                    annotation(figH,'textbox',...
+                        [0.015 0.95 0.20 0.03],...
+                        'String',{thisName},...
+                        'LineStyle','none',...
+                        'FitBoxToText','off');
+                    
+                    saveName = [PlotDir saveNametxt '_ChanStats-' desc];
+                    plotpos = [0 0 20 25];
+                    print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+                    
+                    
+                    
+                end
+            end
+            
+        end
+        
     end
+    
+    
+    
     
     %%
     
