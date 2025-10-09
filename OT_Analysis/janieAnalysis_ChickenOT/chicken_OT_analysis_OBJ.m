@@ -78,6 +78,13 @@ classdef chicken_OT_analysis_OBJ < handle
                     
                     OT_Data_Path = 'Z:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\OTData\Results\';
                     
+                case 'DESKTOP-PBLRH65'
+                      dirD = '\';
+
+                    addpath(genpath('G:\code\Github\code2018\'));
+                    
+                    OT_Data_Path = 'X:\Janie-OT-MLD\OT-MLD\OTProject\OTData\Results\';
+                    
             end
 
 

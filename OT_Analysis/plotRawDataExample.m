@@ -1,16 +1,19 @@
 function [] = plotRawDataExample()
 
-FigSaveDir = '/media/dlc/Data8TB/TUM/OT/OTProject/MLD/';
+FigSaveDir = 'G:\Dropbox\Writing\00_Articles\OT_Paper\ForPaper\';
+%X:\Janie-OT-MLD\OT-MLD\OTProject\MLD
+% experiment = 6; %efc
+% recSession = 3; %sFigSaveNamec
 
-experiment = 6; %efc
-recSession = 3; %sFigSaveNamec
+experiment = 4; %efc
+recSession = 2; %sFigSaveNamec
 
 C_OBJ = chicken_OT_analysis_OBJ(experiment, recSession);
 
 %% Stimulus Protocol
 % Stim Protocol: (1) HRTF; (2) Tuning; (3) IID; (4) ITD; (5) WN
 
-audSelInd = 2; % SpikesThis is the index, spikesnot the stim number!!!
+audSelInd = 1; % SpikesThis is the index, spikesnot the stim number!!!
 selection = C_OBJ.RS_INFO.ResultDirName{audSelInd};
 disp(selection)
 
@@ -30,18 +33,34 @@ disp(['Loaded: ' objPath])
 
 Fs = C_OBJ.Fs;
 
-data_az0_el0 = C_OBJ.EPOCHS.data(38).Data;
+data_az0_el0 = C_OBJ.EPOCHS.data(4).Data;
+
+
 timepoints_samp = 1:1:numel(data_az0_el0);
 timepoints_ms = timepoints_samp/ Fs *1000;
 thresh = C_OBJ.SPKS.spikes.params.thresh;
 
+%% filter
 
+low_cutoff = 300;            % Lower cutoff (Hz)
+high_cutoff = 3000;           % Upper cutoff (Hz)
+filter_order = 4;    
+
+[b, a] = butter(filter_order, [low_cutoff high_cutoff]/(Fs/2), 'bandpass');
+voltage_filtered = filtfilt(b, a, data_az0_el0);
+
+
+%%
 figure(100);clf
 subplot(2, 2, [1 3])
-plot(timepoints_ms, data_az0_el0, 'k');
-ylim([-0.3 0.4])
+plot(timepoints_ms, voltage_filtered, 'k');
 hold on
-line([0 300], [thresh thresh], 'color', 'r')
+%plot(timepoints_ms, voltage_filtered, 'b');
+
+
+ylim([-0.15 0.2])
+hold on
+line([0 300], [thresh*.95 thresh*.95], 'color', 'r')
 xlabel('Time [ms]')
 ylabel('Amplitude [AU]')
 
@@ -57,7 +76,7 @@ plot(timepoints_ms, WaveformSel, 'k');
 xlim([1.5 4])
 xlabel('Time [ms]')
 ylabel('Amplitude [AU]')
-
+ylim([-0.15 0.2])
 %%
 
 % spikes = ss_default_params(C_OBJ.Fs, 'thresh', thresh );
@@ -70,15 +89,15 @@ ylabel('Amplitude [AU]')
 
 spikes = C_OBJ.SPKS.spikes;
 
-inds = randperm(12055);
-indsSel = inds(1:5000);
+inds = randperm(876);
+indsSel = inds(1:350);
 
 x = spikes.waveforms(indsSel,:) * spikes.info.pca.v(:,1);
 y = spikes.waveforms(indsSel,:) * spikes.info.pca.v(:,2);
 subplot(2, 2, 4)
 plot(x, y, '.', 'linestyle', 'none', 'color', 'k')
-ylim([-1 1])
-xlim([-1.5 .5])
+ylim([-.5 .5])
+xlim([-.5 .5])
 xlabel('PC 1')
 ylabel('PC 2')
 
