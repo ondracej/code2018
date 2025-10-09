@@ -1,8 +1,8 @@
 function [] = organizePlexonSpikeTimesIntoStimRepetitons_Wrapper()
 
-%SortedSpikeFile_Dir = 'X:\Janie-OT-MLD\PlexonData-HRTF_2025\';
-SortedSpikeFile_Dir = 'X:\Janie-OT-MLD\PlexonData-WN_2025\';
-StimType = 5; %HRTF 3 (IID), 4 (ITD), 5 (WN)
+SortedSpikeFile_Dir = 'X:\Janie-OT-MLD\PlexonData-HRTF_2025\';
+%SortedSpikeFile_Dir = 'X:\Janie-OT-MLD\PlexonData-WN_2025\';
+StimType = 1; %HRTF 3 (IID), 4 (ITD), 5 (WN)
 
 sortedFile_txt = '*__Sorted.mat';
 sortedFiles = dir(fullfile(SortedSpikeFile_Dir, sortedFile_txt));

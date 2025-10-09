@@ -54,6 +54,8 @@ I.thisStimC2 = INFO.thisStimC2{1,1};
 I.StimInfo = INFO.thisStimAlLStimuli{1,1};
 I.StimNames = INFO.thisStimNames{1,1};
 I.StimDir = INFO.audStimDir{1,1};
+I.stimROIs = stimROIs;
+I.stimInds = stimInds;
 I.Fs = Fs;
 
 switch StimType
