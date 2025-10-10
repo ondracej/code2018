@@ -4,7 +4,7 @@
 %% Initialization
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pathToCodeRepository = 'C:\Users\Neuropix\Documents\GitHub\code2018\';
+pathToCodeRepository = 'C:\Users\DeepLabCut\Documents\code\Github\code2018\';
 addpath(genpath(pathToCodeRepository)) 
 
 % Define paths
@@ -12,10 +12,14 @@ addpath(genpath(pathToCodeRepository))
 close all
 clear all
 
-analysisDir = 'E:\TurtleTestFiles_forMatlabGUI\New\videos\E9\Target-4\';
+%% Change this informaiton here
+
+analysisDir = 'D:\TurtleDLCAnalysis\E9\Target6-LED\'; %make sure that it ands with a \
 TurtleName = 'E9';
-TargetText = 'Target-4';
+TargetText = 'Target6-LED';
 filtered = 1; % 1 use filtered data, 0, use unfiltered data
+%%
+
 
 dlc_OBJ = dlcAnalysis_OBJ_turtle(analysisDir, filtered );
 
@@ -37,16 +41,16 @@ dlc_OBJ = loadTrackedData_generic(dlc_OBJ);
 
 %% Trajectories %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% plot trajectories
-dlc_Obj = plotTrajectories(dlc_OBJ);
+dlc_OBJ = plotTrajectories(dlc_OBJ);
 
 %% plot trajectories with likelihood cutoff
 
 likelihood_cutoff = 0.65;
 
-[dlc_Obj ] = plotTrajectories_with_likelihood(dlc_OBJ, likelihood_cutoff);
+[dlc_OBJ ] = plotTrajectories_with_likelihood(dlc_OBJ, likelihood_cutoff);
 
 %% Videos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-plotTrajectoriesMakeVideo(dlc_Obj);
+plotTrajectoriesMakeVideo(dlc_OBJ);
 
 %% Make Video with Likelihood cutoff and frame cutoff
 
