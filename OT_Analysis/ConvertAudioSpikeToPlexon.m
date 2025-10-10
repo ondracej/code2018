@@ -2,12 +2,17 @@ function [] = ConvertAudioSpikeToPlexon()
 dbstop if error
 
 
-AllNeurons = {'N-03'; 'N-10'; 'N-12'; 'N-16'; 'N-17';'N-21';'N-23'; 'N-24';
-    'N-25'; 'N-26'; 'N-27'; 'N-28'; 'N-29'; 'N-31'; 'N-32'; 'N-33'; 'N-34';
-    'N-37'; 'N-39';'N-40'; 'N-42';'N-43';'N-44'};
+%Gets Results Data from here, sometimes it might be imcomplete:
+%F:\OT-MLD\OT_Project_2021-Final\OTData\Results\
 
-AllExps =       [1; 1; 1; 2; 2; 2; 3; 3; 3; 3; 3; 4; 4; 4; 4; 5; 5; 6; 6; 6; 7; 7; 7];
-EllRs =         [3; 10; 12; 4; 5; 9; 2; 3; 4; 5; 6; 1; 2; 4; 5; 1; 2; 1; 3; 4; 2; 3; 4];
+%{
+% 
+% AllNeurons = {'N-03'; 'N-10'; 'N-12'; 'N-16'; 'N-17';'N-21';'N-23'; 'N-24';
+%     'N-25'; 'N-26'; 'N-27'; 'N-28'; 'N-29'; 'N-31'; 'N-32'; 'N-33'; 'N-34';
+%     'N-37'; 'N-39';'N-40'; 'N-42';'N-43';'N-44'};
+% 
+% AllExps =       [1; 1; 1; 2; 2; 2; 3; 3; 3; 3; 3; 4; 4; 4; 4; 5; 5; 6; 6; 6; 7; 7; 7];
+% EllRs =         [3; 10; 12; 4; 5; 9; 2; 3; 4; 5; 6; 1; 2; 4; 5; 1; 2; 1; 3; 4; 2; 3; 4];
 
 
 % AllNeurons =    {'N-24';'N-26';'N-32'};
@@ -15,36 +20,54 @@ EllRs =         [3; 10; 12; 4; 5; 9; 2; 3; 4; 5; 6; 1; 2; 4; 5; 1; 2; 1; 3; 4; 2
 % EllRs =         [3; 5; 5];
 
 %% WN neurons
- AllNeurons =    {'N-03'; 'N-05'; 'N-06'; 'N-07';'N-08';'N-09';'N-10'; 'N-11'; 'N-12'; 'N-13'; 'N-14'; 'N-15'; 'N-16'; 'N-17';'N-19'; 'N-20'; 'N-21';'N-23';
-     'N-25'; 'N-27'; 'N-28'; 'N-29'; 'N-30'; 'N-31';'N-33'; 'N-34'; 'N-35'; 'N-36'; 'N-37';'N-38';'N-39';'N-40'; 'N-41';'N-42';'N-43';'N-44';'N-45';'N-46'};
-% AllExps =       [1; 1; 1; 1; 1; 1; 1; 1;  1; 2;2;2;2; 2; 2; 2; 2; 2; 3;3;3;4;4;4;4;5;5;5;5;6;6;6;6;7;7;7;7;8;8];
-% EllRs =         [3; 5;6;7;8;9; 10; 11 ;12; 1;2;3;4;  5; 6;7; 8;9;2;4;6;1;2;3;4;1;2;3;4;1;2;3;4;1;2;3;4;1;2];
+%  AllNeurons =    {'N-04'; 'N-03'; 'N-05'; 'N-06'; 'N-07';'N-08';'N-09';'N-10'; 'N-11'; 'N-12'; 'N-13'; 'N-14'; 'N-15'; 'N-16'; 'N-17';'N-19'; 'N-20'; 'N-21';'N-23';
+%      'N-25'; 'N-27'; 'N-28'; 'N-29'; 'N-30'; 'N-31';'N-33'; 'N-34'; 'N-35'; 'N-36'; 'N-37';'N-38';'N-39';'N-40'; 'N-41';'N-42';'N-43';'N-44';'N-45';'N-46'};
+% AllExps =       [1; 1; 1; 1; 1; 1; 1; 1; 1;  1; 2;2;2;2; 2; 2; 2; 2; 2; 3;3;3;4;4;4;4;5;5;5;5;6;6;6;6;7;7;7;7;8;8];
+% EllRs =         [4; 3; 5;6;7;8;9; 10; 11 ;12; 1;2;3;4;  5; 6;7; 8;9;2;4;6;1;2;3;4;1;2;3;4;1;2;3;4;1;2;3;4;1;2];
 
-for E = 6:numel(EllRs)
+%}
+
+exps = [ones(1, 12) ones(1, 9)*2 ones(1, 6)*3 ones(1, 5)*4 ones(1, 4)*5 ones(1, 4)*6 ones(1, 4)*7 ones(1, 2)*8 ones(1, 1)*9 ones(1, 1)*10 ones(1, 2)*12 ones(1, 1)*13 ones(1, 4)*14 ones(1, 3)*15];
+recs = [1:1:12 1:1:9 1:1:6 1:1:5 1:1:4 1:1:4 1:1:4 1:1:2 1 1 1:1:2 1 1:1:4 1:1:3];
+Neurons = 1:1:58;
+
+%WN
+%ExpInds = [3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 19 20 21 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 42 43 44]; 
+
+%HRTF
+%ExpInds = [3 8 10 12 13 16 17 19 21 23 24 25 26 27 28 29 31 33 34 36 37 38 39 40 41 42 43 44 45 46]; %HRTF, 12 16 17 21 37 42 43 are inhibited by sound
+
+%ITD
+%ExpInds = [3 10 12 16 17 19 21 23 24 25 26 27 28 29 31 33 34 36 37 38 39 40 41 42 43 44 45 46]; %38 is incomplete
+
+%IID
+ExpInds = [3 10 12 16 17 19 21 23 24 25 26 27 28 29 31 33 34 36 37 38 39 40 41 42 43 44 45 46]; %HRTF, 12 16 17 21 37 42 43 are inhibited by sound
+
+%saveDir = 'X:\Janie-OT-MLD\PlexonData-WN_2025\';
+%saveDir = 'X:\Janie-OT-MLD\PlexonData-HRTF_2025\';
+%saveDir = 'X:\Janie-OT-MLD\PlexonData-ITD-2025\';
+saveDir = 'X:\Janie-OT-MLD\PlexonData-IID-2025\';
+
+
+    % 5 = WN
+    % 1 = HRTF
+    % 3 = IID
+    % 4 = ITD
+    % 2 = Tuning
+    
+stimIDsToUse = [3];
+
+for E = 5:numel(ExpInds)
+    E
+    thisInd = ExpInds(E);
     %for E = 2
     
-    neuronTxt = [AllNeurons{E} '-' ];
+    neuronTxt = ['N-' num2str(Neurons(thisInd )) '-' ];
     
-    exp = AllExps(E);
-    Rs = EllRs(E);
-    
-    %stimIDsToUse = [5 1];
-    stimIDsToUse = [1];
-
-
-    % 5 = WN
-    % 1 = HRTF
-    % 2 = Tuning
-
-
-    
-    % 5 = WN
-    % 1 = HRTF
-    % 2 = Tuning
+    exp = exps(thisInd );
+    Rs = recs(thisInd );
     
     
-    saveDir = 'F:\PlexonSpikesTest\';
-
     [OT_DB] = OT_database();
     
     nExperiments = numel(OT_DB);
@@ -149,7 +172,7 @@ for E = 6:numel(EllRs)
             textName = [neuronTxt 'Exp-' sprintf('%02d',j) '_Rec-' sprintf('%02d',k) '_INFO.mat'];
             saveName = [saveDir textName];
             save(saveName, 'INFO', '-v7.3')
-            disp('saveName');
+            disp(['Saved: ' saveName]);
             disp('')
             
         end

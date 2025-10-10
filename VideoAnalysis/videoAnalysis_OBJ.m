@@ -795,6 +795,9 @@ classdef videoAnalysis_OBJ < handle
                     imgFormat = '*.tif';
                 case 2
                     imgFormat = '*.jpg';
+                case 3
+                    imgFormat = '*.png';
+                    
             end
             
             %% Reverse or Forward
@@ -1052,9 +1055,18 @@ classdef videoAnalysis_OBJ < handle
                 disp(strcat('Frame: ',num2str(frame_ind ),' is done'))
             end
             
+            framesToFirstAlignment = 336;
+            nframesDark = 45520-336;
+            framesPerHour = round(nframesDark/12);
             fV1(1)=0; % suppress the artifact at the first frame
+            p=1
             save([OFDir OFSaveName '_pt-' sprintf('%02d',p) '.mat'], 'fV1', 'rectim1', 'im');
             clear('fV1');
+            
+            smoothFV1 = smooth(fV1, 60);
+            
+            figure(100); plot(fV1, 'color', [0.5 0.5 0.5]); axis tight;
+            hold on ; plot(smoothFV1, 'k', 'linewidth', 2)
             
             
         end

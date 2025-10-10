@@ -12,8 +12,9 @@ clear all
 %AnalysisDir = 'Z:\JanieData\Neuropixel\w050\raw_01_LH_P1_g0\'; - No Sorting??
 %AnalysisDir = 'Z:\JanieData\Neuropixel\w050\raw_02_LH_P2_g0\'; - no spikes?
 %AnalysisDir = 'Z:\JanieData\Neuropixel\w050\raw_04_LH_P3_g0\'; -no spikes
-AnalysisDir = 'Z:\JanieData\Neuropixel\w050\raw_05_RH_P1_g0\';
+%AnalysisDir = 'Z:\JanieData\Neuropixel\w050\raw_05_RH_P1_g0\';
 
+AnalysisDir = 'X:\Janie-NeuropixelData\w005_adult_male\raw_02_LH_P2_g0\';
 
 cd(AnalysisDir)
 

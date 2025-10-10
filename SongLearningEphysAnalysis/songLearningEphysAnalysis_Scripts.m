@@ -6,12 +6,13 @@ clear all
 
 [rec_DB] = recDatabase();
 
-RecSet = [1:17]; %w038
+%RecSet = [1:17]; %w038
 %RecSet = [18:39]; %w027
 %RecSet = [40:69]; %w025
 %RecSet = [70:92]; %w037
 
-RecSet  = 1:92;
+RecSet  = 59:92;
+RecSet  = 26;
 
 dbstop if error
 
@@ -85,7 +86,7 @@ timeSeriesViewer(dataRecordingObj); % loads all the channels
         
         %% Calculated alignment points
         
-        AnalysisHrs = 11;
+        AnalysisHrs = 11; % analyzing 12 hours after the lights go off
         
         Alignment_LightOff_s = calc_offset_alignment_time(data_OBJ, ephys_On_s, lightOff_s);
         Alignment_LightOn_s = calc_offset_alignment_time(data_OBJ, ephys_On_s, lightOn_s);
@@ -120,47 +121,42 @@ timeSeriesViewer(dataRecordingObj); % loads all the channels
 end
 %%
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Meta analysis songs
+%%
 
-[data_OBJ]  = plot_delta_gamma_across_nights(data_OBJ);
+AnalysisDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\DATA_EPHYS\chronic_2021-08-31_21-59-35\';
+eegChans = [nan nan; 28 21]; %L_ant %R_ant;  L_post R_post;
+data_OBJ = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChans);
 
-
-songDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\w038_SongDevelopment\';
-searchTerm = 'dph51';
-data_OBJ = import_song_analysis_data_from_xls(data_OBJ, songDataDir, searchTerm);
 
 
 %% w038
-
-%
+% 
 %  SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w038_Analysis\Data\';
 %  plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038\Motifs\';
 %  AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038\Entropy\';
 
-
 %% w037
-SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w037_Analysis\Data\';
-plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Motifs\';
-AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Entropy\';
-
-
+% SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w037_Analysis\Data\';
+% plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Motifs\';
+% AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Entropy\';
 
 %% w027
 % SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w027_Analysis\Data\';
 % plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Motifs\';
 % AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Entropy\';
-
+% 
 %% w025
 SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w025_Analysis\Data\';
 plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w025\Motifs\';
 AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w025\Entropy\';
 
-
-
+%% Load wave files and make motif plots and calc entropy on every motif
 
 d = dir(SongDataDir);
 % remove all files (isdir property is 0)
 dfolders = d([d(:).isdir]);
-
 
 dfolders = dfolders(~ismember({dfolders(:).name},{'.','..'}));
 for j = 1:numel(dfolders)
@@ -171,7 +167,6 @@ end
 
 dirsToLoad_inds = find(SylInds ~=0);
 
-
 for k = 1:numel(dirsToLoad_inds)
     
     thisDirInd = dirsToLoad_inds(k);
@@ -180,16 +175,248 @@ for k = 1:numel(dirsToLoad_inds)
     disp(['Loading files: ' thisDirToLoad])
     
     
-    data_OBJ = plotMotifExamples(data_OBJ, thisDirToLoad, plotDir );
+   % data_OBJ = plotMotifExamples(data_OBJ, thisDirToLoad, plotDir );
     
     data_OBJ = calc_wienerEntropy_on_syllables(data_OBJ, thisDirToLoad, AllEntropyDataDir);
     
 end
 
+%% Do meta analysis on wiener entropy files
+
+%entropyFilesDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038\Entropy\';
+%birdName = 'w038';
 
 entropyFilesDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Entropy\';
+birdName = 'w027';
 
-entropyFilesDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038\Entropy\';
+%entropyFilesDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w025\Entropy\';
+%birdName = 'w025';
+
+% entropyFilesDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Entropy\';
+% birdName = 'w037';
+
+
+data_OBJ = metaAnalysis_make_plot_of_entropy_means_across_days_all_data(data_OBJ, entropyFilesDir, birdName);
+
+
+allEntropyDirs = {'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w025\Entropy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Entropy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Entropy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038\Entropy\'};
+
+birdNames = {'w025', 'w027', 'w037', 'w038'};
+
+
+data_OBJ = metaAnalysis_make_plot_of_entropy_means_versus_age(data_OBJ, allEntropyDirs, birdNames);
+
+
+
+%% Meta Analysis Sleep EEG
+
+% w025 = [21 12; 
+         %20 13]; %L_ant %R_ant;  L_post R_post;
+% w025 = [nan 12; 
+         %nan 13]; %L_ant %R_ant;  L_post R_post;
+    
+% w027 = [45 52;
+         %44 53]; %L_ant %R_ant;  L_post R_post;
+% w027 = [21 28;
+         %20 29]; %L_ant %R_ant;  L_post R_post;
+   
+% w038 = [nan nan; 
+        % 28 21]; %L_ant %R_ant;  L_post R_post;
+ 
+% w037 = [13 nan; 
+         %12 nan]; %L_ant %R_ant;  L_post R_post; %LH
+
+%% Left Anterior EEG
+
+dyDirs = {'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w025\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w037\'};
+
+TextStr = 'L-Anterior_EEG__dy';
+Chs = [21 nan; 45 21; 13 nan];
+
+data_OBJ = metaAnalysis_make_plot_of_dy_means_across_nights(data_OBJ, dyDirs, Chs, TextStr  );
+
+
+%% Right Anterior EEG
+
+dyDirs = {'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w025\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\'};
+
+TextStr = 'R-Anterior_EEG__dy';
+Chs = [12 nan; 52 28];
+
+data_OBJ = metaAnalysis_make_plot_of_dy_means_across_nights(data_OBJ, dyDirs, Chs, TextStr  );
+
+
+%% Left Posterior EEG
+
+dyDirs = {'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w025\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w038\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w037\'};
+
+TextStr = 'L-Posterior_EEG__dy';
+Chs = [20 nan; 44 20; 28 nan; 12 nan]; %ChanSet-1 (anterior)
+
+data_OBJ = metaAnalysis_make_plot_of_dy_means_across_nights(data_OBJ, dyDirs, Chs, TextStr  );
+
+%% Right Posterior EEG
+
+dyDirs = {'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w025\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w038\'};
+
+TextStr = 'R-Posterior_EEG__dy';
+Chs = [13 nan; 53 29; 21 nan]; %ChanSet-1 (anterior)
+
+data_OBJ = metaAnalysis_make_plot_of_dy_means_across_nights(data_OBJ, dyDirs, Chs, TextStr  );
+
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% dy correlations across nights
+
+%% Left AP Comparisons
+% Here we add w027 twice to make sure we calc all the chans
+dyDirs = {'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w025\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\', ...   
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\', ...   
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w037\'};
+   
+TextStr = 'Corrs_Left-AP_R';
+Chs = [21 20; 45 44; 21 20; 13 12]; %ChanSet-1 (anterior)
+
+[data_OBJ] = metaAnalysis_make_plot_of_dy_correlations_across_nights(data_OBJ, dyDirs, Chs, TextStr );
+
+%% % Right AP Comparisons
+
+dbstop if error
+dyDirs = {'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w025\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\', ...   
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\'};
+
+TextStr = 'Corrs_Right-AP_R';
+Chs = [12 13; 52 53; 28 29]; %ChanSet-1 (anterior)
+
+[data_OBJ] = metaAnalysis_make_plot_of_dy_correlations_across_nights(data_OBJ, dyDirs, Chs, TextStr );
+
+
+%% % Anterior LR Comparisons
+
+dbstop if error
+dyDirs = {'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w025\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\', ...   
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\'};
+
+TextStr = 'Corrs_Anterior-LR_R';
+Chs = [21 12; 45 52; 21 28]; %ChanSet-1 (anterior)
+
+[data_OBJ] = metaAnalysis_make_plot_of_dy_correlations_across_nights(data_OBJ, dyDirs, Chs, TextStr );
+
+
+%% % Posterior LR Comparisons
+
+dbstop if error
+dyDirs = {'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w025\', ...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\', ...   
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w027\',...
+    'Z:\hameddata2\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\w037\'};
+
+TextStr = 'Corrs_Posterior-LR_R';
+Chs = [20 13; 44 53; 20 29; 28 21]; %ChanSet-1 (anterior)
+
+[data_OBJ] = metaAnalysis_make_plot_of_dy_correlations_across_nights(data_OBJ, dyDirs, Chs, TextStr );
+
+
+%% Do comparisons of EEG stats and Song Entropy - Sleep and next morning comparison
+
+%% R Posterior EEG
+dyDirs = {'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\sleep_next_morning\w025-dy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\sleep_next_morning\w027-dy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\sleep_next_morning\w038-dy\'};
+
+songDirs = {'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\sleep_next_morning\w025-FirstSongs\',...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\sleep_next_morning\w027-FirstSongs\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\sleep_next_morning\w038-FirstSongs\'};
+
+
+TextStr = 'R-Posterior-EEG';
+[data_OBJ] = metaAnalysis_plot_of_dy_stats_and_song_entropy_across_nights(data_OBJ, dyDirs, songDirs, TextStr );
+
+
+[data_OBJ] = metaAnalysis_plot_dy_stats_and_age_across_nights(data_OBJ, dyDirs, TextStr );
+
+
+%[data_OBJ] = metaAnalysis_plot_song_stats_and_age_across_nights(data_OBJ, songDirs, TextStr );
+
+%% L Posterior EEG Sleep and next First songs
+
+dyDirs = {'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\sleep_next_morning\w025-dy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\sleep_next_morning\w027-dy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\sleep_next_morning\w037-dy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\sleep_next_morning\w038-dy\'};
+
+songDirs = {'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\sleep_next_morning\w025-FirstSongs\',...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\sleep_next_morning\w027-FirstSongs\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\sleep_next_morning\w037-FirstSongs\',...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\sleep_next_morning\w038-FirstSongs\'};
+
+
+TextStr = 'L-Posterior-EEG';
+
+[data_OBJ] = metaAnalysis_plot_of_dy_stats_and_song_entropy_across_nights(data_OBJ, dyDirs, songDirs, TextStr );
+
+[data_OBJ] = metaAnalysis_plot_dy_stats_and_age_across_nights(data_OBJ, dyDirs, TextStr );
+
+%[data_OBJ] = metaAnalysis_plot_song_stats_and_age_across_nights(data_OBJ, songDirs, TextStr );
+
+
+%% Last Songs and L Posterior EEG Sleep
+
+dyDirs = {'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\LastSongSameDaySleep\w025-dy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\LastSongSameDaySleep\w027-dy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\LastSongSameDaySleep\w037-dy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\LastSongSameDaySleep\w038-dy\'};
+
+songDirs = {'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\LastSongSameDaySleep\w025-LastSongs\',...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\LastSongSameDaySleep\w027-LastSongs\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\LastSongSameDaySleep\w037-LastSongs\',...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_L_Posterior_EEG\LastSongSameDaySleep\w038-LastSongs\'};
+
+
+TextStr = 'L-Posterior-EEG__LastSongsSleep';
+
+[data_OBJ] = metaAnalysis_plot_of_dy_stats_and_song_entropy_across_nights(data_OBJ, dyDirs, songDirs, TextStr );
+
+[data_OBJ] = metaAnalysis_plot_dy_stats_and_age_across_nights(data_OBJ, dyDirs, TextStr );
+
+%[data_OBJ] = metaAnalysis_plot_song_stats_and_age_across_nights(data_OBJ, songDirs, TextStr );
+
+
+%% Last Songs and R Posterior EEG Sleep
+
+dyDirs = {'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\LastSongSameDaySleep\w025-dy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\LastSongSameDaySleep\w027-dy\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\LastSongSameDaySleep\w038-dy\'};
+
+songDirs = {'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\LastSongSameDaySleep\w025-LastSongs\',...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\LastSongSameDaySleep\w027-LastSongs\', ...
+    'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\all_eeg_all_birds\Meta_All_R_Posterior_EEG\LastSongSameDaySleep\w038-LastSongs\'};
+
+
+TextStr = 'R-Posterior-EEG__LastSongsSleep';
+
+[data_OBJ] = metaAnalysis_plot_of_dy_stats_and_song_entropy_across_nights(data_OBJ, dyDirs, songDirs, TextStr );
+
+
+
+
+
+%%
+data_OBJ = metaAnalysis_make_plot_of_entropy_pooled_days_all_data(data_OBJ, entropyFilesDir, birdName);
 
 data_OBJ = metaAnalysis_analyze_wEntropy_acrossDays(data_OBJ, entropyFilesDir);
 
@@ -210,6 +437,13 @@ data_OBJ = combined_metaAnalysis_analyze_dy_values_across_nights(data_OBJ, meta_
 
 
 
+
+[data_OBJ]  = plot_delta_gamma_across_nights(data_OBJ);
+
+
+songDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\w038_SongDevelopment\';
+searchTerm = 'dph51';
+data_OBJ = import_song_analysis_data_from_xls(data_OBJ, songDataDir, searchTerm);
 
 %% Clustering
 

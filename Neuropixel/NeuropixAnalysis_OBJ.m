@@ -1,4 +1,4 @@
-classdef Song_EEG_Analysis_OBJ < handle
+classdef NeuropixAnalysis_OBJ < handle
     
     
     properties (Access = public)
@@ -22,9 +22,9 @@ classdef Song_EEG_Analysis_OBJ < handle
             %% adding code paths
             
             
-            code2018Path = 'D:\Github\code2018';
+            code2018Path = 'C:\Users\Neuropix\Documents\GitHub\code2018';
             %SpikeGLXTools = 'C:\Users\Neuropix\Documents\GitHub\SpikeGLX_Datafile_Tools';
-            npymatlab = 'D:\Github\npy-matlab-master';
+            npymatlab = 'C:\Users\Neuropix\Documents\code\Github\npy-matlab-master';
             
             
             if isfolder(code2018Path)
@@ -72,7 +72,7 @@ classdef Song_EEG_Analysis_OBJ < handle
         
         function [obj] = getStimDurationsFromWavFile(obj)
             
-            
+            dbstop if error
             %% Check to wav syn file file already exists
             
             doPlot = 0;
@@ -100,8 +100,8 @@ classdef Song_EEG_Analysis_OBJ < handle
                 
                 yRMS = rms(y, 2);
                 
-                %figure; plot(yRMS(1:100*Fs))
-                WavChan_Thresh = 0.1;
+                %figure; plot(yRMS(60*Fs:60*Fs+100*Fs))
+                WavChan_Thresh = 0.1; % might have to change this
                 
                 WavCrossings_fs = find(yRMS >= WavChan_Thresh);
                 WavCrossings_s = WavCrossings_fs/Fs;
@@ -744,6 +744,19 @@ classdef Song_EEG_Analysis_OBJ < handle
             
             obj.ANALYSIS.STIM.StimNames = StimNames;
             obj.ANALYSIS.STIM.nRepsPerStim = nRepsPerStim;
+            
+            
+            StimSync_imec.StimNames = obj.ANALYSIS.STIM.StimNames;
+            StimSync_imec.nRepsPerStim = obj.ANALYSIS.STIM.nRepsPerStim;
+            StimSync_imec.StimOnsets_imecStream_s =  obj.ANALYSIS.STIM.StimOnsets_imecStream_s;
+            StimSync_imec.StimOffsets_imecStream_s =  obj.ANALYSIS.STIM.StimOffsets_imecStream_s;
+            StimSync_imec.T_On_imec_s =   obj.ANALYSIS.STIM.T_On_imec_s;
+            StimSync_imec.T_Off_imec_s =   obj.ANALYSIS.STIM.T_Off_imec_s;
+            
+            
+             save([obj.PATH.nidaq_path obj.PATH.nidaq_binName(1:end-9)  '__Imec_StimSync'], 'StimSync_imec');
+                disp(['Saved Imec Stimulus Sync File: ' [obj.PATH.nidaq_path obj.PATH.nidaq_binName(1:end-9) '__StimSync_imec']]);
+                
             
         end
         

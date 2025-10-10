@@ -181,12 +181,12 @@ end
  createMontageFromVideo(V_OBJ)
  
  %%
-   V_OBJ = videoAnalysis_OBJ({['E:\frog-buccalpumping-2.avi']});
+   V_OBJ = videoAnalysis_OBJ({['X:\ChickenSleep\Take2025-07-11065722PM_nightrecording-Camera1_378581.avi']});
     
    
    
- fileFormat = 2;  % (1)- tif, (2) -.jpg
- ImgDir = {'H:\Grass\FrogSleep\CubanTreeFrog1\20190619\20190619_17-09\Videos\editedVids\Eyes\'};
+ fileFormat = 3;  % (1)- tif, (2) -.jpg
+ ImgDir = {'X:\ChickenSleep\Screenshots\ToUse\'};
  cropImageCreateMontage(V_OBJ, ImgDir, fileFormat)
 
  %%
@@ -196,7 +196,7 @@ end
  makeFastMoviesWithClock(V_OBJ, startFrame, endFrame, clockRate_s)
  %%
  
-vidToAnalyze = 'E:\frogBuccal.avi';
+vidToAnalyze = 'X:\ChickenSleep\Chicks\chicken-009-cam1-2025-Jul-16.avi';
 
   V_OBJ = videoAnalysis_OBJ({vidToAnalyze});
    

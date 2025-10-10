@@ -40,7 +40,7 @@ classdef chronoAnalysis_Obj < handle
         %%
         function [] = makeMultipleMoviesFromImages(obj, imageDir, movieName, saveDir, VideoFrameRate, doRotate, rotationAngle)
             
-            fileFormat = 1; % (1)- tif, (2) -.jpg
+            fileFormat = 4; % (1)- tif, (2) -.jpg
             %doRotate = 1;
             
             %%
@@ -51,6 +51,8 @@ classdef chronoAnalysis_Obj < handle
                     imgFormat = '*.jpg';
                 case 3
                     imgFormat = '*.jpg';
+                     case 4
+                    imgFormat = '*.png';
             end
             
             imageNames = dir(fullfile(imageDir{:},imgFormat));
@@ -109,7 +111,8 @@ classdef chronoAnalysis_Obj < handle
                     if doRotate
                         
                         img = imrotate(img,rotationAngle, 'bilinear');
-                        imshow(img)
+                        %img2 = imrotate(img,rotationAngle, 'bilinear');
+                        %imshow(img2)
                     end
                     
                     if fileFormat == 1
@@ -136,6 +139,8 @@ classdef chronoAnalysis_Obj < handle
                         img2 = img2.cdata;
                         
                         %figure; imshow(img2)
+                         elseif fileFormat ==4
+                        img2 = img;
                     end
                     writeVideo(outputVideo,img2)
                     disp(['Frame: ' num2str(f) '/' num2str(nImags)]);

@@ -11,8 +11,14 @@ switch gethostname
         
     case 'NEUROPIXELS'
         STADir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\MLD\Figs\STAAnalysis\STA-2024\WN\WN-STA-matFiles\';
+    case 'DESKTOP-PBLRH65'
+        STADir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\MLD\Figs\STAAnalysis\STA-2025-WN\';
         
 end
+
+
+    FigSaveDir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\MLD\Figs\STAAnalysis\STA-2025-WN\';
+    
 
 trialSeach = ['*.mat*'];
 
@@ -57,15 +63,33 @@ for s = 1:nTrials
    
 end
 
+singleFreqs = numel(find(cell2mat(cellfun(@numel,allFDets','uni',0)) ==1 ));
+doubleFreqs = numel(find(cell2mat(cellfun(@numel,allFDets','uni',0)) ==2 ));
+totalFreqs = doubleFreqs + singleFreqs;
+
+singleFreqs_percent = singleFreqs/totalFreqs*100;
+doubleFreqs_percent = doubleFreqs/totalFreqs*100;
 
 highTs = find(alldetsT >2.0);
 alldetswOutLowTs = alldetsT(highTs);
     
+maxF = max(alldetsF);
+minF = min(alldetsF);
+medianF = median(alldetsF);
+
+%%
+singleTimes = numel(find(cell2mat(cellfun(@numel,allTDets','uni',0)) ==1 ));
+doubleTimes = numel(find(cell2mat(cellfun(@numel,allTDets','uni',0)) ==2 ));
+zeroTimes= numel(find(cell2mat(cellfun(@numel,allTDets','uni',0)) ==0 ));
+totalTimes = singleTimes + doubleTimes;
+
+singleTimes_percent = singleTimes/totalTimes*100;
+doubleTimes_percent = doubleTimes/totalTimes*100;
+
 minTime = min(alldetsT);
 maxTime = max(alldetsT);
 
-maxF = max(alldetsF);
-minF = min(alldetsF);
+
 
     cols = cell2mat({[0.6350, 0.0780, 0.1840]; [0.8500, 0.3250, 0.0980]; [0.9290, 0.6940, 0.1250]; [0, 0, 0]; [0.4940, 0.1840, 0.5560]});
     
@@ -88,8 +112,6 @@ minF = min(alldetsF);
     
     axis(h(2),'auto');  % Sync axes
     
-    FigSaveDir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\MLD\Figs\STAAnalysis\STA-2024\WN\PopulationFigures/';
-    
     
     plotpos = [0 0 12 10];
     print_in_A4(0, [FigSaveDir 'Fdetections'], '-depsc', 0, plotpos);
@@ -98,8 +120,8 @@ minF = min(alldetsF);
     
 figure(407);clf
     
-%alldetsT = alldetswOutLowTs;
-alldetsT = alldetsT;
+alldetsT = alldetswOutLowTs;
+%alldetsT = alldetsT;
 
  jitterAmount = 0.1;
     jitterValues1 = 2*(rand(size(alldetsT))-0.5)*jitterAmount;   % +
@@ -119,8 +141,8 @@ alldetsT = alldetsT;
     line([2 2], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
     
      plotpos = [0 0 12 10];
-    %print_in_A4(0, [FigSaveDir 'Tdetections_nolows'], '-depsc', 0, plotpos);
-    %print_in_A4(0, [FigSaveDir 'Tdetections_nolows'], '-djpeg', 0, plotpos);
-    print_in_A4(0, [FigSaveDir 'Tdetections_wlows'], '-depsc', 0, plotpos);
-     print_in_A4(0, [FigSaveDir 'Tdetections_wlows'], '-djpeg', 0, plotpos);
+    print_in_A4(0, [FigSaveDir 'Tdetections_nolows'], '-depsc', 0, plotpos);
+    print_in_A4(0, [FigSaveDir 'Tdetections_nolows'], '-djpeg', 0, plotpos);
+    %print_in_A4(0, [FigSaveDir 'Tdetections_wlows'], '-depsc', 0, plotpos);
+    % print_in_A4(0, [FigSaveDir 'Tdetections_wlows'], '-djpeg', 0, plotpos);
 end
