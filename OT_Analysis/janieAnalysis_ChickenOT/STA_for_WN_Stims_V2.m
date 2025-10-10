@@ -13,6 +13,7 @@ ALL_LStimWins = [];
 allStims = C_OBJ.RS_INFO.StimProtocol_name;
 tf = find(strcmpi(allStims,'WhiteNoise'));
 
+THRESH = 95;
 
 audSelInd = tf(1); % SpikesThis is the index, spikesnot the stim number!!!
 Stim = C_OBJ.RS_INFO.StimProtocol_name{audSelInd};
@@ -33,6 +34,10 @@ switch gethostname
         addpath 'C:\Program Files\MATLAB\R2019b\examples\wavelet\main'
         FigSaveDir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\MLD\Figs\STAAnalysis\STA-2024\WN\';
        
+    case 'DESKTOP-PBLRH65'
+        SignalDir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\AllSignals\Signals\';
+        addpath 'C:\Program Files\MATLAB\R2018b\examples\wavelet\main'
+        FigSaveDir = 'X:\Janie-OT-MLD\OT-MLD\OT_Project_2021-Final\MLD\Figs\STAAnalysis\STA-2025-WN\95Threshold\';
         
 end
 
@@ -159,7 +164,10 @@ end
 disp('')
 
 %% STA
-if size(ALL_LStimWins, 1) > 6 % must have at least 6 spikes
+NeuronName
+size(ALL_LStimWins, 1)
+
+if size(ALL_LStimWins, 1) >= 6 % must have at least 6 spikes across all reps
     
 LStimWins_mean = mean(ALL_LStimWins);
 LStimWins_median = median(ALL_LStimWins);
@@ -264,7 +272,7 @@ plot(meanf, f./1e3, 'k', 'linewidth', 1)
 axis tight
 
 sortedMeanF = sort(meanf);
-scaleEstimator=sortedMeanF(round(95/100*numel(sortedMeanF)));
+scaleEstimator=sortedMeanF(round(THRESH/100*numel(sortedMeanF)));
 
 STA.scaleEstimatorF = scaleEstimator;
 
@@ -302,7 +310,7 @@ STA.semt = semt;
 %scaleEstimator=sortedMtest(round(percentile4ScaleEstimation/100*numel(sortedMtest)));
 
 sortedMeanT = sort(meant);
-scaleEstimator=sortedMeanT(round(95/100*numel(sortedMeanT)));
+scaleEstimator=sortedMeanT(round(THRESH/100*numel(sortedMeanT)));
 
 STA.scaleEstimatorT = scaleEstimator;
 xss = xlim;
