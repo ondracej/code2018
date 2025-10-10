@@ -3050,6 +3050,7 @@ end
             
             
             UnitsToUse = [];
+            cnt= 1;
             for o = 1:nUnits
                 thisUnit = uniqueUnits(o);
                 allTimestamps_inds = find(units == thisUnit);
@@ -3058,9 +3059,11 @@ end
                 
                 if match == 1
                     
-                    UnitsToUse(o) = thisUnit;
+                    UnitsToUse(cnt) = thisUnit;
+                     cnt = cnt+1;
                 end
                 
+               
             end
             
             
