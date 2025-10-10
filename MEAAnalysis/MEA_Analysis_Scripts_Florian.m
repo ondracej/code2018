@@ -5,7 +5,7 @@
 close all
 clear all
 
-analysisDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\July2025\20250716\'; % path to the analysis directory
+analysisDir = 'D:\Florian-MEA\florian\20250926\'; % path to the analysis directory with "\" in the end
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
 % 
@@ -51,7 +51,7 @@ mea_OBJ = convertH5DataToPlexonMatlabFormat(mea_OBJ);
 
 
 %% (1) %% Firing rate analysis on 1 file
-spikeDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\July2025\20250716\Firing_Rate_Analysis\';
+spikeDir = 'D:\Florian-MEA\florian\20250926\Firing_Rate_Analysis\';
 
 mea_OBJ = FiringRateAnalysis_singleChannel(spikeDir, mea_OBJ);
 
