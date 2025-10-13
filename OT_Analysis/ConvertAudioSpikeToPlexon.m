@@ -32,10 +32,10 @@ recs = [1:1:12 1:1:9 1:1:6 1:1:5 1:1:4 1:1:4 1:1:4 1:1:2 1 1 1:1:2 1 1:1:4 1:1:3
 Neurons = 1:1:58;
 
 %WN
-%ExpInds = [3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 19 20 21 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 42 43 44]; 
+ExpInds = [3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 19 20 21 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 42 43 44]; 
 
 %HRTF
-ExpInds = [3 8 10 12 13 16 17 19 21 23 24 25 26 27 28 29 31 32 33 34 36 37 38 39 40 41 42 43 44 45 46]; %HRTF, 12 16 17 21 37 42 43 are inhibited by sound
+%ExpInds = [3 8 10 12 13 16 17 19 21 23 24 25 26 27 28 29 31 32 33 34 36 37 38 39 40 41 42 43 44 45 46]; %HRTF, 12 16 17 21 37 42 43 are inhibited by sound
 
 %ITD
 %ExpInds = [3 10 12 16 17 19 21 23 24 25 26 27 28 29 31 32 33 34 36 37 38 39 40 41 42 43 44 45 46]; %38 is incomplete
@@ -43,8 +43,8 @@ ExpInds = [3 8 10 12 13 16 17 19 21 23 24 25 26 27 28 29 31 32 33 34 36 37 38 39
 %IID
 %ExpInds = [3 10 12 16 17 19 21 23 24 25 26 27 28 29 31 32 33 34 36 37 38 39 40 41 42 43 44 46]; %
 
-%saveDir = 'X:\Janie-OT-MLD\PlexonData-WN_2025\';
-saveDir = 'X:\Janie-OT-MLD\PlexonData-HRTF_2025\';
+saveDir = 'X:\Janie-OT-MLD\PlexonData-WN_2025\';
+%saveDir = 'X:\Janie-OT-MLD\PlexonData-HRTF_2025\';
 %saveDir = 'X:\Janie-OT-MLD\PlexonData-ITD-2025\';
 %saveDir = 'X:\Janie-OT-MLD\PlexonData-IID-2025\';
 
@@ -55,7 +55,7 @@ saveDir = 'X:\Janie-OT-MLD\PlexonData-HRTF_2025\';
     % 4 = ITD
     % 2 = Tuning
     
-stimIDsToUse = [1];
+stimIDsToUse = [5];
 
 for E = 18:numel(ExpInds)
     E
