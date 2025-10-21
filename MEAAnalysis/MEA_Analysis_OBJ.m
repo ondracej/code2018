@@ -2475,6 +2475,29 @@ end
             
         end
         
+        function obj = doPopulationAnalysis(spikeDir, obj)
+            
+   dbstop if error
+   
+   fileNames = dir(fullfile(spikeDir, '*.mat'));
+            nFiles = numel(fileNames);
+            
+            for j = 1: nFiles 
+                
+                thisFile = [spikeDir fileNames(j).name];
+d = load(thisFile);
+          
+
+nentries = size(d.CSpikes, 1);
+
+maxTime(j) = d.CSpikes(nentries , 3); % max time in s
+spiketimes{j} = d.CSpikes
+
+
+            end
+            
+            
+        end
         
         
         
@@ -3235,9 +3258,9 @@ end
             
            % allTimestamps_inds_new
             
-            CSpikes(:,:) = d.Channel02(allTimestamps_inds_new, :);
-            
+            %CSpikes(:,:) = d.Channel02(allTimestamps_inds_new, :);
             eval(['CSpikes (:,:)= d.' fields{:} '(allTimestamps_inds_new, :);'])
+            eval('CSpikes(:,2)=newUnitNumber;')
 %             eval('CSpikes(:,2)=newUnitNumber;')
 %             eval('CSpikes(:,3)=allTimestamps_s;')
 %             eval('CSpikes(:,4:86)=allWaveforms;')
