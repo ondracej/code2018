@@ -4,7 +4,7 @@ if nargin <1
     %% Enter the directory path
     
     %wav_file_dir = 'Z:\hameddata2\JanieSongs\2021-07-24-dph59-First100Songs\';
-    wav_file_dir = 'Z:\hameddata2\JanieSongs\w038\2021-09-20-First100Songs\';
+    wav_file_dir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027\Data\2021-08-19-First100Songs-Motifs\';
     
 end
 

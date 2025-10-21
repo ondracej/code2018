@@ -119,17 +119,58 @@ timeSeriesViewer(dataRecordingObj); % loads all the channels
     
     
 end
-%%
+%% Check data of files
+%{
+d = dir('X:\EEG-LFP-songLearning\songs\w025\test\w25D-f00005.txt');
+
+t = datetime(d.datenum,'ConvertFrom','datenum');
+
+  ds = datetime({'02-Feb-2018 11:08:11'
+   '02-Feb-2018 12:08:13'
+   '02-Feb-2018 01:08:14'
+   '02-Feb-2018 02:08:15'
+   '02-Feb-2018 03:08:17'
+   '02-Feb-2018 04:08:18'
+   '02-Feb-2018 05:08:20'
+   '02-Feb-2018 06:08:21'
+   '02-Feb-2018 07:08:23'
+   '02-Feb-2018 08:08:24'});
+  r = 1e3 * [   0.0179
+    0.0180
+    0.0184
+    0.0184
+    0.0189
+    0.0189
+    0.0189
+    0.0189
+    0.0190
+    0.0190];
+
+plot(ds, r, '-o')
+
+% 
+% [~,str] = dos('dir X:\EEG-LFP-songLearning\songs\w025\test\w25D-f00005.txt');
+% rgx = '(\d{4}\.\d{2}\.\d{2}\.\s+\d{2}:\d{2})\s+\d+\s+([^\n]+)';
+% tkn = regexp(str,rgx,'tokens');
+% tkn{:}
+
+
+
+
+%}
+
+
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Meta analysis songs
 %%
 
-AnalysisDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\DATA_EPHYS\chronic_2021-08-31_21-59-35\';
+AnalysisDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w025\DATA_EPHYS\chronic_2021-07-14_20-24-58\';
 eegChans = [nan nan; 28 21]; %L_ant %R_ant;  L_post R_post;
 data_OBJ = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChans);
 
-
+%% To rename files 
+renameFilesinDir
 
 %% w038
 % 
@@ -143,16 +184,22 @@ data_OBJ = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChans);
 % AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Entropy\';
 
 %% w027
-% SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w027_Analysis\Data\';
-% plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Motifs\';
-% AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Entropy\';
-% 
-%% w025
-SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w025_Analysis\Data\';
-plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w025\Motifs\';
-AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w025\Entropy\';
+%SongDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027\Data\';
+SongDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025-w027_AllPlaybackFiles\'; % for playbacks
+plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Motifs\';
+AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Entropy\';
+OriginalSongFileDir = 'X:\EEG-LFP-songLearning\songs\w027\Data\';
+%TimeInfoSaveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027\SongTimeInfo\';
+TimeInfoSaveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025-w027_AllPlaybackFiles\SummaryData\'; % For playbacks
 
-%% Load wave files and make motif plots and calc entropy on every motif
+%% w025
+% SongDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\Data\';
+% plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w025\Motifs\';
+% AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w025\Entropy\';
+% OriginalSongFileDir = 'X:\EEG-LFP-songLearning\songs\w025\Data\';
+% %TimeInfoSaveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\SongTimeInfo\';
+% TimeInfoSaveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\PlaybackTimeInfo\'; % For playbacks
+%% Load wav files and make motif plots and calc entropy on every motif
 
 d = dir(SongDataDir);
 % remove all files (isdir property is 0)
@@ -162,7 +209,8 @@ dfolders = dfolders(~ismember({dfolders(:).name},{'.','..'}));
 for j = 1:numel(dfolders)
     thisName = dfolders(j).name;
     %SylInds(j) = sum(strfind(thisName, 'Syllables'));
-    SylInds(j) = sum(strfind(thisName, 'Motifs'));
+    %SylInds(j) = sum(strfind(thisName, 'Motifs'));
+    SylInds(j) = sum(strfind(thisName, 'Play'));
 end
 
 dirsToLoad_inds = find(SylInds ~=0);
@@ -177,7 +225,13 @@ for k = 1:numel(dirsToLoad_inds)
     
    % data_OBJ = plotMotifExamples(data_OBJ, thisDirToLoad, plotDir );
     
-    data_OBJ = calc_wienerEntropy_on_syllables(data_OBJ, thisDirToLoad, AllEntropyDataDir);
+    %data_OBJ = calc_wienerEntropy_on_syllables(data_OBJ, thisDirToLoad, AllEntropyDataDir);
+    
+    
+    
+   % data_OBJ = calcTimeOfRecFiles(data_OBJ, thisDirToLoad, OriginalSongFileDir, TimeInfoSaveDir );
+    data_OBJ = calcTimeOfPlaybackFiles(data_OBJ, thisDirToLoad, TimeInfoSaveDir );
+    
     
 end
 

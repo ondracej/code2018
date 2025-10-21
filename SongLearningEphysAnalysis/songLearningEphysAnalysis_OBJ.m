@@ -2568,6 +2568,344 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
         end
         
+        function obj = calcTimeOfRecFiles(obj, syllableDir, OriginalSongFileDir, TimeInfoSaveDir )
+            
+            dbstop if error 
+            fileNames = dir(fullfile(syllableDir, '*.wav'));
+            f = filesep;
+            [filepath,name,ext] = fileparts(syllableDir);
+            
+            dateName_inds = find(filepath == f);
+            dateName = filepath(dateName_inds(end)+1:end);
+            
+            dateText = dateName(1:10);
+            
+            %% Now find this date in the original song data directory
+            
+            sd = dir(OriginalSongFileDir);
+            % remove all files (isdir property is 0)
+            sdfolders = sd([sd(:).isdir]);
+            sdfolders = sdfolders(~ismember({sdfolders(:).name},{'.','..'}));
+            
+            for j = 1:numel(sdfolders)
+                thisName = sdfolders(j).name;
+                %SylInds(j) = sum(strfind(thisName, 'Syllables'));
+                dateInds(j) = sum(strfind(thisName, dateText));
+            end
+            
+            dateDirsToLoad_inds = find(dateInds ~=0);
+            
+            originalSongDateToLoad = [OriginalSongFileDir sdfolders(dateDirsToLoad_inds).name];
+            
+            allOrigFilenames = dir(fullfile(originalSongDateToLoad, '*.wav'));
+            
+            thisName = [];
+            for j = 1:numel(allOrigFilenames)
+                
+                thisName{j} = allOrigFilenames(j).name(1:end-4);
+                
+            end
+            
+            dash = '-';
+            
+            for j = 1:numel(fileNames)
+                
+                
+                check = fileNames(j).name;
+                bla = find(check == dash);
+                
+                thisMotifName{j} = fileNames(j).name(1:bla(2)-1); % need to make sure we are including all the numbers
+                
+            end
+            
+            index = cellfun(@(a) strmatch(a,thisMotifName),thisName,'uniform',false);
+            nonEmptyInds = ~cellfun(@isempty,index);
+            
+            nonEmptyInds = find(nonEmptyInds ==1);
+            times = [];
+            
+                sInMin = 60;
+                   sInHr = 3600;
+                   
+                   df_h = 10;
+                   df_m = 0;
+                   df_s = 0;
+                   
+            for k = 1:numel(nonEmptyInds)
+                thisInd = nonEmptyInds(k);
+                
+                thisFilePath = [originalSongDateToLoad '\' allOrigFilenames(thisInd).name];
+                dateData = dir(thisFilePath);
+                
+                %times{k} = datetime(dateData.datenum,'ConvertFrom','datenum');
+                times{k} = dateData.date;
+                
+                
+                   t= datetime(times{k});
+             
+                   [h,m,s] = hms(t);
+                   
+                   %% Now we compute the duration of time that passed since the defualt 10:00:00
+                   
+                   dur_h = h-df_h;
+                   dur_m = m-df_m;
+                   dur_s = s-df_s;
+                   
+                   totalDur_s(k) = dur_h*sInHr + dur_m*sInMin + dur_s;
+                
+            end
+            
+            medianDur_s = median(totalDur_s);
+            stdDur_s = std(totalDur_s);
+            
+            
+            stdDur_Hr = stdDur_s/sInHr;
+            
+            %% Reconvert this duration back to a time
+            
+            nHrs = floor(medianDur_s/sInHr);
+            
+            leftover_min_s = medianDur_s - nHrs*sInHr;
+            
+            nMin = floor(leftover_min_s /sInMin);
+            
+            leftover_s = round(leftover_min_s - nMin*sInMin);
+            
+            meanHr = df_h+nHrs;
+            meanMin = df_m+nMin;
+            meanS = df_s+leftover_s;
+            
+            
+            if meanS == 60
+               meanMin = meanMin +1;
+               meanS = 0;
+            end
+            %%
+            
+            
+          
+            
+            
+            %      ds = datetime({'02-Feb-2018 11:08:11'
+            %    '02-Feb-2018 12:08:13'
+            %    '02-Feb-2018 01:08:14'
+            %    '02-Feb-2018 02:08:15'
+            %    '02-Feb-2018 03:08:17'
+            %    '02-Feb-2018 04:08:18'
+            %    '02-Feb-2018 05:08:20'
+            %    '02-Feb-2018 06:08:21'
+            %    '02-Feb-2018 07:08:23'
+            %    '02-Feb-2018 08:08:24'});
+            %
+            
+            ds = datetime(times);
+            rs = 1:1:numel(times);
+            figure(100); clf
+            plot(rs, ds, 'k.', 'linestyle', 'none')
+            set(gca, 'YDir','reverse')
+            
+            thisDateForLims = times{1}(1:11);
+            thisFirstTimeForLims = '10:00:00';
+            thisLastTimeForLims = '22:00:00';
+            
+            ylimFirstTime = [thisDateForLims ' ' thisFirstTimeForLims];
+            ylimLastTime = [thisDateForLims ' ' thisLastTimeForLims];
+            
+            ylimFirst = datetime(ylimFirstTime);
+            ylimLast = datetime(ylimLastTime);
+            
+            ylim([ylimFirst ylimLast])
+         
+            
+            
+            
+              meanTimeTxt = [ num2str(meanHr) ':' num2str(meanMin) ':' num2str(meanS)]; 
+            meandatetimeTxt = [thisDateForLims ' '  meanTimeTxt];
+            
+            AVG_TIME = datetime(meandatetimeTxt);
+            
+            hold on 
+            plot(50, AVG_TIME, '*k')
+            
+            legTxt = ['Mean Time = ' meanTimeTxt ' +/- ' num2str(roundn(stdDur_Hr, -3)) ' Hr (std)'];
+            legend(legTxt);
+            ylabel('Clock Time (Hr)')
+            xlabel('N')
+            title(dateName)
+          
+            saveDir = TimeInfoSaveDir;
+                    
+                    plotpos = [0 0 12 15];
+                    RecName_save = [saveDir dateName ];
+                    print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
+                    print_in_A4(0, RecName_save, '-depsc', 0, plotpos);
+                   
+            TimeInfo.motifFilenames = thisMotifName;
+            TimeInfo.times = times;
+            TimeInfo.ds = ds;
+            TimeInfo.rs = rs;
+            TimeInfo.AVG_TIME = AVG_TIME;
+            TimeInfo.stdDur_Hr = stdDur_Hr;
+            
+            TimeInfo.syllableDir = syllableDir;
+            TimeInfo.originalSongDateToLoad = originalSongDateToLoad;
+            
+            save([TimeInfoSaveDir dateName '_timeINFO.mat'], 'TimeInfo', '-v7.3')
+            
+            
+        end
+        
+        function obj = calcTimeOfPlaybackFiles(obj, syllableDir, TimeInfoSaveDir )
+            
+            dbstop if error
+            fileNames = dir(fullfile(syllableDir, '*.wav'));
+            nFiles = numel(fileNames);
+            
+            
+            if nFiles ~= 0
+                
+                f = filesep;
+                [filepath,name,ext] = fileparts(syllableDir);
+                
+                dateName_inds = find(filepath == f);
+                dateName = filepath(dateName_inds(end)+1:end);
+                
+                dateText = dateName(1:10);
+                
+                sInMin = 60;
+                sInHr = 3600;
+                
+                df_h = 10;
+                df_m = 0;
+                df_s = 0;
+                
+                for k = 1:nFiles
+                    
+                    playbacktimes{k} = fileNames(k).date;
+                    
+                    playbacktimes_names{k} = fileNames(k).name;
+                    
+                    t= datetime(playbacktimes{k});
+                    
+                    [h,m,s] = hms(t);
+                    
+                    %% Now we compute the duration of time that passed since the defualt 10:00:00
+                    
+                    dur_h = h-df_h;
+                    dur_m = m-df_m;
+                    dur_s = s-df_s;
+                    
+                    totalDur_s(k) = dur_h*sInHr + dur_m*sInMin + dur_s;
+                    
+                end
+                
+                medianDur_s = median(totalDur_s);
+                stdDur_s = std(totalDur_s);
+                
+                
+                stdDur_Hr = stdDur_s/sInHr;
+                
+                %% Reconvert this duration back to a time
+                
+                nHrs = floor(medianDur_s/sInHr);
+                
+                leftover_min_s = medianDur_s - nHrs*sInHr;
+                
+                nMin = floor(leftover_min_s /sInMin);
+                
+                leftover_s = round(leftover_min_s - nMin*sInMin);
+                
+                meanHr = df_h+nHrs;
+                meanMin = df_m+nMin;
+                meanS = df_s+leftover_s;
+                
+                
+                if meanS == 60
+                    meanMin = meanMin +1;
+                    meanS = 0;
+                end
+                %%
+                
+                
+                
+                
+                
+                %      ds = datetime({'02-Feb-2018 11:08:11'
+                %    '02-Feb-2018 12:08:13'
+                %    '02-Feb-2018 01:08:14'
+                %    '02-Feb-2018 02:08:15'
+                %    '02-Feb-2018 03:08:17'
+                %    '02-Feb-2018 04:08:18'
+                %    '02-Feb-2018 05:08:20'
+                %    '02-Feb-2018 06:08:21'
+                %    '02-Feb-2018 07:08:23'
+                %    '02-Feb-2018 08:08:24'});
+                %
+                
+                ds = datetime(playbacktimes);
+                rs = 1:1:numel(playbacktimes);
+                figure(100); clf
+                plot(rs, ds, 'k.', 'linestyle', 'none')
+                set(gca, 'YDir','reverse')
+                
+                thisDateForLims = playbacktimes{1}(1:11);
+                thisFirstTimeForLims = '10:00:00';
+                thisLastTimeForLims = '22:00:00';
+                
+                ylimFirstTime = [thisDateForLims ' ' thisFirstTimeForLims];
+                ylimLastTime = [thisDateForLims ' ' thisLastTimeForLims];
+                
+                ylimFirst = datetime(ylimFirstTime);
+                ylimLast = datetime(ylimLastTime);
+                
+                ylim([ylimFirst ylimLast])
+                
+                
+                
+                
+                meanTimeTxt = [ num2str(meanHr) ':' num2str(meanMin) ':' num2str(meanS)];
+                meandatetimeTxt = [thisDateForLims ' '  meanTimeTxt];
+                
+                AVG_TIME = datetime(meandatetimeTxt);
+                
+                midval = round(numel(ds)/2);
+                hold on
+                plot(midval, AVG_TIME, '*k')
+                
+                legTxt = ['Mean Playback Time = ' meanTimeTxt ' +/- ' num2str(roundn(stdDur_Hr, -3)) ' Hr (std)'];
+                legend(legTxt);
+                ylabel('Clock Time (Hr)')
+                xlabel('N')
+                title(dateName)
+                
+                saveDir = TimeInfoSaveDir;
+                
+                plotpos = [0 0 12 15];
+                RecName_save = [saveDir dateName ];
+                print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
+                print_in_A4(0, RecName_save, '-depsc', 0, plotpos);
+                
+                TimeInfo.motifFilenames = playbacktimes_names;
+                TimeInfo.times = playbacktimes;
+                TimeInfo.ds = ds;
+                TimeInfo.rs = rs;
+                TimeInfo.AVG_TIME = AVG_TIME;
+                TimeInfo.stdDur_Hr = stdDur_Hr;
+                
+                TimeInfo.syllableDir = syllableDir;
+                TimeInfo.originalSongDateToLoad = dateText;
+                
+                save([TimeInfoSaveDir dateName '_PlaybackTimeINFO.mat'], 'TimeInfo', '-v7.3')
+                
+                
+            else
+                
+                disp(['No PLayback files for ' syllableDir])
+            end
+            
+        end
+        
+        
         function obj = calc_wienerEntropy_on_syllables(obj, syllableDir, AllEntropyDataDir)
             
             
