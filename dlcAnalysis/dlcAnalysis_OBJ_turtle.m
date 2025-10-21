@@ -425,14 +425,9 @@ classdef dlcAnalysis_OBJ_turtle < handle
                 
                 vidPath = [ obj.PATH.analysisDir  obj.DATA.VideoFiles{o}];
                 vidObj = VideoReader(vidPath);
-                frameToPlot = 15;
-                
-                if vidObj.NumFrames < frameToPlot 
-                    frameToPlot = 1;
-                end
-                
-                
+                frameToPlot = 20;
                 vidFrame = read(vidObj, frameToPlot );
+                
                 
                 
                 cols = {'r', 'c', 'g', 'b', 'y', 'm',  'w', 'k'};

@@ -5,7 +5,8 @@
 addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
 cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
 
-analysisDir = 'F:\Johanna_MEA_Data\20220603\'; % path to the analysis directory %% CHANGE THIS 
+analysisDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\July2025\20250731\'; % path to the analysis directory
+
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -57,8 +58,36 @@ spikeDir = 'Z:\JanieData\MEA-Projects\JessicaMeaData\20210826\Firing_Rate_Analys
 
 doAnalysisFiringRateComparison(spikeDir, mea_OBJ, 1);
 
+%% (1) %% Firing rate analysis on 1 file
+spikeDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\July2025\20250730\Firing_Rate_Analysis\';
+
+mea_OBJ = FiringRateAnalysis_singleChannel(spikeDir, mea_OBJ);
+
+%% (1) Firing rate analysis across 3 files (baseline, drug, and recovery)
+
+cd(spikeDir)
+
+mea_OBJ = FiringRateAnalysis_singleChannel_Base_Drug_Rec(spikeDir, mea_OBJ);
+
+%%  (2) To combine clusters in a file
+
+fileToCombineSpikes = '20250721-1639mcd_CH-13-23-62-84-_SpikeData__84.mat'; % make sure to include .mat
+Spike_Counts_To_Combine = [793 166]; % enter the spike numbers (read from the other figure)
+
+combineSpikesInFile_PlotNewFiringRateAnalysis(spikeDir, fileToCombineSpikes,Spike_Counts_To_Combine, mea_OBJ); % this will give unit ID 5
+
+%% View the spike sorting statistics for a BASELINE DRUG RECOVERY COMPARISON
+
+UnitsIDs_base_drug_rec = [5 1 5]; % Baseline, drug, recovery Cluster IDs
+
+doAnalysis_Base_Drug_Rec_Comparison(spikeDir, UnitsIDs_base_drug_rec, mea_OBJ);
+
+%% Combine the spikes from a sorted single channel 
+
+%mea_OBJ = FiringRateAnalysis_makeRasters(spikeDir, mea_OBJ);
 
 
+%%
 %checkSpikesOnSortedData()
  
 %makeSummaryPlotFiringRatePharmacology
