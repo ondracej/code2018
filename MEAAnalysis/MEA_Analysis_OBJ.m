@@ -2482,19 +2482,135 @@ end
    fileNames = dir(fullfile(spikeDir, '*.mat'));
             nFiles = numel(fileNames);
             
-            for j = 1: nFiles 
+            for j = 1: nFiles
                 
                 thisFile = [spikeDir fileNames(j).name];
-d = load(thisFile);
-          
-
-nentries = size(d.CSpikes, 1);
-
-maxTime(j) = d.CSpikes(nentries , 3); % max time in s
-spiketimes{j} = d.CSpikes
-
-
+                d = load(thisFile);
+                nentries = size(d.CSpikes, 1);
+                maxTime(j) = d.CSpikes(nentries , 3); % max time in s
+                spiketimes{j} = d.CSpikes(:,3);
+                waveforms{j} = d.CSpikes(:,7:end);
+                
             end
+            
+            % Analyze in 10 s segments
+            WinSize_s = 10;
+            for k = 1:numel(spiketimes)
+                
+                thisMaxTime = maxTime(k);
+                rois = 1:WinSize_s: thisMaxTime;
+                nRois = numel(rois);
+                thisSpiketimes = spiketimes{k};
+                
+                
+                
+                nSpikes = [];
+                Fr = [];
+                for j = 1:nRois-1
+                    thisROI = [rois(j) rois(j)+WinSize_s-1];
+                    
+                    %spks = timestampsToPlot(find(timestampsToPlot >= TOn(q) & timestampsToPlot <= TOn(q+1)))-TOn(q)';
+                    spks_times = thisSpiketimes(find(thisSpiketimes>=thisROI(1) & thisSpiketimes <= thisROI(2)));
+                    
+                    nSpikes(j) = numel(spks_times);
+                    Fr(j) = nSpikes(j)/WinSize_s;
+                end
+                
+                meanCnt(k) = mean(nSpikes);
+                varCnt(k) = var(nSpikes);
+                Fano(k) = varCnt/meanCnt;
+                
+                meanFR(k) = mean(Fr);
+                stdFR(k) = std(Fr);
+                n(k) = nRois;
+            end
+            
+            
+            figure(103); clf
+            pm = char(177);
+            
+            subplot(3, 2, 1)
+            x = 1;
+            data = mean(meanFR);
+            datastd = std(meanFR);
+            bar(x,data)
+            hold on
+            nMeans = numel(meanFR);
+            xes = ones(1, nMeans);
+            plot(xes, meanFR, 'ko')
+            ylim([0 5])
+            legtext = {['Mean = ' num2str(roundn(data, -2)) ' ' pm ' ' num2str(roundn(datastd, -2)) ' (std)'], ['n = ' num2str(nMeans)]};
+            legend(legtext)
+            %legend('boxoff')
+            title('Firing Rate')
+            ylabel('Firing rate (Hz)')
+            set(gca, 'XTickLabel',{''})
+            
+            
+             subplot(3, 2, 2)
+            x = 1;
+            data = mean(Fano);
+            datastd = std(Fano);
+            bar(x,data, 'FaceColor', [0 .5 .5])
+            hold on
+            nFano = numel(Fano);
+            xes = ones(1, nFano);
+            plot(xes, Fano, 'ko')
+            ylim([0 10])
+            legtext = {['Mean = ' num2str(roundn(data, -2)) ' ' pm ' ' num2str(roundn(datastd, -2)) ' (std)'], ['n = ' num2str(nMeans)]};
+            legend(legtext)
+            %legend('boxoff')
+            title('Fano Factor: Variance/Mean')
+            ylabel('Fano factor')
+            set(gca, 'XTickLabel',{''})
+            
+            %%
+            
+             subplot(3, 2, 4)
+            scatter (meanCnt, varCnt, 'ko')
+            %legend('boxoff')
+            ylabel('Count variance')
+            xlabel('Mean count')
+           title('Variance versus mean; 10 s window')
+           
+           %%
+           subplot(3, 2, 3)
+           xes =1:1:nMeans;
+           scatter (xes, meanFR, 'ko')
+           hold on
+           errorbar(xes,meanFR,stdFR,'.b'); 
+           ylim([0 5])
+           xlim([0 nMeans+1])
+           ylabel('Mean Firing Rate')
+           set(gca, 'XTickLabel',{''})
+           title('Variance versus mean; 10 s windows')
+            
+           
+                  legtext = ['Mean ' pm ' std'];
+                  legend(legtext );
+
+            title('Firing rate; 10 s window')
+            
+            %%
+            subplot(3, 2, [4 5])
+            offset = 0;
+            
+            for o = 1:nFiles
+                
+                theseWaveforms = waveforms{o};
+            meanWaveform = mean(theseWaveforms);
+            xes = 1:1:size(meanWaveform, 2);
+            
+            xes = xes + offset;
+            hold on
+            plot(xes, meanWaveform);
+            
+            offset = offset+100;
+            
+            end
+            
+            
+            
             
             
         end

@@ -5,7 +5,7 @@
 addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
 cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
 
-analysisDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\July2025\20250731\'; % path to the analysis directory
+analysisDir = 'D:\Esra\20250717\\'; % path to the analysis directory
 
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
@@ -54,7 +54,7 @@ mea_OBJ = FiringRateAnalysis_makeRasters(mea_OBJ, textSave);
 
 %% Standalone code
 
-spikeDir = 'Z:\JanieData\MEA-Projects\JessicaMeaData\20210826\Firing_Rate_Analysis\';
+spikeDir = 'D:\Esra\20250717\Firing_Rate_Analysis\';
 
 doAnalysisFiringRateComparison(spikeDir, mea_OBJ, 1);
 
@@ -64,7 +64,7 @@ doAnalysisFiringRateComparison(spikeDir, mea_OBJ, 1);
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% (1) %% Firing rate analysis on 1 file
-spikeDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\July2025\20250731\Firing_Rate_Analysis\';
+spikeDir = 'D:\Esra\20250717\Firing_Rate_Analysis\';
 
 mea_OBJ = FiringRateAnalysis_singleChannel(spikeDir, mea_OBJ);
 
@@ -78,8 +78,8 @@ mea_OBJ = FiringRateAnalysis_singleChannel_Base_Drug_Rec(spikeDir, mea_OBJ);
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  (2) To combine clusters in a file
 
-fileToCombineSpikes = '20250721-1639mcd_CH-13-23-62-84-_SpikeData__84.mat'; % make sure to include .mat
-Spike_Counts_To_Combine = [793 166]; % enter the spike numbers (read from the other figure)
+fileToCombineSpikes = '20250717-1524_CH-25-26-33-35-41-_SpikeData__26.mat'; % make sure to include .mat
+Spike_Counts_To_Combine = [706]; % enter the spike numbers (read from the other figure)
 
 combineSpikesInFile_PlotNewFiringRateAnalysis(spikeDir, fileToCombineSpikes,Spike_Counts_To_Combine, mea_OBJ); % this will give unit ID 5
 
@@ -88,6 +88,22 @@ combineSpikesInFile_PlotNewFiringRateAnalysis(spikeDir, fileToCombineSpikes,Spik
 UnitsIDs_base_drug_rec = [5 1 5]; % Baseline, drug, recovery Cluster IDs
 
 doAnalysis_Base_Drug_Rec_Comparison(spikeDir, UnitsIDs_base_drug_rec, mea_OBJ);
+
+
+%% Population analysis on spontaneous baseline files
+
+populationDir = 'D:\Esra\20250717\testPopDir\';
+
+doPopulationAnalysis(populationDir, mea_OBJ)
+
+
+
+
+
+
+
+
+
 
 %% Combine the spikes from a sorted single channel 
 
