@@ -3046,7 +3046,7 @@ end
             %eval(['dataLength = size(d.' cell2mat(fields) ',2)'])
             eval(['units = d.' cell2mat(fields) '(:,2);']);
             eval(['timestamps_s = d.' cell2mat(fields) '(:,3);']);
-            eval(['spikeWaveforms = d.' cell2mat(fields) '(:,7:end);']);
+            eval(['spikeWaveforms = d.' cell2mat(fields) '(:,4:end);']);
             uniqueUnits = unique(units);
             nUnits = numel(uniqueUnits);
             
@@ -3161,8 +3161,8 @@ end
                     set(gca, 'Xticklabel',xtickLabs)
                     xlabel('Time (s)')
                     ylabel('Firing rate (Hz)')
-                    %  legend(legText)
-                    %  legend boxoff
+                      legend(legText)
+                      legend boxoff
                     title('Firing Rate')
                 end
                 %%
@@ -3170,7 +3170,7 @@ end
                 subplot(2, 4, [4])
                 %subplot(1, size(allWaveforms,2), i)
                 hold on
-                plot(allWaveforms(:,:)' +offset, 'color', col)
+                plot(allWaveforms(:,4:end)' +offset, 'color', col)
                 %axis tight
                 %ylim([-5e4 5e4])
                 %legend(legText{i})
@@ -3226,16 +3226,21 @@ end
             D = [];
             
             newUnitNumber = (ones(1, numel(allTimestamps_s))*5)';
+            nEntries = numel(newUnitNumber);
             
             %eval(['D.' fields{:} '(:,1)= d.' fields{:} '(:,1);'])
             %eval(['D.' fields{:} '(:,2)=newUnitNumber'])
             %eval(['D.' fields{:} '(:,3)=allTimestamps_s'])
             %eval(['D.' fields{:} '(:,4:86)=allWaveforms'])
             
-            eval(['CSpikes (:,1)= d.' fields{:} '(:,1);'])
-            eval('CSpikes(:,2)=newUnitNumber;')
-            eval('CSpikes(:,3)=allTimestamps_s;')
-            eval('CSpikes(:,4:86)=allWaveforms;')
+           % allTimestamps_inds_new
+            
+            CSpikes(:,:) = d.Channel02(allTimestamps_inds_new, :);
+            
+            eval(['CSpikes (:,:)= d.' fields{:} '(allTimestamps_inds_new, :);'])
+%             eval('CSpikes(:,2)=newUnitNumber;')
+%             eval('CSpikes(:,3)=allTimestamps_s;')
+%             eval('CSpikes(:,4:86)=allWaveforms;')
             
             underscore = '_';
             dot = '.';
