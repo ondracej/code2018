@@ -2119,15 +2119,15 @@ end
                 %%
                 eval(['bD_units = bD.' cell2mat(bD_fields) '(:,2);']);
                 eval(['bD_timestamps_s_all = bD.' cell2mat(bD_fields) '(:,3);']);
-                eval(['bD_spikeWaveforms = bD.' cell2mat(bD_fields) '(:,4:end);']);
+                eval(['bD_spikeWaveforms = bD.' cell2mat(bD_fields) '(:,7:end);']);
                 
                 eval(['dD_units = dD.' cell2mat(dD_fields) '(:,2);']);
                 eval(['dD_timestamps_s_all = dD.' cell2mat(dD_fields) '(:,3);']);
-                eval(['dD_spikeWaveforms = dD.' cell2mat(dD_fields) '(:,4:end);']);
+                eval(['dD_spikeWaveforms = dD.' cell2mat(dD_fields) '(:,7:end);']);
                 
                 eval(['rD_units = rD.' cell2mat(rD_fields) '(:,2);']);
                 eval(['rD_timestamps_s_all = rD.' cell2mat(rD_fields) '(:,3);']);
-                eval(['rD_spikeWaveforms = rD.' cell2mat(rD_fields) '(:,4:end);']);
+                eval(['rD_spikeWaveforms = rD.' cell2mat(rD_fields) '(:,7:end);']);
                 
                 %% Find the Inds that are the correct spike sorting
                 
@@ -2829,7 +2829,7 @@ end
                 %eval(['dataLength = size(d.' cell2mat(fields) ',2)'])
                 eval(['units = d.' cell2mat(fields) '(:,2);']);
                 eval(['timestamps_s = d.' cell2mat(fields) '(:,3);']);
-                eval(['spikeWaveforms = d.' cell2mat(fields) '(:,4:end);']);
+                eval(['spikeWaveforms = d.' cell2mat(fields) '(:,7:end);']);
                 uniqueUnits = unique(units);
                 nUnits = numel(uniqueUnits);
                 
@@ -3044,7 +3044,7 @@ end
             %eval(['dataLength = size(d.' cell2mat(fields) ',2)'])
             eval(['units = d.' cell2mat(fields) '(:,2);']);
             eval(['timestamps_s = d.' cell2mat(fields) '(:,3);']);
-            eval(['spikeWaveforms = d.' cell2mat(fields) '(:,4:end);']);
+            eval(['spikeWaveforms = d.' cell2mat(fields) '(:,7:end);']);
             uniqueUnits = unique(units);
             nUnits = numel(uniqueUnits);
             
@@ -3315,7 +3315,7 @@ end
                     %eval(['dataLength = size(d.' cell2mat(fields) ',2)'])
                     eval(['units = d.' cell2mat(fields) '(:,2);']);
                     eval(['timestamps_s = d.' cell2mat(fields) '(:,3);']);
-                    eval(['spikeWaveforms = d.' cell2mat(fields) '(:,4:end);']);
+                    eval(['spikeWaveforms = d.' cell2mat(fields) '(:,7:end);']);
                     uniqueUnits = unique(units);
                     nUnits = numel(uniqueUnits);
                     allUniqueUnits{a} = uniqueUnits;
