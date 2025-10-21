@@ -2889,6 +2889,7 @@ end
             legText = [];
             for i=1:numel(TimestampsFinal)
                 
+                        
                 subplot(2, 4, [1 3])
                 
                 timestampsToPlot = TimestampsFinal{i};
@@ -2912,6 +2913,7 @@ end
                     cnt = cnt +1;
                 end
                 
+                 % legText{i} = ['Ch-' num2str(chanNames(i)) ' | n = ' num2str(numel(timestampsToPlot)) '| ID = ' num2str(thisUnitID) ];
                 legText{i} = ['Ch-' ChanNamesFinal{i} ' | n = ' num2str(numel(timestampsToPlot))];
                 
                 if i == numel(TimestampsFinal)
