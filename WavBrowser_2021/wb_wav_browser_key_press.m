@@ -31,9 +31,18 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
             %% Move to the previous file (to the left)
             move_left_or_right(spc, current_file, list_of_names, 2, how_many_files)
 
+             case 'b' % plot whole file
+            wholeFileSwitch = 1;
+              wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files, wav_file_dir, wholeFileSwitch)
+            
+              
         case 's'
             %% Re-Saves the current spectrogram file to the BOS folder
+            %% For motifs
             save_this_file(spc, current_file, list_of_names, wav_file_dir_SaveDir, wav_file_dir)
+
+            %% For syllables
+              %save_this_file_cluster(spc, current_file, list_of_names, wav_file_dir_SaveDir, wav_file_dir)
 
         case 'escape'
             %% Close the browser, save the files, and clear the data
@@ -41,6 +50,8 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
 
         case 'c' %cut
             
+            
+            %% Motifs
             [wav_x,~] = ginput(2);
             
             line([wav_x(1) wav_x(1)], [0 15000], 'color', 'y');
@@ -52,9 +63,37 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
               setappdata(spc, 'LCut', wav_x(1));
               setappdata(spc, 'RCut', wav_x(2));
               
+              
+              %% Syllables
+              %{
+                N_Syllables = getappdata(spc, 'N_Syllables');
+            
+            [wav_x,~] = ginput(N_Syllables +1);
+            
+            for j = 1:N_Syllables+1
+            
+            
+            line([wav_x(j) wav_x(j)], [0 15000], 'color', 'y');
+            hold on
+            end
+            
+            %line([wav_x(2) wav_x(2)], [0 15000], 'color', 'y');
+            %line([wav_x(3) wav_x(3)], [0 15000], 'color', 'y');
+            
+            disp('')
+            hold off
+
+            setappdata(spc, 'AllCuts', wav_x);
+%               setappdata(spc, 'LCut', wav_x(1));
+              
+              %}
+              
         case 'q' %clear
             
-            wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files, wav_file_dir)
+              wholeFileSwitch = 0;
+            wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files, wav_file_dir, wholeFileSwitch)
+          
+            %wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files, wav_file_dir)
             
 %         case 'd'
 %             %% Change the wav directory
@@ -91,7 +130,7 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
         LCut = getappdata(spc, 'LCut');
         RCut = getappdata(spc, 'RCut');
         
-      
+      allCuts = [LCut RCut];
         
         wav_file = getappdata(spc, 'wav_file');
         fs = getappdata(spc, 'fs');
@@ -136,10 +175,18 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
        %}
 
         % write file name to the command window
-        this_file = list_of_names{current_file};
+         this_file = list_of_names{current_file};
         exact_file_name = [wav_file_dir this_file];
         disp(this_file);
 
+        INFO.allCuts_s = allCuts;
+        filWav_s = numel(filWav)/fs;
+        INFO.wavDuration_s = filWav_s;
+        INFO.wavName = this_file;
+        
+        wavInfoDir = getappdata(spc, 'wavInfoDir');
+        save([wavInfoDir this_file(1:end-4) '-INFO'], 'INFO')
+        
         
         %  Save name
         %BOS_wav_dir = getappdata(spc, 'BOS_wav_dir');
@@ -161,6 +208,120 @@ function[] = wb_wav_browser_key_press(src, evnt, spc)
         %wavwrite(wav_file, fs, bits, save_name)
         
     end
+
+
+
+ function save_this_file_cluster(spc, current_file, list_of_names, wav_file_dir_SaveDir, wav_file_dir)
+
+        
+        
+       % current_file = getappdata(spc, 'current_file');
+       % list_of_names =  getappdata(spc, 'list_of_names');
+        wavName = list_of_names{current_file};
+       % wav_file_dir = getappdata(spc, wav_file_dir);
+          
+       allCuts = getappdata(spc, 'AllCuts');
+             
+%         LCut = getappdata(spc, 'LCut');
+%         MCut = getappdata(spc, 'MCut');
+%         RCut = getappdata(spc, 'RCut');
+        
+        wav_file = getappdata(spc, 'wav_file');
+        fs = getappdata(spc, 'fs');
+        %bits = getappdata(spc, 'bits');
+        
+        %% Filter file
+        [b1, a1] = butter(2, [300 10000]/(fs/2));
+        filWav = filtfilt(b1, a1, wav_file);
+    cuts_fs = [];
+     for oo = 1:numel(allCuts)    
+         cuts_fs(oo) = allCuts(oo)*fs;
+     end
+     
+         
+     for oo = 1:numel(allCuts)-1
+         
+         newWav_S = filWav(round(cuts_fs(oo)):round(cuts_fs(oo+1)));
+         YY_S = resample(newWav_S, 44100, fs);
+         newWavName_S = ['S' num2str(oo) '_' wavName(1:end-4) '.wav'];
+         audiowrite([wav_file_dir_SaveDir newWavName_S], YY_S,44100)
+     end
+      %  LCut_samp = LCut*fs;
+       % MCut_samp = MCut*fs;
+      %  RCut_samp = RCut*fs;
+        
+        %duration_s = RCut-LCut;
+        %duration_samp = duration_s*fs;
+        
+        %newWav_S1 = filWav(round(LCut_samp):round(MCut_samp));
+        %newWav_S2 = filWav(round(MCut_samp):round(RCut_samp));
+        
+        
+        %YY_S1 = resample(newWav_S1, 44100, fs);
+        %YY_S2 = resample(newWav_S2, 44100, fs);
+        
+       %prompt = 'Please enter save name:';
+       %dlgtitle = 'Saving';
+       
+        %answer = inputdlg(prompt,dlgtitle);
+      
+        %endingtxt = cell2mat(answer);
+        
+        %newWavName_S1 = ['S1_' wavName(1:end-4) '.wav'];
+        %newWavName_S2 = ['S2_' wavName(1:end-4) '.wav'];
+        
+        %wavwrite(YY,44100, [wav_file_dir newWavName])
+        
+        %% Save filed to M Directory
+       % audiowrite([wav_file_dir_SaveDir newWavName_S1], YY_S1,44100)
+       % audiowrite([wav_file_dir_SaveDir newWavName_S2], YY_S2,44100)
+        
+       % audiowrite([wav_file_dir newWavName], YY,44100)
+        %{
+            % Make the BOS directory if it does not already exist
+            if exist(BOS_wav_dir, 'dir') == 0
+                mkdir(BOS_wav_dir);
+                disp(['Created a  ' BOS_folder_name ' folder for this directory.'])
+            end
+       %}
+
+        % write file name to the command window
+        this_file = list_of_names{current_file};
+        exact_file_name = [wav_file_dir this_file];
+        disp(this_file);
+
+        INFO.allCuts_s = allCuts;
+        filWav_s = numel(filWav)/fs;
+        INFO.wavDuration_s = filWav_s;
+        INFO.wavName = this_file;
+        
+        wavInfoDir = getappdata(spc, 'wavInfoDir');
+        save([wavInfoDir this_file(1:end-4) '-INFO'], 'INFO')
+        
+        
+        %  Save name
+        %BOS_wav_dir = getappdata(spc, 'BOS_wav_dir');
+
+        % We could squelch the file here...
+      %  squelched_wav_file = squelch(wav_file,fs);
+
+      %  copyfile(exact_file_name, BOS_wav_dir)
+     
+        %% In case we want to modify the wav file (ie, squelch)
+        
+        % Get info saved by the from wb_plot_wav_spec function
+        %wav_file = getappdata(spc, 'wav_file');
+        %fs = getappdata(spc, 'fs');
+        %bits = getappdata(spc, 'bits');
+        
+        %save_name = [BOS_wav_dir this_file];
+        
+        %wavwrite(wav_file, fs, bits, save_name)
+        
+    end
+
+
+
 
 
     %% move_this_file
@@ -364,7 +525,8 @@ end
     setappdata(spc, 'current_file', current_file);
 
     % plot the spectrogram
-    wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files, wav_file_dir)
+      wholeFileSwitch = 0;
+    wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files, wav_file_dir, wholeFileSwitch)
     
     end
 

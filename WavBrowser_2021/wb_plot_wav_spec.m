@@ -1,4 +1,4 @@
-function [] = wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files, wav_file_dir)
+function [] = wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files, wav_file_dir, wholeFileSwitch)
 % part of the wave_browser.m, this file plots and updates the spectrogram
 % of the selected .wav file
 
@@ -25,8 +25,25 @@ function [] = wb_plot_wav_spec(spc, current_file, list_of_names, how_many_files,
 
     setappdata(spc, 'this_file', this_file);
 
+     %% filteredWav
+    [b1, a1] = butter(2, [300 10000]/(fs/2));
+    filWav = filtfilt(b1, a1, wav_file);
+    
+    LWav_s = numel(filWav)/fs;
+    if wholeFileSwitch == 0
+        if LWav_s > 4
+            filWav = filWav(1:4*fs);
+        end
+        
+   % elseif wholeFileSwitch ==1
+     %   filWav = filWav;
+        
+    end
+        
+    
     % Plot the spectrogram
-    specgram1((wav_file/spec_scale),512,fs,400,360);
+    %specgram1((wav_file/spec_scale),512,fs,400,360);
+    specgram1((filWav/spec_scale),512,fs,400,360);
     ylim([0 10000])
     xlabel('Time (s)', 'fontsize', 12)
     ylabel('Frequency (Hz)', 'fontsize', 12)

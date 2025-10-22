@@ -6,6 +6,8 @@ clear all
 
 [rec_DB] = recDatabase();
 
+[SongRec_DB] = SongRecDatabase();
+
 %RecSet = [1:17]; %w038
 %RecSet = [18:39]; %w027
 %RecSet = [40:69]; %w025
