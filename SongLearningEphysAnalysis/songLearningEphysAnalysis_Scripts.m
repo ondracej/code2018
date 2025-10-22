@@ -1,6 +1,14 @@
 
-%%
+%% Preprocessing song files
 
+% Run in matlab2013b
+%initVars(1, ), fl, fb, %sort the wave files
+
+wav_browser % to make the motifs
+
+
+
+%%
 close all
 clear all
 
