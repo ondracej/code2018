@@ -3,7 +3,7 @@ function [] = wavFilter()
 spec_scale = 0.02;
 searchString = '*.wav';
 
-wavDir = 'X:\EEG-LFP-songLearning\songs\w042\Data\2021-12-30\';
+wavDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w042\Data\2021-12-30\'; %   f_stop1a = 7990;  f_stop2b = 8050;   % 
 %wavDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w042\Data\2021-12-30-Fil\';
 dirD = '\';
 
@@ -96,11 +96,11 @@ Rp = 1; % Passband ripple (dB)
     [b, a] = butter(6, Wn, 'stop');
     
     % === Apply the filter ===
-    filWav = filtfilt(b, a, wav_file);
+   % filWav = filtfilt(b, a, wav_file);
     
     %%
-    f_stop1a = 7900;   % Lower cutoff frequency (Hz)
-    f_stop2b = 8100;   % Upper cutoff frequency (Hz)
+    f_stop1a = 7990;   % Lower cutoff frequency (Hz)
+    f_stop2b = 8050;   % Upper cutoff frequency (Hz)
     
     % Normalize frequencies to Nyquist frequency
     Wn = [f_stop1a f_stop2b] / (fs / 2);
@@ -109,7 +109,8 @@ Rp = 1; % Passband ripple (dB)
     % Using a 6th-order Butterworth filter (can be adjusted)
     [b, a] = butter(6, Wn, 'stop');
     
-    filWava = filtfilt(b, a, filWav);
+   % filWava = filtfilt(b, a, filWav);
+    filWava = filtfilt(b, a, wav_file);
     
     if even1000 == 0
         
@@ -122,7 +123,7 @@ Rp = 1; % Passband ripple (dB)
         title('Unfiltered')
         
         subplot(2, 2, 3)
-        [Pxx, F] = periodogram(filWava, [], length(filWav), fs);
+        [Pxx, F] = periodogram(filWava, [], length(filWava), fs);
         plot(F, 10*log10(Pxx));
         xlim([0 10000])
         title('Bandstop-Filtered')
