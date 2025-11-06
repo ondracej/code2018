@@ -1,12 +1,11 @@
 function[] = wav_browser()
 
 %% Enter the directory path
-close all
 clear all
 
 %wav_file_dir = 'X:\EEG-LFP-songLearning\Artemis\w038_Analysis\Data\2021-09-19-Last100Songs\'; % make sure there is a \ at the end!
-wav_file_dir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\2021-09-21-First100Songs\';
-spec_scale = 0.1; % Higher value makes it darker
+wav_file_dir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\Data\2021-07-18-Last100Songs\';
+spec_scale = 0.08; % Higher value makes it darker
 
 N_Syllables = 1;
 

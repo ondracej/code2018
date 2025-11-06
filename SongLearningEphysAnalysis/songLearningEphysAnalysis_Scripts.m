@@ -183,24 +183,28 @@ data_OBJ = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChans);
 renameFilesinDir
 
 %% w038
-% 
-%  SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w038_Analysis\Data\';
-%  plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038\Motifs\';
-%  AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w038\Entropy\';
+% check the paths!!! 
 
+ SongDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\';
+ plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\Motifs\';
+ AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\Entropy\';
+
+  OriginalSongFileDir = 'X:\EEG-LFP-songLearning\songs\w038\Data\';
+  TimeInfoSaveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\SongTimeInfo\';
+%TimeInfoSaveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\PlaybackTimeInfo\'; % For playbacks
 %% w037
 % SongDataDir = 'X:\EEG-LFP-songLearning\Artemis\w037_Analysis\Data\';
-% plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Motifs\';
-% AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w037\Entropy\';
+% plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\Motifs\';
+% AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\Entropy\';
 
 %% w027
 %SongDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027\Data\';
-SongDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025-w027_AllPlaybackFiles\'; % for playbacks
-plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Motifs\';
-AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\w027\Entropy\';
-OriginalSongFileDir = 'X:\EEG-LFP-songLearning\songs\w027\Data\';
-%TimeInfoSaveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027\SongTimeInfo\';
-TimeInfoSaveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025-w027_AllPlaybackFiles\SummaryData\'; % For playbacks
+% SongDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025-w027_AllPlaybackFiles\'; % for playbacks
+% plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\Motifs\';
+% AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\Entropy\';
+% OriginalSongFileDir = 'X:\EEG-LFP-songLearning\songs\w027\Data\';
+% %TimeInfoSaveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027\SongTimeInfo\';
+% TimeInfoSaveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025-w027_AllPlaybackFiles\SummaryData\'; % For playbacks
 
 %% w025
 % SongDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\Data\';
@@ -216,14 +220,20 @@ d = dir(SongDataDir);
 dfolders = d([d(:).isdir]);
 
 dfolders = dfolders(~ismember({dfolders(:).name},{'.','..'}));
+SylInds = [];
 for j = 1:numel(dfolders)
     thisName = dfolders(j).name;
     %SylInds(j) = sum(strfind(thisName, 'Syllables'));
-    %SylInds(j) = sum(strfind(thisName, 'Motifs'));
-    SylInds(j) = sum(strfind(thisName, 'Play'));
+    SylInds(j) = sum(strfind(thisName, 'Motifs'));
+    %SylInds(j) = sum(strfind(thisName, 'Play'));
 end
 
 dirsToLoad_inds = find(SylInds ~=0);
+
+%% Override
+%thisDirToLoad = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\2021-09-07-Last100Songs-Motifs\';
+%plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\Motifs\';
+
 
 for k = 1:numel(dirsToLoad_inds)
     
@@ -233,14 +243,16 @@ for k = 1:numel(dirsToLoad_inds)
     disp(['Loading files: ' thisDirToLoad])
     
     
-   % data_OBJ = plotMotifExamples(data_OBJ, thisDirToLoad, plotDir );
+    doSortedMotifs = 0;
     
-    %data_OBJ = calc_wienerEntropy_on_syllables(data_OBJ, thisDirToLoad, AllEntropyDataDir);
+    data_OBJ = plotMotifExamples(data_OBJ, thisDirToLoad, plotDir, doSortedMotifs );
+    
+    data_OBJ = calc_wienerEntropy_on_syllables(data_OBJ, thisDirToLoad, AllEntropyDataDir);
     
     
     
-   % data_OBJ = calcTimeOfRecFiles(data_OBJ, thisDirToLoad, OriginalSongFileDir, TimeInfoSaveDir );
-    data_OBJ = calcTimeOfPlaybackFiles(data_OBJ, thisDirToLoad, TimeInfoSaveDir );
+    data_OBJ = calcTimeOfRecFiles(data_OBJ, thisDirToLoad, OriginalSongFileDir, TimeInfoSaveDir );
+    %data_OBJ = calcTimeOfPlaybackFiles(data_OBJ, thisDirToLoad, TimeInfoSaveDir );
     
     
 end
