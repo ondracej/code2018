@@ -2579,7 +2579,8 @@ end
            scatter (xes, meanFR, 'ko')
            hold on
            errorbar(xes,meanFR,stdFR,'.b'); 
-           ylim([0 5])
+           axis tight
+           %ylim([0 5])
            xlim([0 nMeans+1])
            ylabel('Mean Firing Rate')
            set(gca, 'XTickLabel',{''})
@@ -2592,7 +2593,7 @@ end
             title('Firing rate; 10 s window')
             
             %%
-            subplot(3, 2, [4 5])
+            subplot(3, 2, [5 6])
             offset = 0;
             
             for o = 1:nFiles
