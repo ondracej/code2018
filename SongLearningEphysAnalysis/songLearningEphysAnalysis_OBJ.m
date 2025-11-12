@@ -2461,7 +2461,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
         end
         
         
-        function obj = plotMotifExamples(obj, motifDataDir, plotDir)
+        function obj = plotMotifExamples(obj, motifDataDir, plotDir, doSortedMotifs)
             
             
             fileNames = dir(fullfile(motifDataDir, '*.wav'));
@@ -2471,15 +2471,27 @@ classdef songLearningEphysAnalysis_OBJ < handle
             dateName_inds = find(filepath == f);
             dateName = filepath(dateName_inds(end)+1:end);
             
+            size_bytes = cell2mat({fileNames.bytes})';
             fileNames = {fileNames.name}';
-            nFiles = numel(fileNames);
-            stringsearch = 'f';
             
+            
+            if doSortedMotifs
+                [B,I] = sort(size_bytes, 'ascend');
+                fileNames = fileNames(I,:);
+            else
+                fileNames = fileNames;
+            end
+            
+            nFiles = numel(fileNames);
+            
+            stringsearch = 'f';
+            NText = [];
             for j = 1:nFiles
                 SText{j} = fileNames{j,:}(1:2);
                 
                 bla = find(fileNames{j,:} == stringsearch);
-                NText(j) = str2double(fileNames{j,:}(bla+1:end-4));
+                %NText(j) = str2double(fileNames{j,:}(bla+1:end-4));
+                NText{j} = fileNames{j,:}(bla:end-7);
                 
             end
             
@@ -2501,8 +2513,10 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 motiv_count =  35;
                 height = 1/motiv_count;
                 
-                width = 0.9 /3;
-                L_edge = 0.05;
+                %width = 0.9 /3;
+                width = 0.87 /3;
+                L_edge = 0.03;
+                horz_space = 0.03;
                 file_cnt = 1;
                 
                 figH = figure(104); clf
@@ -2522,12 +2536,13 @@ classdef songLearningEphysAnalysis_OBJ < handle
                             specgram1((y/spec_scale),512,Fs,400,360);
                             ylim ([0 8000]);
                             axis off
-                            annotation(figH ,'textbox',[0 (cnt)*height+.01 0.02 0.02],'String',num2str(file_cnt),'FitBoxToText','off', 'linestyle', 'none');
+                            %annotation(figH ,'textbox',[0 (cnt)*height+.01 0.02 0.02],'String',num2str(file_cnt),'FitBoxToText','off', 'linestyle', 'none');
+                            annotation(figH ,'textbox',[0 (cnt)*height+.01 0.02 0.02],'String', NText(file_cnt),'FitBoxToText','off', 'linestyle', 'none');
                             
                             cnt = cnt+1;
                             file_cnt = file_cnt+1;
                         end
-                        L_edge = L_edge+ width;
+                        L_edge = L_edge+ width + horz_space;
                     else
                         cnt =0;
                         for k = 1: motiv_count
@@ -2541,18 +2556,21 @@ classdef songLearningEphysAnalysis_OBJ < handle
                             specgram1((y/spec_scale),512,Fs,400,360);
                             ylim ([0 8000]);
                             axis off
+                            annotation(figH ,'textbox',[L_edge-horz_space (cnt)*height+.01 0.02 0.02],'String', NText(file_cnt),'FitBoxToText','off', 'linestyle', 'none');
+                           
                             cnt = cnt+1;
                             file_cnt = file_cnt+1;
                             
                         end
-                        L_edge = L_edge+ width;
+                        L_edge = L_edge+ width +horz_space;
                     end
                     
                 end
                 
-                plotpos = [0 0 15 45];
+                plotpos = [0 0 55 45];
                 
-                saveName = [dateName '-' num2str(oo)];
+                %saveName = [dateName '-' num2str(oo)];
+                saveName = [dateName];
                 
                 plot_filename = [motifDataDir saveName];
                 print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);

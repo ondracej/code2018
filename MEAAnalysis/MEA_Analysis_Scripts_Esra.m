@@ -92,7 +92,7 @@ doAnalysis_Base_Drug_Rec_Comparison(spikeDir, UnitsIDs_base_drug_rec, mea_OBJ);
 
 %% Population analysis on spontaneous baseline files
 
-populationDir = 'D:\Esra\20250717\testPopDir\';
+populationDir = 'X:\Janie-MEA-Data\Esra-MEA2025\PopulationAnalysis_mat\';
 
 doPopulationAnalysis(populationDir, mea_OBJ)
 
