@@ -6,6 +6,8 @@ RecDate =  '2021-07-19';
 lightOn_time = '10:52:08'; % Morning before singing
 lightOff_time = '22:49:13'; % night before sleep
 
+unplugTime = '11:01:04'; %last frame in video
+plugTime = '21:38:41'; %last frame in video
 %%
 saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\SongPlaybackSummaries\';
 PlaybackTimeInfoDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\PlaybackTimeInfo\';
@@ -37,9 +39,13 @@ pb_timeInfo = pb.TimeInfo.ds;
 thisDate = m_First100_timeInfo_times{1}(1:11);
 LightsOnTime  = [thisDate ' ' lightOn_time];
 LightsOffTime  = [thisDate ' ' lightOff_time];
+UnplugTime = [thisDate ' ' unplugTime];
+PlugTime = [thisDate ' ' plugTime];
 
 LightsOn_dt = datetime(LightsOnTime);
 LightsOff_dt = datetime(LightsOffTime);
+Unplug_dt = datetime(UnplugTime);
+Plug_dt = datetime(PlugTime);
 %% Plot the motifs
 figure(105);clf
 
@@ -59,6 +65,10 @@ set(gca, 'YDir','reverse')
 
 line([LightsOn_dt LightsOn_dt], [0 100])
 line([LightsOff_dt LightsOff_dt], [0 100])
+
+line([Unplug_dt Unplug_dt], [0 100], 'color', 'r')
+line([Plug_dt Plug_dt], [0 100], 'color', 'r')
+
 
 legend({'First 100 songs', 'Last 100 songs', 'Playbacks'})
 
