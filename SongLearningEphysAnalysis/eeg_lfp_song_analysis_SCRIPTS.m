@@ -111,7 +111,7 @@ for k = 1:numel(dirsToLoad_inds)
     
     % This plots the songs relative to 10:00, need to change the limits if earlier
     data_OBJ = calcTimeOfSongFiles(data_OBJ, thisDirToLoad, data_OBJ.PATH.OriginalSongPath);
-    data_OBJ = calcTimeOfPlaybackFiles(data_OBJ, thisDirToLoad);
+    %data_OBJ = calcTimeOfPlaybackFiles(data_OBJ, thisDirToLoad);
     
     
 end
@@ -119,13 +119,13 @@ end
 %% make a summary plot of motifs, playbacks and lights on-off for each file
 % requires that calcTimeOfRecFiles and calcTimeOfPlaybackFiles has been run
 
-Plot_SongsPlaybackLights_Alignment
+%Plot_SongsPlaybackLights_Alignment
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  % Meta analysis per bird across days
 %% make a plot of entropy versus time
 
-firstOrLastSwitch = 2; % 1 = First, 2 = Last, 0 = both
+firstOrLastSwitch = 1; % 1 = First, 2 = Last, 0 = both
 data_OBJ = meta_make_plot_of_entropy_with_times_first_last(data_OBJ, firstOrLastSwitch);
 
 data_OBJ = metaAnalysis_make_plot_of_entropy_across_days_with_times(data_OBJ);
