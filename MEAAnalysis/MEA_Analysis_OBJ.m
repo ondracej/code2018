@@ -2477,14 +2477,15 @@ end
         
         function obj = doPopulationAnalysis(spikeDir, obj)
             
-   dbstop if error
-   
-   fileNames = dir(fullfile(spikeDir, '*.mat'));
-            nFiles = numel(fileNames);
+            dbstop if error
             
+            fileNames = dir(fullfile(spikeDir, '*.mat'));
+            nFiles = numel(fileNames);
+            legtext_names = [];
             for j = 1: nFiles
                 
                 thisFile = [spikeDir fileNames(j).name];
+                legtext_names{j} = fileNames(j).name(end-5:end-4);
                 d = load(thisFile);
                 nentries = size(d.CSpikes, 1);
                 maxTime(j) = d.CSpikes(nentries , 3); % max time in s
@@ -2494,7 +2495,9 @@ end
             end
             
             % Analyze in 10 s segments
-            WinSize_s = 10;
+            %WinSize_s = 10;
+            %% Window size for fano factor
+            WinSize_s = 2;
             for k = 1:numel(spiketimes)
                 
                 thisMaxTime = maxTime(k);
@@ -2502,13 +2505,10 @@ end
                 nRois = numel(rois);
                 thisSpiketimes = spiketimes{k};
                 
-                
-                
                 nSpikes = [];
                 Fr = [];
                 for j = 1:nRois-1
                     thisROI = [rois(j) rois(j)+WinSize_s-1];
-                    
                     %spks = timestampsToPlot(find(timestampsToPlot >= TOn(q) & timestampsToPlot <= TOn(q+1)))-TOn(q)';
                     spks_times = thisSpiketimes(find(thisSpiketimes>=thisROI(1) & thisSpiketimes <= thisROI(2)));
                     
@@ -2525,10 +2525,11 @@ end
                 n(k) = nRois;
             end
             
-            
+            %%
             figure(103); clf
-            pm = char(177);
+            pm = char(177); % plus minus symbol
             
+            %% mean firing rate
             subplot(3, 2, 1)
             x = 1;
             data = mean(meanFR);
@@ -2537,7 +2538,7 @@ end
             hold on
             nMeans = numel(meanFR);
             xes = ones(1, nMeans);
-            plot(xes, meanFR, 'ko')
+            plot(xes, meanFR, 'k.')
             ylim([0 5])
             legtext = {['Mean = ' num2str(roundn(data, -2)) ' ' pm ' ' num2str(roundn(datastd, -2)) ' (std)'], ['n = ' num2str(nMeans)]};
             legend(legtext)
@@ -2546,8 +2547,8 @@ end
             ylabel('Firing rate (Hz)')
             set(gca, 'XTickLabel',{''})
             
-            
-             subplot(3, 2, 2)
+            %% Fano factor
+            subplot(3, 2, 2)
             x = 1;
             data = mean(Fano);
             datastd = std(Fano);
@@ -2555,42 +2556,42 @@ end
             hold on
             nFano = numel(Fano);
             xes = ones(1, nFano);
-            plot(xes, Fano, 'ko')
-            ylim([0 10])
+            plot(xes, Fano, 'k.')
+            ylim([0 4]) %%%%%%%% Chang depending on time windwo
             legtext = {['Mean = ' num2str(roundn(data, -2)) ' ' pm ' ' num2str(roundn(datastd, -2)) ' (std)'], ['n = ' num2str(nMeans)]};
             legend(legtext)
             %legend('boxoff')
-            title('Fano Factor: Variance/Mean')
+            title(['Fano Factor: Variance/Mean | WinSize = ' num2str(WinSize_s) ' s'])
             ylabel('Fano factor')
             set(gca, 'XTickLabel',{''})
             
-            %%
+            %% Means and variance
             
-             subplot(3, 2, 4)
-            scatter (meanCnt, varCnt, 'ko')
+            subplot(3, 2, 4)
+            scatter (meanCnt, varCnt, 'k.')
             %legend('boxoff')
             ylabel('Count variance')
             xlabel('Mean count')
-           title('Variance versus mean; 10 s window')
-           
-           %%
-           subplot(3, 2, 3)
-           xes =1:1:nMeans;
-           scatter (xes, meanFR, 'ko')
-           hold on
-           errorbar(xes,meanFR,stdFR,'.b'); 
-           axis tight
-           %ylim([0 5])
-           xlim([0 nMeans+1])
-           ylabel('Mean Firing Rate')
-           set(gca, 'XTickLabel',{''})
-           title('Variance versus mean; 10 s windows')
+            title(['Variance versus mean | WinSize = ' num2str(WinSize_s) ' s'])
+            xlim([-1 40])
+            ylim([-5 120])
             
-           
-                  legtext = ['Mean ' pm ' std'];
-                  legend(legtext );
-
-            title('Firing rate; 10 s window')
+            %% Firing rates
+            subplot(3, 2, 3)
+            xes =1:1:nMeans;
+            scatter (xes, meanFR, 'ko')
+            hold on
+            errorbar(xes,meanFR,stdFR,'.k');
+            axis tight
+            %ylim([0 5])
+            xlim([0 nMeans+1])
+            ylabel('Mean Firing Rate')
+            set(gca, 'XTickLabel',{''})
+            
+            legtext = ['Mean ' pm ' std'];
+            legend(legtext );
+            
+            title(['Firing rate | WinSize = ' num2str(WinSize_s) ' s'])
             
             %%
             subplot(3, 2, [5 6])
@@ -2599,22 +2600,41 @@ end
             for o = 1:nFiles
                 
                 theseWaveforms = waveforms{o};
-            meanWaveform = mean(theseWaveforms);
-            xes = 1:1:size(meanWaveform, 2);
-            
-            xes = xes + offset;
-            hold on
-            plot(xes, meanWaveform);
-            
-            offset = offset+100;
-            
+                meanWaveform = mean(theseWaveforms);
+                xes = 1:1:size(meanWaveform, 2);
+                
+                xes = xes + offset;
+                hold on
+                plot(xes, meanWaveform);
+                
+                offset = offset+100;
+                
             end
             
+            % wrapped_label = textwrap(legtext_names, 20);
+            legend(legtext_names)
+            legend('location', 'eastoutside')
+            My_LGD = legend;
+            legend('location', 'eastoutside')
+            My_LGD.NumColumns = 4; %%%%%%%%%%%%%%%%%%%%%%%%%%
+            
+            title(['Spike Waveforms'])
+            set(gca, 'XTickLabel',{''})
+            set(gca, 'YTickLabel',{''})
+            
+            %%
+            saveName = [spikeDir 'PopulationAnalysis'];
+            
+            plotpos = [0 0 25 25];
+            print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            print_in_A4(0, saveName, '-depsc', 0, plotpos);
             
             
             
             
         end
+        
+        
         
         
         
