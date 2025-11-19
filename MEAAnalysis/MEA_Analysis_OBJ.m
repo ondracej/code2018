@@ -2579,7 +2579,8 @@ end
            scatter (xes, meanFR, 'ko')
            hold on
            errorbar(xes,meanFR,stdFR,'.b'); 
-           ylim([0 5])
+           axis tight
+           %ylim([0 5])
            xlim([0 nMeans+1])
            ylabel('Mean Firing Rate')
            set(gca, 'XTickLabel',{''})
@@ -2592,7 +2593,7 @@ end
             title('Firing rate; 10 s window')
             
             %%
-            subplot(3, 2, [4 5])
+            subplot(3, 2, [5 6])
             offset = 0;
             
             for o = 1:nFiles
@@ -3545,7 +3546,7 @@ end
                             cnt = cnt +1;
                         end
                         
-                        legText{i} = ['Ch-' num2str(chanNames(i)) ' | n = ' num2str(numel(timestampsToPlot)) '| ID = ' num2str(thisUnitID) ];
+                        legText{i} = ['Ch-' num2str(chanNames(1)) ' | n = ' num2str(numel(timestampsToPlot)) '| ID = ' num2str(thisUnitID) ];
                         
                         if i == numel(TimestampsFinal)
                             
@@ -3607,7 +3608,7 @@ end
                         
                         if i == numel(TimestampsFinal)
                             axis tight
-                            ylim([-30000 40000])
+                            ylim([-30000 60000])
                             xlabel('Samples')
                             ylabel('Waveform Amplitue (AU)')
                             title('Spike Waveforms')
@@ -3618,13 +3619,13 @@ end
                         binEdges = 0:10:1000;
                         binCenters = binEdges(1:end-1) + diff(binEdges)/2;
                         
-                        subplot(2, 4, [7 8]);
+                        subplot(2, 4, [7 8])
                         isi = diff(TimestampsFinal{i});
                         isi_ms = isi*1000;
                         [counts, ~] = histcounts(isi_ms, binEdges);
                         
                         hold on
-                        bar(binCenters, counts, 'FaceAlpha', 0.9, 'FaceColor', col);
+                        bar(binCenters, counts, 'FaceAlpha', 0.25, 'FaceColor', col);
                         
                         if i == numel(TimestampsFinal)
                             legend(legText)

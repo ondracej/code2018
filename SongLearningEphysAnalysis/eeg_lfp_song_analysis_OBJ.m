@@ -1,17 +1,153 @@
-classdef songLearningEphysAnalysis_OBJ < handle
+classdef eeg_lfp_song_analysis_OBJ < handle
     
     
     properties (Access = public)
         
         PATH
-        ANALYSIS
-        DATA
-        PLOT
+        INFO
+        SONGS
+        VIDEO
+        EPHYS
     end
     
     methods
         
-        function obj = getPathInfo(obj)
+        function obj = import_xls_data(obj, xlsFile, startRow, endRow, P)
+            
+            [filepath,name,ext] = fileparts(xlsFile);
+            
+            %% Loading the file
+            opts = spreadsheetImportOptions("NumVariables", 19);
+            
+            % Specify sheet and range
+            opts.Sheet = "Sheet1";
+            opts.DataRange = "A" + startRow(1) + ":S" + endRow(1);
+            
+            % Specify column names and types
+            opts.VariableNames = ["dph", "date", "SongsAM", "SongsPM", "Video", "VidDir", "Ephys", "EphysRecName", "EEG_L_Ant", "EEG_R_Ant", "EEG_L_Post", "EEG_R_Post", "LFP_m", "LFP_l", "FirstFrame", "LastFrame", "LightsOff", "LightsOn", "FramesOffOn"];
+            opts.VariableTypes = ["double", "datetime", "double", "double", "double", "string", "double", "string", "double", "double", "double", "double", "double", "double", "string", "string", "string", "string", "string"];
+            opts = setvaropts(opts, [6, 8, 15, 16, 17, 18, 19], "WhitespaceRule", "preserve");
+            opts = setvaropts(opts, [6, 8, 15, 16, 17, 18, 19], "EmptyFieldRule", "auto");
+            
+            % Import the data
+            T = readtable(xlsFile, opts, "UseExcel", false);
+            
+            for idx = 2:length(startRow)
+                opts.DataRange = "A" + startRow(idx) + ":S" + endRow(idx);
+                tb = readtable(xlsFile, opts, "UseExcel", false);
+                T = [T; tb]; %#ok<AGROW>
+            end
+            
+            %% Adding the data to the data_obj
+            
+            nEntries = size(T, 1);
+            
+            obj.INFO.birdName = name;
+            obj.INFO.date = T.date;
+            
+            date = obj.INFO.date;
+            
+            date_txt_month = datestr(date, 'mmm-dd-yyyy');
+            date_txt_year = datestr(date, 'yyyy-mm-dd');
+            
+            obj.INFO.date_txt_month = date_txt_month;
+            obj.INFO.date_txt_year = date_txt_year;
+            
+            obj.INFO.dph = T.dph;
+            obj.INFO.nEntries = nEntries;
+            
+            obj.SONGS.SongsAM = T.SongsAM;
+            obj.SONGS.SongsPM = T.SongsPM;
+            
+            %% Fix Video Syntax
+            
+            FirstFrame = T.FirstFrame;
+            LastFrame = T.LastFrame;
+            LightsOff = T.LightsOff;
+            LightsOn = T.LightsOn;
+            FramesOffOn = T.FramesOffOn;
+            
+            underscore = '_';
+            colon = ':';
+            
+            for k = 1:5
+                switch k
+                    case 1
+                        Text =  FirstFrame;
+                    case 2
+                        Text =  LastFrame;
+                    case 3
+                        Text =  LightsOff;
+                    case 4
+                        Text =  LightsOn;
+                    case 5
+                        Text =  FramesOffOn;
+                end
+                
+                text_c = [];
+                for j =1:nEntries
+                    thisText = Text{j};
+                    underscoreInds = find(thisText == underscore);
+                    if isempty(underscoreInds)
+                        text_c{j} = [];
+                    else
+                        
+                        thisText(underscoreInds) = colon;
+                        text_c{j} = thisText;
+                    end
+                end
+                
+                switch k
+                    case 1
+                        obj.VIDEO.FirstFrame = text_c;
+                    case 2
+                        
+                        obj.VIDEO.LastFrame = text_c;
+                    case 3
+                        
+                        obj.VIDEO.LightsOff = text_c;
+                    case 4
+                        
+                        obj.VIDEO.LightsOn = text_c;
+                    case 5
+                        
+                        obj.VIDEO.FramesOffOn = text_c;
+                end
+                
+            end
+            
+            obj.VIDEO.VidDir = T.VidDir;
+            %% extract Ephys Time from file name
+            dash = '-';
+            for j =1:nEntries
+                thisText = T.EphysRecName{j};
+                underscoreInds = find(thisText == underscore);
+                if isempty(underscoreInds)
+                    EphysStartTime{j} = [];
+                else
+                    
+                    tempTxt = thisText(underscoreInds(2)+1:end);
+                    dashInds = find(tempTxt == dash);
+                    tempTxt(dashInds) = colon;
+                    
+                    EphysStartTime{j} = tempTxt;
+                end
+            end
+            
+            
+            
+            obj.EPHYS.Ephys = T.Ephys;
+            obj.EPHYS.EphysRecName = T.EphysRecName;
+            obj.EPHYS.EphysStartTime = EphysStartTime;
+            obj.EPHYS.EEG_L_Ant = T.EEG_L_Ant;
+            obj.EPHYS.EEG_R_Ant = T.EEG_R_Ant;
+            obj.EPHYS.EEG_L_Post = T.EEG_L_Post;
+            obj.EPHYS.EEG_R_Post = T.EEG_R_Post;
+            obj.EPHYS.LFP_l = T.LFP_l;
+            obj.EPHYS.LFP_m = T.LFP_m;
+            
+            
+            %% PATH stuff
             
             if ispc
                 dirD = '\';
@@ -19,10 +155,19 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 dirD = '/';
             end
             
+            obj.PATH.dirD  = dirD ;
+            obj.PATH.AnalysisPath = P.AnalysisPath;
+            obj.PATH.EphysPath = P.EphysPath;
+            obj.PATH.OriginalSongPath = P.OriginalSongPath;
+            obj.PATH.SongPath = P.SongPath;
+            obj.PATH.VideoPath = P.VideoPath;
+            obj.PATH.PlotPath = P.PlotPath;
+            obj.PATH.AllPlots= P.AllPlots;
+            
             %% adding code paths
             
             switch gethostname
-                case 'DESKTOP-PBLRH65'
+                case 'DESKTOP-PBLRH65' % Zalamander
                     
                     code2018Path = 'G:\code\Github\code2018\SongLearningEphysAnalysis\';
                     analysisToolsPath = 'G:\code\Github\analysis-tools';
@@ -42,54 +187,13 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 disp('Please check definition for code2018 path in "getPathInfo"')
             end
             
-            eegChans = obj.DATA.eegChans;
-            %lfpChan = obj.DATA.lfpChan;
-            AnalysisDir = obj.PATH.AnalysisDir;
-            ephys_path = [AnalysisDir 'Ephys' dirD];
             
-            obj.PATH.ephys_path = ephys_path;
-            
-            % Ask user for binary file
-            %{
-            [eeg_name, eeg_path] = uigetfile('*.continuous', 'Select EEG channel to analyze');
-            [lfp_name, lfp_path] = uigetfile('*.continuous', 'Select LFP channel to analyze');
-            [vid_path] = uigetdir(obj.PATH.AnalysisDir, 'Select video directory');
-            
-            ephys_analysis_dir = [obj.PATH.AnalysisDir 'Ephys_Analysis' dirD];
-            if exist(ephys_analysis_dir, 'dir') ==0
-                mkdir(ephys_analysis_dir);
-                disp(['Created directory: ' ephys_analysis_dir])
-            end
-            
-            video_analysis_dir = [obj.PATH.AnalysisDir 'Video_Analysis' dirD];
-            if exist(video_analysis_dir , 'dir') ==0
-                mkdir(video_analysis_dir );
-                disp(['Created directory: ' video_analysis_dir ])
-            end
-            
-            video_analysis_dir = [obj.PATH.AnalysisDir 'Video_Analysis' dirD];
-            if exist(video_analysis_dir , 'dir') ==0
-                mkdir(video_analysis_dir );
-                disp(['Created directory: ' video_analysis_dir ])
-            end
-        
-            %}
-            %obj.PATH.lfp_name = lfpChan;
-            %obj.PATH.lfp_path = ephys_path;
-            
-            %obj.PATH.vid_path = [vid_path dirD];
-            %obj.PATH.vid_path = [vid_path dirD];
-            
-            %obj.PATH.ephys_analysis_dir = [ephys_analysis_dir ];
-            %obj.PATH.video_analysis_dir = [video_analysis_dir ];
-            
-            obj.PATH.dirD  = dirD ;
             
         end
         
         
         
-        function obj = analyze_mvmt_in_video_frames(obj, framesOffOn)
+        function obj = analyze_mvmt_in_video_frames(obj, entry_ind)
             
             
             % Based on Hamed's birdvid_move_extract.m
@@ -106,10 +210,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             
-            vid_path = obj.PATH.vid_path;
-            
-            
-            %vid_path = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\DATA_VIDEO\converted_Imgs_1_frame_per_min\w038_01_09_21_00219-converted_img\';
+            vid_path = [obj.PATH.VideoPath obj.VIDEO.VidDir{entry_ind} obj.PATH.dirD];
             
             %vidroi=VideoReader(vid_path);
             %disp('object was created for the video file. start of reading frames...');
@@ -191,14 +292,57 @@ classdef songLearningEphysAnalysis_OBJ < handle
             last_im=im1;
             last_dif=dif;
             % waitbar(1,f,'Video read completely!');
+            %%
             
-            %figure; plot(r_dif)
-            %axis tight
-            %ylim([0 60000])
+            figure(100); clf
+            FramesOffOn = obj.VIDEO.FramesOffOn{entry_ind};
+            colon = ':';
+            colonInds = find(FramesOffOn == colon);
+            FrameLightOff = str2double(FramesOffOn(1:colonInds-1));
+            FrameLightOn = str2double(FramesOffOn(colonInds+1:end));
+            hold on
+            line([FrameLightOff FrameLightOff], [0 1e5], 'color', 'r', 'linestyle', ':')
+            line([FrameLightOn+1 FrameLightOn+1], [0 1e5], 'color', 'r', 'linestyle', ':')
             
-            %xlabel('Time (s)')
-            obj.ANALYSIS.VID.r_dif = r_dif;
-            obj.ANALYSIS.VID.framesOffOn = framesOffOn;
+            plot(r_dif)
+            axis tight
+            ylim([0 1e5])
+            
+            DiffFrames_12hr = FrameLightOn-FrameLightOff;
+            framesPerHr = round(DiffFrames_12hr/12);
+            
+            xticks = 1:framesPerHr:numel(r_dif);
+            set(gca, 'xtick', xticks);
+            xticklabs = 1:1:numel(xticks);
+            
+            xlabs = [];
+            for j = 1:numel(xticklabs)
+                xlabs{j} = num2str(xticklabs(j));
+            end
+            set(gca, 'xticklabel', xlabs)
+            xlabel('Time (Hr)')
+            ylabel('Movement (AU)')
+            
+            date_title = obj.INFO.date_txt_month(entry_ind,:);
+            
+            title([ obj.INFO.birdName{:} ': ' date_title]);
+            date_title_savetxt = obj.INFO.date_txt_year(entry_ind,:);
+            save_txt = [obj.INFO.birdName{:} '_' date_title_savetxt];
+            
+            %%
+            PlotDir = [obj.PATH.AllPlots obj.INFO.birdName{:} obj.PATH.dirD 'VideoMvmt' obj.PATH.dirD];
+            if exist(PlotDir, 'dir') == 0
+                mkdir(PlotDir);
+                disp(['Created: '  PlotDir])
+            end
+            
+            plotpos = [0 0 18 10];
+            
+            plot_filename = [PlotDir save_txt];
+            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+            print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+            
+            save(plot_filename, 'r_dif', 'xticks', 'xlabs', 'save_txt', '-v7.3')
             
         end
         
@@ -1576,13 +1720,13 @@ classdef songLearningEphysAnalysis_OBJ < handle
         
         function obj = metaAnalysis_make_plot_of_entropy_means_versus_age(obj, allEntropyDirs, birdNames)
             
-             %% Ages
- 
-             w025_age = [55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86]; % Ch 13
-             w027_age = [59 60 61 62 63 64 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85]; % Ch 53/29
-             w037_age = [46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75]; % Ch 12
-             w038_age = [51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67]; % Ch 21
-
+            %% Ages
+            
+            w025_age = [55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86]; % Ch 13
+            w027_age = [59 60 61 62 63 64 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85]; % Ch 53/29
+            w037_age = [46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75]; % Ch 12
+            w038_age = [51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67]; % Ch 21
+            
             nDirs = numel(allEntropyDirs);
             for k = 1:nDirs
                 
@@ -1651,9 +1795,9 @@ classdef songLearningEphysAnalysis_OBJ < handle
             end
             
             figure(303); clf
-            markers = {'v', 'o', 'sq', 'd'}; 
+            markers = {'v', 'o', 'sq', 'd'};
             cols = {[0, 0.4470, 0.7410]; [0.8500, 0.3250, 0.0980]; [0.4660, 0.6740, 0.1880]; [0.4940, 0.1840, 0.5560]};
-           
+            
             for s = 1:nDirs
                 
                 all_song_means = all_dy_song_stats.song_mean{s};
@@ -1687,9 +1831,9 @@ classdef songLearningEphysAnalysis_OBJ < handle
             scatter(all_age_means_concat, all_song_means_concat);
             hold on
             %ylim([0 300])
-              xlim ([45 90])
+            xlim ([45 90])
             
-             title(['Mean Wiener Entropy versus age'])
+            title(['Mean Wiener Entropy versus age'])
             [r, p] = corrcoef(all_song_means_concat, all_age_means_concat);
             r
             p
@@ -1702,10 +1846,10 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
             %%
             
-               figure(305); clf
-            markers = {'v', 'o', 'sq', 'd'}; 
+            figure(305); clf
+            markers = {'v', 'o', 'sq', 'd'};
             cols = {[0, 0.4470, 0.7410]; [0.8500, 0.3250, 0.0980]; [0.4660, 0.6740, 0.1880]; [0.4940, 0.1840, 0.5560]};
-           
+            
             for s = 1:nDirs
                 
                 all_song_meansVar = all_dy_song_stats.song_meanVar{s};
@@ -1739,9 +1883,9 @@ classdef songLearningEphysAnalysis_OBJ < handle
             scatter(all_age_means_concat, all_song_meansVar_concat);
             hold on
             %ylim([0 300])
-              xlim ([45 90])
+            xlim ([45 90])
             
-             title(['Mean Wiener EntropyVar versus age'])
+            title(['Mean Wiener EntropyVar versus age'])
             [r, p] = corrcoef(all_song_meansVar_concat, all_age_means_concat);
             r
             p
@@ -1756,6 +1900,310 @@ classdef songLearningEphysAnalysis_OBJ < handle
             disp('')
             
         end
+        
+        function obj = meta_make_plot_of_entropy_with_times_first_last(obj, firstOrLastSwitch)
+            
+            dbstop if error
+            
+            switch firstOrLastSwitch
+                
+                case 1
+                    entropyFilesDir = [obj.PATH.AllEntropyDataDir 'First' obj.PATH.dirD];
+                    
+                case 2
+                    entropyFilesDir = [obj.PATH.AllEntropyDataDir 'Last' obj.PATH.dirD];
+            end
+            
+            entropyFileNames = dir(fullfile(entropyFilesDir, '*.mat'));
+            entropyFileNames = {entropyFileNames.name}';
+            nFiles_entropy = numel(entropyFileNames);
+            
+            underscore = '_';
+            
+            for j = 1:nFiles_entropy
+                
+                thisEntropyName = entropyFileNames{j,1};
+                bla = find(thisEntropyName ==underscore);
+                fullEntropyName{j} = thisEntropyName(1:bla-1);
+                
+                dates{j} = entropyFileNames{j,1}(1:10);
+                %firstOrLast{j} = entropyFileNames{j,1}(12:15);
+            end
+            
+            
+            TimeInfoSaveDir_motifs = obj.PATH.TimeInfoSaveDir_motifs;
+            
+            motifTimeFileNames = dir(fullfile(TimeInfoSaveDir_motifs, '*.mat'));
+            motifTimeFileNames = {motifTimeFileNames.name}';
+            nFiles_motifs = numel(motifTimeFileNames);
+            
+            for j = 1:nFiles_motifs
+                
+                thisMotifName = motifTimeFileNames{j,1};
+                bla = find(thisMotifName ==underscore);
+                fullMotifName{j} = thisMotifName(1:bla-1);
+                
+                % dates_motifTimes{j} = motifTimeFileNames{j,1}(1:10);
+                %  firstOrLast_motifTimes{j} = motifTimeFileNames{j,1}(12:15);
+                
+            end
+            
+            
+            %% Pool all Data over days
+            %% This assumes that the first file is the "first" motifs
+          
+            figHHH = figure(105); clf
+            ylims_V = [0 1];
+            ylims_E  = [-1.8 -0.6];
+            
+            for j = 1:nFiles_entropy
+                
+                
+                thisDate = dates{j};
+                
+                ind = strmatch(thisDate, obj.INFO.date_txt_year);
+                
+                switch firstOrLastSwitch
+                    
+                    case 1 % First
+                        xlims = [datetime([dates{j} ' 9:00:00']) datetime([dates{j} ' 18:00:00'])];
+                        lineData1_time = obj.VIDEO.LastFrame(ind);
+                        lineData2_time = obj.VIDEO.LightsOn(ind);
+                        
+                    case 2 %last
+                        xlims = [datetime([dates{j} ' 14:00:00']) datetime([dates{j} ' 23:00:00'])];
+                        lineData1_time = obj.VIDEO.FirstFrame(ind);
+                        lineData2_time = obj.VIDEO.LightsOff(ind);
+                        
+                end
+                
+                thisEntropyFile_name = fullEntropyName{j};
+                
+                index = cellfun(@(a) strmatch(a,thisEntropyFile_name),fullMotifName,'uniform',false);
+                nonEmptyInds = ~cellfun(@isempty,index);
+                
+                nonEmptyInds = find(nonEmptyInds ==1);
+                
+                
+                d = load([entropyFilesDir entropyFileNames{j}]);
+                if ~isempty(nonEmptyInds)
+                    m = load([TimeInfoSaveDir_motifs  motifTimeFileNames{nonEmptyInds}]);
+                else
+                    continue
+                end
+                
+                allMeans = d.E.all_means_wEntropy{:};
+                allVars = d.E.all_vars_wEntropy{:};
+                
+                motif_datetime = m.TimeInfo.ds;
+                
+                %% Plot single plot of E and EV
+                figure(figHHH)
+                subplot(1, 2, 1)
+                plot(motif_datetime, allMeans, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
+                title([obj.INFO.birdName{:} {thisEntropyFile_name} 'Mean Wiener Entropy' ]);
+                
+                xlim(xlims)
+                ylim(ylims_E)
+                
+                subplot(1, 2, 2)
+                plot(motif_datetime, allVars, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
+                title(['Wiener Entropy Variance' ]);
+                xlim(xlims)
+                ylim(ylims_V)
+                
+                if ~isempty(lineData1_time{:})
+                    
+                    linedate1 = datetime([dates{j} ' ' lineData1_time{:}]);
+                    linedate2 = datetime([dates{j} ' ' lineData2_time{:}]);
+                    
+                    figure(figHHH)
+                    subplot(1, 2, 1)
+                    line([linedate1, linedate1], [ylims_E(1) ylims_E(2)], 'color', 'r')
+                    line([linedate2, linedate2], [ylims_E(1) ylims_E(2)], 'color', 'k')
+                    
+                    subplot(1, 2, 2)
+                    line([linedate1, linedate1], [ylims_V(1) ylims_V(2)], 'color', 'r')
+                    line([linedate2, linedate2], [ylims_V(1) ylims_V(2)], 'color', 'k')
+                end
+                
+                plotpos = [0 0 12 8];
+                plotName = [entropyFilesDir thisEntropyFile_name '_E-EV'];
+                print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+                %  print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            end
+        end
+        
+        
+        function obj = metaAnalysis_make_plot_of_entropy_across_days_with_times(obj)
+            
+            dbstop if error
+             entropyFilesDir = [obj.PATH.AllEntropyDataDir];
+                   
+            entropyFileNames = dir(fullfile(entropyFilesDir, '*.mat'));
+            entropyFileNames = {entropyFileNames.name}';
+            nFiles_entropy = numel(entropyFileNames);
+            
+            underscore = '_';
+            
+            for j = 1:nFiles_entropy
+                
+                thisEntropyName = entropyFileNames{j,1};
+                bla = find(thisEntropyName ==underscore);
+                fullEntropyName{j} = thisEntropyName(1:bla-1);
+                
+                dates{j} = entropyFileNames{j,1}(1:10);
+                %firstOrLast{j} = entropyFileNames{j,1}(12:15);
+            end
+            
+            
+            TimeInfoSaveDir_motifs = obj.PATH.TimeInfoSaveDir_motifs;
+            
+            motifTimeFileNames = dir(fullfile(TimeInfoSaveDir_motifs, '*.mat'));
+            motifTimeFileNames = {motifTimeFileNames.name}';
+            nFiles_motifs = numel(motifTimeFileNames);
+            
+            for j = 1:nFiles_motifs
+                
+                thisMotifName = motifTimeFileNames{j,1};
+                bla = find(thisMotifName ==underscore);
+                fullMotifName{j} = thisMotifName(1:bla-1);
+               
+            end
+            
+            
+            %% Pool all Data over days
+            %% This assumes that the first file is the "first" motifs
+            
+            figH = figure(103); clf
+            figHH = figure(104); clf
+           
+            ylims_V = [0 1];
+            ylims_E  = [-1.8 -0.6];
+            
+            for j = 1:nFiles_entropy
+                
+                
+                thisDate = dates{j};
+                
+                ind = strmatch(thisDate, obj.INFO.date_txt_year);
+                
+%                 switch firstOrLastSwitch
+%                     case 0
+%                         xlims = [datetime([dates{j} ' 9:00:00']) datetime([dates{j} ' 20:00:00'])];
+%                     case 1 % First
+%                         xlims = [datetime([dates{j} ' 9:00:00']) datetime([dates{j} ' 18:00:00'])];
+%                        
+%                         
+%                     case 2 %last
+%                         xlims = [datetime([dates{j} ' 14:00:00']) datetime([dates{j} ' 23:00:00'])];
+%                       
+%                         
+%                 end
+                
+                thisEntropyFile_name = fullEntropyName{j};
+                
+                index = cellfun(@(a) strmatch(a,thisEntropyFile_name),fullMotifName,'uniform',false);
+                nonEmptyInds = ~cellfun(@isempty,index);
+                
+                nonEmptyInds = find(nonEmptyInds ==1);
+                
+                
+                d = load([entropyFilesDir entropyFileNames{j}]);
+                if ~isempty(nonEmptyInds)
+                    m = load([TimeInfoSaveDir_motifs  motifTimeFileNames{nonEmptyInds}]);
+                else
+                    continue
+                end
+                
+                allMeans = d.E.all_means_wEntropy{:};
+                allVars = d.E.all_vars_wEntropy{:};
+                
+                motif_datetime = m.TimeInfo.ds;
+                
+                %% Plot single plot of E and EV
+              
+                if numel(allMeans) ~= numel(motif_datetime)
+                    keyboard
+                else
+                    %% plot summary plot across days
+                    figure(figH)
+                    hold on
+                    plot(motif_datetime, allMeans, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
+                    
+                    figure(figHH)
+                    hold on
+                    plot(motif_datetime, allVars, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
+                    
+                      lineData_time = obj.VIDEO.FirstFrame(ind);
+                      
+                    if ~isempty(lineData_time{:})
+                        
+                        lineData_LightsOn = obj.VIDEO.LightsOn(ind); % morning
+                        lineData_LastFrame = obj.VIDEO.LastFrame(ind); %unplugged (morning)
+                        lineData_time_FirstFrame = obj.VIDEO.FirstFrame(ind); %plugged in (night)
+                        lineData_time_LightsOff = obj.VIDEO.LightsOff(ind); %night
+                        
+                        linedate_LightsOn = datetime([dates{j} ' ' lineData_LightsOn{:}]);
+                        linedate_LastFrame = datetime([dates{j} ' ' lineData_LastFrame{:}]);
+                        
+                        linedate_FirstFrame = datetime([dates{j} ' ' lineData_time_FirstFrame{:}]);
+                        linedate_LightsOff = datetime([dates{j} ' ' lineData_time_LightsOff{:}]);
+                        
+                        figure(figH) %Entropy
+                        line([linedate_LightsOn, linedate_LightsOn], [ylims_E(1) ylims_E(2)], 'color', 'k')
+                        line([linedate_LightsOff, linedate_LightsOff], [ylims_E(1) ylims_E(2)], 'color', 'k')
+                        line([linedate_LastFrame, linedate_LastFrame], [ylims_E(1) ylims_E(2)], 'color', 'r', 'lineStyle', '--')
+                        line([linedate_FirstFrame, linedate_FirstFrame], [ylims_E(1) ylims_E(2)], 'color', 'r', 'lineStyle', '--')
+                        
+                        figure(figHH) %Variance
+                         line([linedate_LightsOn, linedate_LightsOn], [ylims_V(1) ylims_V(2)], 'color', 'k')
+                        line([linedate_LightsOff, linedate_LightsOff], [ylims_V(1) ylims_V(2)], 'color', 'k')
+                        line([linedate_LastFrame, linedate_LastFrame], [ylims_V(1) ylims_V(2)],  'color', 'r', 'lineStyle', '--')
+                        line([linedate_FirstFrame, linedate_FirstFrame], [ylims_V(1) ylims_V(2)],  'color', 'r', 'lineStyle', '--')
+                     
+                    end
+                    
+                
+                    
+                    
+                
+                end
+            end
+            
+            figure(figH)
+            xticks(datetime([dates{1} ' 9:00:00']) : days(1) : (datetime([dates{end} ' 9:00:00'])))
+            xtickangle(90)
+            titleTxt = [obj.INFO.birdName{:} ': Mean Wiener Entropy Across Days'];
+            title(titleTxt)
+            
+            xlim([datetime([dates{1} ' 9:00:00']) - days(1) datetime([dates{end} ' 9:00:00']) + days(1)])
+            
+            ylim(ylims_E )
+            
+            plotpos = [0 0 15 20];
+            plotName = [entropyFilesDir obj.PATH.dirD obj.INFO.birdName{:} '_EntropyTimesAcrossDays'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+            
+            figure(figHH)
+            xticks(datetime([dates{1} ' 9:00:00']) - days(1) : days(1) : (datetime([dates{end} ' 9:00:00']) + days(1)))
+            xtickangle(90)
+            titleTxt = [obj.INFO.birdName{:} ': Wiener Entropy Variance Across Days'];
+            title(titleTxt)
+            xlim([datetime([dates{1} ' 9:00:00']) - days(1) datetime([dates{end} ' 9:00:00']) + days(1)])
+            
+            ylim(ylims_V)
+            
+            plotpos = [0 0 15 20];
+            plotName = [entropyFilesDir obj.PATH.dirD obj.INFO.birdName{:} '_EntropyVarianceTimesAcrossDays'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+        end
+        
+        
         
         
         
@@ -1903,13 +2351,13 @@ classdef songLearningEphysAnalysis_OBJ < handle
                             titleTxt = ' Mean Wiener Entropy Across Days - Means';
                             saveName = '__EntropyMeansAcrossDays_means';
                             allMeans = allMeans_Mean;
-                              ylims  = [-1.8 -0.6];
+                            ylims  = [-1.8 -0.6];
                         case 2
                             thesemeans = allDates_vars{k}; % Entropy Variance means
                             titleTxt = ' Mean Wiener Entropy Variance Across Days - Means';
                             saveName = '__EntropyVarianceMeansAcrossDays_means';
                             allMeans = allVars_Mean;
-                              ylims  = [0 1];
+                            ylims  = [0 1];
                     end
                     
                     
@@ -1952,7 +2400,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             for oo = 1:2
                 figure(108+oo); clf
                 offset  = 300;
-               
+                
                 for k = 1:numel(allDates_vars)
                     
                     switch oo
@@ -1997,11 +2445,11 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 end
                 
                 
-                   xval = firstX(end)+round((lastX(end) - firstX(end))/2); % we do this to add the last x tick
-                   
-                   
-                   ylim(ylims);
-                   
+                xval = firstX(end)+round((lastX(end) - firstX(end))/2); % we do this to add the last x tick
+                
+                
+                ylim(ylims);
+                
                 xticks = [allXVals xval];
                 set(gca, 'xtick', xticks)
                 set(gca, 'xticklabels', allDates_text)
@@ -2460,7 +2908,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
         end
         
-        
+        %% plotMotifExamples
         function obj = plotMotifExamples(obj, motifDataDir, plotDir, doSortedMotifs)
             
             
@@ -2503,13 +2951,10 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 
                 allFilesThisSyl = ismember(SText, uniqueSyls{oo});
                 allfileInds = find(allFilesThisSyl ==1);
-                
-                
                 thisSylFiles = allfileInds;
                 
-                
-                
-                spec_scale = 0.08;
+                %%
+                spec_scale = 0.08; %%%%%%%%%%%%%%%%%%
                 motiv_count =  35;
                 height = 1/motiv_count;
                 
@@ -2557,7 +3002,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
                             ylim ([0 8000]);
                             axis off
                             annotation(figH ,'textbox',[L_edge-horz_space (cnt)*height+.01 0.02 0.02],'String', NText(file_cnt),'FitBoxToText','off', 'linestyle', 'none');
-                           
+                            
                             cnt = cnt+1;
                             file_cnt = file_cnt+1;
                             
@@ -2586,12 +3031,14 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
         end
         
-        function obj = calcTimeOfRecFiles(obj, syllableDir, OriginalSongFileDir, TimeInfoSaveDir )
+        function obj = calcTimeOfSongFiles(obj, songDir, OriginalSongFileDir)
+            dbstop if error
             
-            dbstop if error 
-            fileNames = dir(fullfile(syllableDir, '*.wav'));
+            TimeInfoSaveDir = obj.PATH.TimeInfoSaveDir_motifs;
+            
+            fileNames = dir(fullfile(songDir, '*.wav'));
             f = filesep;
-            [filepath,name,ext] = fileparts(syllableDir);
+            [filepath,name,ext] = fileparts(songDir);
             
             dateName_inds = find(filepath == f);
             dateName = filepath(dateName_inds(end)+1:end);
@@ -2642,13 +3089,13 @@ classdef songLearningEphysAnalysis_OBJ < handle
             nonEmptyInds = find(nonEmptyInds ==1);
             times = [];
             
-                sInMin = 60;
-                   sInHr = 3600;
-                   
-                   df_h = 10;
-                   df_m = 0;
-                   df_s = 0;
-                   
+            sInMin = 60;
+            sInHr = 3600;
+            
+            df_h = 10;
+            df_m = 0;
+            df_s = 0;
+            
             for k = 1:numel(nonEmptyInds)
                 thisInd = nonEmptyInds(k);
                 
@@ -2658,18 +3105,17 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 %times{k} = datetime(dateData.datenum,'ConvertFrom','datenum');
                 times{k} = dateData.date;
                 
+                t= datetime(times{k});
                 
-                   t= datetime(times{k});
-             
-                   [h,m,s] = hms(t);
-                   
-                   %% Now we compute the duration of time that passed since the defualt 10:00:00
-                   
-                   dur_h = h-df_h;
-                   dur_m = m-df_m;
-                   dur_s = s-df_s;
-                   
-                   totalDur_s(k) = dur_h*sInHr + dur_m*sInMin + dur_s;
+                [h,m,s] = hms(t);
+                
+                %% Now we compute the duration of time that passed since the default 10:00:00
+                
+                dur_h = h-df_h;
+                dur_m = m-df_m;
+                dur_s = s-df_s;
+                
+                totalDur_s(k) = dur_h*sInHr + dur_m*sInMin + dur_s;
                 
             end
             
@@ -2693,29 +3139,12 @@ classdef songLearningEphysAnalysis_OBJ < handle
             meanMin = df_m+nMin;
             meanS = df_s+leftover_s;
             
-            
             if meanS == 60
-               meanMin = meanMin +1;
-               meanS = 0;
+                meanMin = meanMin +1;
+                meanS = 0;
             end
-            %%
             
-            
-          
-            
-            
-            %      ds = datetime({'02-Feb-2018 11:08:11'
-            %    '02-Feb-2018 12:08:13'
-            %    '02-Feb-2018 01:08:14'
-            %    '02-Feb-2018 02:08:15'
-            %    '02-Feb-2018 03:08:17'
-            %    '02-Feb-2018 04:08:18'
-            %    '02-Feb-2018 05:08:20'
-            %    '02-Feb-2018 06:08:21'
-            %    '02-Feb-2018 07:08:23'
-            %    '02-Feb-2018 08:08:24'});
-            %
-            
+            %% Plotting
             ds = datetime(times);
             rs = 1:1:numel(times);
             figure(100); clf
@@ -2723,6 +3152,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             set(gca, 'YDir','reverse')
             
             thisDateForLims = times{1}(1:11);
+            
             thisFirstTimeForLims = '10:00:00';
             thisLastTimeForLims = '22:00:00';
             
@@ -2733,16 +3163,13 @@ classdef songLearningEphysAnalysis_OBJ < handle
             ylimLast = datetime(ylimLastTime);
             
             ylim([ylimFirst ylimLast])
-         
             
-            
-            
-              meanTimeTxt = [ num2str(meanHr) ':' num2str(meanMin) ':' num2str(meanS)]; 
+            meanTimeTxt = [ num2str(meanHr) ':' num2str(meanMin) ':' num2str(meanS)];
             meandatetimeTxt = [thisDateForLims ' '  meanTimeTxt];
             
             AVG_TIME = datetime(meandatetimeTxt);
             
-            hold on 
+            hold on
             plot(50, AVG_TIME, '*k')
             
             legTxt = ['Mean Time = ' meanTimeTxt ' +/- ' num2str(roundn(stdDur_Hr, -3)) ' Hr (std)'];
@@ -2750,14 +3177,14 @@ classdef songLearningEphysAnalysis_OBJ < handle
             ylabel('Clock Time (Hr)')
             xlabel('N')
             title(dateName)
-          
+            
             saveDir = TimeInfoSaveDir;
-                    
-                    plotpos = [0 0 12 15];
-                    RecName_save = [saveDir dateName ];
-                    print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
-                    print_in_A4(0, RecName_save, '-depsc', 0, plotpos);
-                   
+            
+            plotpos = [0 0 12 15];
+            RecName_save = [saveDir dateName ];
+            print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
+            print_in_A4(0, RecName_save, '-depsc', 0, plotpos);
+            
             TimeInfo.motifFilenames = thisMotifName;
             TimeInfo.times = times;
             TimeInfo.ds = ds;
@@ -2765,7 +3192,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             TimeInfo.AVG_TIME = AVG_TIME;
             TimeInfo.stdDur_Hr = stdDur_Hr;
             
-            TimeInfo.syllableDir = syllableDir;
+            TimeInfo.syllableDir = songDir;
             TimeInfo.originalSongDateToLoad = originalSongDateToLoad;
             
             save([TimeInfoSaveDir dateName '_timeINFO.mat'], 'TimeInfo', '-v7.3')
@@ -2773,12 +3200,14 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
         end
         
-        function obj = calcTimeOfPlaybackFiles(obj, syllableDir, TimeInfoSaveDir )
+        function obj = calcTimeOfPlaybackFiles(obj, syllableDir)
             
             dbstop if error
+            
+            TimeInfoSaveDir = obj.PATH.TimeInfoSaveDir_playbacks;
+            
             fileNames = dir(fullfile(syllableDir, '*.wav'));
             nFiles = numel(fileNames);
-            
             
             if nFiles ~= 0
                 
@@ -2837,28 +3266,11 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 meanMin = df_m+nMin;
                 meanS = df_s+leftover_s;
                 
-                
                 if meanS == 60
                     meanMin = meanMin +1;
                     meanS = 0;
                 end
                 %%
-                
-                
-                
-                
-                
-                %      ds = datetime({'02-Feb-2018 11:08:11'
-                %    '02-Feb-2018 12:08:13'
-                %    '02-Feb-2018 01:08:14'
-                %    '02-Feb-2018 02:08:15'
-                %    '02-Feb-2018 03:08:17'
-                %    '02-Feb-2018 04:08:18'
-                %    '02-Feb-2018 05:08:20'
-                %    '02-Feb-2018 06:08:21'
-                %    '02-Feb-2018 07:08:23'
-                %    '02-Feb-2018 08:08:24'});
-                %
                 
                 ds = datetime(playbacktimes);
                 rs = 1:1:numel(playbacktimes);
@@ -2877,8 +3289,6 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 ylimLast = datetime(ylimLastTime);
                 
                 ylim([ylimFirst ylimLast])
-                
-                
                 
                 
                 meanTimeTxt = [ num2str(meanHr) ':' num2str(meanMin) ':' num2str(meanS)];
@@ -2915,7 +3325,6 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 
                 save([TimeInfoSaveDir dateName '_PlaybackTimeINFO.mat'], 'TimeInfo', '-v7.3')
                 
-                
             else
                 
                 disp(['No PLayback files for ' syllableDir])
@@ -2924,7 +3333,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
         end
         
         
-        function obj = calc_wienerEntropy_on_syllables(obj, syllableDir, AllEntropyDataDir)
+        function obj = calc_wienerEntropy_on_motifs(obj, syllableDir, AllEntropyDataDir)
             
             
             % From fb_plugin_WienerEntropy
@@ -3007,9 +3416,9 @@ classdef songLearningEphysAnalysis_OBJ < handle
                     samplestart = 1;
                     buffersize = 512;
                     
-                 
                     
-                 %   specgram1((Data_t/.08),512,Fs,400,360);
+                    
+                    %   specgram1((Data_t/.08),512,Fs,400,360);
                     
                     %{
                 %% ID onsets
@@ -3093,7 +3502,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
                     
                     cnt = cnt +1;
                     
-                   %{ 
+                    %{
                     figure(103); clf
                     subplot(3, 1, 1)
                     specgram1((Data_t/.08),512,Fs,400,360);
@@ -3582,21 +3991,21 @@ classdef songLearningEphysAnalysis_OBJ < handle
         
         
         function [obj] =  metaAnalysis_plot_song_stats_and_age_across_nights(obj, songDirs, TextStr )
-           
+            
             dbstop if error
             
-             %% L Posterior EEG
-%             w025_age = [54 55 56 57 60 61 62 63 64 66 67 71 72 75];
-%             w027_age = [59 60 61 62 65 66 67 68 70 71 72 74 75 76 77 78 81 82 83 84];
-%             w037_age = [ 46 47 48 49 50 51 53 54 55 56 57 58 59 61 62 64 65 66 67 68 69 72 73];
-%             w038_age = [ 50 51 52 54 55 56 57 58 59 60 62 63 65 66];
-
-             %% R Posterior EEG
-%  
-             w025_age = [54 55 56 57 60 61 62 63 64 66 67 71 72 75 76 77 78 79 82 83 84 85]; % Ch 13
-             w027_age = [59 60 61 62 65 66 67 68 70 71 72 74 75 76 77 78 81 82 83 84]; % Ch 53/29
-             w038_age = [ 50 51 52 54 55 56 57 58 59 60 62 63 65 66]; % Ch 21
-
+            %% L Posterior EEG
+            %             w025_age = [54 55 56 57 60 61 62 63 64 66 67 71 72 75];
+            %             w027_age = [59 60 61 62 65 66 67 68 70 71 72 74 75 76 77 78 81 82 83 84];
+            %             w037_age = [ 46 47 48 49 50 51 53 54 55 56 57 58 59 61 62 64 65 66 67 68 69 72 73];
+            %             w038_age = [ 50 51 52 54 55 56 57 58 59 60 62 63 65 66];
+            
+            %% R Posterior EEG
+            %
+            w025_age = [54 55 56 57 60 61 62 63 64 66 67 71 72 75 76 77 78 79 82 83 84 85]; % Ch 13
+            w027_age = [59 60 61 62 65 66 67 68 70 71 72 74 75 76 77 78 81 82 83 84]; % Ch 53/29
+            w038_age = [ 50 51 52 54 55 56 57 58 59 60 62 63 65 66]; % Ch 21
+            
             nDirs = numel(songDirs);
             for k = 1:nDirs
                 
@@ -3617,9 +4026,9 @@ classdef songLearningEphysAnalysis_OBJ < handle
                         birdName = 'w038';
                 end
                 this_song_dir = songDirs{k};
-               
+                
                 textSearch = '*.mat*'; % text search for ripple detection file
-            
+                
                 song_files = dir(fullfile(this_song_dir,textSearch));
                 song_fileNames = {song_files.name}';
                 
@@ -3629,23 +4038,23 @@ classdef songLearningEphysAnalysis_OBJ < handle
                     keyboard
                 else
                     
-                  song_medianVar = []; song_meanVar = []; song_median = []; song_mean = [];
+                    song_medianVar = []; song_meanVar = []; song_median = []; song_mean = [];
                     for j = 1:nFiles
-                     S = load([this_song_dir song_fileNames{j}]);
-                       
+                        S = load([this_song_dir song_fileNames{j}]);
+                        
                         
                         song_mean(j) = S.E.all_mean_mean_wEntropy{:};
-                    song_median(j) = S.E.all_median_median_wEntropy{:};
-                    song_meanVar(j) = S.E.all_mean_var_wEntropy{:};
-                    song_medianVar(j) = S.E.all_median_var_wEntropy{:};
+                        song_median(j) = S.E.all_median_median_wEntropy{:};
+                        song_meanVar(j) = S.E.all_mean_var_wEntropy{:};
+                        song_medianVar(j) = S.E.all_median_var_wEntropy{:};
                         
                     end
                 end
-                  all_dy_song_stats.song_mean{k} = song_mean;
+                all_dy_song_stats.song_mean{k} = song_mean;
                 all_dy_song_stats.song_median{k} = song_median;
                 all_dy_song_stats.song_meanVar{k} = song_meanVar;
                 all_dy_song_stats.song_medianVar{k} = song_medianVar;
-                   all_dy_song_stats.birdAge{k} = birdAges;
+                all_dy_song_stats.birdAge{k} = birdAges;
                 all_dy_song_stats.birdName{k} = birdName;
             end
             
@@ -3687,8 +4096,8 @@ classdef songLearningEphysAnalysis_OBJ < handle
             scatter(all_age_means_concat, all_song_means_concat);
             hold on
             %ylim([0 300])
-             xlim ([45 85])
-             title(['Mean Wiener Entropy versus age - ' TextStr])
+            xlim ([45 85])
+            title(['Mean Wiener Entropy versus age - ' TextStr])
             [r, p] = corrcoef(all_song_means_concat, all_age_means_concat);
             r
             p
@@ -3699,9 +4108,9 @@ classdef songLearningEphysAnalysis_OBJ < handle
             print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
             print_in_A4(0, RecName_save, '-depsc', 0, plotpos);
             
-           %% Song Variance
-           
-           
+            %% Song Variance
+            
+            
             figure(303); clf
             %markers = {'v', 'o', 'sq', 'd'};
             markers = {'v', 'o', 'd'};
@@ -3740,8 +4149,8 @@ classdef songLearningEphysAnalysis_OBJ < handle
             scatter(all_age_means_concat, all_song_means_concat);
             hold on
             %ylim([0 300])
-             xlim ([45 85])
-             title(['Mean Wiener Entropy Variance versus age - ' TextStr])
+            xlim ([45 85])
+            title(['Mean Wiener Entropy Variance versus age - ' TextStr])
             [r, p] = corrcoef(all_song_means_concat, all_age_means_concat);
             r
             p
@@ -3765,13 +4174,13 @@ classdef songLearningEphysAnalysis_OBJ < handle
             %w027_age = [59 60 61 62 65 66 67 68 70 71 72 74 75 76 77 78 81 82 83 84];
             %w037_age = [ 46 47 48 49 50 51 53 54 55 56 57 58 59 61 62 64 65 66 67 68 69 72 73];
             %w038_age = [ 50 51 52 54 55 56 57 58 59 60 62 63 65 66];
-
-             %% R Posterior EEG
- 
-             w025_age = [54 55 56 57 60 61 62 63 64 66 67 71 72 75 76 77 78 79 82 83 84 85]; % Ch 13
-             w027_age = [59 60 61 62 65 66 67 68 70 71 72 74 75 76 77 78 81 82 83 84]; % Ch 53/29
-             w038_age = [ 50 51 52 54 55 56 57 58 59 60 62 63 65 66]; % Ch 21
-
+            
+            %% R Posterior EEG
+            
+            w025_age = [54 55 56 57 60 61 62 63 64 66 67 71 72 75 76 77 78 79 82 83 84 85]; % Ch 13
+            w027_age = [59 60 61 62 65 66 67 68 70 71 72 74 75 76 77 78 81 82 83 84]; % Ch 53/29
+            w038_age = [ 50 51 52 54 55 56 57 58 59 60 62 63 65 66]; % Ch 21
+            
             nDirs = numel(dyDirs);
             for k = 1:nDirs
                 
@@ -3859,7 +4268,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             scatter(all_age_means_concat, all_dy_means_concat);
             hold on
             ylim([0 300])
-             xlim ([45 85])
+            xlim ([45 85])
             title(['Mean dy versus age  - ' TextStr])
             [r, p] = corrcoef(all_dy_means_concat, all_age_means_concat);
             r
@@ -3932,7 +4341,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
             %% mean dy versus mean entropy
             figure(303); clf
-         %   markers = {'v', 'o', 'sq', 'd'}; % for 4 animals
+            %   markers = {'v', 'o', 'sq', 'd'}; % for 4 animals
             markers = {'v', 'o', 'd'}; % for 3 animals
             %cols = {[0, 0.4470, 0.7410]; [0.8500, 0.3250, 0.0980]; [0.4660, 0.6740, 0.1880]; [0.4940, 0.1840, 0.5560]};
             cols = {[0, 0.4470, 0.7410]; [0.8500, 0.3250, 0.0980];  [0.4940, 0.1840, 0.5560]}; % 3 animals
@@ -3983,7 +4392,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
             %% dy STD mean entropy
             
-              figure(306); clf
+            figure(306); clf
             for s = 1:nDirs
                 
                 all_dy_std = all_dy_song_stats.dy_std{s};
@@ -4004,7 +4413,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             ylim([0 500])
             
             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\ALL_PLOTS\FinalMetaAnalysis\';
-               figure(306)
+            figure(306)
             
             RecName_save = [saveDir  'std_dy_versus_mean_entropy__' TextStr  ];
             print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
@@ -4022,7 +4431,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             r
             p
             
-             figure(308)
+            figure(308)
             
             RecName_save = [saveDir  'std_dy_versus_mean_entropy_fit__' TextStr  ];
             print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
@@ -4032,9 +4441,9 @@ classdef songLearningEphysAnalysis_OBJ < handle
             
             
             
-             %% dy mean versus entropy var
+            %% dy mean versus entropy var
             
-             figure(313); clf
+            figure(313); clf
             
             for s = 1:nDirs
                 
@@ -4073,7 +4482,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             [r, p] = corrcoef(all_dy_means_concat, all_song_meanvariance_concat);
             r
             p
-          
+            
             figure(312)
             
             RecName_save = [saveDir  'mean_dy_versus_mean_entropyVariance_fit__' TextStr  ];
@@ -4081,7 +4490,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             print_in_A4(0, RecName_save, '-depsc', 0, plotpos);
             
             
-       
+            
             
             disp('')
             
@@ -4111,7 +4520,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 for j = 1:nFiles
                     chanTxt{j} = fileNames{j,1}(end-5:end-4);
                     date_Txt{j} = fileNames{j,1}(7:16);
-                      birdNames{j} = fileNames{j,1}(1:4);
+                    birdNames{j} = fileNames{j,1}(1:4);
                 end
                 
                 fileInds = [];
@@ -4191,7 +4600,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 allBirds.allMeanR{k} =   allCorrs.meanR;
                 allBirds.allMedianR{k} = allCorrs.medianR;
                 allBirds.allStdR{k} =   allCorrs.stdR;
-
+                
             end
             
             %% Corr Means Medians
@@ -4229,7 +4638,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 offset = offset+50;
             end
             
-             legText  = [];
+            legText  = [];
             for p = 1:nDirs
                 legText = [legText {allBirds.birdNames{1,p}{1,1}}];
             end
@@ -4267,7 +4676,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             end
             
             ylim([0 0.5])
-           legend(legText)
+            legend(legText)
             legend('location', 'southwest')
             xlim([xlims(1)-10  xlims(2)+10 ])
             
@@ -4381,7 +4790,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
             for p = 1:nDirs
                 legText = [legText {allBirds.names{1,p}{1,1}}];
             end
-           
+            
             offset =  0;
             for s = 1:nDirs
                 
@@ -4456,7 +4865,7 @@ classdef songLearningEphysAnalysis_OBJ < handle
                 offset = offset+50;
             end
             
-             legend(legText)
+            legend(legText)
             xlim([xlims(1)-10  xlims(2)+10 ])
             ylim([0 500])
             title('Standard deviation of d/y values for nights of sleep')
@@ -10143,13 +10552,9 @@ clear('cx','cy');
     
     methods (Hidden)
         %class constructor
-        function obj = songLearningEphysAnalysis_OBJ(AnalysisDir, eegChans)
+        function obj = eeg_lfp_song_analysis_OBJ(xlsFile, startRow, endRow, P)
             
-            obj.PATH.AnalysisDir = AnalysisDir;
-            obj.DATA.eegChans = eegChans;
-            
-            
-            obj = getPathInfo(obj);
+            obj = import_xls_data(obj, xlsFile, startRow, endRow, P);
             
         end
     end
