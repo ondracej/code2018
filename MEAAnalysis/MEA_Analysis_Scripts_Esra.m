@@ -3,9 +3,9 @@
 % *** To run a cell, type STRG + Enter
 
 addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
-cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
+%cd 'D:\Github\code2018\MEAAnalysis\'
 
-analysisDir = 'D:\Esra\20250717\\'; % path to the analysis directory
+analysisDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\July2025\20250730\'; % path to the analysis directory
 
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
@@ -64,7 +64,7 @@ doAnalysisFiringRateComparison(spikeDir, mea_OBJ, 1);
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% (1) %% Firing rate analysis on 1 file
-spikeDir = 'D:\Esra\20250717\Firing_Rate_Analysis\';
+    spikeDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\July2025\20250730\Firing_Rate_Analysis\';
 
 mea_OBJ = FiringRateAnalysis_singleChannel(spikeDir, mea_OBJ);
 
@@ -78,31 +78,23 @@ mea_OBJ = FiringRateAnalysis_singleChannel_Base_Drug_Rec(spikeDir, mea_OBJ);
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  (2) To combine clusters in a file
 
-fileToCombineSpikes = '20250717-1524_CH-25-26-33-35-41-_SpikeData__26.mat'; % make sure to include .mat
-Spike_Counts_To_Combine = [706]; % enter the spike numbers (read from the other figure)
+fileToCombineSpikes = '20250730-1629_CH-62-71-83-_SpikeData__62.mat'; % make sure to include .mat
+Spike_Counts_To_Combine = [1549 56]; % enter the spike numbers (read from the other figure)
 
 combineSpikesInFile_PlotNewFiringRateAnalysis(spikeDir, fileToCombineSpikes,Spike_Counts_To_Combine, mea_OBJ); % this will give unit ID 5
 
 %% View the spike sorting statistics for a BASELINE DRUG RECOVERY COMPARISON
 
-UnitsIDs_base_drug_rec = [5 1 5]; % Baseline, drug, recovery Cluster IDs
+UnitsIDs_base_drug_rec = [5 5 5]; % Baseline, drug, recovery Cluster IDs
 
 doAnalysis_Base_Drug_Rec_Comparison(spikeDir, UnitsIDs_base_drug_rec, mea_OBJ);
 
 
 %% Population analysis on spontaneous baseline files
 
-populationDir = 'D:\Esra\20250717\testPopDir\';
+populationDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\PopulationAnalysis_mat\';
 
 doPopulationAnalysis(populationDir, mea_OBJ)
-
-
-
-
-
-
-
-
 
 
 %% Combine the spikes from a sorted single channel 
