@@ -177,6 +177,10 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     code2018Path = 'C:\Users\Neuropix\Documents\GitHub\code2018\';
                     analysisToolsPath = 'C:\Users\Neuropix\Documents\GitHub\analysis-tools';
                     
+                case 'DLC'
+                    code2018Path = 'C:\Users\dlc\Documents\GitHub\code2018\';
+                    analysisToolsPath = 'C:\Users\dlc\Documents\GitHub\analysis-tools';
+                    
             end
             
             if isfolder(code2018Path)
