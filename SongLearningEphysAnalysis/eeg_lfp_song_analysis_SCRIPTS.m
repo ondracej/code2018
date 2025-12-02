@@ -236,6 +236,12 @@ data_OBJ = analyze_EV_acrossBirds(data_OBJ);
 %data_OBJ = metaAnalysis_make_plot_of_entropy_means_across_days_all_data(data_OBJ);
 
 
+%% Song / motif preparation
+
+
+
+
+
 
 
 %% Ephys data
