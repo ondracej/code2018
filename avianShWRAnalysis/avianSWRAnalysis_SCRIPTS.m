@@ -27,12 +27,16 @@ disp([D_OBJ.INFO.birdName ': ' D_OBJ.Session.time])
 
 %%
 dataDir = D_OBJ.Session.SessionDir;
+
+
+%dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025-w0027-justephys\chronic_2021-08-09_21-51-42'
+%dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025\chronic_2021-07-14_20-24-58'
+%dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025-w0027-justephys\chronic_2021-07-24_22-37-34'
+dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025-w0027-justephys\chronic_2021-08-05_22-06-10'
 dataRecordingObj = OERecordingMF(dataDir);
+
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
-
 timeSeriesViewer(dataRecordingObj); % loads all the channels
-
-
 
 
 

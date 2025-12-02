@@ -83,4 +83,35 @@ freq = 1/(2*pi) * diff(phi) * Fs;
     hold on
     plot(cy, bla_z, 'k', 'linewidth', 2)
     
- %}  
+ %} 
+
+
+
+%% Jittered gausian dist box plot
+%{
+    jitterAmount = 0.1;
+    jitterValuesX = 2*(rand(size(zscores))-0.5)*jitterAmount;   % +
+    
+    cols = cell2mat({[0 0 0]; [.5 .5 .5]});
+    %cols = cell2mat({[0.6350, 0.0780, 0.1840]; [0.8500, 0.3250, 0.0980]; [0.9290, 0.6940, 0.1250]; [0, 0, 0]; [0.4940, 0.1840, 0.5560]});
+    
+    figure(102); clf
+    h = scatterhist(zscores,jitterValuesX, 'Kernel','on', 'Location','NorthEast',...
+        'Direction','out', 'LineStyle',{'-','-'}, 'Marker','..', 'Markersize', 20, 'color', cols);
+    
+     
+   
+    boxplot(h(2),zscores,'orientation','horizontal',...
+        'label',{''},'color', 'k', 'plotstyle', 'compact', 'Whisker', 10);
+    
+    
+    
+    axis(h(1),'auto');  % Sync axes
+    
+    yss = ylim;
+    xss = xlim;
+    
+    hold on
+    line([.5 .5], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
+    line([-.5 -.5], [yss(1) yss(2)], 'color', 'k', 'linestyle', ':')
+   %} 

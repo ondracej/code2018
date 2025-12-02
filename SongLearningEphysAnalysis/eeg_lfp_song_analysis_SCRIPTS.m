@@ -2,6 +2,8 @@
 
 
 %% PerBird Analysis
+ clear all
+ close all
  
 
 %% w038
@@ -17,6 +19,81 @@ P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w038\ANALYSIS\';
 P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w038\PLOTS\';
 P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\';
 P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w038\Data\';
+
+
+%% w037
+xlsFile = "X:\EEG-LFP-songLearning\JaniesAnalysis\w037\w037.xlsx";
+
+startRow = 2;
+endRow  = 40;
+
+P.AllPlots = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\';
+P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\DATA_VIDEO\';
+P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\DATA_EPHYS\';
+P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\ANALYSIS\';
+P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\PLOTS\';
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w037\Data\';
+P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w037\Data\';
+
+%% w025
+xlsFile = "X:\EEG-LFP-songLearning\JaniesAnalysis\w025\w025.xlsx";
+
+startRow = 2;
+endRow  = 39;
+
+P.AllPlots = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\';
+P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w025\DATA_VIDEO\';
+P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w025\DATA_EPHYS\';
+P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w025\ANALYSIS\';
+P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w025\PLOTS\';
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\Data\';
+P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w025\Data\';
+
+
+%% w027
+xlsFile = "X:\EEG-LFP-songLearning\JaniesAnalysis\w027\w027.xlsx";
+
+startRow = 2;
+endRow  = 29;
+
+P.AllPlots = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\';
+P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\DATA_VIDEO\';
+P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\DATA_EPHYS\';
+P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\ANALYSIS\';
+P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\PLOTS\';
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027\Data\';
+P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w027\Data\';
+
+
+%% w044
+xlsFile = "X:\EEG-LFP-songLearning\JaniesAnalysis\w044\w044.xlsx";
+
+startRow = 2;
+endRow  = 20;
+
+P.AllPlots = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\';
+P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w044\DATA_VIDEO\';
+P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w044\DATA_EPHYS\';
+P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w044\ANALYSIS\';
+P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w044\PLOTS\';
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w044\Data\';
+P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w044\Data\';
+
+
+
+%% w042
+xlsFile = "X:\EEG-LFP-songLearning\JaniesAnalysis\w042\w042.xlsx";
+
+startRow = 2;
+endRow  = 21;
+
+P.AllPlots = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\';
+P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w042\DATA_VIDEO\';
+P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w042\DATA_EPHYS\';
+P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w042\ANALYSIS\';
+P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w042\PLOTS\';
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w042\Data\';
+P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w042\Data\';
 
 %%
 
@@ -125,11 +202,133 @@ end
  % Meta analysis per bird across days
 %% make a plot of entropy versus time
 
-firstOrLastSwitch = 1; % 1 = First, 2 = Last, 0 = both
+% Make sure to move the entropy files into a First and Last folder!
+firstOrLastSwitch = 2; % 1 = First, 2 = Last, 0 = both
 data_OBJ = meta_make_plot_of_entropy_with_times_first_last(data_OBJ, firstOrLastSwitch);
 
 data_OBJ = metaAnalysis_make_plot_of_entropy_across_days_with_times(data_OBJ);
 
-data_OBJ = metaAnalysis_make_plot_of_entropy_means_across_days_all_data(data_OBJ, entropyFilesDir, birdName);
+%%
+
+%datesToSkip = {};
+%datesToSkip = {'2021-08-30', '2021-08-31', '2021-09-01', '2021-09-02'}; % w038, days with only last motifs
+data_OBJ =  combineEntropyFiles_FirstLast(data_OBJ, datesToSkip);
+
+data_OBJ = metaAnalysis_make_plot_of_MEAN_ENTROPY_across_days(data_OBJ);
+data_OBJ = metaAnalysis_make_plot_of_MEAN_ENTROPY_VARIANCE_across_days(data_OBJ);
+
+
+
+%%  all birds combined, requires X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\entropyStats_AllBirds dirs
+
+data_OBJ = analyze_EV_acrossBirds(data_OBJ);
+           
+%% identify large dEVs
+
+
+ data_OBJ = analyze_dEV_night_and_day(data_OBJ)
+
+
+
+
+
+
+%data_OBJ = metaAnalysis_make_plot_of_entropy_means_across_days_all_data(data_OBJ);
+
+
+
+
+%% Ephys data
+
+   %% Load EEG
+   
+   % Loop over all days and all channels
+   EEG_L_Ant = data_OBJ.EPHYS.EEG_L_Ant;
+   EEG_R_Ant = data_OBJ.EPHYS.EEG_R_Ant;
+   EEG_L_Post = data_OBJ.EPHYS.EEG_L_Post;
+   EEG_R_Post = data_OBJ.EPHYS.EEG_R_Post;
+   
+   LFP_l = data_OBJ.EPHYS.LFP_l;
+   LFP_m = data_OBJ.EPHYS.LFP_m;
+   
+   for k = 1:6
+       switch k
+           case 1
+               data = EEG_L_Ant;
+               dataType = 'EEG_L_Ant';
+           case 2
+               data = EEG_R_Ant;
+               dataType = 'EEG_R_Ant';
+           case 3
+               data = EEG_L_Post;
+               dataType = 'EEG_L_Post';
+           case 4
+               data = EEG_R_Post;
+               dataType = 'EEG_R_Post';
+           case 5
+               data = LFP_l;
+               dataType = 'LFP_l';
+           case 6
+               data = LFP_m;
+               dataType = 'LFP_m';
+               
+       end
+       
+       for j = 1:nEntries
+           
+           thisChan  = num2str(data(j));
+           
+           if thisChan  == '0'
+              
+           else
+               
+               
+               
+               pathToData = [data_OBJ.PATH.EphysPath data_OBJ.EPHYS.EphysRecName{j} data_OBJ.PATH.dirD];
+               
+               chanNames = dir(fullfile(pathToData, '*.continuous'));
+               index = strfind({chanNames.name}, thisChan);
+               idx = find(~cellfun(@isempty,index));
+               chanPath = [pathToData chanNames(idx).name ];
+               
+               [data_OBJ, dataInfo] = load_ephys_data(data_OBJ, chanPath);
+               
+               dataInfo.thisChan = thisChan;
+               dataInfo.dataType = dataType;
+               
+               data_OBJ   = calc_delta_gamma(data_OBJ, dataInfo, j);
+               
+               
+           end
+       end
+   end
+       
+   
+
+
+%% To check data with Time Series Viewer, requires that NeuralElectrophysilogyTools is on path
+%% w025 w027
+dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025\chronic_2021-07-14_20-24-58';
+dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025-w0027-justephys\chronic_2021-07-24_22-37-34';
+dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025-w0027-justephys\chronic_2021-08-05_22-06-10';
+
+%% 
+dataDir = 'X:\EEG-LFP-songLearning\w038andw037\chronic_2021-09-01_21-54-15';
+dataDir = 'X:\EEG-LFP-songLearning\w038andw037\chronic_2021-09-21_21-50-18';
+
+%%
+
+%% w044 and w042
+dataDir = 'X:\EEG-LFP-songLearning\w042andw044\w044 and w042\chronic_2021-12-30_20-56-35'
+dataDir = 'X:\EEG-LFP-songLearning\w042andw044\w044 and w042\chronic_2022-01-01_20-26-41'
+dataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w042\DATA_EPHYS\chronic_2021-12-29_20-44-37'
+dataDir = 'X:\EEG-LFP-songLearning\w042andw044\w044 and w042\chronic_2022-01-04_20-47-15'
+dataDir = 'X:\EEG-LFP-songLearning\w042andw044\w044 and w042\chronic_2022-01-10_21-39-26'
+
+
+dataRecordingObj = OERecordingMF(dataDir);
+dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
+
+timeSeriesViewer(dataRecordingObj); % loads all the channels
 
 

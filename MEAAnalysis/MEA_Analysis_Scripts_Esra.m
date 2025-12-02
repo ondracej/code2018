@@ -5,7 +5,7 @@
 addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
 %cd 'D:\Github\code2018\MEAAnalysis\'
 
-analysisDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\July2025\20250730\'; % path to the analysis directory
+analysisDir = 'X:\Janie-MEA-Data\Esra-MEA2025\20250813\'; % path to the analysis directory
 
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
@@ -92,7 +92,7 @@ doAnalysis_Base_Drug_Rec_Comparison(spikeDir, UnitsIDs_base_drug_rec, mea_OBJ);
 
 %% Population analysis on spontaneous baseline files
 
-populationDir = 'Y:\Janie-MEA-Data\Esra-MEA2025\PopulationAnalysis_mat\';
+populationDir = 'X:\Janie-MEA-Data\Esra-MEA2025\PopulationAnalysis_mat\';
 
 doPopulationAnalysis(populationDir, mea_OBJ)
 
