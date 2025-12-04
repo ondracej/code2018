@@ -293,7 +293,7 @@ data_OBJ = analyze_EV_acrossBirds(data_OBJ);
                pathToData = [data_OBJ.PATH.EphysPath data_OBJ.EPHYS.EphysRecName{j} data_OBJ.PATH.dirD];
                
                chanNames = dir(fullfile(pathToData, '*.continuous'));
-               index = strfind({chanNames.name}, thisChan);
+               index = strfind({chanNames.name}, ['CH' thisChan]);
                idx = find(~cellfun(@isempty,index));
                chanPath = [pathToData chanNames(idx).name ];
                
