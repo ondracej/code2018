@@ -4,7 +4,7 @@ function[] = wav_browser()
 clear all
 
 %wav_file_dir = 'X:\EEG-LFP-songLearning\Artemis\w038_Analysis\Data\2021-09-19-Last100Songs\'; % make sure there is a \ at the end!
-wav_file_dir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\Data\2021-07-15-First100Songs\';
+wav_file_dir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\Data\2021-07-14-Last100Songs\';
 spec_scale = 0.08; % Higher value makes it darker
 
 N_Syllables = 1;
@@ -141,7 +141,8 @@ setappdata(spc, 'sc_g', 1);
 % Others
 setappdata(spc, 'spec_scale', spec_scale);
 scrsz = get(0,'ScreenSize');
-set(spc, 'Position',[1 scrsz(4)/2 scrsz(3)/2 scrsz(4)/2]);
+set(spc, 'Position',[2000 300 scrsz(3)/2+500 scrsz(4)/2]); %%%%%%%%%%% change this is fig is not displaying
+%set(spc, 'Position',[100 300 scrsz(3)/2+500 scrsz(4)/2]); %%%%%%%%%%% change this is fig is not displaying
 
 %% Key Press Function!
 

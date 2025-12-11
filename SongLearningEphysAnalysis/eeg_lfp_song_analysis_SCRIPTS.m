@@ -127,10 +127,6 @@ end
 
 dirsToLoad_inds = find(SylInds ~=0);
 
-%% Override
-%thisDirToLoad = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\2021-09-07-Last100Songs-Motifs\';
-%plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\Motifs\';
-
 %% Create dirs for plots and analysis 
 MotifPlotDir = [data_OBJ.PATH.AllPlots data_OBJ.INFO.birdName{:} data_OBJ.PATH.dirD 'Motifs' data_OBJ.PATH.dirD];
 
@@ -173,9 +169,17 @@ end
 
 data_OBJ.PATH.TimeInfoSaveDir_playbacks = TimeInfoSaveDir_playbacks;
 
-%%
-doSortedMotifs = 0;
+%% To check file differences
 
+dir1 = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\Data\2021-07-19-Last100Songs\'; % allSongs
+dir2 = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\Data\2021-07-19-Last100Songs-Motifs\'; % all motifs
+
+data_OBJ = checkFileDiffs(data_OBJ, dir1 , dir2 );
+
+%% Override
+%thisDirToLoad = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\Data\2021-07-16-First100Songs-Motifs\';
+%MotifPlotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\Motifs\';
+doSortedMotifs = 0;
 for k = 1:numel(dirsToLoad_inds)
     
     thisDirInd = dirsToLoad_inds(k);
@@ -203,16 +207,15 @@ end
 %% make a plot of entropy versus time
 
 % Make sure to move the entropy files into a First and Last folder!
-firstOrLastSwitch = 2; % 1 = First, 2 = Last, 0 = both
+firstOrLastSwitch = 1; % 1 = First, 2 = Last, 0 = both
 data_OBJ = meta_make_plot_of_entropy_with_times_first_last(data_OBJ, firstOrLastSwitch);
 
 data_OBJ = metaAnalysis_make_plot_of_entropy_across_days_with_times(data_OBJ);
 
 %%
 
-%datesToSkip = {};
-%datesToSkip = {'2021-08-30', '2021-08-31', '2021-09-01', '2021-09-02'}; % w038, days with only last motifs
-data_OBJ =  combineEntropyFiles_FirstLast(data_OBJ, datesToSkip);
+% Make sure that the motif dirs and the time info dirs match!
+data_OBJ =  combineEntropyFiles_FirstLast(data_OBJ);
 
 data_OBJ = metaAnalysis_make_plot_of_MEAN_ENTROPY_across_days(data_OBJ);
 data_OBJ = metaAnalysis_make_plot_of_MEAN_ENTROPY_VARIANCE_across_days(data_OBJ);
@@ -238,10 +241,16 @@ data_OBJ = analyze_EV_acrossBirds(data_OBJ);
 
 %% Song / motif preparation
 
+%% Preprocessing song files
+
+% Run in matlab2013b
+%initVars(1, ), fl, fb, %sort the .wav files
+
+wav_browser % to make the motifs
 
 
 
-
+remove_first_syl_from_motifs_w025
 
 
 %% Ephys data

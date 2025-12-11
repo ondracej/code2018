@@ -2410,7 +2410,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
         
         
         
-        function obj = combineEntropyFiles_FirstLast(obj, datesToSkip)
+        function obj = combineEntropyFiles_FirstLast(obj)
             disp('');
             
             entropyFilesDir = [obj.PATH.AllEntropyDataDir];
@@ -2421,8 +2421,6 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 mkdir(combinedFileDir);
                 disp(['Created: '  combinedFileDir])
             end
-            
-            
             
             entropyFileNames = dir(fullfile(entropyFilesDir, '*.mat'));
             entropyFileNames = {entropyFileNames.name}';
@@ -2440,36 +2438,36 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
                 % here we check to see if the file matches the skipped
                 % dates
-                index = cellfun(@(a) strmatch(a,thisDate),datesToSkip,'uniform',false);
-                nonEmptyInds = ~cellfun(@isempty,index); % inds ref the larger file list
-                nonEmptyInds = find(nonEmptyInds ==1);
-                nskippedDateFiles = numel(nonEmptyInds);
+                %                 index = cellfun(@(a) strmatch(a,thisDate),datesToSkip,'uniform',false);
+                %                 nonEmptyInds = ~cellfun(@isempty,index); % inds ref the larger file list
+                %                 nonEmptyInds = find(nonEmptyInds ==1);
+                %                 nskippedDateFiles = numel(nonEmptyInds);
+                %
+                %   if nskippedDateFiles == 0
                 
-                if nskippedDateFiles == 0
-                    
-                    dates{j} = thisDate;
-                    bla = find(thisEntropyName ==underscore);
-                    
-                    fullEntropyName{j} = thisEntropyName(1:bla-1);
-                    
-                    firstOrLast = thisEntropyName(12:15);
-                    
-                    if strcmp(firstOrLast, 'Firs')
-                        firstInds(j) = j;
-                        firstInds_log(j) = 1;
-                    else
-                        lastInds(j) = j;
-                        lastInds_log(j) = 1;
-                    end
+                dates{j} = thisDate;
+                bla = find(thisEntropyName ==underscore);
+                
+                fullEntropyName{j} = thisEntropyName(1:bla-1);
+                
+                firstOrLast = thisEntropyName(12:15);
+                
+                if strcmp(firstOrLast, 'Firs')
+                    firstInds(j) = j;
+                    firstInds_log(j) = 1;
                 else
-                    disp(['Date skipped:  ' thisDate])
-                    dates{j} = '';
-                     fullEntropyName{j} = '';
-                       firstInds(j) = nan;
-                        firstInds_log(j) = nan;
-                     lastInds(j) = nan;
-                        lastInds_log(j) = nan;
+                    lastInds(j) = j;
+                    lastInds_log(j) = 1;
                 end
+                %                 else
+                %                     disp(['Date skipped:  ' thisDate])
+                %                     dates{j} = '';
+                %                      fullEntropyName{j} = '';
+                %                        firstInds(j) = nan;
+                %                         firstInds_log(j) = nan;
+                %                      lastInds(j) = nan;
+                %                         lastInds_log(j) = nan;
+                %                 end
                 
                 
             end
@@ -2491,10 +2489,10 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             uniqueDates = unique(dates);
             
-%% Check that there is not a '' in the unique dates            
-             Emptyindex = cellfun(@(a) strmatch(a,''),uniqueDates,'uniform',false);
-             nonEmptyInds = ~cellfun(@isempty,Emptyindex); % inds ref the larger file list
-nonEmptyInds = find(nonEmptyInds ==1);
+            %% Check that there is not a '' in the unique dates
+            Emptyindex = cellfun(@(a) strmatch(a,''),uniqueDates,'uniform',false);
+            nonEmptyInds = ~cellfun(@isempty,Emptyindex); % inds ref the larger file list
+            nonEmptyInds = find(nonEmptyInds ==1);
             uniqueDates(nonEmptyInds) = [];
             
             nUniqueDates = numel(uniqueDates);
@@ -2628,10 +2626,10 @@ nonEmptyInds = find(nonEmptyInds ==1);
                         end
                     end
                     %% Save this single file
-                end 
-                   saveName = [combinedFileDir thisDate '_combined.mat'];
-                    save(saveName,  'E', '-v7.3')
-                    disp(['Saved:' saveName])
+                end
+                saveName = [combinedFileDir thisDate '_combined.mat'];
+                save(saveName,  'E', '-v7.3')
+                disp(['Saved:' saveName])
             end
         end
                   
@@ -4006,6 +4004,41 @@ nonEmptyInds = find(nonEmptyInds ==1);
             end
             
         end
+        
+        
+        
+        
+        function [obj] = checkFileDiffs(obj, dir1, dir2)
+         
+            dbstop if error
+            
+            
+            fileNames_songs = dir(fullfile(dir1, '*.wav'));
+         fileNames_songs = {fileNames_songs.name}';
+         
+            fileNames_motifs = dir(fullfile(dir2, '*.wav'));
+            fileNames_motifs = {fileNames_motifs.name}';
+         
+            for j = 1: numel(fileNames_motifs)
+             fileNames_songs_short{j} = fileNames_motifs{j}(6:11);
+            end
+         
+         
+            for j = 1: numel(fileNames_motifs)
+            
+                thisFilename = fileNames_songs{j}(6:11);
+               index = cellfun(@(a) strmatch(a,thisFilename),fileNames_songs_short,'uniform',false);
+            nonEmptyInds = ~cellfun(@isempty,index);
+            
+            if sum(nonEmptyInds) > 0
+            else
+                disp(thisFilename)
+            end
+            end
+        
+        end
+        
+        
         
         function obj = calcTimeOfSongFiles(obj, songDir, OriginalSongFileDir)
             dbstop if error
