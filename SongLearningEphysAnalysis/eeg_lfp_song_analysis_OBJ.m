@@ -1949,6 +1949,152 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
         end
         
+        function obj = meta_make_histogram_plot_first_last_times(obj)
+            
+            for q =1:2
+                
+                dbstop if error
+                
+                switch q
+                    
+                    case 1
+                        entropyFilesDir = [obj.PATH.AllEntropyDataDir 'First' obj.PATH.dirD];
+                        
+                    case 2
+                        entropyFilesDir = [obj.PATH.AllEntropyDataDir 'Last' obj.PATH.dirD];
+                end
+                
+                entropyFileNames = dir(fullfile(entropyFilesDir, '*.mat'));
+                entropyFileNames = {entropyFileNames.name}';
+                nFiles_entropy = numel(entropyFileNames);
+                
+                underscore = '_';
+                
+                for j = 1:nFiles_entropy
+                    
+                    thisEntropyName = entropyFileNames{j,1};
+                    bla = find(thisEntropyName ==underscore);
+                    fullEntropyName{j} = thisEntropyName(1:bla-1);
+                    
+                    dates{j} = entropyFileNames{j,1}(1:10);
+                    %firstOrLast{j} = entropyFileNames{j,1}(12:15);
+                end
+                
+                
+                TimeInfoSaveDir_motifs = obj.PATH.TimeInfoSaveDir_motifs;
+                
+                motifTimeFileNames = dir(fullfile(TimeInfoSaveDir_motifs, '*.mat'));
+                motifTimeFileNames = {motifTimeFileNames.name}';
+                nFiles_motifs = numel(motifTimeFileNames);
+                
+                for j = 1:nFiles_motifs
+                    
+                    thisMotifName = motifTimeFileNames{j,1};
+                    bla = find(thisMotifName ==underscore);
+                    fullMotifName{j} = thisMotifName(1:bla-1);
+                    
+                    % dates_motifTimes{j} = motifTimeFileNames{j,1}(1:10);
+                    %  firstOrLast_motifTimes{j} = motifTimeFileNames{j,1}(12:15);
+                    
+                end
+                allTotalDurs_concat = [];
+                cnt =1;
+                for j = 1:nFiles_entropy
+                    
+                    thisDate = dates{j};
+                    thisEntropyFile_name = fullEntropyName{j};
+                    
+                    index = cellfun(@(a) strmatch(a,thisEntropyFile_name),fullMotifName,'uniform',false);
+                    nonEmptyInds = ~cellfun(@isempty,index);
+                    
+                    nonEmptyInds = find(nonEmptyInds ==1);
+                    d = load([entropyFilesDir entropyFileNames{j}]);
+                    
+                    if ~isempty(nonEmptyInds)
+                        m = load([TimeInfoSaveDir_motifs  motifTimeFileNames{nonEmptyInds}]);
+                    else
+                        continue
+                    end
+                    
+                    % allMeans = d.E.all_means_wEntropy{:};
+                    % allVars = d.E.all_vars_wEntropy{:};
+                    
+                    motif_datetime = m.TimeInfo.ds;
+                    %  sInHr = 3600;
+                    %   sInMin = 60;
+                    %
+                    %                     if q ==1
+                    %
+                    %                         df_h = 9;
+                    %                     elseif q == 2
+                    %                         df_h = 12;
+                    %                     end
+                    %
+                    % df_m = 0;
+                    % df_s = 0;
+                    % totalDur_s = [];
+                    T = datetime('today');
+                    
+                    for o = 1:numel(motif_datetime)
+                        
+                        this_t = motif_datetime(o);
+                        [h,m,s] = hms(this_t);
+                        %
+                        %                         dur_h = h-df_h;
+                        %                         dur_m = m-df_m;
+                        %                         dur_s = s-df_s;
+                        %                         totalDur_s(o) = dur_h*sInHr + dur_m*sInMin + dur_s;
+                        
+                        M_d(cnt) = T + hours(h) + minutes(m) + seconds(s);
+                        cnt = cnt+1;
+                    end
+                    
+                    %  allTotalDurs{j} = totalDur_s;
+                    % allTotalDurs_concat = [allTotalDurs_concat totalDur_s];
+                    
+                end
+                disp('')
+                
+                minDur = min(allTotalDurs_concat);
+                maxDur = max(allTotalDurs_concat);
+                
+                binEdges = minDur:100:maxDur;
+                figure(103);
+                
+                all_M_d{q} = M_d;
+                
+                % BinWidth = hours(1);
+                % histogram(M_d)
+                % hist(allTotalDurs_concat, binEdges)
+                
+            end
+            figure(103); clf
+            h1 = histogram(all_M_d{1});
+            hold on
+            h2 = histogram(all_M_d{2});
+            disp('')
+            h1.Normalization = 'probability';
+            h1.BinWidth = minutes(5);
+            h2.Normalization = 'probability';
+            h2.BinWidth = minutes(5);
+            
+            title('Song times over days')
+            legend('First', 'Last')
+            legend('location', 'northwest')
+            xlabel('Clock time')
+            ylabel('Probability')
+            
+            plotpos = [0 0 18 12];
+            plotName = [obj.PATH.TimeInfoSaveDir_motifs '_AllSongTimeHistogram'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+            
+            
+            
+        end
+        
+        
         function obj = meta_make_plot_of_entropy_with_times_first_last(obj, firstOrLastSwitch)
             
             dbstop if error
@@ -2229,7 +2375,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             ylim(ylims_E )
             
-            plotpos = [0 0 15 20];
+            plotpos = [0 0 25 15];
             plotName = [entropyFilesDir obj.PATH.dirD obj.INFO.birdName{:} '_EntropyTimesAcrossDays'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             print_in_A4(0, plotName, '-depsc', 0, plotpos);
@@ -2244,7 +2390,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             ylim(ylims_V)
             
-            plotpos = [0 0 15 20];
+            plotpos = [0 0 25 15];
             plotName = [entropyFilesDir obj.PATH.dirD obj.INFO.birdName{:} '_EntropyVarianceTimesAcrossDays'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             print_in_A4(0, plotName, '-depsc', 0, plotpos);
@@ -2490,11 +2636,11 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             uniqueDates = unique(dates);
             
             %% Check that there is not a '' in the unique dates
-            Emptyindex = cellfun(@(a) strmatch(a,''),uniqueDates,'uniform',false);
-            nonEmptyInds = ~cellfun(@isempty,Emptyindex); % inds ref the larger file list
-            nonEmptyInds = find(nonEmptyInds ==1);
-            uniqueDates(nonEmptyInds) = [];
-            
+%             Emptyindex = cellfun(@(a) strmatch(a,''),uniqueDates,'uniform',false);
+%             nonEmptyInds = ~cellfun(@isempty,Emptyindex); % inds ref the larger file list
+%             nonEmptyInds = find(nonEmptyInds ==1);
+%             uniqueDates(nonEmptyInds) = [];
+%             
             nUniqueDates = numel(uniqueDates);
             
             
@@ -2507,19 +2653,22 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 ndatesFiles = numel(nonEmptyInds);
                 
                 if ndatesFiles == 1 % single file, nothing to combine
+                    E = [];
                     
                     d = load([entropyFilesDir entropyFileNames{nonEmptyInds}]);
                     match = strcmp(fullEntropyName{nonEmptyInds}, fullMotifName{nonEmptyInds});
                     
-                    if match
+                    if match % entropy and motif names match
                         m = load([TimeInfoSaveDir_motifs  motifTimeFileNames{nonEmptyInds}]);
                     else
+                        disp(' Entropy and Motif name do not match!!!')
+                        keyboard  % check the SongTimeInfo dir and the Entropy dir
                         continue
                     end
                     
                     motif_datetime = m.TimeInfo.ds;
                     
-                    firstOrLast = firstInds_log(nonEmptyInds); % Is this a first of last file?
+                    firstOrLast_n = firstInds_log(nonEmptyInds); % Is this a first of last file?
                     
                     allMeans = d.E.all_means_wEntropy{:};
                     allVars  = d.E.all_vars_wEntropy{:};
@@ -2532,7 +2681,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     std_allVars = std(allVars);
                     sem_allVars = std_allVars/(sqrt(numel(allVars)));
                     
-                    if firstOrLast  == 0 % first is 0, must be a last file
+                    if firstOrLast_n  == 0 % first is 0, must be a last file
                         
                         E.Last.allMeans = allMeans;
                         E.Last.mean_allMeans = mean_allMeans;
@@ -2545,7 +2694,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         E.Last.sem_allVars = sem_allVars;
                         
                         E.Last.motif_datetime = motif_datetime;
-                    elseif  firstOrLast  == 1 % must be a first file
+                    elseif  firstOrLast_n  == 1 % must be a first file
                         
                         E.First.allMeans = allMeans;
                         E.First.mean_allMeans = mean_allMeans;
@@ -2583,7 +2732,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         
                         motif_datetime = m.TimeInfo.ds;
                         
-                        firstOrLast = firstInds_log(thisInd); % Is this a first of last file?
+                        firstOrLast_n = firstInds_log(thisInd); % Is this a first of last file?
                         
                         allMeans = d.E.all_means_wEntropy{:};
                         allVars  = d.E.all_vars_wEntropy{:};
@@ -2596,7 +2745,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         std_allVars = std(allVars);
                         sem_allVars = std_allVars/(sqrt(numel(allVars)));
                         
-                        if firstOrLast  == 0 % first is 0, must be a last file
+                        if firstOrLast_n  == 0 % first is 0, must be a last file
                             
                             E.Last.allMeans = allMeans;
                             E.Last.mean_allMeans = mean_allMeans;
@@ -2609,7 +2758,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                             E.Last.sem_allVars = sem_allVars;
                             
                             E.Last.motif_datetime = motif_datetime;
-                        elseif  firstOrLast  == 1 % must be a first file
+                        elseif  firstOrLast_n  == 1 % must be a first file
                             
                             E.First.allMeans = allMeans;
                             E.First.mean_allMeans = mean_allMeans;
@@ -2642,7 +2791,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             FirstVals  = {};
             LastVals  = {};
-            
+            allDates = [];
             for j = 1:nFiles_entropy
                 
                 load([combinedFileDir entropyFileNames{j}])
@@ -2650,10 +2799,14 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
                 if isfield(E, 'First')
                     FirstVals{j} = E.First;
+                else
+                    FirstVals{j} = [];
                 end
                 
                 if isfield(E, 'Last')
                     LastVals{j} = E.Last;
+                else
+                    LastVals{j} = [];
                 end
                 
             end
@@ -2676,7 +2829,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 if ~isempty(thisDate_first)
                     allMeans = thisDate_first.allMeans;
                     
-                    if numel(allMeans) > 10    
+                    if numel(allMeans) > 10 % we ignore days that don't have atleast 10 songs   
                         motif_datetime = thisDate_first.motif_datetime;
                         plot(motif_datetime, allMeans, 'marker', '.', 'linestyle', 'none', 'color', gray)
                         pooledMeans = [pooledMeans allMeans];
@@ -2687,7 +2840,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
                 if ~isempty(thisDate_last)
                     allMeans = thisDate_last.allMeans;
-                    if numel(allMeans) > 10
+                    if numel(allMeans) > 10 % we ignore days that don't have atleast 10 songs
                         motif_datetime = thisDate_last.motif_datetime;
                         plot(motif_datetime, allMeans, 'marker', '.', 'linestyle', 'none', 'color', gray)
                         pooledMeans = [pooledMeans allMeans];
@@ -2699,8 +2852,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
             end
             
-            % Now add Means and lines Differences across nights
-            
+            %% Now add Means and lines Differences across nights
             
             plot(allLastTimes, allMeans_Last, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
             plot(allFirstTimes, allMeans_First, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
@@ -2710,7 +2862,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 diffs_LastToFirst(j) =  allMeans_First(j+1) - allMeans_Last(j);
             end
             
-            %% Now agan for the differences betwen first and last according to time
+            %% Now agan for the differences between first and last according to time
             
             figure(305); clf
             hold on
@@ -2751,7 +2903,6 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             figure(306); clf
             hold on
             offset = 200;
-            
             for j = 1:nFiles_entropy
                 
                 allMeans = allPooledMeans{j};
@@ -2768,9 +2919,15 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     lastX(j) = xes(end);
                     midX(j) = xes(round(numel(allMeans)/2));
                     offset =  lastX(j) +200;    
-                else
-                offset =  lastX(j-1) +200;
-                  midX(j) = midX(j-1)+200;
+                elseif isempty(vals) && j ==1
+                    offset =  200;
+                    midX(j) = 100;
+                    
+                elseif isempty(vals) && j~= 1
+                    offset =  lastX(end) +200;
+                    %offset =  lastX(j-1) +200;
+                    %midX(j) = midX(j-1)+200;
+                     midX(j) = midX(end)+200;
                 end
                 
             end
@@ -3026,19 +3183,29 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
                   vals = 1:1:numel(allVars);
                   
-                if ~isempty(vals)
-                    xes = vals+offset ;
-                    hold on
-                    plot(xes, allVars, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
-                    
-                    % firstX(j) = xes(1);
-                    lastX(j) = xes(end);
-                    midX(j) = xes(round(numel(allVars)/2));
-                    offset =  lastX(j) +200;
-                else
-                    offset =  lastX(j-1) +200;
-                    midX(j) = midX(j-1)+200;
-                end
+                  if ~isempty(vals)
+                      xes = vals+offset ;
+                      hold on
+                      plot(xes, allVars, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
+                      
+                      % firstX(j) = xes(1);
+                      lastX(j) = xes(end);
+                      midX(j) = xes(round(numel(allVars)/2));
+                      offset =  lastX(j) +200;
+                      
+                  elseif isempty(vals) && j ==1
+                      offset =  200;
+                      midX(j) = 100;
+                      
+                  elseif isempty(vals) && j~= 1
+                      offset =  lastX(j-1) +200;
+                      midX(j) = midX(j-1)+200;
+                  end
+                  
+                  
+                
+                
+                
                 
             end
             
@@ -4020,13 +4187,15 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             fileNames_motifs = {fileNames_motifs.name}';
          
             for j = 1: numel(fileNames_motifs)
-             fileNames_songs_short{j} = fileNames_motifs{j}(6:11);
+             %fileNames_songs_short{j} = fileNames_motifs{j}(6:11);
+             fileNames_songs_short{j} = fileNames_motifs{j}(6:12);% w038
             end
          
          
             for j = 1: numel(fileNames_motifs)
             
-                thisFilename = fileNames_songs{j}(6:11);
+                %thisFilename = fileNames_songs{j}(6:11);
+                    thisFilename = fileNames_songs{j}(6:12); %w038
                index = cellfun(@(a) strmatch(a,thisFilename),fileNames_songs_short,'uniform',false);
             nonEmptyInds = ~cellfun(@isempty,index);
             
@@ -4157,6 +4326,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             ds = datetime(times);
             rs = 1:1:numel(times);
             figure(100); clf
+            subplot(2, 1, 1)
             plot(rs, ds, 'k.', 'linestyle', 'none')
             set(gca, 'YDir','reverse')
             
@@ -4187,6 +4357,18 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             xlabel('N')
             title(dateName)
             
+            
+            subplot(2, 1, 2)
+            
+            
+               h1 = histogram(ds);
+            hold on
+            %h1.Normalization = 'probability';
+            h1.BinWidth = minutes(5);
+            
+                        
+                        %%
+                        
             saveDir = TimeInfoSaveDir;
             
             plotpos = [0 0 12 15];
