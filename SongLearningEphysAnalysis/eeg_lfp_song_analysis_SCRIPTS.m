@@ -5,7 +5,8 @@
  clear all
  close all
  
-
+nSongs = 2;% 1=100; 2 = 50;
+ 
 %% w038
 xlsFile = "X:\EEG-LFP-songLearning\JaniesAnalysis\w038\w038.xlsx";
 
@@ -17,7 +18,8 @@ P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w038\DATA_VIDEO\';
 P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w038\DATA_EPHYS\';
 P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w038\ANALYSIS\';
 P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w038\PLOTS\';
-P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\';
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038_50Songs\Data\';% 50 songs
+%P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038_100Songs\Data\';% 50 songs
 P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w038\Data\';
 
 
@@ -32,7 +34,8 @@ P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\DATA_VIDEO\';
 P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\DATA_EPHYS\';
 P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\ANALYSIS\';
 P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\PLOTS\';
-P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w037\Data\';
+%P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w037_50Songs\Data\';
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w037_100Songs\Data\';
 P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w037\Data\';
 
 %% w025
@@ -46,7 +49,8 @@ P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w025\DATA_VIDEO\';
 P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w025\DATA_EPHYS\';
 P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w025\ANALYSIS\';
 P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w025\PLOTS\';
-P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025\Data\';
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025_50Songs\Data\'; % 50 motifs
+%P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025_100Songs\Data\'; % 100 songs
 P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w025\Data\';
 
 
@@ -61,7 +65,8 @@ P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\DATA_VIDEO\';
 P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\DATA_EPHYS\';
 P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\ANALYSIS\';
 P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\PLOTS\';
-P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027\Data\';
+%P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027_50Songs\Data\'; % 50 songs
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027_100Songs\Data\'; % 50 songs
 P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w027\Data\';
 
 
@@ -76,9 +81,9 @@ P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w044\DATA_VIDEO\';
 P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w044\DATA_EPHYS\';
 P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w044\ANALYSIS\';
 P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w044\PLOTS\';
-P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w044\Data\';
+%P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w044_50Songs\Data\'; % 50 songs
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w044_100Songs\Data\'; % 50 songs
 P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w044\Data\';
-
 
 
 %% w042
@@ -128,8 +133,11 @@ end
 dirsToLoad_inds = find(SylInds ~=0);
 
 %% Create dirs for plots and analysis 
-MotifPlotDir = [data_OBJ.PATH.AllPlots data_OBJ.INFO.birdName{:} data_OBJ.PATH.dirD 'Motifs' data_OBJ.PATH.dirD];
-
+if nSongs == 1
+    MotifPlotDir = [data_OBJ.PATH.AllPlots data_OBJ.INFO.birdName{:} data_OBJ.PATH.dirD 'Motifs-100Songs' data_OBJ.PATH.dirD];
+elseif nSongs ==2
+    MotifPlotDir = [data_OBJ.PATH.AllPlots data_OBJ.INFO.birdName{:} data_OBJ.PATH.dirD 'Motifs-50Songs' data_OBJ.PATH.dirD];
+end
 if exist(MotifPlotDir , 'dir') == 0
     mkdir(MotifPlotDir );
     disp(['Created: '  MotifPlotDir ])
@@ -137,8 +145,12 @@ end
 
 data_OBJ.PATH.MotifPlotDir = MotifPlotDir;
 
-AllEntropyDataDir = [data_OBJ.PATH.AllPlots data_OBJ.INFO.birdName{:} data_OBJ.PATH.dirD 'Entropy' data_OBJ.PATH.dirD];
-
+if nSongs == 1    
+    AllEntropyDataDir = [data_OBJ.PATH.AllPlots data_OBJ.INFO.birdName{:} data_OBJ.PATH.dirD 'Entropy-100Songs' data_OBJ.PATH.dirD];
+elseif nSongs ==2
+    AllEntropyDataDir = [data_OBJ.PATH.AllPlots data_OBJ.INFO.birdName{:} data_OBJ.PATH.dirD 'Entropy-50Songs' data_OBJ.PATH.dirD];
+end
+    
 if exist(AllEntropyDataDir, 'dir') == 0
     mkdir(AllEntropyDataDir);
     disp(['Created: '  AllEntropyDataDir])
@@ -171,10 +183,10 @@ data_OBJ.PATH.TimeInfoSaveDir_playbacks = TimeInfoSaveDir_playbacks;
 
 %% To check file differences
 
-dir1 = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\2021-08-30-First100Songs\'; % allSongs
-dir2 = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\2021-08-30-First100Songs-Motifs\'; % all motifs
+%dir1 = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\2021-08-30-First100Songs\'; % allSongs
+%dir2 = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\2021-08-30-First100Songs-Motifs\'; % all motifs
 
-data_OBJ = checkFileDiffs(data_OBJ, dir1 , dir2 );
+%data_OBJ = checkFileDiffs(data_OBJ, dir1 , dir2 );
 
 %% Override
 %thisDirToLoad = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\2021-08-27-First100Songs-Motifs\';
@@ -219,24 +231,52 @@ data_OBJ = metaAnalysis_make_plot_of_entropy_across_days_with_times(data_OBJ);
 % Make sure that the motif dirs and the ******time info dirs *****match!
 data_OBJ =  combineEntropyFiles_FirstLast(data_OBJ);
 
-data_OBJ = metaAnalysis_make_plot_of_MEAN_ENTROPY_across_days(data_OBJ);
-data_OBJ = metaAnalysis_make_plot_of_MEAN_ENTROPY_VARIANCE_across_days(data_OBJ);
+metaAnalysis_make_plot_of_MEAN_ENTROPY_OR_VARIANCE_across_days(data_OBJ, 1)
+metaAnalysis_make_plot_of_MEAN_ENTROPY_OR_VARIANCE_across_days(data_OBJ, 2)
 
+%data_OBJ = metaAnalysis_make_plot_of_MEAN_ENTROPY_across_days(data_OBJ);
+%data_OBJ = metaAnalysis_make_plot_of_MEAN_ENTROPY_VARIANCE_across_days(data_OBJ);
+
+
+%% identify large dEVs - per bird basis (runs on active object)
+ data_OBJ = analyze_dEV_night_and_day(data_OBJ);
 
 
 %%  all birds combined, requires X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\entropyStats_AllBirds dirs
 
 data_OBJ = analyze_EV_acrossBirds(data_OBJ);
            
-%% identify large dEVs
 
 
- data_OBJ = analyze_dEV_night_and_day(data_OBJ)
+%% Ephys analysis (standalone)
+
+dEV_dir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\EphysAnalysis\';
+%% Large dEV
+%dateText = '2021-07-30';
+%dateText = '2021-07-31';
+dateText = '2021-08-02';
+%dateText = '2021-08-04';
+%dateText = '2021-08-05';
+
+%% small dEV
+%dateText = '2021-07-16';
+%dateText = '2021-07-18'; % not a full 12 hours
+%dateText = '2021-07-19'; 
+%dateText = '2021-07-27'; 
+%dateText = '2021-07-29'; 
+%dateText = '2021-08-15'; baddish
+dateText = '2021-08-17';
+
+
+data_OBJ = analyze_sleep_ephys(data_OBJ, dEV_dir, dateText);
 
 
 
 
 
+%% summarize dEV means and medians across days                
+                
+data_OBJ = analyze_spectral_means_sleep_ephys(data_OBJ)
 
 %data_OBJ = metaAnalysis_make_plot_of_entropy_means_across_days_all_data(data_OBJ);
 

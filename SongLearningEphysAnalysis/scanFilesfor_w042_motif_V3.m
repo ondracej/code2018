@@ -1,6 +1,6 @@
 function [] = scanFilesfor_w042_motif_V3()             
-audioDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w042\Data\2021-12-31\';  % directory containing WAV files
-destNo  = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w042\Data\2021-12-31-ToDiscard\';
+audioDir = 'Z:\zoologie\JanieData\SongbirdSongs\SongsFreising\w023\Data\2021-07-06\';  % directory containing WAV files
+destNo  = 'Z:\zoologie\JanieData\SongbirdSongs\SongsFreising\w023\Data\2021-07-06-ToDiscard\';
 
 
 birdBand = [2000 6000];     % Hz

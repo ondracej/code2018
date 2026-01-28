@@ -1970,6 +1970,8 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
                 underscore = '_';
                 
+                fullEntropyName = [];
+                dates = [];
                 for j = 1:nFiles_entropy
                     
                     thisEntropyName = entropyFileNames{j,1};
@@ -1987,6 +1989,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 motifTimeFileNames = {motifTimeFileNames.name}';
                 nFiles_motifs = numel(motifTimeFileNames);
                 
+                fullMotifName = [];
                 for j = 1:nFiles_motifs
                     
                     thisMotifName = motifTimeFileNames{j,1};
@@ -1998,7 +2001,8 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     
                 end
                 allTotalDurs_concat = [];
-                cnt =1;
+                cnt =1;  M_d = NaT;
+                
                 for j = 1:nFiles_entropy
                     
                     thisDate = dates{j};
@@ -2034,6 +2038,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     % df_s = 0;
                     % totalDur_s = [];
                     T = datetime('today');
+                    
                     
                     for o = 1:numel(motif_datetime)
                         
@@ -2329,37 +2334,73 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     hold on
                     plot(motif_datetime, allVars, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
                     
-                      lineData_time = obj.VIDEO.FirstFrame(ind);
+                      lineData_time = obj.VIDEO.FirstFrame(ind); % animal plugged in
                       
                     if ~isempty(lineData_time{:})
                         
-                        lineData_LightsOn = obj.VIDEO.LightsOn(ind); % morning
-                        lineData_LastFrame = obj.VIDEO.LastFrame(ind); %unplugged (morning)
+                        lineData_LightsOn = obj.VIDEO.LightsOn(ind); % morning                        
+                        
+                        if ind ~=1
+                            lineData_LastFrame = obj.VIDEO.LastFrame(ind-1); %unplugged (next morning)
+                        else
+                            lineData_LastFrame = {[]};
+                        end
+                        
                         lineData_time_FirstFrame = obj.VIDEO.FirstFrame(ind); %plugged in (night)
                         lineData_time_LightsOff = obj.VIDEO.LightsOff(ind); %night
                         
                         linedate_LightsOn = datetime([dates{j} ' ' lineData_LightsOn{:}]);
                         linedate_LastFrame = datetime([dates{j} ' ' lineData_LastFrame{:}]);
                         
+                        if isempty(lineData_LastFrame{:})
+                            linedate_LastFrame = NaT;
+                        end
+                        
                         linedate_FirstFrame = datetime([dates{j} ' ' lineData_time_FirstFrame{:}]);
                         linedate_LightsOff = datetime([dates{j} ' ' lineData_time_LightsOff{:}]);
                         
                         figure(figH) %Entropy
-                        line([linedate_LightsOn, linedate_LightsOn], [ylims_E(1) ylims_E(2)], 'color', 'k')
-                        line([linedate_LightsOff, linedate_LightsOff], [ylims_E(1) ylims_E(2)], 'color', 'k')
-                        line([linedate_LastFrame, linedate_LastFrame], [ylims_E(1) ylims_E(2)], 'color', 'r', 'lineStyle', '--')
+                        line([linedate_LightsOn, linedate_LightsOn], [ylims_E(1) ylims_E(2)], 'color', 'k','lineStyle', '-')
+                        line([linedate_LightsOff, linedate_LightsOff], [ylims_E(1) ylims_E(2)], 'color', 'k', 'lineStyle', '--')
+                        line([linedate_LastFrame, linedate_LastFrame], [ylims_E(1) ylims_E(2)], 'color', 'b', 'lineStyle', '--')
                         line([linedate_FirstFrame, linedate_FirstFrame], [ylims_E(1) ylims_E(2)], 'color', 'r', 'lineStyle', '--')
                         
                         figure(figHH) %Variance
-                         line([linedate_LightsOn, linedate_LightsOn], [ylims_V(1) ylims_V(2)], 'color', 'k')
-                        line([linedate_LightsOff, linedate_LightsOff], [ylims_V(1) ylims_V(2)], 'color', 'k')
-                        line([linedate_LastFrame, linedate_LastFrame], [ylims_V(1) ylims_V(2)],  'color', 'r', 'lineStyle', '--')
+                         line([linedate_LightsOn, linedate_LightsOn], [ylims_V(1) ylims_V(2)], 'color', 'k', 'lineStyle', '-')
+                        line([linedate_LightsOff, linedate_LightsOff], [ylims_V(1) ylims_V(2)], 'color', 'k', 'lineStyle', '--')
+                        line([linedate_LastFrame, linedate_LastFrame], [ylims_V(1) ylims_V(2)],  'color', 'b', 'lineStyle', '--')
                         line([linedate_FirstFrame, linedate_FirstFrame], [ylims_V(1) ylims_V(2)],  'color', 'r', 'lineStyle', '--')
                      
+                    else
+                        
+                        lineData_LightsOn = obj.VIDEO.LightsOn(ind); % morning
+                        lineData_time_LightsOff = obj.VIDEO.LightsOff(ind); %night
+                        
+                        lineData_LastFrame = obj.VIDEO.LastFrame(ind-1); %unplugged (next morning)
+                        
+                        linedate_LastFrame = datetime([dates{j} ' ' lineData_LastFrame{:}]);
+                        
+                        if isempty(lineData_LastFrame{:})
+                            linedate_LastFrame = NaT;
+                        end
+                        
+                        linedate_LightsOn = datetime([dates{j} ' ' lineData_LightsOn{:}]);
+                        linedate_LightsOff = datetime([dates{j} ' ' lineData_time_LightsOff{:}]);
+                        
+                        
+                        figure(figH) %Entropy
+                        line([linedate_LightsOn, linedate_LightsOn], [ylims_E(1) ylims_E(2)], 'color', 'k','lineStyle', '-')
+                        line([linedate_LightsOff, linedate_LightsOff], [ylims_E(1) ylims_E(2)], 'color', 'k', 'lineStyle', '--')
+                          line([linedate_LastFrame, linedate_LastFrame], [ylims_E(1) ylims_E(2)], 'color', 'b', 'lineStyle', '--')
+                        
+                        figure(figHH) %Variance
+                        line([linedate_LastFrame, linedate_LastFrame], [ylims_V(1) ylims_V(2)],  'color', 'b', 'lineStyle', '--')
+                        line([linedate_LightsOn, linedate_LightsOn], [ylims_V(1) ylims_V(2)], 'color', 'k', 'lineStyle', '-')
+                        line([linedate_LightsOff, linedate_LightsOff], [ylims_V(1) ylims_V(2)], 'color', 'k', 'lineStyle', '--')
                     end
                     
                 
-                    
+                 
                     
                 
                 end
@@ -2398,54 +2439,476 @@ classdef eeg_lfp_song_analysis_OBJ < handle
         end
         
         function obj = analyze_dEV_night_and_day(obj)
-        
+            
             disp('')
             
-            dEV_dir = [obj.PATH.AllEntropyDataDir 'CombinedEntropyFiles' obj.PATH.dirD]
-            
-            dEV_file = [obj.INFO.birdName{:} 'EntropyVarianceDiffs.mat'];
-            
-            
+            dEV_dir = [obj.PATH.AllEntropyDataDir 'CombinedEntropyFiles' obj.PATH.dirD];
+            dEV_file = [obj.INFO.birdName{:} '_EV_Diffs.mat'];
             d = load([dEV_dir dEV_file]);
             
-            dEV_FirstToLast = d.diffs_FirstToLast;
-            dEV_LastToFirst = d.diffs_LastToFirst;
+            dEV_FirstToLast = d.diffs_FirstToLast; % daytime
+            dEV_LastToFirst = d.diffs_LastToFirst; % night time
             
+            [h,p] = kstest(dEV_LastToFirst);
+            [h,p] = lillietest(dEV_LastToFirst);
+            
+            
+            
+            
+            
+            %%
+            
+    sorted_dEV=sort(dEV_LastToFirst); %most negative first
+    
+    percentile4ScaleEstimation_low = 20;
+    percentile4ScaleEstimation_hi = 80;
+    
+    thresh_low=sorted_dEV(round(percentile4ScaleEstimation_low/100*numel(sorted_dEV)));
+    thresh_hi=sorted_dEV(round(percentile4ScaleEstimation_hi/100*numel(sorted_dEV)));
+    
+    
+    %scaleEstimator_sw=sortedMtest_SW(round(percentile4ScaleEstimation/100*numel(sortedMtest_SW)));
+    
+            
+            
+            %% Large dEV - night time
+            figure (109); clf; hold on;
+            subplot(2, 1, 2)
             xes = 1:1:numel(dEV_LastToFirst);
             
-            
-            [h,p] = kstest(dEV_LastToFirst)
-            [h,p] = lillietest(dEV_LastToFirst)
-            
-            
-            figure (109); clf; hold on;
             plot(xes, dEV_LastToFirst, 'ko', 'linestyle', 'none')
             mean_dEV = nanmean(dEV_LastToFirst);
             std_dEV = nanstd(dEV_LastToFirst);
             iqr_deV = iqr(dEV_LastToFirst);
+           
+            line([xes(1) xes(end)], [thresh_low thresh_low], 'color', 'g')
+            line([xes(1) xes(end)], [thresh_hi thresh_hi], 'color', 'g')
+            
             line([xes(1) xes(end)], [mean_dEV mean_dEV], 'color', 'k')
             %line([xes(1) xes(end)], [mean_dEV-3*std_dEV mean_dEV-3*std_dEV], 'color', 'b')
             %line([xes(1) xes(end)], [mean_dEV-2*std_dEV mean_dEV-2*std_dEV], 'color', 'b')
             line([xes(1) xes(end)], [mean_dEV-1*std_dEV mean_dEV-1*std_dEV], 'color', 'b')
+            line([xes(1) xes(end)], [mean_dEV+1*std_dEV mean_dEV+1*std_dEV], 'color', 'b')
             %line([xes(1) xes(end)], [mean_dEV-1*iqr_deV mean_dEV-1*iqr_deV], 'color', 'r')
             %line([xes(1) xes(end)], [mean_dEV-.5*iqr_deV mean_dEV-.5*iqr_deV], 'color', 'r')
             line([xes(1) xes(end)], [0 0], 'color', 'k', 'linestyle', '--')
             set(gca, 'xtick', xes)
             set(gca, 'xticklabel', d.allDates)
-                xtickangle(90)
-           ylabel('Delta EV')
-           title(obj.INFO.birdName{:})
-                ylim([-.25 0.1])
-                xlim([0 xes(end)+1])
-                
-                   plotpos = [0 0 15 8];
-            plotName = [dEV_dir obj.INFO.birdName{:} '_DiffEntropyVariance_largeVals'];
+            xtickangle(90)
+            ylabel('Delta EV')
+            title([obj.INFO.birdName{:} ' Last-to-First: Night'])
+            ylim([-.35 0.35])
+            xlim([0 xes(end)+1])
+            grid on
+            mean_dEV_LF = mean_dEV;
+            %% Large dEV - day time
+            subplot(2, 1, 1)
+            dEV_FirstToLast = dEV_FirstToLast(1:numel(dEV_LastToFirst));
+            
+            
+              sorted_dEV=sort(dEV_FirstToLast); %most negative first
+    
+    percentile4ScaleEstimation_low = 20;
+    percentile4ScaleEstimation_hi = 80;
+    
+    thresh_low=sorted_dEV(round(percentile4ScaleEstimation_low/100*numel(sorted_dEV)));
+    thresh_hi=sorted_dEV(round(percentile4ScaleEstimation_hi/100*numel(sorted_dEV)));
+    
+            
+            
+            xes = 1:1:numel(dEV_FirstToLast);
+            
+            plot(xes, dEV_FirstToLast, 'ko', 'linestyle', 'none')
+            mean_dEV = nanmean(dEV_FirstToLast);
+            std_dEV = nanstd(dEV_FirstToLast);
+            iqr_deV = iqr(dEV_FirstToLast);
+          
+              line([xes(1) xes(end)], [thresh_low thresh_low], 'color', 'g')
+            line([xes(1) xes(end)], [thresh_hi thresh_hi], 'color', 'g')
+           
+            
+            line([xes(1) xes(end)], [mean_dEV mean_dEV], 'color', 'k')
+            %line([xes(1) xes(end)], [mean_dEV-3*std_dEV mean_dEV-3*std_dEV], 'color', 'b')
+            %line([xes(1) xes(end)], [mean_dEV-2*std_dEV mean_dEV-2*std_dEV], 'color', 'b')
+            line([xes(1) xes(end)], [mean_dEV-1*std_dEV mean_dEV-1*std_dEV], 'color', 'b')
+            line([xes(1) xes(end)], [mean_dEV+1*std_dEV mean_dEV+1*std_dEV], 'color', 'b')
+            %line([xes(1) xes(end)], [mean_dEV-1*iqr_deV mean_dEV-1*iqr_deV], 'color', 'r')
+            %line([xes(1) xes(end)], [mean_dEV-.5*iqr_deV mean_dEV-.5*iqr_deV], 'color', 'r')
+            line([xes(1) xes(end)], [0 0], 'color', 'k', 'linestyle', '--')
+            set(gca, 'xtick', xes)
+            set(gca, 'xticklabel', d.allDates)
+            xtickangle(90)
+            ylabel('Delta EV')
+            title([obj.INFO.birdName{:} ' First-to-Last: Day'])
+            ylim([-.35 0.35])
+            xlim([0 xes(end)+1])
+            grid on
+            mean_dEV_FL = mean_dEV;
+            
+            figure (109);
+            plotpos = [0 0 25 20];
+            plotName = [dEV_dir obj.INFO.birdName{:} '_EV_diff_largeVals'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+            %% Looks at correlation between song improvement and that same date sleep deterioration (n+0)
+            
+            figure(105); clf
+            subplot(2, 3, 1)
+            scatter(dEV_LastToFirst, dEV_FirstToLast)
+            hold on
+            plot(mean_dEV_LF, mean_dEV_FL, 'k*')
+            line([-.35 .35], [0 0], 'color', 'k', 'linestyle', '--')
+            line([0 0], [-.35 .35], 'color', 'k', 'linestyle', '--')
+            
+            ylabel(['\Delta EV: First-to-Last: Day'])
+            xlabel(['\Delta EV: Last-to-First: Night'])
+            %title('Neg \Delta EV = deterioration; pos \Delta EV = improvement')
+            title('Singing (same day) versus night-time deterioration')
+            axis tight
+            ylim([-.35 0.35])
+            xlim([-.35 0.35])
+            
+            %% Data is not normally distributed, so we need to use the spearman corr, not pearson's
+            %[r, p] = corrcoef(dEV_FirstToLast, dEV_LastToFirst, 'rows', 'complete'); %
+            [r, p] = corr(dEV_FirstToLast', dEV_LastToFirst', 'type', 'spearman', 'rows', 'complete'); % need to transpose
+            corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
+          text(-0.3, -0.3, corrtext)
+            ndays = sum(~isnan(dEV_FirstToLast));
+            legend(['n = ' num2str(ndays)])
+            %% Lets look at night sleep and next day vocal improvement (n+1)
+            dEV_FirstToLast_nextDay = [];
+            for j = 1:numel(dEV_LastToFirst)-1
+                dEV_FirstToLast_nextDay(j) = dEV_FirstToLast(j+1);
+            end
+            nFL = numel(dEV_FirstToLast_nextDay);
+            
+            subplot(2, 3, 2)
+            scatter(dEV_LastToFirst(1:nFL), dEV_FirstToLast_nextDay)
+            hold on
+            plot(mean(dEV_LastToFirst(1:numel(dEV_FirstToLast_nextDay))), mean(dEV_FirstToLast_nextDay), 'k*')
+            line([-.35 .35], [0 0], 'color', 'k', 'linestyle', '--')
+            line([0 0], [-.35 .35], 'color', 'k', 'linestyle', '--')
+            
+            ylabel(['\Delta EV: First-to-Last: Next Day'])
+            xlabel(['\Delta EV: Last-to-First: Night'])
+            title('Singing (next day) versus night-time deterioration')
+            axis tight
+            ylim([-.35 0.35])
+            xlim([-.35 0.35])
+            
+            
+            %[r, p] = corrcoef(dEV_FirstToLast_nextDay, dEV_LastToFirst(1:numel(dEV_FirstToLast_nextDay)),'rows', 'complete');
+            [r, p] = corr(dEV_FirstToLast_nextDay', dEV_LastToFirst(1:nFL)', 'type', 'spearman', 'rows', 'complete');
+            corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
+            text(-0.3, -0.3, corrtext)
+            ndays = sum(~isnan(dEV_FirstToLast_nextDay));
+            legend(['n = ' num2str(ndays)])
+            %% next next day (n+2)
+            
+            for j = 1:numel(dEV_LastToFirst)-2
                 
-                
+                dEV_FirstToLast_nextnextDay(j) = dEV_FirstToLast(j+2);
+            end
+            nFL = numel(dEV_FirstToLast_nextnextDay);
+            
+            subplot(2, 3, 3)
+            scatter(dEV_LastToFirst(1:numel(dEV_FirstToLast_nextnextDay)), dEV_FirstToLast_nextnextDay)
+            hold on
+            plot(mean(dEV_LastToFirst(1:numel(dEV_FirstToLast_nextnextDay))), mean(dEV_FirstToLast_nextnextDay), 'k*')
+            line([-.35 .35], [0 0], 'color', 'k', 'linestyle', '--')
+            line([0 0], [-.35 .35], 'color', 'k', 'linestyle', '--')
+            
+            ylabel(['\Delta EV: First-to-Last: Next Next Day'])
+            xlabel(['\Delta EV: Last-to-First: Night'])
+            title('Singing (next next day) versus night-time deterioration')
+            axis tight
+            ylim([-.35 0.35])
+            xlim([-.35 0.35])
+            
+            %[r, p] = corrcoef(dEV_FirstToLast_nextnextDay, dEV_LastToFirst(1:numel(dEV_FirstToLast_nextnextDay)),'rows', 'complete');
+            [r, p] = corr(dEV_FirstToLast_nextnextDay', dEV_LastToFirst(1:nFL)', 'type', 'spearman', 'rows', 'complete');
+            corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
+           text(-0.3, -0.3, corrtext)
+              ndays = sum(~isnan(dEV_FirstToLast_nextnextDay));
+            legend(['n = ' num2str(ndays)])
+            %% random
+            rng(1)
+            bla = randperm(numel(dEV_LastToFirst));
+            dEV_FirstToLast_rand = dEV_FirstToLast(bla);
+            
+            subplot(2, 3, 4)
+            scatter(dEV_LastToFirst, dEV_FirstToLast_rand)
+            hold on
+            % plot(mean(dEV_LastToFirst(1:numel(dEV_FirstToLast_nextDay))), mean(dEV_FirstToLast_nextDay), 'k*')
+            line([-.35 .35], [0 0], 'color', 'k', 'linestyle', '--')
+            line([0 0], [-.35 .35], 'color', 'k', 'linestyle', '--')
+            
+            ylabel(['\Delta EV: First-to-Last: Random Day'])
+            xlabel(['\Delta EV: Last-to-First: Night'])
+            title('Singing (random day) versus night-time deterioration')
+            axis tight
+            ylim([-.35 0.35])
+            xlim([-.35 0.35])
+            
+            %[r, p] = corrcoef(dEV_FirstToLast_rand, dEV_LastToFirst,'rows', 'complete');
+            [r, p] = corr(dEV_FirstToLast_rand', dEV_LastToFirst', 'type', 'spearman', 'rows', 'complete');
+            corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
+            text(-0.3, -0.3, corrtext)
+            
+             ndays = sum(~isnan(dEV_FirstToLast_rand));
+            legend(['n = ' num2str(ndays)])
+            %% Age and dEV
+            
+            age = 1:1:numel(dEV_LastToFirst);
+            
+            subplot(2, 3, 5)
+            scatter(age, dEV_LastToFirst)
+            hold on
+            % plot(mean_dEV_LF, mean_dEV_FL, 'k*')
+            %   line([-.35 .35], [0 0], 'color', 'k', 'linestyle', '--')
+            %   line([0 0], [-.35 .35], 'color', 'k', 'linestyle', '--')
+            
+            ylabel(['\Delta EV: First-to-Last: Day'])
+            xlabel(['Age'])
+            %title('Neg \Delta EV = deterioration; pos \Delta EV = improvement')
+            title('Age versus night-time deterioration')
+            axis tight
+            ylim([-.35 0.35])
+            %  xlim([-.35 0.35])
+            
+            %[r, p] = corrcoef(age, dEV_LastToFirst,'rows', 'complete');
+            [r, p] = corr(age', dEV_LastToFirst', 'type', 'spearman', 'rows', 'complete');
+            format short
+            corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
+            text(3, .3, corrtext)
+             ndays = sum(~isnan(dEV_LastToFirst));
+            legend(['n = ' num2str(ndays)])
+            %% age and singing
+            
+            subplot(2, 3, 6)
+            scatter(age, dEV_FirstToLast)
+            hold on
+            % plot(mean_dEV_LF, mean_dEV_FL, 'k*')
+            %   line([-.35 .35], [0 0], 'color', 'k', 'linestyle', '--')
+            %   line([0 0], [-.35 .35], 'color', 'k', 'linestyle', '--')
+            
+            ylabel(['\Delta EV: First-to-Last: Day'])
+            xlabel(['Age'])
+            %title('Neg \Delta EV = deterioration; pos \Delta EV = improvement')
+            title('Age versus day-time improvement')
+            axis tight
+            ylim([-.35 0.35])
+            %  xlim([-.35 0.35])
+            
+            %[r, p] = corrcoef(age, dEV_FirstToLast,'rows', 'complete');
+            [r, p] = corr(age', dEV_FirstToLast', 'type', 'spearman', 'rows', 'complete');
+            
+            corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
+            text(3, -.3, corrtext)
+              
+            ndays = sum(~isnan(dEV_FirstToLast));
+            legend(['n = ' num2str(ndays)])
+            
+            plotpos = [0 0 35 20];
+            plotName = [dEV_dir obj.INFO.birdName{:} '_EV_diff_Corrs'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+            %%
+            %
+            %               hold on
+            % % Find x values for plotting the fit based on xlim
+            % axesLimits1 = xlim(axes1);
+            % xplot1 = linspace(axesLimits1(1), axesLimits1(2));
+            %
+            % % Find coefficients for polynomial (order = 1)
+            % fitResults1 = polyfit(dEV_FirstToLast,dEV_LastToFirst,1);
+            % % Evaluate polynomial
+            % yplot1 = polyval(fitResults1,xplot1);
+            % % Plot the fit
+            % fitLine1 = plot(xplot1,yplot1,'DisplayName','   linear','Tag','linear',...
+            %     'Parent',axes1,...
+            %     'Color',[0.929 0.694 0.125]);
+            %
+            % % Set new line in proper position
+            % %setLineOrder(axes1,fitLine1,scatter1);
+            
+            %%
+            
         end
         
+        
+        function obj = analyze_spectral_means_sleep_ephys(obj)
+            
+            dEV_dir_large = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV_nights_Large\MeansMedians\'
+            dEV_dir_small = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV_nights_Small\MeansMedians\'
+            
+            
+            large_dEV_Filenames = dir(fullfile(dEV_dir_large, '*.mat'));
+            large_dEV_Filenames = {large_dEV_Filenames.name}';
+            n_large_dEV_Filenames = numel(large_dEV_Filenames);
+            
+            small_dEV_Filenames = dir(fullfile(dEV_dir_small, '*.mat'));
+            small_dEV_Filenames = {small_dEV_Filenames.name}';
+            n_small_dEV_Filenames = numel(small_dEV_Filenames);
+            
+            %%
+            allMeans_large = []; allMedians_large = [];            
+            for j = 1:n_large_dEV_Filenames
+                
+                dd = load([dEV_dir_large large_dEV_Filenames{j}]);
+                
+                allMeans_large(j,:) = dd.thisBinMean;
+                allMedians_large(j,:) = dd.thisBinMedian;
+            end
+            
+            %%
+            allMeans_small = [];  allMedians_small = [];
+            for j = 1:n_small_dEV_Filenames
+                
+                dd = load([dEV_dir_small small_dEV_Filenames{j}]);
+                
+                allMeans_small(j,:) = dd.thisBinMean;
+                allMedians_small(j,:) = dd.thisBinMedian;
+            end
+            %%
+for kk = 1:2
+    
+    switch kk
+        case 1
+            data = allMedians_large;
+        case 2
+            data = allMedians_small;
+        
+    end
+         figure (100+kk); clf
+         hold on
+         
+
+for i = 1:5
+    %y = allMeans_large{i};
+    y = data(i,:);
+    y = y(~isnan(y));
+
+    [f, yi] = ksdensity(y);
+    f = f / max(f) * 0.3;   % control width
+
+    fill([i+f, i-fliplr(f)], ...
+         [yi, fliplr(yi)], ...
+         [0.7 0.7 0.9], ...
+         'EdgeColor','k','FaceAlpha',0.8)
+
+    plot(i, median(y), 'k.', 'MarkerSize',18)
+end
+
+xlim([0 n+1])
+xticks(1:n)
+ylabel('Value')
+title('Violin Plot')
+hold off
+end
+            
+      %%      
+            
+            allMeans_small = cell2mat(allMeans_small);
+            allMeans_large = cell2mat(allMeans_large);
+            
+            
+            [p, h] = ranksum(allMeans_small, allMeans_large);
+            toPlot = [allMeans_large; allMeans_small]';
+            boxplot(toPlot, 'whisker', 0, 'plotstyle', 'compact')
+            boxplot(toPlot, 'whisker', 100, 'plotstyle', 'compact')
+            bar(allMeans_large)
+            
+        end
+        
+        function obj = analyze_sleep_ephys(obj, dEV_dir, dateText)
+            
+            ephysFilenames = dir(fullfile(dEV_dir, '*.mat'));
+            
+            ephysFilenames = {ephysFilenames.name}';
+            nFiles = numel(ephysFilenames);
+            
+            fileInds = [];
+            for j = 1:nFiles
+                thisName = ephysFilenames{j,:};
+                fileInds{j} = strfind(thisName, dateText);
+                
+            end
+            
+            fileInds = ~cellfun(@isempty,fileInds);
+            fileList = ephysFilenames(fileInds);
+            
+            prompt = 'Please choose the artifact file...';
+            
+            [indx,tf] = listdlg('PromptString',prompt, 'ListString',fileList, 'SelectionMode','single', 'ListSize', [700 200]);
+            
+            SelectedFile = fileList{indx};
+            
+            
+            a_data = load([dEV_dir obj.PATH.dirD SelectedFile]);
+            
+            artifact_inds = a_data.dyData.inds_wake;
+            
+            
+            prompt = 'Please choose the analysis file...';
+            
+            [indx,tf] = listdlg('PromptString',prompt, 'ListString',fileList, 'SelectionMode','single', 'ListSize', [700 200]);
+            
+            SelectedFile = fileList{indx};
+            
+            d_data = load([dEV_dir obj.PATH.dirD SelectedFile]);
+            
+            
+            %% Analysis is done in 60 s (1 min batches)
+            % 12 hours  = 720 minutes 
+            % Each 1 minute bin is 52 values
+            
+            % Lets look at mean and median values per minute, disgarding
+            % the "artifact" bins and starting 30 min afther the lights
+            % turn off
+            
+            lightsOff_ind = d_data.INFO.totalDur_min_start_lightsOff;
+            lightsOn_ind = d_data.INFO.totalDur_min_start_lightsOn;
+        
+            tOn = lightsOff_ind +60; % + 60 minutes
+            tOff = tOn+659; %t onset + 11 hours
+            % fixing it like this make sure we compare the same numbers
+            % across exps. 
+                deltaRaw = d_data.dyData.bufferedDeltaCell;
+                
+                cnt = 1;
+                thisBinMean = []; thisBinMedian = [];
+                for j = tOn:tOff
+                    
+                    isArtifact = artifact_inds(j);
+                    
+                    if isArtifact == 1 % is an artifact
+                        
+                        thisBinMean(cnt) = nan;
+                        thisBinMedian(cnt) = nan;
+                        
+                    elseif isArtifact == 0 % not an artifact
+                        
+                        thisBinMean(cnt) = nanmean(deltaRaw{j});
+                        thisBinMedian(cnt) = nanmedian(deltaRaw{j});
+                        
+                    end
+                   cnt = cnt +1; 
+                end
+            
+            subplot(1, 2,1); plot(thisBinMean); axis tight; ylim([0 5e4])
+            subplot(1, 2,2); plot(thisBinMedian); axis tight; ylim([0 5e4])
+            
+            saveFile_txt = [dEV_dir obj.PATH.dirD SelectedFile(1:end-4) '__MeanMedian_delta'];
+            
+            INFO.artifactFile = a_data.INFO.dataType;
+            
+            save(saveFile_txt, 'thisBinMean', 'thisBinMedian', 'INFO');
+            
+            
+        end
         
         
         function obj = analyze_EV_acrossBirds(obj)
@@ -2453,11 +2916,11 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             dirToLoad = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\entropyStats_AllBirds\EV\';
             
-            w025_file =  'w025EntropyVarianceDiffs';
-            w027_file =  'w027EntropyVarianceDiffs';
-            w038_file =  'w038EntropyVarianceDiffs';
-            w037_file =  'w037EntropyVarianceDiffs';
-            w044_file =  'w044EntropyVarianceDiffs';
+            w025_file =  'w025_EV_Diffs';
+            w027_file =  'w027_EV_Diffs';
+            w038_file =  'w038_EV_Diffs';
+            w037_file =  'w037_EV_Diffs';
+            w044_file =  'w044_EV_Diffs';
             
             
             for j = 1:5
@@ -2466,16 +2929,16 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     
                     case 1
                         d = load([dirToLoad w025_file]);
-                        dph = 54:86;
+                        dph = 52:86;
                     case 2
                         d = load([dirToLoad w027_file]);
-                        dph = [60:65 67:86];
+                        dph = [60:86];
                     case 3
                         d = load([dirToLoad w038_file]);
-                         dph = [45:46 51:69];
+                         dph = [44:69];
                     case 4
                         d = load([dirToLoad w037_file]);
-                        dph = 48:77; % bird with other male
+                        dph = 66:77; % bird with other male
                     case 5
                         d = load([dirToLoad w044_file]);
                          dph = [78:85 88:96]; % bird with other male
@@ -2483,7 +2946,8 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         
                 end
             
-                allPooledVars = d.allPooledVars;
+                %allPooledVars = d.allPooledVars;
+                allPooledVars = d.allPooledMeans;
                 
                 thisMean = []; thissem = [];
                 for k = 1:numel(allPooledVars)
@@ -2782,6 +3246,330 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             end
         end
                   
+        
+        
+        function obj = metaAnalysis_make_plot_of_MEAN_ENTROPY_OR_VARIANCE_across_days(obj, E_switch)
+            
+            
+            combinedFileDir = [obj.PATH.AllEntropyDataDir 'CombinedEntropyFiles' obj.PATH.dirD];
+            entropyFileNames = dir(fullfile(combinedFileDir, '*combined*'));
+            entropyFileNames = {entropyFileNames.name}';
+            nFiles_entropy = numel(entropyFileNames);
+            
+            FirstVals  = {};
+            LastVals  = {};
+            allDates = [];
+            for j = 1:nFiles_entropy
+                
+                load([combinedFileDir entropyFileNames{j}])
+                allDates{j} = entropyFileNames{j}(1:10);
+                
+                if isfield(E, 'First')
+                    FirstVals{j} = E.First;
+                else
+                    FirstVals{j} = [];
+                end
+                
+                if isfield(E, 'Last')
+                    LastVals{j} = E.Last;
+                else
+                    LastVals{j} = [];
+                end
+                
+            end
+            
+            %% plot of all entropy values and time and differences across nights
+            
+            gray = [0.5 0.5 0.5];
+            figure(304); clf
+            hold on
+            allMeans_First = nan(1, nFiles_entropy);
+            allMeans_Last = nan(1, nFiles_entropy);
+            allFirstTimes = NaT(1, nFiles_entropy);
+            allLastTimes = NaT(1, nFiles_entropy);
+            
+            
+            for j = 1:nFiles_entropy
+                pooledMeans = [];
+                thisDate_first = FirstVals{j};
+                thisDate_last = LastVals{j};
+                motif_datetime = NaT;
+                if ~isempty(thisDate_first)
+                    
+                    if E_switch == 1
+                        allMeans = thisDate_first.allMeans;
+                    elseif E_switch ==2
+                        allMeans = thisDate_first.allVars;
+                    end
+                    
+                    
+                    if numel(allMeans) > 10 % we ignore days that don't have atleast 10 songs
+                        motif_datetime = thisDate_first.motif_datetime;
+                        plot(motif_datetime, allMeans, 'marker', '.', 'linestyle', 'none', 'color', gray)
+                        pooledMeans = [pooledMeans allMeans];
+                        %allMeans_First(j) = thisDate_first.mean_allMeans;
+                        allMeans_First(j) = nanmean(allMeans);
+                        allFirstTimes(j) = motif_datetime(1);
+                    end
+                end
+                
+                if ~isempty(thisDate_last)
+                    if E_switch == 1
+                        allMeans = thisDate_last.allMeans;
+                    elseif E_switch ==2
+                        allMeans = thisDate_last.allVars;
+                    end
+                    
+                    if numel(allMeans) > 10 % we ignore days that don't have atleast 10 songs
+                        motif_datetime = thisDate_last.motif_datetime;
+                        plot(motif_datetime, allMeans, 'marker', '.', 'linestyle', 'none', 'color', gray)
+                        pooledMeans = [pooledMeans allMeans];
+                        allMeans_Last(j) = nanmean(allMeans);
+                        allLastTimes(j) = motif_datetime(end);
+                    end
+                end
+                allPooledMeans{j} = pooledMeans;
+                
+            end
+            
+            %% Now add Means and lines Differences across nights
+            
+            plot(allLastTimes, allMeans_Last, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
+            plot(allFirstTimes, allMeans_First, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
+            
+            for j = 1:nFiles_entropy-1
+                line([allLastTimes(j) allFirstTimes(j+1)],[allMeans_Last(j), allMeans_First(j+1)], 'color', 'k', 'linewidth', 2)
+                diffs_LastToFirst(j) =  allMeans_First(j+1) - allMeans_Last(j);
+            end
+            
+            %% Now agan for the differences between first and last according to time
+            
+            figure(305); clf
+            hold on
+            for j = 1:nFiles_entropy
+                
+                thisDate_first = FirstVals{j};
+                thisDate_last = LastVals{j};
+                
+                if ~isempty(thisDate_first)
+                    
+                    if E_switch == 1
+                        allMeans = thisDate_first.allMeans;
+                    elseif E_switch ==2
+                        allMeans = thisDate_first.allVars;
+                    end
+                    
+                    motif_datetime = thisDate_first.motif_datetime;
+                    plot(motif_datetime, allMeans, 'marker', '.', 'linestyle', 'none', 'color', gray)
+                    
+                end
+                
+                if ~isempty(thisDate_last)
+                    if E_switch == 1
+                        allMeans = thisDate_last.allMeans;
+                    elseif E_switch ==2
+                        allMeans = thisDate_last.allVars;
+                    end
+                    
+                    
+                    motif_datetime = thisDate_last.motif_datetime;
+                    plot(motif_datetime, allMeans, 'marker', '.', 'linestyle', 'none', 'color', gray)
+                    
+                end
+                
+            end
+            
+            plot(allFirstTimes, allMeans_First, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
+            plot(allLastTimes, allMeans_Last, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
+            
+            
+            for j = 1:nFiles_entropy
+                line([allFirstTimes(j) allLastTimes(j)],[allMeans_First(j), allMeans_Last(j)], 'color', 'k', 'linewidth', 2)
+                diffs_FirstToLast(j) =  allMeans_Last(j) - allMeans_First(j);
+            end
+            
+            
+            
+            %% Now make a plot of mean values but without time info
+            
+            figure(306); clf
+            hold on
+            offset = 200;
+            meanVal = []; lastX = [];  midX = [];
+            for j = 1:nFiles_entropy
+                
+                allMeans = allPooledMeans{j};
+                meanVal(j) = mean(allMeans);
+                
+                vals = 1:1:numel(allMeans);
+                
+                if ~isempty(vals)
+                    xes = vals+offset ;
+                    hold on
+                    plot(xes, allMeans, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
+                    
+                    % firstX(j) = xes(1);
+                    lastX(j) = xes(end);
+                    midX(j) = xes(round(numel(allMeans)/2));
+                    offset =  lastX(j) +200;
+                elseif isempty(vals) && j ==1
+                    offset =  200;
+                    midX(j) = 100;
+                    
+                elseif isempty(vals) && j~= 1
+                      lastX(j) = lastX(j-1)+200;
+                    offset =  lastX(j);
+                    
+                    %offset =  lastX(j) +200;
+                    %midX(j) = midX(j-1)+200;
+                    midX(j) = lastX(j) -100;
+                end
+%                 if j ~=1 && midX(j)<= midX(j-1)
+%                     midX(j) = midX(j-1)+200;
+%                 end
+            end
+            
+            %% Add means and lines
+            
+            plot(midX, meanVal, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
+            for j = 1:nFiles_entropy-1
+                line([midX(j) midX(j+1)],[meanVal(j), meanVal(j+1)], 'color', 'k', 'linewidth', 2)
+                diffs_Means(j) = meanVal(j+1) - meanVal(j);
+            end
+            
+         
+            %% Now do the same thing for diffs across nights, ie from last to first
+            
+            %{
+            figure(306); clf
+            hold on
+            offset = 200;
+            
+            for j = 1:nFiles_entropy
+                
+                allMeans = allPooledMeans{j};
+                meanVal(j) = mean(allMeans);
+                
+                vals = 1:1:numel(allMeans);
+                xes = vals+offset ;
+                hold on
+                plot(xes, allMeans, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
+                
+                firstX(j) = xes(1);
+                lastX(j) = xes(end);
+                %midX(j) = xes(round(numel(allMeans)/2));
+                
+                offset =  lastX(j) +200;
+            end
+            
+            
+            plot(lastX, allMeans_Last, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
+            plot(firstX, allMeans_First, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
+            
+            for j = 1:nFiles_entropy-1
+                line([lastX(j) firstX(j+1)],[allMeans_Last(j), allMeans_First(j+1)], 'color', 'k', 'linewidth', 2)
+            end
+            %}
+            
+            
+            %% Different from first to last
+            %{
+              
+            figure(308); clf
+            hold on
+            offset = 200;
+            
+            for j = 1:nFiles_entropy
+                
+                allMeans = allPooledMeans{j};
+                meanVal(j) = mean(allMeans);
+                
+                vals = 1:1:numel(allMeans);
+                xes = vals+offset ;
+                hold on
+                plot(xes, allMeans, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
+                
+                firstX(j) = xes(1);
+                lastX(j) = xes(end);
+                %midX(j) = xes(round(numel(allMeans)/2));
+                
+                offset =  lastX(j) +200;
+            end
+            
+            
+            plot(lastX, allMeans_Last, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
+            plot(firstX, allMeans_First, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
+            
+            for j = 1:nFiles_entropy
+                line([firstX(j) lastX(j)],[allMeans_First(j), allMeans_Last(j)], 'color', 'k', 'linewidth', 2)
+            end
+            %}
+            
+            if E_switch == 1
+                ylims  = [-1.8 -0.6];
+                titleText = 'Mean Wiener Entropy';
+                saveText = 'E_';
+            elseif E_switch ==2
+                ylims = [0 1];
+                titleText = 'Entropy Variance';
+                saveText = 'EV_';
+            end
+            
+               SaveName = [combinedFileDir obj.INFO.birdName{:} '_' saveText 'Diffs.mat'];
+            save(SaveName, 'diffs_LastToFirst', 'diffs_FirstToLast', 'diffs_Means', 'allDates', 'allPooledMeans')
+            
+            
+            %%
+            figure(305) % First versus last
+            xticks(datetime([allDates{1} ' 9:00:00']) : days(1) : (datetime([allDates{end} ' 9:00:00'])))
+            xtickangle(90)
+            titleTxt = [obj.INFO.birdName{:} ': ' titleText ': Diff Across Day: First to Last'];
+            title(titleTxt)
+            
+            xlim([datetime([allDates{1} ' 9:00:00']) - days(1) datetime([allDates{end} ' 9:00:00']) + days(1)])
+            ylim(ylims )
+            
+            plotpos = [0 0 35 20];
+            plotName = [combinedFileDir obj.INFO.birdName{:} '_' saveText 'FirstToLast'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+            %%
+            figure(304) % Last to First
+            xticks(datetime([allDates{1} ' 9:00:00']) : days(1) : (datetime([allDates{end} ' 9:00:00'])))
+            xtickangle(90)
+            titleTxt = [obj.INFO.birdName{:} ': ' titleText ' : Diff Across Night: Last to First'];
+            title(titleTxt)
+            
+            xlim([datetime([allDates{1} ' 9:00:00']) - days(1) datetime([allDates{end} ' 9:00:00']) + days(1)])
+            ylim(ylims )
+            
+            plotpos = [0 0 35 20];
+            plotName = [combinedFileDir obj.INFO.birdName{:} '_' saveText 'LastToFirst'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+            %%
+            figure(306)
+            set(gca, 'xtick', midX)
+            set(gca, 'xticklabels', allDates)
+            set(gca,'XTickLabelRotation',90)
+            ylim(ylims )
+            
+            titleTxt = [obj.INFO.birdName{:} ': ' titleText ' Across Days'];
+            title(titleTxt)
+            
+            xlim([0 midX(end)+300])
+            plotpos = [0 0 35 20];
+            plotName = [combinedFileDir obj.INFO.birdName{:} '_' saveText 'Means'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+        end
+        
+        
+        
+        
         function obj = metaAnalysis_make_plot_of_MEAN_ENTROPY_across_days(obj)
             
             combinedFileDir = [obj.PATH.AllEntropyDataDir 'CombinedEntropyFiles' obj.PATH.dirD];
@@ -3010,21 +3798,29 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             end
             %}
             
-            ylims_V = [0 1];
-            ylims_E  = [-1.8 -0.6];
+            if E_switch == 1
+                ylims  = [-1.8 -0.6];
+                titleText = 'Mean Wiener Entropy';
+                saveText = 'E_';
+            elseif E_switch ==2
+                ylims = [0 1];
+                titleText = 'Entropy Variance';
+                saveText = 'EV_';
+            end
+            
             
             %%
             figure(305) % First versus last
             xticks(datetime([allDates{1} ' 9:00:00']) : days(1) : (datetime([allDates{end} ' 9:00:00'])))
             xtickangle(90)
-            titleTxt = [obj.INFO.birdName{:} ': Mean Wiener Entropy : Diff Across Day: First to Last'];
+            titleTxt = [obj.INFO.birdName{:} ': ' titleText ': Diff Across Day: First to Last'];
             title(titleTxt)
             
             xlim([datetime([allDates{1} ' 9:00:00']) - days(1) datetime([allDates{end} ' 9:00:00']) + days(1)])
-            ylim(ylims_E )
+            ylim(ylims )
             
             plotpos = [0 0 35 20];
-            plotName = [combinedFileDir obj.INFO.birdName{:} '_EntropyFirstToLast'];
+            plotName = [combinedFileDir obj.INFO.birdName{:} '_' saveText 'FirstToLast'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             print_in_A4(0, plotName, '-depsc', 0, plotpos);
             
@@ -3032,14 +3828,14 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             figure(304) % Last to First
             xticks(datetime([allDates{1} ' 9:00:00']) : days(1) : (datetime([allDates{end} ' 9:00:00'])))
             xtickangle(90)
-            titleTxt = [obj.INFO.birdName{:} ': Mean Wiener Entropy : Diff Across Night: Last to First'];
+            titleTxt = [obj.INFO.birdName{:} ': ' titleText ' : Diff Across Night: Last to First'];
             title(titleTxt)
             
             xlim([datetime([allDates{1} ' 9:00:00']) - days(1) datetime([allDates{end} ' 9:00:00']) + days(1)])
-            ylim(ylims_E )
+            ylim(ylims )
             
             plotpos = [0 0 35 20];
-            plotName = [combinedFileDir obj.INFO.birdName{:} '_EntropyLastToFirst'];
+            plotName = [combinedFileDir obj.INFO.birdName{:} '_' saveText 'LastToFirst'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             print_in_A4(0, plotName, '-depsc', 0, plotpos);
             
@@ -3048,14 +3844,14 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             set(gca, 'xtick', midX)
             set(gca, 'xticklabels', allDates)
             set(gca,'XTickLabelRotation',90)
-            ylim(ylims_E )
+            ylim(ylims )
             
-            titleTxt = [obj.INFO.birdName{:} ': Wiener Entropy Means Across Days'];
+            titleTxt = [obj.INFO.birdName{:} ': ' titleText ' Across Days'];
             title(titleTxt)
             
             xlim([0 midX(end)+300])
             plotpos = [0 0 35 20];
-            plotName = [combinedFileDir obj.INFO.birdName{:} '_EntropyMeans'];
+            plotName = [combinedFileDir obj.INFO.birdName{:} '_' saveText 'Means'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             print_in_A4(0, plotName, '-depsc', 0, plotpos);
             
@@ -3079,10 +3875,14 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
                 if isfield(E, 'First')
                     FirstVals{j} = E.First;
+                else
+                    FirstVals{j} = [];
                 end
                 
                 if isfield(E, 'Last')
                     LastVals{j} = E.Last;
+                else
+                    LastVals{j} = [];
                 end
                 
             end
@@ -3094,36 +3894,41 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             hold on
             allMeans_First = nan(1, nFiles_entropy);
             allMeans_Last = nan(1, nFiles_entropy);
-            
+              allFirstTimes = NaT(1, nFiles_entropy);
+            allLastTimes = NaT(1, nFiles_entropy);
             
             for j = 1:nFiles_entropy
                 pooledVars = [];
                 thisDate_first = FirstVals{j};
                 thisDate_last = LastVals{j};
+                motif_datetime = NaT;
                 
                 if ~isempty(thisDate_first)
                     allVars = thisDate_first.allVars;
-                    motif_datetime = thisDate_first.motif_datetime;
-                    plot(motif_datetime, allVars, 'marker', '.', 'linestyle', 'none', 'color', gray)
-                    pooledVars = [pooledVars allVars];
-                    allMeans_First(j) = thisDate_first.mean_allVars;
-                    allFirstTimes(j) = motif_datetime(1);
+                    
+                    if numel(allVars) > 10
+                        motif_datetime = thisDate_first.motif_datetime;
+                        plot(motif_datetime, allVars, 'marker', '.', 'linestyle', 'none', 'color', gray)
+                        pooledVars = [pooledVars allVars];
+                        allMeans_First(j) = thisDate_first.mean_allVars;
+                        allFirstTimes(j) = motif_datetime(1);
+                    end
                 end
-                
                 if ~isempty(thisDate_last)
                     allVars = thisDate_last.allVars;
+                     if numel(allVars) > 10
                     motif_datetime = thisDate_last.motif_datetime;
                     plot(motif_datetime, allVars, 'marker', '.', 'linestyle', 'none', 'color', gray)
                     pooledVars = [pooledVars allVars];
                     allMeans_Last(j) = thisDate_last.mean_allVars;
                     allLastTimes(j) = motif_datetime(end);
-                    
+                     end
                 end
-                allPooledVars{j} = pooledVars;
+               
                 
             end
-            
-            % Now add Means and lines Differences across nights
+             allPooledVars{j} = pooledVars;
+            %% Now add Means and lines Differences across nights
             
             
             plot(allLastTimes, allMeans_Last, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
@@ -3198,8 +4003,8 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                       midX(j) = 100;
                       
                   elseif isempty(vals) && j~= 1
-                      offset =  lastX(j-1) +200;
-                      midX(j) = midX(j-1)+200;
+                      offset =  lastX(end) +200;
+                      midX(j) = midX(end)+200;
                   end
                   
                   
@@ -4072,7 +4877,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             end
             
             nFiles = numel(fileNames);
-            
+         
             stringsearch = 'f';
             NText = [];
             for j = 1:nFiles
@@ -4089,6 +4894,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             nSyls = numel(uniqueSyls);
             
             for oo = 1:nSyls
+            
                 
                 allFilesThisSyl = ismember(SText, uniqueSyls{oo});
                 allfileInds = find(allFilesThisSyl ==1);
@@ -4097,6 +4903,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 %%
                 spec_scale = 0.08; %%%%%%%%%%%%%%%%%%
                 motiv_count =  35;
+                %motiv_count =  17; %%%%%%%%%%%%%%%%%
                 height = 1/motiv_count;
                 
                 %width = 0.9 /3;
@@ -4251,7 +5058,10 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             dash = '-';
             
-            for j = 1:numel(fileNames)
+            
+               nFiles = numel(fileNames);
+            
+            for j = 1:nFiles
                 
                 
                 check = fileNames(j).name;
@@ -4556,6 +5366,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             nFiles = numel(fileNames);
             stringsearch = 'f';
             
+            
             for j = 1:nFiles
                 SText{j} = fileNames{j,:}(1:2);
                 
@@ -4755,7 +5566,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             %AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\ANALYSIS\SongAnalysis\allWienerEntropyFiles\';
             save([AllEntropyDataDir dateName '_wEntropy.mat'], 'E', '-v7.3')
-            
+            disp(['Saved: ' AllEntropyDataDir dateName '_wEntropy.mat'])
             
         end
         function  obj = combined_metaAnalysis_analyze_dy_values_across_nights(obj, meta_dyDataFile, meta_songDataFile)
