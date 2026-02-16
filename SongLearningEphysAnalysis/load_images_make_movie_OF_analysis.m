@@ -37,6 +37,7 @@ for ii = 1:numel(dfolders)
     framesToGrab = 1:1:nImages;
     
     %fig1 = figure(100);clf
+    
     %videoReader = vision.VideoFileReader(vidToLoad,'ImageColorSpace','Intensity','VideoOutputDataType','uint8'); % create required video objects
     converter = vision.ImageDataTypeConverter;
     opticalFlow = vision.OpticalFlow('Method','Lucas-Kanade','ReferenceFrameDelay', 1);% use of the Lucas-Kanade method for optic flow determination
