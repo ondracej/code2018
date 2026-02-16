@@ -65,8 +65,8 @@ P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\DATA_VIDEO\';
 P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\DATA_EPHYS\';
 P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\ANALYSIS\';
 P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w027\PLOTS\';
-%P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027_50Songs\Data\'; % 50 songs
-P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027_100Songs\Data\'; % 50 songs
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027_50Songs\Data\'; % 50 songs
+%P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w027_100Songs\Data\'; % 50 songs
 P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w027\Data\';
 
 
@@ -219,7 +219,7 @@ end
 %% make a plot of entropy versus time
 
 % Make sure to move the entropy files into a First and Last folder!
-firstOrLastSwitch = 2; % 1 = First, 2 = Last, 0 = both
+firstOrLastSwitch = 1; % 1 = First, 2 = Last, 0 = both
 data_OBJ = meta_make_plot_of_entropy_with_times_first_last(data_OBJ, firstOrLastSwitch);
 
 data_OBJ = meta_make_histogram_plot_first_last_times(data_OBJ);
@@ -239,6 +239,11 @@ metaAnalysis_make_plot_of_MEAN_ENTROPY_OR_VARIANCE_across_days(data_OBJ, 2)
 
 
 %% identify large dEVs - per bird basis (runs on active object)
+
+
+datesToExlude_NoEphysData = {'2021-07-22', '2021-07-23', '2021-08-03', '2021-07-22'}
+
+
  data_OBJ = analyze_dEV_night_and_day(data_OBJ);
 
 
@@ -248,35 +253,58 @@ data_OBJ = analyze_EV_acrossBirds(data_OBJ);
            
 
 
+data_OBJ = checkEphysChans(data_OBJ);
+
+
+
 %% Ephys analysis (standalone)
 
-dEV_dir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\EphysAnalysis\';
-%% Large dEV
-%dateText = '2021-07-30';
-%dateText = '2021-07-31';
-dateText = '2021-08-02';
-%dateText = '2021-08-04';
-%dateText = '2021-08-05';
-
-%% small dEV
-%dateText = '2021-07-16';
-%dateText = '2021-07-18'; % not a full 12 hours
-%dateText = '2021-07-19'; 
-%dateText = '2021-07-27'; 
-%dateText = '2021-07-29'; 
-%dateText = '2021-08-15'; baddish
-dateText = '2021-08-17';
 
 
-data_OBJ = analyze_sleep_ephys(data_OBJ, dEV_dir, dateText);
+%% W038 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Artifacts = L_post EEG / Analyze L LFP
+
+%% neg dEV -L-F
+%dateText = '2021-09-08';
+%dateText = '2021-09-12';
+%dateText = '2021-09-18';
+%dateText = '2021-09-19';
+
+%% pos dEV -L-F
+%dateText = '2021-09-11';
+%dateText = '2021-09-13';
+
+%% Neutral dEV -L-F
+%dateText = '2021-09-07';
+%dateText = '2021-09-09';
+%dateText = '2021-09-10';
+%dateText = '2021-09-15';
+%dateText = '2021-09-16';
+
+%%
+
+% w027
+%dEV_dir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\EphysAnalysis\';
+%savedir  = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
+%savedir  = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
+%savedir  = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Neutral-dEV_L-F_MeansMedians\';
+
+% w038
+%dEV_dir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\EphysAnalysis\';
+%savedir  = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
+%savedir  = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
+%savedir  = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Neutral-dEV_L-F_MeansMedians\';
 
 
+birdSwitch = 4; % 1 (w025); 2 (w027); 3 (w038); 4 (w037)
 
 
+data_OBJ = analyze_sleep_ephys(data_OBJ, birdSwitch);
 
 %% summarize dEV means and medians across days                
-                
-data_OBJ = analyze_spectral_means_sleep_ephys(data_OBJ)
+             
+% Define Save directories in folder
+data_OBJ = analyze_spectral_means_sleep_ephys(data_OBJ);
 
 %data_OBJ = metaAnalysis_make_plot_of_entropy_means_across_days_all_data(data_OBJ);
 
