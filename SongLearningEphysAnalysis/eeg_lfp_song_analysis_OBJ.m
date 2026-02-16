@@ -352,28 +352,28 @@ classdef eeg_lfp_song_analysis_OBJ < handle
         
         function [totalDur_min] = calc_offset_alignment_time_min(obj, date, refTime, alignmentTime)
             
-         thisdate_ephysTimeOn = [date ' ' refTime];
-         thisdate_Lights = [date ' ' alignmentTime];
-         %thisdate_LightsOn = [date ' ' LightsOn];
-         
+            thisdate_ephysTimeOn = [date ' ' refTime];
+            thisdate_Lights = [date ' ' alignmentTime];
+            %thisdate_LightsOn = [date ' ' LightsOn];
             
-              t_ephys = datetime(thisdate_ephysTimeOn);
-              t_lights = datetime(thisdate_Lights);
-              %t_lightsOn = datetime(thisdate_LightsOn);
-                
-                [h_e,m_e,s_e] = hms(t_ephys);
-                [h_l,m_l,s_l] = hms(t_lights);
-                
-                %% Now we compute the duration of time that passed 
-                if h_l < h_e % morning the next day
-                    dur_h = 24-h_e+h_l;
-                    dur_m = m_l-m_e;
-                else % same night
-                    dur_h = h_l-h_e; % assume lights go off after ephys starts
-                    dur_m = m_l-m_e;
-                end
-                totalDur_min = dur_h*60 + dur_m;
-                
+            
+            t_ephys = datetime(thisdate_ephysTimeOn);
+            t_lights = datetime(thisdate_Lights);
+            %t_lightsOn = datetime(thisdate_LightsOn);
+            
+            [h_e,m_e,s_e] = hms(t_ephys);
+            [h_l,m_l,s_l] = hms(t_lights);
+            
+            %% Now we compute the duration of time that passed
+            if h_l < h_e % morning the next day
+                dur_h = 24-h_e+h_l;
+                dur_m = m_l-m_e;
+            else % same night
+                dur_h = h_l-h_e; % assume lights go off after ephys starts
+                dur_m = m_l-m_e;
+            end
+            totalDur_min = dur_h*60 + dur_m;
+            
             
         end
         
@@ -871,7 +871,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
             end
             disp('Finished...')
-         
+            
             
             %% plot of 30 hz power
             %{
@@ -883,14 +883,14 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             plot(pow_30hz_all_toPlot*1000, 'k*')
             %}
             
-%             %%
-%             timepoints_wake_samp_cell = [];
-%             for oo = 1:numel(timepoints_wake_inds)
-%                 timepoints_wake_samp_cell{oo} = timepoints_wake_inds(oo)*size(deltaGammaRatioAll, 2)-size(deltaGammaRatioAll, 2)+1:timepoints_wake_inds(oo)*size(deltaGammaRatioAll, 2)+1;
-%             end
-%             
-%             
-%             timepoints_wake_samp = cell2mat(timepoints_wake_samp_cell);
+            %             %%
+            %             timepoints_wake_samp_cell = [];
+            %             for oo = 1:numel(timepoints_wake_inds)
+            %                 timepoints_wake_samp_cell{oo} = timepoints_wake_inds(oo)*size(deltaGammaRatioAll, 2)-size(deltaGammaRatioAll, 2)+1:timepoints_wake_inds(oo)*size(deltaGammaRatioAll, 2)+1;
+            %             end
+            %
+            %
+            %             timepoints_wake_samp = cell2mat(timepoints_wake_samp_cell);
             
             
             
@@ -2150,7 +2150,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             %% Pool all Data over days
             %% This assumes that the first file is the "first" motifs
-          
+            
             figHHH = figure(105); clf
             ylims_V = [0 1];
             ylims_E  = [-1.8 -0.6];
@@ -2166,12 +2166,12 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     
                     case 1 % First
                         xlims = [datetime([dates{j} ' 9:00:00']) datetime([dates{j} ' 18:00:00'])];
-                        lineData1_time = obj.VIDEO.LastFrame(ind);
+                        lineData1_time = obj.VIDEO.LastFrame(ind-1); % this is the last day from the previous day!!!
                         lineData2_time = obj.VIDEO.LightsOn(ind);
                         
                     case 2 %last
                         xlims = [datetime([dates{j} ' 14:00:00']) datetime([dates{j} ' 23:00:00'])];
-                        lineData1_time = obj.VIDEO.FirstFrame(ind);
+                        lineData1_time = obj.VIDEO.FirstFrame(ind); % when the animal is plugged in that night
                         lineData2_time = obj.VIDEO.LightsOff(ind);
                         
                 end
@@ -2237,8 +2237,8 @@ classdef eeg_lfp_song_analysis_OBJ < handle
         function obj = metaAnalysis_make_plot_of_entropy_across_days_with_times(obj)
             
             dbstop if error
-             entropyFilesDir = [obj.PATH.AllEntropyDataDir];
-                   
+            entropyFilesDir = [obj.PATH.AllEntropyDataDir];
+            
             entropyFileNames = dir(fullfile(entropyFilesDir, '*.mat'));
             entropyFileNames = {entropyFileNames.name}';
             nFiles_entropy = numel(entropyFileNames);
@@ -2267,7 +2267,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 thisMotifName = motifTimeFileNames{j,1};
                 bla = find(thisMotifName ==underscore);
                 fullMotifName{j} = thisMotifName(1:bla-1);
-               
+                
             end
             
             
@@ -2276,7 +2276,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             figH = figure(103); clf
             figHH = figure(104); clf
-           
+            
             ylims_V = [0 1];
             ylims_E  = [-1.8 -0.6];
             
@@ -2287,18 +2287,18 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
                 ind = strmatch(thisDate, obj.INFO.date_txt_year);
                 
-%                 switch firstOrLastSwitch
-%                     case 0
-%                         xlims = [datetime([dates{j} ' 9:00:00']) datetime([dates{j} ' 20:00:00'])];
-%                     case 1 % First
-%                         xlims = [datetime([dates{j} ' 9:00:00']) datetime([dates{j} ' 18:00:00'])];
-%                        
-%                         
-%                     case 2 %last
-%                         xlims = [datetime([dates{j} ' 14:00:00']) datetime([dates{j} ' 23:00:00'])];
-%                       
-%                         
-%                 end
+                %                 switch firstOrLastSwitch
+                %                     case 0
+                %                         xlims = [datetime([dates{j} ' 9:00:00']) datetime([dates{j} ' 20:00:00'])];
+                %                     case 1 % First
+                %                         xlims = [datetime([dates{j} ' 9:00:00']) datetime([dates{j} ' 18:00:00'])];
+                %
+                %
+                %                     case 2 %last
+                %                         xlims = [datetime([dates{j} ' 14:00:00']) datetime([dates{j} ' 23:00:00'])];
+                %
+                %
+                %                 end
                 
                 thisEntropyFile_name = fullEntropyName{j};
                 
@@ -2321,7 +2321,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 motif_datetime = m.TimeInfo.ds;
                 
                 %% Plot single plot of E and EV
-              
+                
                 if numel(allMeans) ~= numel(motif_datetime)
                     keyboard
                 else
@@ -2334,11 +2334,11 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     hold on
                     plot(motif_datetime, allVars, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
                     
-                      lineData_time = obj.VIDEO.FirstFrame(ind); % animal plugged in
-                      
+                    lineData_time = obj.VIDEO.FirstFrame(ind); % animal plugged in
+                    
                     if ~isempty(lineData_time{:})
                         
-                        lineData_LightsOn = obj.VIDEO.LightsOn(ind); % morning                        
+                        lineData_LightsOn = obj.VIDEO.LightsOn(ind); % morning
                         
                         if ind ~=1
                             lineData_LastFrame = obj.VIDEO.LastFrame(ind-1); %unplugged (next morning)
@@ -2366,11 +2366,11 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         line([linedate_FirstFrame, linedate_FirstFrame], [ylims_E(1) ylims_E(2)], 'color', 'r', 'lineStyle', '--')
                         
                         figure(figHH) %Variance
-                         line([linedate_LightsOn, linedate_LightsOn], [ylims_V(1) ylims_V(2)], 'color', 'k', 'lineStyle', '-')
+                        line([linedate_LightsOn, linedate_LightsOn], [ylims_V(1) ylims_V(2)], 'color', 'k', 'lineStyle', '-')
                         line([linedate_LightsOff, linedate_LightsOff], [ylims_V(1) ylims_V(2)], 'color', 'k', 'lineStyle', '--')
                         line([linedate_LastFrame, linedate_LastFrame], [ylims_V(1) ylims_V(2)],  'color', 'b', 'lineStyle', '--')
                         line([linedate_FirstFrame, linedate_FirstFrame], [ylims_V(1) ylims_V(2)],  'color', 'r', 'lineStyle', '--')
-                     
+                        
                     else
                         
                         lineData_LightsOn = obj.VIDEO.LightsOn(ind); % morning
@@ -2391,7 +2391,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         figure(figH) %Entropy
                         line([linedate_LightsOn, linedate_LightsOn], [ylims_E(1) ylims_E(2)], 'color', 'k','lineStyle', '-')
                         line([linedate_LightsOff, linedate_LightsOff], [ylims_E(1) ylims_E(2)], 'color', 'k', 'lineStyle', '--')
-                          line([linedate_LastFrame, linedate_LastFrame], [ylims_E(1) ylims_E(2)], 'color', 'b', 'lineStyle', '--')
+                        line([linedate_LastFrame, linedate_LastFrame], [ylims_E(1) ylims_E(2)], 'color', 'b', 'lineStyle', '--')
                         
                         figure(figHH) %Variance
                         line([linedate_LastFrame, linedate_LastFrame], [ylims_V(1) ylims_V(2)],  'color', 'b', 'lineStyle', '--')
@@ -2399,10 +2399,10 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         line([linedate_LightsOff, linedate_LightsOff], [ylims_V(1) ylims_V(2)], 'color', 'k', 'lineStyle', '--')
                     end
                     
-                
-                 
                     
-                
+                    
+                    
+                    
                 end
             end
             
@@ -2458,17 +2458,17 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             %%
             
-    sorted_dEV=sort(dEV_LastToFirst); %most negative first
-    
-    percentile4ScaleEstimation_low = 20;
-    percentile4ScaleEstimation_hi = 80;
-    
-    thresh_low=sorted_dEV(round(percentile4ScaleEstimation_low/100*numel(sorted_dEV)));
-    thresh_hi=sorted_dEV(round(percentile4ScaleEstimation_hi/100*numel(sorted_dEV)));
-    
-    
-    %scaleEstimator_sw=sortedMtest_SW(round(percentile4ScaleEstimation/100*numel(sortedMtest_SW)));
-    
+            sorted_dEV=sort(dEV_LastToFirst); %most negative first
+            
+            percentile4ScaleEstimation_low = 20;
+            percentile4ScaleEstimation_hi = 80;
+            
+            thresh_low=sorted_dEV(round(percentile4ScaleEstimation_low/100*numel(sorted_dEV)));
+            thresh_hi=sorted_dEV(round(percentile4ScaleEstimation_hi/100*numel(sorted_dEV)));
+            
+            
+            %scaleEstimator_sw=sortedMtest_SW(round(percentile4ScaleEstimation/100*numel(sortedMtest_SW)));
+            
             
             
             %% Large dEV - night time
@@ -2480,7 +2480,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             mean_dEV = nanmean(dEV_LastToFirst);
             std_dEV = nanstd(dEV_LastToFirst);
             iqr_deV = iqr(dEV_LastToFirst);
-           
+            
             line([xes(1) xes(end)], [thresh_low thresh_low], 'color', 'g')
             line([xes(1) xes(end)], [thresh_hi thresh_hi], 'color', 'g')
             
@@ -2501,19 +2501,45 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             xlim([0 xes(end)+1])
             grid on
             mean_dEV_LF = mean_dEV;
+            
+            
+            
+            %% Find specific large dEV
+            
+            bla1 = find(dEV_LastToFirst <= thresh_low);
+            disp('******************')
+            disp('All negative dEVs:')
+            all_neg_dEV_dates = d.allDates(bla1)
+            disp('******************')
+            
+            bla2 = find(dEV_LastToFirst >= thresh_hi);
+            disp('******************')
+            disp('All positive dEVs:')
+            all_pos_dEV_dates = d.allDates(bla2)
+            disp('******************')
+            
+            bla3 = find(dEV_LastToFirst > thresh_low & dEV_LastToFirst < thresh_hi);
+            disp('******************')
+            disp('All neutral dEVs:')
+            all_neut_dEV_dates = d.allDates(bla3 )
+            disp('******************')
+            
+            
+            
+            
             %% Large dEV - day time
             subplot(2, 1, 1)
             dEV_FirstToLast = dEV_FirstToLast(1:numel(dEV_LastToFirst));
             
             
-              sorted_dEV=sort(dEV_FirstToLast); %most negative first
-    
-    percentile4ScaleEstimation_low = 20;
-    percentile4ScaleEstimation_hi = 80;
-    
-    thresh_low=sorted_dEV(round(percentile4ScaleEstimation_low/100*numel(sorted_dEV)));
-    thresh_hi=sorted_dEV(round(percentile4ScaleEstimation_hi/100*numel(sorted_dEV)));
-    
+            sorted_dEV=sort(dEV_FirstToLast); %most negative first
+            
+            percentile4ScaleEstimation_low = 20;
+            percentile4ScaleEstimation_hi = 80;
+            
+            thresh_low=sorted_dEV(round(percentile4ScaleEstimation_low/100*numel(sorted_dEV)));
+            thresh_hi=sorted_dEV(round(percentile4ScaleEstimation_hi/100*numel(sorted_dEV)));
+            
             
             
             xes = 1:1:numel(dEV_FirstToLast);
@@ -2522,10 +2548,10 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             mean_dEV = nanmean(dEV_FirstToLast);
             std_dEV = nanstd(dEV_FirstToLast);
             iqr_deV = iqr(dEV_FirstToLast);
-          
-              line([xes(1) xes(end)], [thresh_low thresh_low], 'color', 'g')
+            
+            line([xes(1) xes(end)], [thresh_low thresh_low], 'color', 'g')
             line([xes(1) xes(end)], [thresh_hi thresh_hi], 'color', 'g')
-           
+            
             
             line([xes(1) xes(end)], [mean_dEV mean_dEV], 'color', 'k')
             %line([xes(1) xes(end)], [mean_dEV-3*std_dEV mean_dEV-3*std_dEV], 'color', 'b')
@@ -2545,11 +2571,29 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             grid on
             mean_dEV_FL = mean_dEV;
             
+            
+            %%
+            
+             bla2 = find(dEV_FirstToLast >= thresh_hi);
+            disp('******************')
+            disp('All Large negative dEVs:')
+            all_pos_dEV_dates = d.allDates(bla2)
+            disp('******************')
+            
+            
+            %%
             figure (109);
             plotpos = [0 0 25 20];
             plotName = [dEV_dir obj.INFO.birdName{:} '_EV_diff_largeVals'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+            
+            
+            
+            
+            
+            
             
             %% Looks at correlation between song improvement and that same date sleep deterioration (n+0)
             
@@ -2573,7 +2617,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             %[r, p] = corrcoef(dEV_FirstToLast, dEV_LastToFirst, 'rows', 'complete'); %
             [r, p] = corr(dEV_FirstToLast', dEV_LastToFirst', 'type', 'spearman', 'rows', 'complete'); % need to transpose
             corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
-          text(-0.3, -0.3, corrtext)
+            text(-0.3, -0.3, corrtext)
             ndays = sum(~isnan(dEV_FirstToLast));
             legend(['n = ' num2str(ndays)])
             %% Lets look at night sleep and next day vocal improvement (n+1)
@@ -2629,8 +2673,8 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             %[r, p] = corrcoef(dEV_FirstToLast_nextnextDay, dEV_LastToFirst(1:numel(dEV_FirstToLast_nextnextDay)),'rows', 'complete');
             [r, p] = corr(dEV_FirstToLast_nextnextDay', dEV_LastToFirst(1:nFL)', 'type', 'spearman', 'rows', 'complete');
             corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
-           text(-0.3, -0.3, corrtext)
-              ndays = sum(~isnan(dEV_FirstToLast_nextnextDay));
+            text(-0.3, -0.3, corrtext)
+            ndays = sum(~isnan(dEV_FirstToLast_nextnextDay));
             legend(['n = ' num2str(ndays)])
             %% random
             rng(1)
@@ -2656,7 +2700,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
             text(-0.3, -0.3, corrtext)
             
-             ndays = sum(~isnan(dEV_FirstToLast_rand));
+            ndays = sum(~isnan(dEV_FirstToLast_rand));
             legend(['n = ' num2str(ndays)])
             %% Age and dEV
             
@@ -2682,7 +2726,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             format short
             corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
             text(3, .3, corrtext)
-             ndays = sum(~isnan(dEV_LastToFirst));
+            ndays = sum(~isnan(dEV_LastToFirst));
             legend(['n = ' num2str(ndays)])
             %% age and singing
             
@@ -2706,7 +2750,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             corrtext = ['CC: r = ' num2str(r) ' , p = ' num2str(p)];
             text(3, -.3, corrtext)
-              
+            
             ndays = sum(~isnan(dEV_FirstToLast));
             legend(['n = ' num2str(ndays)])
             
@@ -2740,179 +2784,625 @@ classdef eeg_lfp_song_analysis_OBJ < handle
         
         
         function obj = analyze_spectral_means_sleep_ephys(obj)
+            isLFP = 1;
             
-            dEV_dir_large = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV_nights_Large\MeansMedians\'
-            dEV_dir_small = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV_nights_Small\MeansMedians\'
+            %% w037
+            %L-F
+            dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
+            dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
+            dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\';
+            saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\_dEV-L-F_Analysis\';
+            %% w038
+            %L-F
+%             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
+%             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
+%             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\';
+%             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\';
             
+      % F-L
+%             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\Neg-dEV_F-L_MeansMedians\';
+%             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\Pos-dEV_F-L_MeansMedians\';
+%             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\Neutral-dEV_F-L_MeansMedians\';
+%             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\';
+%       
             
-            large_dEV_Filenames = dir(fullfile(dEV_dir_large, '*.mat'));
-            large_dEV_Filenames = {large_dEV_Filenames.name}';
-            n_large_dEV_Filenames = numel(large_dEV_Filenames);
-            
-            small_dEV_Filenames = dir(fullfile(dEV_dir_small, '*.mat'));
-            small_dEV_Filenames = {small_dEV_Filenames.name}';
-            n_small_dEV_Filenames = numel(small_dEV_Filenames);
-            
-            %%
-            allMeans_large = []; allMedians_large = [];            
-            for j = 1:n_large_dEV_Filenames
-                
-                dd = load([dEV_dir_large large_dEV_Filenames{j}]);
-                
-                allMeans_large(j,:) = dd.thisBinMean;
-                allMedians_large(j,:) = dd.thisBinMedian;
-            end
-            
-            %%
-            allMeans_small = [];  allMedians_small = [];
-            for j = 1:n_small_dEV_Filenames
-                
-                dd = load([dEV_dir_small small_dEV_Filenames{j}]);
-                
-                allMeans_small(j,:) = dd.thisBinMean;
-                allMedians_small(j,:) = dd.thisBinMedian;
-            end
-            %%
-for kk = 1:2
+            %% w027
+%             % L-F
+%             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
+%             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
+%             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\';
+%             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\';
+%             
+            %% w025
+            % L-F
+%             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
+%             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
+%             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\';
+%             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\';
+%             
+            %F-L
+%             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\Neg-dEV_F-L_MeansMedians\';
+%             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\Pos-dEV_F-L_MeansMedians\';
+%             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\Neutral-dEV_F-L_MeansMedians\';
+%             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\';
+% %             
+
+if isLFP
+    yss1 = [0 1e4];
+    yss2 = [0 2500];
+else
+     yss1 = [0 1000];
+    yss2 = [0 300];
     
-    switch kk
-        case 1
-            data = allMedians_large;
-        case 2
-            data = allMedians_small;
-        
-    end
-         figure (100+kk); clf
-         hold on
-         
-
-for i = 1:5
-    %y = allMeans_large{i};
-    y = data(i,:);
-    y = y(~isnan(y));
-
-    [f, yi] = ksdensity(y);
-    f = f / max(f) * 0.3;   % control width
-
-    fill([i+f, i-fliplr(f)], ...
-         [yi, fliplr(yi)], ...
-         [0.7 0.7 0.9], ...
-         'EdgeColor','k','FaceAlpha',0.8)
-
-    plot(i, median(y), 'k.', 'MarkerSize',18)
 end
+    
+            for o = 1:3
+                
+                switch o
+                    case 1 % neg
+                        dataDir = dEV_dir_neg;
+                    case 2 % pos
+                        dataDir = dEV_dir_pos;
+                    case 3 % neutral
+                        dataDir = dEV_dir_neutral;
+                        
+                end
+                
+                
+                dEV_Filenames = dir(fullfile(dataDir, '*.mat'));
+                dEV_Filenames = {dEV_Filenames.name}';
+                n_dEV_Filenames = numel(dEV_Filenames);
+                
+                %%
+                allMeans = []; allMedians = []; titleNames = [];
+                for j = 1:n_dEV_Filenames
+                    
+                    dd = load([dataDir dEV_Filenames{j}]);
+                    titleNames{j} = dEV_Filenames{j}(6:15);
+                    allMeans(j,:) = dd.thisBinMean;
+                    allMedians(j,:) = dd.thisBinMedian;
+                    BirdName = dEV_Filenames{j}(1:4);
+                end
+                
+                AllMeans{o} = allMeans;
+                AllMedians{o} = allMedians;
+                allNames{o} = titleNames;
+            end
+            
+            
+            %% Violin plot
+            figure (100); clf
+            for o = 1:3
+                
+                switch o
+                    case 1 % neg
+                        TitleText = 'Median delta values: Neg dEV';
+                        
+                    case 2 % pos
+                        TitleText = 'Median delta values: Pos dEV';
+                    case 3 % neutral
+                        TitleText = 'Median delta values: Neutral dEV';
+                        
+                end
+                
+                theseXLabs = allNames{o};
+                subplot(2, 3, o)
+                hold on
+                
+                thisDataMeans = AllMeans{o};
+                thisDataMedians = AllMedians{o};
+                
+                nEntries = size(thisDataMeans, 1);
+                
+                for i = 1:nEntries
+                    %y = allMeans_large{i};
+                    y = thisDataMedians(i,:);
+                    y = y(~isnan(y));
+                    
+                    [f, yi] = ksdensity(y);
+                    f = f / max(f) * 0.3;   % control width
+                    
+                    fill([i+f, i-fliplr(f)], ...
+                        [yi, fliplr(yi)], ...
+                        [0.7 0.7 0.9], ...
+                        'EdgeColor','k','FaceAlpha',0.8)
+                    
+                    
+                    plot(i, median(y), 'k.', 'MarkerSize',18)
+                end
+                
+                %ylim([0 3e4])
+                ylim(yss1)%w038
+                set(gca, 'xticklabels', theseXLabs)
+                set(gca, 'xtick', 1:nEntries)
+                xtickangle(90)
+                ylabel('Value')
+                title(TitleText)
+                hold off
+            end
+            
+            
+            %%
+            med_neg_vals =  AllMedians{1};
+            med_pos_vals =  AllMedians{2};
+            med_neutral_vals =  AllMedians{3};
+            
+            med_neg = reshape(med_neg_vals,[1,numel(med_neg_vals)]);
+            med_pos = reshape(med_pos_vals,[1,numel(med_pos_vals)]);
+            med_neutral = reshape(med_neutral_vals,[1,numel(med_neutral_vals)]);
+            
+            med_neg_median = nanmedian(med_neg);
+            med_pos_median = nanmedian(med_pos);
+            med_neutral_median = nanmedian(med_neutral);
+            
+            
+            med_neg_median_sem = nanstd(med_neg)/sqrt(numel(med_neg ));
+            med_pos_median_sem = nanstd(med_pos)/sqrt(numel(med_pos ));
+            med_neutral_median_sem = nanstd(med_neutral)/sqrt(numel(med_neutral ));
+            
+            toPlot = [med_neg_median med_pos_median med_neutral_median];
+            errs = [med_neg_median_sem med_pos_median_sem med_neutral_median_sem];
+            
+            figure(100)
+            subplot(2, 3, [4 5 6])
+            x = 1:3;
+            
+            bar(x,toPlot)
+            
+            hold on
+            
+            er = errorbar(x,toPlot,errs,errs);
+            er.Color = [0 0 0];
+            er.LineStyle = 'none';
+            title('Median delta values')
+            ylim(yss2)
+            %ylim([0 800])
+            title([BirdName '- Neg, Pos, Neutral delta values'])
+            
+            
+            
+            [p_negPos, h] = ranksum(med_neg, med_pos)
+            [p_neutPos, h] = ranksum(med_neutral, med_pos)
+            [p_neutNeg, h] = ranksum(med_neutral, med_neg)
+            
+            
+            %% Anova
+            group1 = med_neg;
+group2 = med_pos;
+group3 = med_neutral;
 
-xlim([0 n+1])
-xticks(1:n)
-ylabel('Value')
-title('Violin Plot')
-hold off
-end
+% Combine data
+data   = [group1(:); group2(:); group3(:)];
+groups = [ ...
+    repmat({'G1'}, numel(group1), 1);
+    repmat({'G2'}, numel(group2), 1);
+    repmat({'G3'}, numel(group3), 1)];
+
+% One-way ANOVA
+[p, tbl, stats] = anova1(data, groups);
+
+fprintf('ANOVA p-value = %.4f\n', p);
+   
+
+figure
+multcompare(stats, 'CType', 'tukey-kramer');
+
+[H, pValue, W] = swtest(group1);
+[H, pValue, W] = swtest(group2)
+[H, pValue, W] = swtest(group3)
+
+h = lillietest(group1)
+
+          %%  
             
-      %%      
+            plotpos = [0 0 25 15];
+            plotName = [saveDir 'NegPosNeutral_DValues_dEV'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
             
-            allMeans_small = cell2mat(allMeans_small);
-            allMeans_large = cell2mat(allMeans_large);
+            %toPlot = [allMeans_large; allMeans_small]';
+            %boxplot(toPlot, 'whisker', 0, 'plotstyle', 'compact')
+            %boxplot(toPlot, 'whisker', 100, 'plotstyle', 'compact')
+            %bar(allMeans_large)
             
             
-            [p, h] = ranksum(allMeans_small, allMeans_large);
-            toPlot = [allMeans_large; allMeans_small]';
-            boxplot(toPlot, 'whisker', 0, 'plotstyle', 'compact')
-            boxplot(toPlot, 'whisker', 100, 'plotstyle', 'compact')
-            bar(allMeans_large)
+            
+            
+            
             
         end
         
-        function obj = analyze_sleep_ephys(obj, dEV_dir, dateText)
+        
+        function obj = analyze_sleep_ephys(obj, birdSwitch)
             
-            ephysFilenames = dir(fullfile(dEV_dir, '*.mat'));
+            L_F = 1; %LastToFirst = 1
+            
+            % w037
+            artifactElectrode = 'EEG_L_Ant'; %
+            analysisElectrode = 'LFP_m';
+            
+            
+            %artifactElectrode = 'EEG_R_Ant'; %
+            %artifactElectrode = 'EEG_L_Post'; %
+            
+            %analysisElectrode = 'LFP_l';
+            %analysisElectrode = 'LFP_m';
+            %analysisElectrode = 'EEG_R_Ant';
+            %analysisElectrode = 'EEG_L_Post';
+            switch birdSwitch
+                case 1 % w025 % Artifacts = R_ant EEG
+                    %% w025 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    birdName = 'w025';
+                    
+                    %% neg dEV -L-F
+                    negdEV_dateText = {'2021-07-30', ...
+                        '2021-07-31', ...
+                        '2021-08-05'};
+                    
+                    %% pos dEV -L-F
+                    posdEV_dateText = {'2021-07-16', ...
+                        '2021-07-17', ...
+                        '2021-07-26', ...
+                        '2021-08-17'};
+                    
+                    %% Neutral dEV -L-F
+                    neutEV_dateText = {'2021-07-19', ...
+                        '2021-07-20', ...
+                        '2021-07-21', ...
+                        '2021-07-24', ...
+                        '2021-07-25', ...
+                        '2021-07-27', ...
+                        '2021-07-28', ...
+                        '2021-08-04', ...
+                        '2021-08-16', ...
+                        '2021-08-18'};
+                    
+                    
+                case 2 %w027 % Artifacts = R_ant EEG
+                    %% w027 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    
+                    birdName = 'w027';
+                    
+                    %% neg dEV -L-F
+                    negdEV_dateText = {'2021-07-27',...
+                        '2021-07-28',...
+                        '2021-07-30',...
+                        '2021-08-09'};
+                    
+                    %% pos dEV -L-F
+                    posdEV_dateText = {'2021-07-24',...
+                        '2021-07-31',...
+                        '2021-08-02',...
+                        '2021-08-10',...
+                        '2021-08-16'};
+                    
+                    %% neutral dEV -L-F
+                    neutEV_dateText = {'2021-07-25',...
+                        '2021-07-26',...
+                        '2021-08-01',...
+                        '2021-08-04',...
+                        '2021-08-11',...
+                        '2021-08-12',...
+                        '2021-08-15',...
+                        '2021-08-17',...
+                        '2021-08-18'};
+                case 3 % w038 % Artifacts = L_post EEG / Analyze L LFP
+                    %% W038 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                      birdName = 'w038';
+                      
+                    %% neg dEV -L-F
+                       negdEV_dateText = {'2021-09-08',...
+                    '2021-09-12',...
+                    '2021-09-19'};
+                    
+                    %% pos dEV -L-F
+                    posdEV_dateText = {'2021-09-07',...
+                    '2021-09-11',...
+                    '2021-09-13'};
+                    
+                    %% Neutral dEV -L-F
+                   neutEV_dateText = {'2021-09-09',...
+                    '2021-09-10',...
+                    '2021-09-15',...
+                    '2021-09-16',...
+                    '2021-09-18'};
+                
+                
+                
+                 case 4 % w038 % Artifacts = L_post EEG / Analyze L LFP
+                    %% W038 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                      birdName = 'w037';
+                      
+                    %% neg dEV -L-F
+                       negdEV_dateText = {'2021-09-27'};
+                       
+                    %% pos dEV -L-F
+                    posdEV_dateText = {'2021-09-18',...
+                    '2021-09-22'};
+                    
+                    %% Neutral dEV -L-F
+                   neutEV_dateText = {'2021-09-19',...
+                    '2021-09-20',...
+                    '2021-09-21',...
+                    '2021-09-23',...
+                    '2021-09-26'};
+                    
+            end
+            
+            dEV_dir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\EphysAnalysis\'];
+            
+            for k = 1:3
+                
+                switch k
+                    case 1
+                        allDates = negdEV_dateText;
+                        if L_F 
+                        savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\'];
+                        else
+                            savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-F-L_Analysis\Neg-dEV_F-L_MeansMedians\'];
+                        end
+                    case 2
+                        allDates = posdEV_dateText;
+                        if L_F 
+                        savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\'];
+                        else
+                            savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-F-L_Analysis\Pos-dEV_F-L_MeansMedians\'];
+                        end
+                    case 3
+                        allDates = neutEV_dateText;
+                        if L_F 
+                        savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\'];
+                        else
+                            savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-F-L_Analysis\Neut-dEV_F-L_MeansMedians\'];
+                        end
+                end
+                
+                %%
+                
+                
+                ephysFilenames = dir(fullfile(dEV_dir, '*.mat'));
+                
+                ephysFilenames = {ephysFilenames.name}';
+                nFiles = numel(ephysFilenames);
+                for i = 1:numel(allDates)
+                    dateText = allDates{i};
+                    
+                    fileInds = [];
+                    for j = 1:nFiles
+                        thisName = ephysFilenames{j,:};
+                        fileInds{j} = strfind(thisName, dateText);
+                        
+                    end
+                    
+                    fileInds = ~cellfun(@isempty,fileInds);
+                    fileList = ephysFilenames(fileInds);
+                    
+                    
+                    bla = strfind(fileList, artifactElectrode);
+                    fileInds = find(~cellfun(@isempty,bla));
+                    if isempty(fileInds)
+                        keyboard
+                    end
+                    SelectedFile = fileList{fileInds};
+                    
+                    %prompt = 'Please choose the artifact file...';
+                    %[indx,tf] = listdlg('PromptString',prompt, 'ListString',fileList, 'SelectionMode','single', 'ListSize', [700 200]);
+                    %SelectedFile = fileList{indx};
+                    
+                    a_data = load([dEV_dir obj.PATH.dirD SelectedFile]);
+                    artifact_inds = a_data.dyData.inds_wake;
+                    
+                    bla = strfind(fileList, analysisElectrode);
+                    fileInds = find(~cellfun(@isempty,bla));
+                    if isempty(fileInds)
+                        keyboard
+                    end
+                    SelectedFile = fileList{fileInds};
+                    
+                    %prompt = 'Please choose the analysis file...';
+                    %[indx,tf] = listdlg('PromptString',prompt, 'ListString',fileList, 'SelectionMode','single', 'ListSize', [700 200]);
+                    %SelectedFile = fileList{indx};
+                    
+                    d_data = load([dEV_dir obj.PATH.dirD SelectedFile]);
+                    
+                    %% Analysis is done in 60 s (1 min batches)
+                    % 12 hours  = 720 minutes
+                    % Each 1 minute bin is 52 values
+                    
+                    % Lets look at mean and median values per minute, disgarding
+                    % the "artifact" bins and starting 30 min afther the lights
+                    % turn off
+                    
+                    lightsOff_ind = d_data.INFO.totalDur_min_start_lightsOff;
+                    lightsOn_ind = d_data.INFO.totalDur_min_start_lightsOn;
+                    
+                    tOn = lightsOff_ind +120; % + 120 minutes (2 hours after lights off)
+                    %tOn = lightsOff_ind +60; % + 60 minutes
+                    
+                    %tOff = tOn+659; %t onset + 11 hours
+                    tOff = tOn+600; %t onset + 10 hours 
+                    % fixing it like this make sure we compare the same numbers
+                    % across exps.
+                    deltaRaw = d_data.dyData.bufferedDeltaCell;
+                    
+                    cnt = 1;
+                    thisBinMean = []; thisBinMedian = [];
+                    for j = tOn:tOff
+                        
+                        isArtifact = artifact_inds(j);
+                        
+                        if isArtifact == 1 % is an artifact
+                            
+                            thisBinMean(cnt) = nan;
+                            thisBinMedian(cnt) = nan;
+                            
+                        elseif isArtifact == 0 % not an artifact
+                            
+                            thisBinMean(cnt) = nanmean(deltaRaw{j});
+                            thisBinMedian(cnt) = nanmedian(deltaRaw{j});
+                            
+                        end
+                        cnt = cnt +1;
+                    end
+                    
+                    subplot(1, 2,1); plot(thisBinMean); axis tight; ylim([0 5e4])
+                    subplot(1, 2,2); plot(thisBinMedian); axis tight; ylim([0 5e4])
+                    
+                    if exist(savedir, 'dir') == 0
+                        mkdir(savedir);
+                        disp(['Created: '  savedir])
+                    end
+                    
+                    saveFile_txt = [savedir SelectedFile(1:end-4) '__MeanMedian_delta'];
+                    
+                    INFO.artifactFile = a_data.INFO.dataType;
+                    
+                    save(saveFile_txt, 'thisBinMean', 'thisBinMedian', 'INFO');
+                    disp(['Saved: ' saveFile_txt]);
+                end
+            end
+            
+        end
+        %
+        function obj = checkEphysChans(obj)
+            
+            artifactElectrode = 'EEG_R_Ant';
+            analysisElectrode = 'LFP_l';
+            
+            
+            ephysDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\EphysAnalysis\';
+            
+            ephysFilenames = dir(fullfile(ephysDir, '*.mat'));
             
             ephysFilenames = {ephysFilenames.name}';
             nFiles = numel(ephysFilenames);
-            
             fileInds = [];
             for j = 1:nFiles
                 thisName = ephysFilenames{j,:};
-                fileInds{j} = strfind(thisName, dateText);
-                
+                fileInds{j} = strfind(thisName, analysisElectrode);
             end
             
             fileInds = ~cellfun(@isempty,fileInds);
             fileList = ephysFilenames(fileInds);
             
-            prompt = 'Please choose the artifact file...';
-            
-            [indx,tf] = listdlg('PromptString',prompt, 'ListString',fileList, 'SelectionMode','single', 'ListSize', [700 200]);
-            
-            SelectedFile = fileList{indx};
-            
-            
-            a_data = load([dEV_dir obj.PATH.dirD SelectedFile]);
-            
-            artifact_inds = a_data.dyData.inds_wake;
+            artifactFileList = [];
+            for k = 1:numel(fileList)
+                thisname = fileList{k};
+                artifactFileList{k} = [thisname(1:16) artifactElectrode '_dyData.mat'];
+            end
             
             
-            prompt = 'Please choose the analysis file...';
-            
-            [indx,tf] = listdlg('PromptString',prompt, 'ListString',fileList, 'SelectionMode','single', 'ListSize', [700 200]);
-            
-            SelectedFile = fileList{indx};
-            
-            d_data = load([dEV_dir obj.PATH.dirD SelectedFile]);
-            
-            
-            %% Analysis is done in 60 s (1 min batches)
-            % 12 hours  = 720 minutes 
-            % Each 1 minute bin is 52 values
-            
-            % Lets look at mean and median values per minute, disgarding
-            % the "artifact" bins and starting 30 min afther the lights
-            % turn off
-            
-            lightsOff_ind = d_data.INFO.totalDur_min_start_lightsOff;
-            lightsOn_ind = d_data.INFO.totalDur_min_start_lightsOn;
-        
-            tOn = lightsOff_ind +60; % + 60 minutes
-            tOff = tOn+659; %t onset + 11 hours
-            % fixing it like this make sure we compare the same numbers
-            % across exps. 
-                deltaRaw = d_data.dyData.bufferedDeltaCell;
+            for o = 1:numel(fileList)
                 
-                cnt = 1;
-                thisBinMean = []; thisBinMedian = [];
-                for j = tOn:tOff
+                a_data = load([ephysDir artifactFileList{o}]);
+                artifact_inds = a_data.dyData.inds_wake;
+                d_data = load([ephysDir fileList{o}]);
+                
+                dy_data = d_data.dyData.bufferedDeltaGammaRatioCell;
+                
+                %% remove artifacts
+                dy_data_no_artifact = [];
+                
+                for s = 1:size(dy_data, 2)
                     
-                    isArtifact = artifact_inds(j);
-                    
+                    isArtifact = artifact_inds(s);
+                    thisDataCell = dy_data{s};
                     if isArtifact == 1 % is an artifact
-                        
-                        thisBinMean(cnt) = nan;
-                        thisBinMedian(cnt) = nan;
-                        
+                        dy_data_no_artifact{s} = nan(1, size(thisDataCell, 2));
                     elseif isArtifact == 0 % not an artifact
-                        
-                        thisBinMean(cnt) = nanmean(deltaRaw{j});
-                        thisBinMedian(cnt) = nanmedian(deltaRaw{j});
-                        
+                        dy_data_no_artifact{s} = thisDataCell;
                     end
-                   cnt = cnt +1; 
                 end
-            
-            subplot(1, 2,1); plot(thisBinMean); axis tight; ylim([0 5e4])
-            subplot(1, 2,2); plot(thisBinMedian); axis tight; ylim([0 5e4])
-            
-            saveFile_txt = [dEV_dir obj.PATH.dirD SelectedFile(1:end-4) '__MeanMedian_delta'];
-            
-            INFO.artifactFile = a_data.INFO.dataType;
-            
-            save(saveFile_txt, 'thisBinMean', 'thisBinMedian', 'INFO');
-            
+                
+                
+                %% Analysis is done in 60 s (1 min batches)
+                % 12 hours  = 720 minutes
+                % Each 1 minute bin is 52 values
+                
+                % Lets look at mean and median values per minute, disgarding
+                % the "artifact" bins and starting 30 min afther the lights
+                % turn off
+                
+                lightsOff_ind = d_data.INFO.totalDur_min_start_lightsOff;
+                lightsOn_ind = d_data.INFO.totalDur_min_start_lightsOn;
+                tOn = lightsOff_ind +60; % + 120 minutes (2 hours after lights off)
+                %tOn = lightsOff_ind +60; % + 60 minutes
+                %tOff = tOn+659; %t onset + 11 hours
+                tOff = tOn+599; %t onset + 10 hours
+                % fixing it like this make sure we compare the same numbers across exps.
+                
+                deltagammaRaw_10Hr_no_artifact =  dy_data_no_artifact(tOn:tOff);
+                deltagammaRaw_10Hr_w_artifact = dy_data(tOn:tOff);
+                artifactInds_10Hr = artifact_inds(tOn:tOff);
+                
+                rawData_DS_10Hr = d_data.dyData.alldsData(tOn:tOff);
+                
+                
+                deltagammaRaw_10Hr_no_artifact_vect = [];
+                deltagammaRaw_10Hr_w_artifact_vect = [];
+                for oo = 1:size(deltagammaRaw_10Hr_no_artifact, 2)
+                    thisCell_noArtifact = deltagammaRaw_10Hr_no_artifact{oo};
+                    deltagammaRaw_10Hr_no_artifact_vect = [deltagammaRaw_10Hr_no_artifact_vect thisCell_noArtifact];
+                    
+                    thisCell_wArtifact = deltagammaRaw_10Hr_w_artifact{oo};
+                    deltagammaRaw_10Hr_w_artifact_vect = [deltagammaRaw_10Hr_w_artifact_vect thisCell_wArtifact];
+                    
+                    figure(103); clf
+                    plot(rawData_DS_10Hr{oo});
+                    pause
+                end
+                
+                deltagammaRaw_10Hr_noArtifact = buffer(deltagammaRaw_10Hr_no_artifact_vect, 1560);
+                deltagammaRaw_10Hr_wArtifact = buffer(deltagammaRaw_10Hr_w_artifact_vect, 1560);
+                
+                %%
+                figure(104); clf
+                
+                xticks = 52*5:52*5:30*52;
+                xticklabs = {'5', '10', '15', '20', '25', '30'};
+                yticklabs = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'};
+                
+                subplot(1, 2, 1)
+                imagesc(deltagammaRaw_10Hr_wArtifact', [0 1200])
+                titletext = fileList{o}(1:end-11);
+                title(titletext, 'interpreter', 'none')
+                set(gca, 'xtick', xticks )
+                set(gca, 'xticklabels', xticklabs )
+                set(gca, 'yticklabels', yticklabs )
+                ylabel('Clock time (Hrs)')
+                xlabel('Time (min)')
+                
+                subplot(1, 2, 2)
+                imagesc(deltagammaRaw_10Hr_noArtifact', [0 1200])
+                
+                title('No Artifact')
+                set(gca, 'xtick', xticks )
+                set(gca, 'xticklabels', xticklabs )
+                set(gca, 'yticklabels', yticklabs )
+                ylabel('Clock time (Hrs)')
+                xlabel('Time (min)')
+                
+                saveDir = [ephysDir '10HrPlots\' ];
+                
+                if exist(saveDir, 'dir') == 0
+                    mkdir(saveDir);
+                    disp(['Created: '  saveDir])
+                end
+                
+                saveName = [saveDir  titletext '__10HrDataPlot'];
+                plotpos = [0 0 25 15];
+                
+                print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+               % print_in_A4(0, saveName, '-depsc', 0, plotpos);
+                
+                
+            end
             
         end
         
         
         function obj = analyze_EV_acrossBirds(obj)
-           
+            
             
             dirToLoad = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\entropyStats_AllBirds\EV\';
             
@@ -2935,17 +3425,17 @@ end
                         dph = [60:86];
                     case 3
                         d = load([dirToLoad w038_file]);
-                         dph = [44:69];
+                        dph = [44:69];
                     case 4
                         d = load([dirToLoad w037_file]);
                         dph = 66:77; % bird with other male
                     case 5
                         d = load([dirToLoad w044_file]);
-                         dph = [78:85 88:96]; % bird with other male
+                        dph = [78:85 88:96]; % bird with other male
                         
                         
                 end
-            
+                
                 %allPooledVars = d.allPooledVars;
                 allPooledVars = d.allPooledMeans;
                 
@@ -2966,36 +3456,36 @@ end
                 
                 
             end
-                min_all_dph = min(min_dph);
-                max_all_dph = max(max_dph);
-                disp('')
+            min_all_dph = min(min_dph);
+            max_all_dph = max(max_dph);
+            disp('')
+            
+            dph_allBirds = min_all_dph:max_all_dph;
+            %% merge all data into one big matrix
+            
+            allMeans_dph = nan(5, numel(dph_allBirds));
+            allsems_dph = nan(5, numel(dph_allBirds));
+            
+            
+            for j = 1:5
                 
-                dph_allBirds = min_all_dph:max_all_dph;
-                %% merge all data into one big matrix
+                Bird_dph = all_dph{j};
+                Bird_allMeans = allMeans{j};
+                Bird_allSems = allsem{j};
                 
-                allMeans_dph = nan(5, numel(dph_allBirds));
-                allsems_dph = nan(5, numel(dph_allBirds));
-              
+                [tf, loc] = ismember(Bird_dph, dph_allBirds);
                 
-                for j = 1:5
-                    
-                    Bird_dph = all_dph{j};
-                    Bird_allMeans = allMeans{j};
-                    Bird_allSems = allsem{j};
-                    
-                    [tf, loc] = ismember(Bird_dph, dph_allBirds);
-                    
-                    allMeans_dph(j, loc) = Bird_allMeans;
-                    allsems_dph(j, loc) = Bird_allSems;
-                    
-                end
+                allMeans_dph(j, loc) = Bird_allMeans;
+                allsems_dph(j, loc) = Bird_allSems;
                 
-                
+            end
+            
+            
             figure (104); clf
             for j =1:5
                 hold on
-            errorbar(dph_allBirds, allMeans_dph(j,:), allsems_dph(j,:), 'linewidth', 2 )
-            
+                errorbar(dph_allBirds, allMeans_dph(j,:), allsems_dph(j,:), 'linewidth', 2 )
+                
             end
             
             leg_text = {'w025', 'w027', 'w038', 'w037', 'w044'};
@@ -3004,7 +3494,7 @@ end
             xlabel('dph')
             ylim([0 1])
             
-               plotpos = [0 0 20 15];
+            plotpos = [0 0 20 15];
             plotName = [dirToLoad 'AllBirds_EV_over_DPH'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             print_in_A4(0, plotName, '-depsc', 0, plotpos);
@@ -3100,11 +3590,11 @@ end
             uniqueDates = unique(dates);
             
             %% Check that there is not a '' in the unique dates
-%             Emptyindex = cellfun(@(a) strmatch(a,''),uniqueDates,'uniform',false);
-%             nonEmptyInds = ~cellfun(@isempty,Emptyindex); % inds ref the larger file list
-%             nonEmptyInds = find(nonEmptyInds ==1);
-%             uniqueDates(nonEmptyInds) = [];
-%             
+            %             Emptyindex = cellfun(@(a) strmatch(a,''),uniqueDates,'uniform',false);
+            %             nonEmptyInds = ~cellfun(@isempty,Emptyindex); % inds ref the larger file list
+            %             nonEmptyInds = find(nonEmptyInds ==1);
+            %             uniqueDates(nonEmptyInds) = [];
+            %
             nUniqueDates = numel(uniqueDates);
             
             
@@ -3245,7 +3735,7 @@ end
                 disp(['Saved:' saveName])
             end
         end
-                  
+        
         
         
         function obj = metaAnalysis_make_plot_of_MEAN_ENTROPY_OR_VARIANCE_across_days(obj, E_switch)
@@ -3336,7 +3826,7 @@ end
             
             plot(allLastTimes, allMeans_Last, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
             plot(allFirstTimes, allMeans_First, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
-            
+            diffs_LastToFirst = [];
             for j = 1:nFiles_entropy-1
                 line([allLastTimes(j) allFirstTimes(j+1)],[allMeans_Last(j), allMeans_First(j+1)], 'color', 'k', 'linewidth', 2)
                 diffs_LastToFirst(j) =  allMeans_First(j+1) - allMeans_Last(j);
@@ -3382,7 +3872,7 @@ end
             plot(allFirstTimes, allMeans_First, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
             plot(allLastTimes, allMeans_Last, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
             
-            
+            diffs_FirstToLast = [];
             for j = 1:nFiles_entropy
                 line([allFirstTimes(j) allLastTimes(j)],[allMeans_First(j), allMeans_Last(j)], 'color', 'k', 'linewidth', 2)
                 diffs_FirstToLast(j) =  allMeans_Last(j) - allMeans_First(j);
@@ -3417,16 +3907,16 @@ end
                     midX(j) = 100;
                     
                 elseif isempty(vals) && j~= 1
-                      lastX(j) = lastX(j-1)+200;
+                    lastX(j) = lastX(j-1)+200;
                     offset =  lastX(j);
                     
                     %offset =  lastX(j) +200;
                     %midX(j) = midX(j-1)+200;
                     midX(j) = lastX(j) -100;
                 end
-%                 if j ~=1 && midX(j)<= midX(j-1)
-%                     midX(j) = midX(j-1)+200;
-%                 end
+                %                 if j ~=1 && midX(j)<= midX(j-1)
+                %                     midX(j) = midX(j-1)+200;
+                %                 end
             end
             
             %% Add means and lines
@@ -3437,7 +3927,7 @@ end
                 diffs_Means(j) = meanVal(j+1) - meanVal(j);
             end
             
-         
+            
             %% Now do the same thing for diffs across nights, ie from last to first
             
             %{
@@ -3515,7 +4005,7 @@ end
                 saveText = 'EV_';
             end
             
-               SaveName = [combinedFileDir obj.INFO.birdName{:} '_' saveText 'Diffs.mat'];
+            SaveName = [combinedFileDir obj.INFO.birdName{:} '_' saveText 'Diffs.mat'];
             save(SaveName, 'diffs_LastToFirst', 'diffs_FirstToLast', 'diffs_Means', 'allDates', 'allPooledMeans')
             
             
@@ -3617,7 +4107,7 @@ end
                 if ~isempty(thisDate_first)
                     allMeans = thisDate_first.allMeans;
                     
-                    if numel(allMeans) > 10 % we ignore days that don't have atleast 10 songs   
+                    if numel(allMeans) > 10 % we ignore days that don't have atleast 10 songs
                         motif_datetime = thisDate_first.motif_datetime;
                         plot(motif_datetime, allMeans, 'marker', '.', 'linestyle', 'none', 'color', gray)
                         pooledMeans = [pooledMeans allMeans];
@@ -3681,7 +4171,7 @@ end
             
             for j = 1:nFiles_entropy
                 line([allFirstTimes(j) allLastTimes(j)],[allMeans_First(j), allMeans_Last(j)], 'color', 'k', 'linewidth', 2)
-                  diffs_FirstToLast(j) =  allMeans_Last(j) - allMeans_First(j);
+                diffs_FirstToLast(j) =  allMeans_Last(j) - allMeans_First(j);
             end
             
             
@@ -3706,7 +4196,7 @@ end
                     % firstX(j) = xes(1);
                     lastX(j) = xes(end);
                     midX(j) = xes(round(numel(allMeans)/2));
-                    offset =  lastX(j) +200;    
+                    offset =  lastX(j) +200;
                 elseif isempty(vals) && j ==1
                     offset =  200;
                     midX(j) = 100;
@@ -3715,7 +4205,7 @@ end
                     offset =  lastX(end) +200;
                     %offset =  lastX(j-1) +200;
                     %midX(j) = midX(j-1)+200;
-                     midX(j) = midX(end)+200;
+                    midX(j) = midX(end)+200;
                 end
                 
             end
@@ -3728,9 +4218,9 @@ end
                 diffs_Means(j) = meanVal(j+1) - meanVal(j);
             end
             
-             SaveName = [combinedFileDir obj.INFO.birdName{:} 'EntropyDiffs.mat'];
-             save(SaveName, 'diffs_LastToFirst', 'diffs_FirstToLast', 'diffs_Means', 'allDates', 'allPooledMeans')
-             
+            SaveName = [combinedFileDir obj.INFO.birdName{:} 'EntropyDiffs.mat'];
+            save(SaveName, 'diffs_LastToFirst', 'diffs_FirstToLast', 'diffs_Means', 'allDates', 'allPooledMeans')
+            
             %% Now do the same thing for diffs across nights, ie from last to first
             
             %{
@@ -3894,7 +4384,7 @@ end
             hold on
             allMeans_First = nan(1, nFiles_entropy);
             allMeans_Last = nan(1, nFiles_entropy);
-              allFirstTimes = NaT(1, nFiles_entropy);
+            allFirstTimes = NaT(1, nFiles_entropy);
             allLastTimes = NaT(1, nFiles_entropy);
             
             for j = 1:nFiles_entropy
@@ -3916,18 +4406,18 @@ end
                 end
                 if ~isempty(thisDate_last)
                     allVars = thisDate_last.allVars;
-                     if numel(allVars) > 10
-                    motif_datetime = thisDate_last.motif_datetime;
-                    plot(motif_datetime, allVars, 'marker', '.', 'linestyle', 'none', 'color', gray)
-                    pooledVars = [pooledVars allVars];
-                    allMeans_Last(j) = thisDate_last.mean_allVars;
-                    allLastTimes(j) = motif_datetime(end);
-                     end
+                    if numel(allVars) > 10
+                        motif_datetime = thisDate_last.motif_datetime;
+                        plot(motif_datetime, allVars, 'marker', '.', 'linestyle', 'none', 'color', gray)
+                        pooledVars = [pooledVars allVars];
+                        allMeans_Last(j) = thisDate_last.mean_allVars;
+                        allLastTimes(j) = motif_datetime(end);
+                    end
                 end
-               
+                
                 
             end
-             allPooledVars{j} = pooledVars;
+            allPooledVars{j} = pooledVars;
             %% Now add Means and lines Differences across nights
             
             
@@ -3936,7 +4426,7 @@ end
             
             for j = 1:nFiles_entropy-1
                 line([allLastTimes(j) allFirstTimes(j+1)],[allMeans_Last(j), allMeans_First(j+1)], 'color', 'k', 'linewidth', 2)
-                   diffs_LastToFirst(j) =  allMeans_First(j+1) - allMeans_Last(j);
+                diffs_LastToFirst(j) =  allMeans_First(j+1) - allMeans_Last(j);
             end
             
             %% Now agan for the differences betwen first and last according to time
@@ -3970,7 +4460,7 @@ end
             
             for j = 1:nFiles_entropy
                 line([allFirstTimes(j) allLastTimes(j)],[allMeans_First(j), allMeans_Last(j)], 'color', 'k', 'linewidth', 2)
-                      diffs_FirstToLast(j) =  allMeans_Last(j) - allMeans_First(j);
+                diffs_FirstToLast(j) =  allMeans_Last(j) - allMeans_First(j);
             end
             
             
@@ -3986,28 +4476,28 @@ end
                 allVars = allPooledVars{j};
                 meanVal(j) = mean(allVars);
                 
-                  vals = 1:1:numel(allVars);
-                  
-                  if ~isempty(vals)
-                      xes = vals+offset ;
-                      hold on
-                      plot(xes, allVars, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
-                      
-                      % firstX(j) = xes(1);
-                      lastX(j) = xes(end);
-                      midX(j) = xes(round(numel(allVars)/2));
-                      offset =  lastX(j) +200;
-                      
-                  elseif isempty(vals) && j ==1
-                      offset =  200;
-                      midX(j) = 100;
-                      
-                  elseif isempty(vals) && j~= 1
-                      offset =  lastX(end) +200;
-                      midX(j) = midX(end)+200;
-                  end
-                  
-                  
+                vals = 1:1:numel(allVars);
+                
+                if ~isempty(vals)
+                    xes = vals+offset ;
+                    hold on
+                    plot(xes, allVars, 'marker', '.', 'linestyle', 'none', 'color', [0.5 0.5 0.5])
+                    
+                    % firstX(j) = xes(1);
+                    lastX(j) = xes(end);
+                    midX(j) = xes(round(numel(allVars)/2));
+                    offset =  lastX(j) +200;
+                    
+                elseif isempty(vals) && j ==1
+                    offset =  200;
+                    midX(j) = 100;
+                    
+                elseif isempty(vals) && j~= 1
+                    offset =  lastX(end) +200;
+                    midX(j) = midX(end)+200;
+                end
+                
+                
                 
                 
                 
@@ -4019,12 +4509,12 @@ end
             plot(midX, meanVal, 'marker', '.', 'linestyle', 'none', 'color', 'k', 'markersize', 20)
             for j = 1:nFiles_entropy-1
                 line([midX(j) midX(j+1)],[meanVal(j), meanVal(j+1)], 'color', 'k', 'linewidth', 2)
-                     diffs_Means(j) = meanVal(j+1) - meanVal(j);
+                diffs_Means(j) = meanVal(j+1) - meanVal(j);
             end
             
             SaveName = [combinedFileDir obj.INFO.birdName{:} 'EntropyVarianceDiffs.mat'];
-             save(SaveName, 'diffs_LastToFirst', 'diffs_FirstToLast', 'diffs_Means', 'allDates', 'allPooledVars')
-             
+            save(SaveName, 'diffs_LastToFirst', 'diffs_FirstToLast', 'diffs_Means', 'allDates', 'allPooledVars')
+            
             %% Now do the same thing for diffs across nights, ie from last to first
             
             %{
@@ -4093,7 +4583,7 @@ end
             %}
             
             ylims_V = [0 1];
-           
+            
             %%
             figure(305) % First versus last
             xticks(datetime([allDates{1} ' 9:00:00']) : days(1) : (datetime([allDates{end} ' 9:00:00'])))
@@ -4151,7 +4641,7 @@ end
             entropyFileNames = {entropyFileNames.name}';
             nFiles_entropy = numel(entropyFileNames);
             
-        
+            
             for j = 1:nFiles_entropy
                 
                 dates{j} = entropyFileNames{j,1}(1:10);
@@ -4177,7 +4667,7 @@ end
                 allVars_sem(j) = allVars_std/(sqrt(numel(allVars)));
                 
                 
-                  thisDate = dates{j};
+                thisDate = dates{j};
                 
                 
                 if j ==1
@@ -4202,12 +4692,12 @@ end
                         allDates_means{cnt} = allDatafromDate_means;
                         allDates_vars{cnt} = allDatafromDate_vars;
                         allDates_text{cnt} = thisNextDate;
-                   
+                        
                     else % next day
                         cnt = cnt+1;
                         thisDate = thisNextDate;
-                         allDates_text{cnt} = thisDate;
-                         
+                        allDates_text{cnt} = thisDate;
+                        
                         allDatafromDate_means  = [];
                         allDatafromDate_vars  = [];
                         allDatafromDate_means = [allMeans];
@@ -4877,7 +5367,7 @@ end
             end
             
             nFiles = numel(fileNames);
-         
+            
             stringsearch = 'f';
             NText = [];
             for j = 1:nFiles
@@ -4894,7 +5384,7 @@ end
             nSyls = numel(uniqueSyls);
             
             for oo = 1:nSyls
-            
+                
                 
                 allFilesThisSyl = ismember(SText, uniqueSyls{oo});
                 allfileInds = find(allFilesThisSyl ==1);
@@ -4983,35 +5473,35 @@ end
         
         
         function [obj] = checkFileDiffs(obj, dir1, dir2)
-         
+            
             dbstop if error
             
             
             fileNames_songs = dir(fullfile(dir1, '*.wav'));
-         fileNames_songs = {fileNames_songs.name}';
-         
+            fileNames_songs = {fileNames_songs.name}';
+            
             fileNames_motifs = dir(fullfile(dir2, '*.wav'));
             fileNames_motifs = {fileNames_motifs.name}';
-         
-            for j = 1: numel(fileNames_motifs)
-             %fileNames_songs_short{j} = fileNames_motifs{j}(6:11);
-             fileNames_songs_short{j} = fileNames_motifs{j}(6:12);% w038
-            end
-         
-         
-            for j = 1: numel(fileNames_motifs)
             
+            for j = 1: numel(fileNames_motifs)
+                %fileNames_songs_short{j} = fileNames_motifs{j}(6:11);
+                fileNames_songs_short{j} = fileNames_motifs{j}(6:12);% w038
+            end
+            
+            
+            for j = 1: numel(fileNames_motifs)
+                
                 %thisFilename = fileNames_songs{j}(6:11);
-                    thisFilename = fileNames_songs{j}(6:12); %w038
-               index = cellfun(@(a) strmatch(a,thisFilename),fileNames_songs_short,'uniform',false);
-            nonEmptyInds = ~cellfun(@isempty,index);
+                thisFilename = fileNames_songs{j}(6:12); %w038
+                index = cellfun(@(a) strmatch(a,thisFilename),fileNames_songs_short,'uniform',false);
+                nonEmptyInds = ~cellfun(@isempty,index);
+                
+                if sum(nonEmptyInds) > 0
+                else
+                    disp(thisFilename)
+                end
+            end
             
-            if sum(nonEmptyInds) > 0
-            else
-                disp(thisFilename)
-            end
-            end
-        
         end
         
         
@@ -5059,7 +5549,7 @@ end
             dash = '-';
             
             
-               nFiles = numel(fileNames);
+            nFiles = numel(fileNames);
             
             for j = 1:nFiles
                 
@@ -5171,14 +5661,14 @@ end
             subplot(2, 1, 2)
             
             
-               h1 = histogram(ds);
+            h1 = histogram(ds);
             hold on
             %h1.Normalization = 'probability';
             h1.BinWidth = minutes(5);
             
-                        
-                        %%
-                        
+            
+            %%
+            
             saveDir = TimeInfoSaveDir;
             
             plotpos = [0 0 12 15];
