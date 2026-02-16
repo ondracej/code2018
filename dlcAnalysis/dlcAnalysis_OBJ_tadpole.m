@@ -14,7 +14,7 @@ classdef dlcAnalysis_OBJ_tadpole < handle
     methods
         
         
-        function obj = getVideoInfo(obj,analysisDir, filtered )
+        function obj = getVideoInfo(obj,analysisDir, filtered, nAnimals )
             
             disp('Getting video info...')
             
@@ -39,38 +39,40 @@ classdef dlcAnalysis_OBJ_tadpole < handle
                 VideoFileNames{j} = files(j).name;
             end
             
+            
+            prompt = 'Please choose the video file...';
+            [indx,tf] = listdlg('PromptString',prompt, 'ListString',VideoFileNames, 'SelectionMode','single', 'ListSize', [700 200]);
+            SelectedFile = VideoFileNames{indx};
+            
+            
             files = dir(fullfile(analysisDir, '*.csv'));
             nFiles = numel(files);
             for j = 1:nFiles
                 CsvFileNames{j} = files(j).name;
             end
+            fileInds = [];
+            for j = 1:nFiles
+                thisName = CsvFileNames{j};
+                fileInds{j} = strfind(thisName, SelectedFile(1:15));
+                
+            end
+            
+            fileInds = ~cellfun(@isempty,fileInds);
+            fileList = CsvFileNames(fileInds);
+            
             
             searchtext = 'filtered';
-            match = strfind(CsvFileNames, searchtext);
+            match = strfind(fileList, searchtext);
             
             if filtered == 1
-                bla = find(~cellfun(@isempty,match));   
+                bla = find(~cellfun(@isempty,match));
             else
                 bla = find(cellfun(isempty(match)));
             end
-            CsvFileNames = CsvFileNames(bla);
-             
+            CsvFileNames = fileList(bla);
             
-            
-%             searchString = ['.csv']; % look for the .csv file
-%             
-%             matchInds = cellfun(@(x) strfind(x, searchString), fileNames, 'UniformOutput', 0);
-%             matchIndsPlace = cell2mat(matchInds);
-%             [minVal, minInd] = min(matchIndsPlace);
-%             matchInds_nonempty = find(cellfun(@(x) ~isempty(x), matchInds)==1);
-%             
-%             matchFileName = fileNames{matchInds_nonempty(minInd)};
-%             disp(['Analysis file: ' matchFileName])
-%             
-%             origVideo_path = [analysisDir VidToAnalyze];
-%             data_path = [analysisDir matchFileName]; % this assumes we are using the non-filtered data
-            
-            plotPath = [analysisDir 'Plots' dirD];
+            %%
+            plotPath = [analysisDir 'MatlabPlots' dirD];
             
             %obj.PATH.vidPath = origVideo_path;
             %obj.PATH.dataPath = data_path;
@@ -84,116 +86,145 @@ classdef dlcAnalysis_OBJ_tadpole < handle
             
             obj.DATA.CsvFiles = CsvFileNames;
             obj.DATA.VideoFiles = VideoFileNames;
+            obj.DATA.nAnimals = nAnimals;
             
         end
         
-        function [obj] = loadTrackedData_generic(obj)
+        function [obj] = loadTrackedData_multianimalTadpole(obj)
             
             dataPath = obj.PATH.analysisDir;
             CsvFileNames = obj.DATA.CsvFiles;
             
             nFilesToLoad = numel(CsvFileNames);
             
-            for o = 1:nFilesToLoad
-                this_csv_file = [dataPath  CsvFileNames{o}];
+            
+            %% First importa variable names
+            filename = CsvFileNames{:};
+            delimiter = ',';
+            endRow = 4;
+            formatSpec = '%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%[^\n\r]';
+            
+            %% Open the text file.
+            fileID = fopen(filename,'r');
+            
+            %% Read columns of data according to the format.
+            % This call is based on the structure of the file used to generate this
+            % code. If an error occurs for a different file, try regenerating the code
+            % from the Import Tool.
+            dataArray = textscan(fileID, formatSpec, endRow, 'Delimiter', delimiter, 'TextType', 'string', 'ReturnOnError', false, 'EndOfLine', '\r\n');
+            
+            %% Close the text file.
+            %fclose(fileID);
+            
+            narray = numel(dataArray);
+            cnt = 1;
+            for j = 1:narray
                 
+                thisdataArray = dataArray{j};
                 
-                
-                
-                %% Initialize variables.
-                filename = this_csv_file;
-                
-                %filename = 'E:\Frog\Analysis\CubanTF-1-shortFrogMovingDLC_resnet50_TreeFrogOct24shuffle1_320000.csv';
-                delimiter = ',';
-                startRow = 2;
-                endRow = 3;
-                
-                %% Read columns of data as strings:
-                % For more information, see the TEXTSCAN documentation.
-                formatSpec = '%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%[^\n\r]';
-                
-                %% Open the text file.
-                fileID = fopen(filename,'r');
-                
-                %% Read columns of data according to format string.
-                % This call is based on the structure of the file used to generate this
-                % code. If an error occurs for a different file, try regenerating the code
-                % from the Import Tool.
-                dataArray = textscan(fileID, formatSpec, endRow-startRow+1, 'Delimiter', delimiter, 'HeaderLines', startRow-1, 'ReturnOnError', false);
-                
-                nElements = size(dataArray, 2);
-                allLabels = [];
-                uniqueLabels = [];
-                cnt =1;
-                for j = 1:nElements
-                    allLabels{j} = dataArray{1, j}{1,1};
+                if j == 1
+                    eval([thisdataArray{1} '=[];']) % scorer
+                    eval([thisdataArray{2} '=[];']) %individuals
+                    eval([thisdataArray{3} '=[];']) % bodyparts
+                    eval([thisdataArray{4} '=[];']) % coords
+                else
                     
-                    b = mod(j, 3);
-                    if b ==0
-                        uniqueLabels{cnt} =   allLabels{j};
-                        cnt = cnt+1;
-                    end
+                    scorer{cnt} = thisdataArray{1};
+                    individuals{cnt} = thisdataArray{2};
+                    bodyparts{cnt} = thisdataArray{3};
+                    coords{cnt} = thisdataArray{4};
+                    cnt = cnt+1;
+                    
                 end
                 
-                   uniqueLabels = unique(uniqueLabels);
-                nUniqueLabels = numel(uniqueLabels);
-                
-                clear('dataArray');
-                
-                delimiter = ',';
-                startRow = 4;
-                
-                formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
-                
-                %% Open the text file.
-                fileID = fopen(filename,'r');
-                
-                %% Read columns of data according to format string.
-                % This call is based on the structure of the file used to generate this
-                % code. If an error occurs for a different file, try regenerating the code
-                % from the Import Tool.
-                dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'EmptyValue' ,NaN,'HeaderLines' ,startRow-1, 'ReturnOnError', false);
-                fclose(fileID);
-                
-                frames = dataArray{1,:};
-                dash = '-';
-                cnt = 2;
-                for k = 2:nUniqueLabels
-                    
-                    thisLabel = uniqueLabels{k};
-                    bla = find(thisLabel == dash);
-                    thisLabel(bla) = '_';
-                    
-                    eval(['allCoords.' thisLabel '.y = dataArray{:, cnt}']);
-                    cnt = cnt+1;
-                    eval(['allCoords.' thisLabel '.x = dataArray{:,cnt}']);
-                    cnt = cnt+1;
-                    eval(['allCoords.' thisLabel '.likelihood = dataArray{:,cnt}']);
-                    cnt = cnt+1;
-                    
-                    varNames{k} = thisLabel;
-                end
-                
-                allCoords.nEntries = size(dataArray{1,1},1);
-                
-                obj.COORDS{o}.allCoords = allCoords;
-                obj.COORDS{o}.varNames = varNames(2:end);
-                obj.COORDS{o}.CsvFileName = CsvFileNames{o};
-                
-                disp('Body parts annotated: ')
-                celldisp(varNames);
-                disp(['n Entries: ' num2str(allCoords.nEntries )]);
             end
             
-            C.allCoords = obj.COORDS{o}.allCoords;
-            C.varNames = obj.COORDS{o}.varNames;
-            C.CsvFileName = obj.COORDS{o}.CsvFileName;
-            C.TurtleName = obj.DATA.TurtleName;
-            C.Target = obj.DATA.TargetText;
+            uniqueAnimals = unique(individuals);
+            uniqueAnimals(1) = []; % first entry is empty?
+            nAnimals = numel(uniqueAnimals);
             
-            saveName = [dataPath 'allCoords.mat'];
+            if nAnimals ~= obj.DATA.nAnimals
+                disp('We have a problem, animal numers do not match!')
+                keyboard
+            end
+            
+            uniqueBodyparts = unique(bodyparts);
+            uniqueBodyparts(1) = []; % first entry is empty?
+            nBodyparts = numel(uniqueBodyparts);
+            
+            nEntries_per_animals = nBodyparts *3;
+            
+            
+            %%
+         
+            delimiter = ',';
+            startRow = 5;
+            formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
+            
+            %% Open the text file.
+            fileID = fopen(filename,'r');
+            
+            %% Read columns of data according to the format.
+            % This call is based on the structure of the file used to generate this
+            % code. If an error occurs for a different file, try regenerating the code
+            % from the Import Tool.
+            dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'TextType', 'string', 'EmptyValue', NaN, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+            
+            
+            
+            nElements = size(dataArray, 2);
+            nFrames = size(dataArray{1}, 1);
+            
+            frames = dataArray{1};
+            
+            
+            cnt = 2;
+            for k = 1:nAnimals
+                
+                thisAnimal = uniqueAnimals{k};
+                
+                
+                for q = 1:nBodyparts
+                    
+                    switch q
+                        case 1
+                            thisBodypart = 'L_Eye';
+                        case 2
+                            thisBodypart = 'R_Eye';
+                        case 3
+                            thisBodypart = 'Tectum';
+                            
+                        case 4
+                            thisBodypart = 'Gut';
+                    end
+                    
+                    bodyPartOrder{q} = thisBodypart;
+                    
+                    eval([thisAnimal '.' thisBodypart '.Coords_x = dataArray{cnt};' ]);
+                    
+                    cnt = cnt+1;
+                    eval([thisAnimal '.' thisBodypart '.Coords_y = dataArray{cnt};' ]);
+                    cnt = cnt+1;
+                    eval([thisAnimal '.' thisBodypart '.likelihood = dataArray{cnt};' ]);
+                    cnt = cnt+1;
+                end
+            end
+            
+            for  k = 1:nAnimals
+                eval(['C.' uniqueAnimals{k} '= ' uniqueAnimals{k}])
+            end
+            
+            C.filename = filename;
+            C.uniqueAnimals = uniqueAnimals;
+            C.uniqueBodyparts = bodyPartOrder;
+            C.frames = frames;
+            
+            obj.DATA.C = C;
+            
+            saveName = [obj.PATH.plotPath CsvFileNames{1}(1:end-4) '__allCoords.mat'];
             save(saveName, 'C', '-v7.3')
             disp('')
+            
         end
         
         function [obj] = loadTrackedData(obj)
@@ -657,67 +688,55 @@ classdef dlcAnalysis_OBJ_tadpole < handle
             
             text_supp = ['LH = ' num2str(likelihood_cutoff)];
             
-            VidFrameRate = obj.VID.VidFrameRate;
-            nEntries = obj.COORDS.nEntries;
             
-            varNames = obj.COORDS.varNames;
+            VidFrameRate = 2; % 2 frames per second
+            C = obj.DATA.C;
             
-            list = {varNames{2:end}};
-            [indx,tf] = listdlg('PromptString','Choose tracked objects:', 'ListString',list);
-            
-            nChoices = numel(indx);
-            trackedText = [];
-            for j = 1:nChoices
-                allChoices{j} = list{indx(j)};
-                trackedText{j} = list{indx(j)};
-            end
-            
-            cols = {'r', 'c','g', 'b', 'y', 'm', 'w', 'k'};
-            
-            %% Iterate over Choices
-            
-            timeRes_s = 1/VidFrameRate;
-            
-            figH = figure(100);clf
-            for j = 1:nChoices
-                
-                
-                thisTrackedObject = allChoices{j};
-                fieldMatch = isfield(obj.COORDS, thisTrackedObject);
-                
-                if fieldMatch
-                    eval(['coords_X = obj.COORDS.' thisTrackedObject '.x;']);
-                    eval(['coords_Y = obj.COORDS.' thisTrackedObject '.y;']);
-                    eval(['likelihood = obj.COORDS.' thisTrackedObject '.likelihood;']);
-                    
-                    HL_inds = find(likelihood >= likelihood_cutoff);
-                    n_inds = numel(HL_inds);
-                    
-                    c_X = coords_X(HL_inds);
-                    c_Y = coords_Y(HL_inds);
-                    
-                    % Determine Euclidian distance for velocity calc
-                    euclidianDistance = [];
-                    for k = 1:numel(c_X)-1
-                        point_xy_t0 = [c_X(k), c_Y(k)];
-                        point_xy_t1 = [c_X(k+1), c_Y(k+1)];
-                        distance = [point_xy_t0; point_xy_t1];
-                        euclidianDistance(k) = pdist(distance,'euclidean');
-                        
-                    end
-                    
-                    velocity_px_per_s = euclidianDistance/timeRes_s;
-                    hold on
-                    
-                    
-                    %subplot(nChoices, 1, j)
-                    hold on
-                    plot(euclidianDistance, 'color', cols{j}, 'marker', '.', 'markersize', 20, 'linestyle', '-')
-                    clear('coords_X', 'coords_Y');
-                    
-                end
-            end
-            
+            % Hardcode this for now - iterate over animals using the tectum
+             figure(105); clf
+              cols = {'r', 'c','g', 'b', 'y', 'm', 'w', 'k'};
+              for j = 1:numel(C.uniqueAnimals)
+                  
+                  eval(['thisAnimalTectum_x = C.T' num2str(j) '.Tectum.Coords_x;'])
+                  eval(['thisAnimalTectum_y = C.T' num2str(j) '.Tectum.Coords_y;'])
+                  eval(['thisAnimalTectum_likelihood = C.T' num2str(j) '.Tectum.likelihood;'])
+                  
+                  HL_inds = find(thisAnimalTectum_likelihood <= likelihood_cutoff);
+                  n_inds = numel(HL_inds);
+                  
+                  c_X = thisAnimalTectum_x;
+                  c_Y = thisAnimalTectum_y;
+                  
+                  c_X(HL_inds) = nan;
+                  c_Y(HL_inds) = nan;
+                  
+                  euclidianDistance = [];
+                  for k = 1:numel(c_X)-1
+                      point_xy_t0 = [c_X(k), c_Y(k)];
+                      point_xy_t1 = [c_X(k+1), c_Y(k+1)];
+                      distance = [point_xy_t0; point_xy_t1];
+                      euclidianDistance(k) = pdist(distance,'euclidean');
+                      
+                  end
+                  
+                  timeRes_s = 1/VidFrameRate;
+                  velocity_px_per_s = euclidianDistance/timeRes_s;
+                  hold on
+                  
+                  %hold on
+                  %  plot(euclidianDistance, 'color', cols{j}, 'marker', '.', 'markersize', 20, 'linestyle', '-')
+                  % clear('coords_X', 'coords_Y');
+                  
+                  figure(105);
+                  plot(smooth(velocity_px_per_s, 10)+j*100, 'color', cols{j})
+                  hold on
+                  if ~isempty(HL_inds)
+                      plot(HL_inds, 10, 'k*')
+                  end
+                  
+              end
+              
+              %% 
             % Label figure
             legend(trackedText)
             axis tight
@@ -1023,11 +1042,11 @@ classdef dlcAnalysis_OBJ_tadpole < handle
     
     methods (Hidden)
         %class constructor
-        function obj = dlcAnalysis_OBJ_turtle(analysisDir, filtered )
+        function obj = dlcAnalysis_OBJ_tadpole(analysisDir, filtered, nAnimals)
             
             addpath(genpath(analysisDir))
             
-            obj = getVideoInfo(obj, analysisDir, filtered );
+            obj = getVideoInfo(obj, analysisDir, filtered, nAnimals);
             
             
         end
