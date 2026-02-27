@@ -33,7 +33,7 @@ classdef dlcAnalysis_OBJ_tadpole < handle
             %[pathstr,name,ext] = fileparts(analysisDir);
             %searchString = ['*' name '*'];
             
-            files = dir(fullfile(analysisDir, '*.avi'));
+            files = dir(fullfile(analysisDir, '*.mp4'));
             nFiles = numel(files);
             for j = 1:nFiles
                 VideoFileNames{j} = files(j).name;
@@ -693,8 +693,8 @@ classdef dlcAnalysis_OBJ_tadpole < handle
             C = obj.DATA.C;
             
             % Hardcode this for now - iterate over animals using the tectum
-             figure(105); clf
-              cols = {'r', 'c','g', 'b', 'y', 'm', 'w', 'k'};
+          figH = figure(105); clf
+              cols = {'r', 'c','g', 'b', 'm', 'k'};
               for j = 1:numel(C.uniqueAnimals)
                   
                   eval(['thisAnimalTectum_x = C.T' num2str(j) '.Tectum.Coords_x;'])
@@ -731,26 +731,58 @@ classdef dlcAnalysis_OBJ_tadpole < handle
                   plot(smooth(velocity_px_per_s, 10)+j*100, 'color', cols{j})
                   hold on
                   if ~isempty(HL_inds)
-                      plot(HL_inds, 10, 'k*')
+                      plot(HL_inds, j*100, 'k^')
                   end
                   
               end
               
-              %% 
-            % Label figure
-            legend(trackedText)
-            axis tight
-            ylim([0 100])
-            xlabel('Frames')
-            ylabel('Distance (px)')
+              %% Label figure
+              
+              
+              axis tight
+              yss = [0 700];
+              ylim(yss )
+              
+              DarkOn = 12314;
+              line([DarkOn  DarkOn ], [yss(1) yss(2)], 'color', 'k')
+              
+              lastVal = numel(velocity_px_per_s);
+              
+              x_rect = [DarkOn DarkOn lastVal lastVal];
+              y_rect = [yss(2) yss(1) yss(1) yss(2)];
+              
+              % Fill with color
+              h = fill(x_rect, y_rect, [0.8 0.8 0.8], 'EdgeColor', 'none');
+              
+              
+              
+              framesIn1Min = 2*60;
+              framesInhour = framesIn1Min *60;
+              
+              xticks = 1:framesIn1Min*10:lastVal; % 10 min
+              
+              set(gca, 'xtick', xticks)
+              
+              xticklabs = 0:10:110;
+              
+              xlabs = [];
+              for j = 1:numel(xticklabs)
+                  xlabs{j} = num2str(xticklabs(j));
+              end
+              
+              set(gca, 'xticklabel', xlabs)
+              uistack(h, 'bottom');
+              xlabel('Minutes')
+            ylabel('Velocity (px/s)')
             
+            %%
             figure(figH)
-            annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.VID.vidName '-' text_supp],'LineStyle','none','FitBoxToText','off', 'fontsize', 12);
+            annotation(figH,'textbox',[0.1 0.96 0.46 0.028],'String',[obj.DATA.C.filename],'LineStyle','none','FitBoxToText','off', 'fontsize', 12, 'interpreter', 'none');
             disp('Printing Plot')
             
             % Print figure
             plotPath = obj.PATH.plotPath;
-            saveName = [plotPath obj.VID.vidName(1:end-4) '_Distance' text_save];
+            saveName = [plotPath obj.DATA.C.filename '_Velocity' text_save];
             plotpos = [0 0 25 15];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
         end

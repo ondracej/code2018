@@ -30,7 +30,7 @@ dlc_OBJ = loadTrackedData_multianimalTadpole(dlc_OBJ);
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 likelihood_cutoff = 0.65;
 dlc_Obj = plotVelocity(dlc_OBJ, likelihood_cutoff);
-dlc_Obj = plotVelocity(dlc_OBJ);
+%dlc_Obj = plotVelocity(dlc_OBJ);
 
 
 
