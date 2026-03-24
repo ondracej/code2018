@@ -744,6 +744,7 @@ classdef dlcAnalysis_OBJ_tadpole < handle
               yss = [0 700];
               ylim(yss )
               
+              keyboard
               DarkOn = 12314;
               line([DarkOn  DarkOn ], [yss(1) yss(2)], 'color', 'k')
               
