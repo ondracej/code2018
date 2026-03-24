@@ -33,7 +33,8 @@ classdef dlcAnalysis_OBJ_tadpole < handle
             %[pathstr,name,ext] = fileparts(analysisDir);
             %searchString = ['*' name '*'];
             
-            files = dir(fullfile(analysisDir, '*.mp4'));
+            %files = dir(fullfile(analysisDir, '*.mp4'));
+            files = dir(fullfile(analysisDir, '*.avi'));
             nFiles = numel(files);
             for j = 1:nFiles
                 VideoFileNames{j} = files(j).name;
