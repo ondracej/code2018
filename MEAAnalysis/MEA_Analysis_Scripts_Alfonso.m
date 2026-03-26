@@ -2,10 +2,10 @@
 %% [1] Initialize the program
 % *** To run a cell, type STRG + Enter
 
-addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
-cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
+addpath(genpath('C:\Users\Neuropix\Documents\GitHub\code2018'));
+cd 'C:\Users\Neuropix\Documents\GitHub\code2018\MEAAnalysis\'
 
-analysisDir = 'F:\Johanna_MEA_Data\20220603\'; % path to the analysis directory %% CHANGE THIS 
+analysisDir = 'F:\MEAData\Alfonso\16.03.2026-E17\'; % path to the analysis directory %% CHANGE THIS 
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
@@ -38,9 +38,9 @@ mea_OBJ = addAnalysisInfoToObj(mea_OBJ);
 
 %% SWR Detection Analysis - this takes a long time
 
-mea_OBJ = load_MCS_data_detectSWRs_SW_detection(mea_OBJ);
+%mea_OBJ = load_MCS_data_detectSWRs_SW_detection(mea_OBJ); Does not exist
 %mea_OBJ = load_MCS_data_detectSWRs_zscore_detection(mea_OBJ);
-%mea_OBJ  = load_MCS_data_detectSWRs_rippleDetection(mea_OBJ);
+mea_OBJ  = load_MCS_data_detectSWRs_rippleDetection(mea_OBJ);
 
 mea_OBJ = collectAllSWRDetections(mea_OBJ);
 % printing figures
