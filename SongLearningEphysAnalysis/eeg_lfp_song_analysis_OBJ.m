@@ -24,8 +24,8 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             opts.DataRange = "A" + startRow(1) + ":S" + endRow(1);
             
             % Specify column names and types
-            opts.VariableNames = ["dph", "date", "SongsAM", "SongsPM", "Video", "VidDir", "Ephys", "EphysRecName", "EEG_L_Ant", "EEG_R_Ant", "EEG_L_Post", "EEG_R_Post", "LFP_m", "LFP_l", "FirstFrame", "LastFrame", "LightsOff", "LightsOn", "FramesOffOn"];
-            opts.VariableTypes = ["double", "datetime", "double", "double", "double", "string", "double", "string", "double", "double", "double", "double", "double", "double", "string", "string", "string", "string", "string"];
+            opts.VariableNames = ["dph", "date", "SongsAM", "SongsPM", "Video", "VidDir", "Ephys", "EphysRecName", "EEG_L_Ant", "EEG_R_Ant", "EEG_L_Post", "EEG_R_Post", "LFP_m", "LFP_l", "FirstFrame", "LastFrame", "LightsOff", "LightsOn", "FramesOffOn", "LFP_chans"];
+            opts.VariableTypes = ["double", "datetime", "double", "double", "double", "string", "double", "string", "double", "double", "double", "double", "double", "double", "string", "string", "string", "string", "string", "string"];
             opts = setvaropts(opts, [6, 8, 15, 16, 17, 18, 19], "WhitespaceRule", "preserve");
             opts = setvaropts(opts, [6, 8, 15, 16, 17, 18, 19], "EmptyFieldRule", "auto");
             
@@ -134,6 +134,13 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 end
             end
             
+            LFP_chans = [];
+              for j =1:nEntries
+                thisText = T.LFP_chans{j};
+                
+                LFP_chans{j} = str2num(thisText);
+               
+            end
             
             
             obj.EPHYS.Ephys = T.Ephys;
@@ -145,6 +152,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             obj.EPHYS.EEG_R_Post = T.EEG_R_Post;
             obj.EPHYS.LFP_l = T.LFP_l;
             obj.EPHYS.LFP_m = T.LFP_m;
+            obj.EPHYS.LFP_chans = LFP_chans;
             
             
             %% PATH stuff
@@ -435,6 +443,1137 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
         end
         
+        function obj =  plotArtifactsOverDays(data_OBJ, dataDir)
+            
+            nHoursToAnalyze = 9;
+            binInHour = 180;
+              analysisBins = nHoursToAnalyze*binInHour;
+              
+            LFPdataNames = dir(fullfile(dataDir, '*mat*'));
+            LFP_FileNames = {LFPdataNames.name}';
+            nFiles_LFP = numel(LFP_FileNames);
+            totalArtifacts_overFiles = [];
+            allNames = [];
+            figure(104);  clf
+            for s = 1:nFiles_LFP
+                
+                d = load([dataDir LFP_FileNames{s}]);
+                artifacts = d.D.isArtifact;
+                LightsOff_min = d.INFO.totalDur_min_start_lightsOff;
+                
+                LightsOff_s_bins = LightsOff_min*3; %3 bins per min for 20 s bins
+                
+                % 2 hours after lights off = 360, 20 s bins
+                %1 min = 3 bins, 3*60 = 1 hr, 180*2  = 360
+                onsetBins = LightsOff_s_bins+360; % 2 hours after lights off
+                
+                %offsetBins = onsetBins+1800;
+                offsetBins = onsetBins+analysisBins;
+                
+                totalArtifacts_inAnalysisWin = sum(artifacts(onsetBins:offsetBins));
+                totalBins = offsetBins - onsetBins; 
+                totalArtifacts_overFiles(s) =  totalArtifacts_inAnalysisWin;
+                
+                hold on
+                plot(s, totalArtifacts_inAnalysisWin, 'k*')
+                t = text(s,totalArtifacts_inAnalysisWin+20, [d.INFO.EphysRecName(9:18)], 'interpreter', 'none');
+                t.Rotation = 90;
+                
+                
+                
+                allNames{s} = d.INFO.EphysRecName;
+            end
+            
+           ylim([0 2000]) 
+           title('Artifacts over days')
+           
+           
+             plotpos = [0 0 18 10];
+                plot_filename = [dataDir 'Artifacts'];
+                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                
+            % 10 hours after onset =  180*10; = 1800;
+            
+            
+        end
+        
+        
+        function obj = plot_LFP_Data(obj, dataDir)
+            
+            LFPdataNames = dir(fullfile(dataDir, '*mat*'));
+            LFP_FileNames = {LFPdataNames.name}';
+            nFiles_LFP = numel(LFP_FileNames);
+            
+            
+            for s = 1:nFiles_LFP
+                
+                d = load([dataDir LFP_FileNames{s}]);
+                nChans = numel(d.D.chanNamesSet);
+                
+                %% d/y
+                figure(105); clf
+                subplot(3, 1, 1)
+                offset = 1000;
+                isArtifact = d.D.isArtifact;
+                
+                xticks_hr = 1:1:12;
+                xticks_s = xticks_hr*3600/20;
+                
+                xlabs= {};
+                for j = 1:numel(xticks_hr)
+                    
+                    xlabs{j} = num2str(xticks_hr(j));
+                end
+                
+                
+                for ss = 1:nChans
+                    plot(d.D.bufferedDeltaGammaRatio_median(ss,:)' +offset)
+                    text(0.5, offset, d.D.chanNamesSet{ss}(1:8), 'interpreter', 'none')
+                    hold on
+                    offset = offset+1000;
+                    
+                end
+                
+                axis tight
+                ylim([500 10000])
+                hold on;
+                title('Median delta/gamma')
+                
+                plot(isArtifact*1000, 'k*')
+                set(gca, 'xtick', xticks_s);
+                set(gca, 'xticklabel', xlabs)
+                
+                %% delta
+                subplot(3, 1, 2)
+                offset = 2000;
+                for ss = 1:nChans
+                    plot(d.D.bufferedDelta_median(ss,:)' +offset)
+                    text(0.5, offset, d.D.chanNamesSet{ss}(1:8), 'interpreter', 'none')
+                    hold on
+                    offset = offset+2000;
+                    
+                end
+                
+                axis tight
+                ylim([500 20000])
+                hold on;
+                title('Median delta')
+                
+                plot(isArtifact*2000, 'k*')
+                set(gca, 'xtick', xticks_s);
+                set(gca, 'xticklabel', xlabs)
+                
+                %% gamma
+                subplot(3, 1, 3)
+                offset = 1000;
+                for ss = 1:nChans
+                    plot(d.D.bufferedDeltaGammaRatio_median(ss,:)' +offset)
+                    text(0.5, offset, d.D.chanNamesSet{ss}(1:8), 'interpreter', 'none')
+                    hold on
+                    offset = offset+1000;
+                    
+                end
+                
+                axis tight
+                ylim([500 10000])
+                hold on;
+                title('Median gamma')
+                
+                plot(isArtifact*1000, 'k*')
+                set(gca, 'xtick', xticks_s);
+                set(gca, 'xticklabel', xlabs)
+                xlabel('Time (Hr)')
+                
+                plotpos = [0 0 18 10];
+                plot_filename = [dataDir LFP_FileNames{s}(1:end-4) '__dy'];
+                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                %print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+                
+                
+            end
+            
+        end
+        
+        
+        
+        function obj = process_LFP_Data_burstAnalysis(obj, nEntries, saveDir, ephysPath)
+            dbstop if error
+            for j = 1:nEntries
+                
+                if ~isempty(obj.EPHYS.EphysRecName{j})
+                    
+                    pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{j} obj.PATH.dirD];
+                    
+                    
+                    
+                    EphysLFPFiles = dir(fullfile(ephysPath, '*.mat'));
+                    
+                    LFPIndex = strfind({EphysLFPFiles.name}, obj.EPHYS.EphysRecName{j});
+                    idx_LFP = find(~cellfun(@isempty,LFPIndex));
+                    LFPNames =  EphysLFPFiles(idx_LFP).name;
+                    
+                    a = load([ephysPath LFPNames]);
+                    artifactInds = a.D.isArtifact;
+                    
+                    timeWin_s = a.D.timeWin_s; %seconds
+                    tOn = a.D.tOn_s;
+                    nBins = numel(tOn);
+                    
+                    chanNames = dir(fullfile(pathToData, '*.continuous'));
+                    
+                    index = strfind({chanNames.name}, ['CH']);
+                    idx = find(~cellfun(@isempty,index));
+                    chanNames =  chanNames(idx);
+                    nChans = numel(chanNames);
+                    
+                    
+                    chanSet = obj.EPHYS.LFP_chans{j};
+                    
+                    dot = '.';
+                    match = [];
+                    for h = 1:nChans
+                        thisName = chanNames(h).name;
+                        bla = find(thisName == dot);
+                        chN = str2num(thisName(bla-2:bla-1));
+                        match(h) = sum(ismember(chanSet, chN));
+                    end
+                    
+                    
+                    chanNamesSet = [];
+                    cnt = 1;
+                    for jj = 1:nChans
+                        if match(jj) ==1
+                            chanNamesSet{cnt} = chanNames(jj).name;
+                            cnt = cnt+1;
+                        else
+                        end
+                    end
+                    
+                    nChans = numel(chanNamesSet);
+                    
+                    thisChan = chanNamesSet{1};
+                    filename = [pathToData thisChan];
+                    [data, timestamps, info] = load_open_ephys_data(filename);
+                    
+                    FS = info.header.sampleRate;
+                    dataSamps = numel(timestamps);
+                    dataDur_s = dataSamps/FS;
+                    
+                    
+                    
+                    %rippleBand = [120 200];
+                    %rippleBand = [100 250];
+                    %rippleBand = [100 200];
+                    %rippleBand = [120 250];
+                    %rippleBand = [80 300];
+                    rippleBand = [80 250];
+                    %RippleDetectThresh = 2.0;      % detection threshold (z-score)   
+                    %RipplePeakThresh = 2.0;        % peak threshold
+                    
+                    
+                    %detectThresh = 0.8;      % detection threshold (z-score)
+                    %peakThresh = 2.0;        % peak threshold
+                    
+                    
+                    detectThresh = 2.0;      % detection threshold (z-score)
+                    %peakThresh = 1.8;        % peak threshold
+                    peakThresh = 2.0;        % peak threshold
+                    
+                    %minDur = 0.02;         % 20 ms
+                    %maxDur = 0.12;         % 120 ms
+                    
+                    %minDur = 0.010;
+                    minDur = 0.008;         % 10 ms% 10 ms
+                    maxDur = 0.15;         % 50 ms
+                    
+                    minChannels = floor(nChans*.5);       % ripple must appear on >= channels
+                    
+                    for o = 1: nBins-1
+                        
+                        isArtifact = artifactInds(o);
+                        
+                        if ~isArtifact
+                            
+                            AllDataBin_clean_ds = [];
+                            for oo = 1:nChans
+                                
+                                thisChan = chanNamesSet{oo};
+                                filename = [pathToData thisChan];
+                                [dataBin, ~, ~] = load_open_ephys_data_chunked(filename,tOn(o), tOn(o)+timeWin_s);
+                                
+                                %dataBin_clean = dataBin - mean(dataBin);
+                                
+                                %dataBin_clean_ds = resample(dataBin_clean, 1, FS/fs_ds); %
+                                AllDataBin_clean_ds(oo,:) = dataBin;
+                                %%
+                                
+                            end
+                            % LFP: [samples x channels]
+                            % fs: sampling rate
+                            
+                            %% PARAMETERS
+                            LFP = AllDataBin_clean_ds';
+                            nCh = size(LFP,2);
+nSamp = size(LFP,1);
+                            %fs = fs_ds;
+                            fs = FS;
+                            
+                        %% Sharp Band
+                        sharpBand = [8 40];
+
+sharpThresh = 3;      % z threshold
+minSharpDur = 0.05;
+maxSharpDur = 0.20;
+
+                    %%    
+[b,a] = butter(3, sharpBand/(fs/2),'bandpass');
+sharpLFP = filtfilt(b,a,LFP);
+sharpEnv = abs(hilbert(sharpLFP));
+sharpZ = (sharpEnv - median(sharpEnv))./mad(sharpEnv,1);
+                        
+    %%                    
+                        
+     
+figure(104); clf
+subplot(5, 1, 1)
+hold on
+t = (1:length(LFP))/fs;
+offset = 0;
+for j = 1:nCh
+    plot(t, LFP(:,j)+offset);
+    text(0, offset, chanNamesSet{j}(5:8), 'interpreter', 'none')
+    offset = offset +500;
+end
+ylim([-100 3500])
+title('Raw LFP')
+
+subplot(5, 1, 2)
+hold on
+offset = 0;
+for j = 1:nCh
+    plot(t, sharpLFP(:,j)+offset);
+    offset = offset +80;
+end
+ylim([-100 600])
+title('LFP - Sharp wave filter (8-40 Hz)')
+
+subplot(5, 1, 3)
+hold on
+offset = 0;
+for j = 1:nCh
+    %plot(t, DataSeg_LF(j,:) +offset);
+    plot(t, sharpZ(:,j) +offset);
+    %plot(env(:,j)+offset);
+    offset = offset +10;
+end
+
+ylim([-5 80])
+title('Z-Scored Sharp wave envelope')                   
+        disp('')                
+         
+        
+        %% 
+        sharpSum = median(sharpZ, 2);
+        smoothed = smooth(sharpSum, .1*fs);
+        smoothed_sq = smoothed.^2;
+     %   figure; plot(smoothed_sq);
+     %   figure; plot(diff(smoothed_sq));
+        %% Sharp wave mask
+      
+sharpMask = sharpZ > sharpThresh;
+
+%% SHARP WAVE EVENTS
+
+minFrames = round(minSharpDur*fs);
+maxFrames = round(maxSharpDur*fs);
+
+sharpEvents = false(nSamp,1);
+
+for ch = 1:nCh
+
+    d = diff([0; sharpMask(:,ch); 0]);
+    starts = find(d==1);
+    ends = find(d==-1)-1;
+
+    for i = 1:length(starts)
+
+        dur = ends(i)-starts(i)+1;
+
+        if dur>=minFrames && dur<=maxFrames
+            sharpEvents(starts(i):ends(i)) = true;
+        end
+
+    end
+end
+                  
+     %% Ripple filter                  
+     rippleBand = [80 250];
+                    rippleThresh = 2.0;      % detection threshold (z-score)   
+                    ripplePeak = 2.0;        % peak threshold
+                                   minRippleDur = 0.008;         % 10 ms% 10 ms
+                    maxRippleDur = 0.15;         % 50 ms       
+                        
+                            %% BANDPASS FILTER (stable SOS)
+                            [z,p,k] = butter(4,rippleBand/(fs/2),'bandpass');
+                            [sos,g] = zp2sos(z,p,k);
+                            
+                            rippleLFP = filtfilt(sos,g,LFP);
+                            
+                            %% Hilbert envelope
+                            rippleEnv = abs(hilbert(rippleLFP));
+                            %                        figure; plot(env)
+                            %% Smooth envelope
+                            %env = movmean(env, round(0.005*fs));
+                            rippleEnv = movmean(rippleEnv, round(0.010*fs));
+                            
+                            %% Z-score per channel
+                            rippleZ = (rippleEnv - mean(rippleEnv))./std(rippleEnv);
+                            rippleMask = rippleZ > rippleThresh;
+                            %%
+figure(104);                            
+                            subplot(5, 1, 4)
+
+offset = 0;
+for j = 1:nCh
+    hold on
+    %plot(t, DataSeg_LF(j,:) +offset);
+    plot(t, rippleLFP(:,j) +offset);
+    %plot(env(:,j)+offset);
+    offset = offset +100;
+end
+
+ylim([-100 700])
+title('Ripple Filter')                   
+        disp('')     
+                            
+%%                  
+         subplot(5, 1, 5)
+hold on
+offset = 0;
+for j = 1:nCh
+    %plot(t, DataSeg_LF(j,:) +offset);
+    plot(t, rippleZ(:,j) +offset);
+    %plot(env(:,j)+offset);
+    offset = offset +5;
+end
+ylim([-5 35])
+title('Z-Scored Ripple envelope')                   
+        disp('')    
+        %%
+        
+        
+          plotpos = [0 0 25 15];
+            
+            plotDir =   'G:\Dropbox\Writing\00_Articles\JIN\';
+            
+            
+            plot_filename = [plotDir 'RawData'];
+            %print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+            print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+            
+            
+minFrames = round(minRippleDur*fs);
+maxFrames = round(maxRippleDur*fs);
+
+rippleClean = false(size(rippleMask));
+
+for ch = 1:nCh
+
+    d = diff([0; rippleMask(:,ch); 0]);
+    starts = find(d==1);
+    ends = find(d==-1)-1;
+
+    for i = 1:length(starts)
+
+        dur = ends(i)-starts(i)+1;
+
+        if dur>=minFrames && dur<=maxFrames
+
+            if max(rippleZ(starts(i):ends(i),ch)) > ripplePeak
+                rippleClean(starts(i):ends(i),ch) = true;
+            end
+
+        end
+
+    end
+end
+        
+        
+  %%      
+        
+    
+activeRippleCh = sum(rippleClean,2);
+rippleEvents = activeRippleCh >= minChannels;
+
+%% REQUIRE RIPPLE INSIDE SHARP WAVE
+
+SWRmask = rippleEvents & sharpEvents;
+
+%% EXTRACT EVENTS
+
+d = diff([0; SWRmask; 0]);
+starts = find(d==1);
+ends = find(d==-1)-1;
+
+SWR.samples = [starts ends];
+SWR.time = SWR.samples / fs;
+
+%% FIND RIPPLE PEAKS
+
+nEvents = length(starts);
+
+SWR.peakTime = zeros(nEvents,1);
+SWR.peakPower = zeros(nEvents,1);
+
+for i = 1:nEvents
+
+    seg = rippleZ(starts(i):ends(i),:);
+
+    [p,idx] = max(seg(:));
+
+    [row,~] = ind2sub(size(seg),idx);
+
+    peakSample = starts(i) + row - 1;
+
+    SWR.peakTime(i) = peakSample/fs;
+    SWR.peakPower(i) = p;
+
+end
+    
+    subplot(4, 1, 4)
+hold on
+for i = 1:size(SWR.peakTime,1)
+    xline(SWR.peakTime(i,1),'k', 'linestyle', ':');
+end
+
+        
+        
+        
+        
+        
+        %%
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+                            %% Detect candidate ripple periods
+                            candidate = rippleEnvZ > RippleDetectThresh;
+                            
+                            %% Duration constraints
+                            minFrames = round(minDur*fs);
+                            maxFrames = round(maxDur*fs);
+                            
+                            cleanMask = false(size(candidate));
+                            
+                            for ch = 1:nCh
+                                
+                                d = diff([0; candidate(:,ch); 0]);
+                                starts = find(d==1);
+                                ends = find(d==-1)-1;
+                                
+                                for i = 1:length(starts)
+                                    
+                                    dur = ends(i)-starts(i)+1;
+                                    
+                                    if dur >= minFrames && dur <= maxFrames
+                                        
+                                        if max(rippleEnvZ(starts(i):ends(i),ch)) > peakThresh
+                                            
+                                            cleanMask(starts(i):ends(i),ch) = true;
+                                            
+                                        end
+                                        
+                                    end
+                                   
+                                end
+                                
+                            end
+                            
+                            
+                            
+                            %% Multi-channel coincidence
+                            activeChannels = sum(cleanMask,2);
+                            rippleMask = activeChannels >= minChannels;
+                            
+                            %% Extract ripple events
+                            d = diff([0; rippleMask; 0]);
+                            starts = find(d==1);
+                            ends = find(d==-1)-1;
+                            
+                            ripples.samples = [starts ends];
+                            ripples.time = [starts ends] ./ fs;
+                            
+                            %% Compute ripple peaks
+                            nEvents = size(starts,1);
+                            ripples.peakTime = zeros(nEvents,1);
+                            ripples.peakPower = zeros(nEvents,1);
+                            
+                            for i = 1:nEvents
+                                
+                                seg = envZ(starts(i):ends(i),:);
+                                [peakPower, idx] = max(seg(:));
+                                
+                                rippleSample = starts(i) + mod(idx,size(seg,1)) - 1;
+                                
+                                ripples.peakTime(i) = rippleSample / fs;
+                                ripples.peakPower(i) = peakPower;
+                                
+                            end
+                            
+                            %%
+                            figure(106);clf
+                            subplot(3, 1, 1)
+                            hold on
+                              t = (1:length(LFP))/fs;
+                            offset = 0;
+                            for j = 1:nCh
+                                plot(t, LFP(:,j)+offset);
+                                text(0, offset, chanNamesSet{j}(5:8), 'interpreter', 'none')
+                                offset = offset +500;
+                            end
+                             hold on
+                            for i = 1:size(ripples.time,1)
+                                xline(ripples.time(i,1),'r', 'linestyle', ':');
+                            end
+                            axis tight
+                            grid on
+                            title('LFP')
+                           
+                            subplot(3, 1, 2)
+                            hold on
+                            offset = 0;
+                            for j = 1:nCh
+                                plot(rippleLFP(:,j)+offset);
+                                offset = offset +100;
+                            end
+                            axis tight
+                            grid on
+                            title('Ripple Filter')
+                            
+                            subplot(3, 1, 3)
+                            offset = 0;
+                            hold on
+                          
+                            
+                            for j = 1:nCh
+                                plot(t, envZ(:,j) +offset);
+                                %plot(env(:,j)+offset);
+                                
+                                offset = offset +10;
+                            end
+                            axis tight
+                            grid on
+                            hold on
+                            for i = 1:size(ripples.time,1)
+                                xline(ripples.time(i,1),'r', 'linestyle', ':');
+                                xline(ripples.peakTime(i),'b', 'linestyle', ':');
+                            end
+                            disp('')
+                            title('Z-scored envelop')
+                            ylim([-10 70])
+                            
+                            
+                            
+                            %%
+                            LFPwin_s = 0.01; % 50 ms
+                            
+                            for i = 1:size(ripples.time,1)
+                                
+                                thisripplePeak = ripples.peakTime(i);
+                                
+                                LFP_roi_s = [thisripplePeak-LFPwin_s thisripplePeak+LFPwin_s];
+                                
+                                if LFP_roi_s(1) <= 0
+                                    continue
+                                end
+                                LFP_roi_samp = round(LFP_roi_s*fs);
+                                
+                                LFP_ripple = LFP(LFP_roi_samp(1):LFP_roi_samp(2), :);
+                                LFP_mean = nanmean(LFP_ripple, 2);
+                                
+                                figure; plot(LFP_mean); axis tight
+                                
+                            end
+                            
+                            
+                            %% plot average LFP:
+                            
+                            
+                            
+                            
+                            
+                            
+                                     allRipples(o) = ripples;
+                        end
+                       
+                    end
+                  
+                            
+               
+
+
+
+%%
+       
+       
+       
+       
+       %%
+                            
+                            
+                            
+                            %%
+                            
+                            %
+                            %                         plot(t, LFP(:,1))
+                            %                         hold on
+                            %
+                            %                         for i = 1:size(ripples.time,1)
+                            %                             xline(ripples.time(i,1),'r')
+                            %                         end
+                            %
+                      
+                    
+                    INFO.Birdname = obj.INFO.birdName{:};
+                    INFO.EphysRecName = obj.EPHYS.EphysRecName{j};
+                    INFO.date = obj.INFO.date_txt_year(j,:);
+                    INFO.EphysStartTime = obj.EPHYS.EphysStartTime{j};
+                    INFO.LightsOff = obj.VIDEO.LightsOff{j};
+                    %INFO.LightsOn = obj.VIDEO.LightsOn{j+1};
+                    
+                    
+                    [totalDur_min_start_lightsOff] = calc_offset_alignment_time_min(obj, INFO.date, INFO.EphysStartTime, INFO.LightsOff);
+                    %[totalDur_min_start_lightsOn] = calc_offset_alignment_time_min(obj, INFO.date, INFO.EphysStartTime, INFO.LightsOn);
+                    
+                    INFO.totalDur_min_start_lightsOff = totalDur_min_start_lightsOff;
+                    %INFO.totalDur_min_start_lightsOn = totalDur_min_start_lightsOn;
+                    
+                    saveName = [saveDir obj.EPHYS.EphysRecName{j} '_allLFP_dyData-' num2str(nChans)];
+                    
+                    if exist(saveDir, 'dir') == 0
+                        mkdir(saveDir);
+                        disp(['Created: '  saveDir])
+                    end
+                    
+                    save([saveName '.mat'], 'D', 'INFO', '-v7.3')
+                    
+                    disp(['Saved:' saveName])
+                end
+                
+            end
+            
+            
+        end
+        
+        
+        
+        
+        
+        
+        
+        function obj = process_LFP_Data(obj, nEntries, saveDir)
+            
+            artifactChan = 1;
+            for j = 3:nEntries
+                
+                if ~isempty(obj.EPHYS.EphysRecName{j})
+                    
+                    pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{j} obj.PATH.dirD];
+                    
+                    chanNames = dir(fullfile(pathToData, '*.continuous'));
+                    
+                    index = strfind({chanNames.name}, ['CH']);
+                    idx = find(~cellfun(@isempty,index));
+                    chanNames =  chanNames(idx);
+                    nChans = numel(chanNames);
+                    
+                    
+                    chanSet = obj.EPHYS.LFP_chans{j};
+                    
+                    dot = '.';
+                    match = [];
+                    for h = 1:nChans
+                        thisName = chanNames(h).name;
+                        bla = find(thisName == dot);
+                        chN = str2num(thisName(bla-2:bla-1));
+                        match(h) = sum(ismember(chanSet, chN));
+                    end
+                    
+                    
+                    chanNamesSet = [];
+                    cnt = 1;
+                    for jj = 1:nChans
+                        if match(jj) ==1
+                            chanNamesSet{cnt} = chanNames(jj).name;
+                            cnt = cnt+1;
+                        else
+                        end
+                    end
+                    
+                    nChans = numel(chanNamesSet);
+                    
+                    thisChan = chanNamesSet{1};
+                    filename = [pathToData thisChan];
+                    [data, timestamps, info] = load_open_ephys_data(filename);
+                    
+                    fs = info.header.sampleRate;
+                    dataSamps = numel(timestamps);
+                    dataDur_s = dataSamps/fs;
+                    
+                    timeWin_s = 20; %seconds
+                    tOn = 1:timeWin_s:dataDur_s;
+                    nBins = numel(tOn);
+                    
+                    %% Bandpass ------------------------------------
+                    d_bandpass = designfilt('bandpassiir', ...
+                        'FilterOrder', 4, ...
+                        'HalfPowerFrequency1', 1, ...
+                        'HalfPowerFrequency2', 2000, ...
+                        'SampleRate', fs);
+                    
+                    %% Loading all LFP channels
+                    
+                    isArtifact = nan(1, nBins-1);
+                    %tOn_all = nan(1, nBins-1);
+                    
+                    fs_ds = 2500;
+                    bufferedDeltaGammaRatioCell = cell(1, nBins-1);
+                       bufferedDeltaCell = cell(1, nBins-1);
+                        bufferedGammaCell = cell(1, nBins-1);
+                        
+                          bufferedDeltaGammaRatio_mean = nan(nChans, nBins-1);
+                        bufferedDeltaGammaRatio_median = nan(nChans, nBins-1);
+                        
+                        bufferedDelta_mean = nan(nChans, nBins-1);
+                        bufferedDelta_median = nan(nChans, nBins-1);
+                        
+                        bufferedGamma_mean = nan(nChans, nBins-1);
+                        bufferedGamma_median = nan(nChans, nBins-1);
+                        
+                        
+                    for o = 1: nBins-1
+                        
+                        
+                        AllDataBin_clean_ds = [];
+                        for oo = 1:nChans
+                            
+                            thisChan = chanNamesSet{oo};
+                            filename = [pathToData thisChan];
+                            [dataBin, ~, ~] = load_open_ephys_data_chunked(filename,tOn(o), tOn(o)+timeWin_s);
+                            
+                            dataBin_clean = dataBin - mean(dataBin);
+                            
+                            % Apply zero-phase filtering
+                            v_filtered = filtfilt(d_bandpass, dataBin_clean);
+                            
+                            dataBin_clean_ds = resample(v_filtered, 1, fs/fs_ds); %
+                            AllDataBin_clean_ds(oo,:) = dataBin_clean_ds;
+                            
+                        end
+                        
+                        %      figure; plot(AllDataBin_clean_ds(1,:))
+                        %% Gamma band artifact rejection
+                        
+                        v = AllDataBin_clean_ds(artifactChan,:);
+                        
+                        % --- PARAMETERS ---
+                        %gammaBand = [30 90];
+                        gammaBand = [10 140]; % not really gamma
+                        zThresh   = 12;
+                        minDurMs  = 80;
+                        smoothMs  = 10;
+                        
+                        %% 1) Bandpass filter into gamma
+                        
+                        dgamma = designfilt('bandpassiir', ...
+                            'FilterOrder', 4, ...
+                            'HalfPowerFrequency1', gammaBand(1), ...
+                            'HalfPowerFrequency2', gammaBand(2), ...
+                            'SampleRate', fs_ds);
+                        
+                        vGamma = filtfilt(dgamma, v);
+                        
+                        %figure; plot(vGamma)
+                        
+                        %%
+                        
+                        gammaEnv = abs(hilbert(vGamma));
+                        
+                        %% 3) Smooth envelope
+                        smoothSamples = round((smoothMs/1000) * fs_ds);
+                        gammaEnv = movmean(gammaEnv, smoothSamples);
+                        
+                        %% 4) Z-score (robust)
+                        medVal = median(gammaEnv);
+                        madVal = mad(gammaEnv,1);        % robust scale
+                        zGamma = (gammaEnv - medVal) / madVal;
+                        
+                        artifactMask_inds = find(zGamma > zThresh);
+                        artifactMask = zGamma > zThresh;
+                        
+                        minSamples = round((minDurMs/1000) * fs_ds);
+                        
+                        maskIn =  artifactMask;
+                        maskOut = false(size(maskIn));
+                        
+                        d = diff([0; maskIn'; 0]);
+                        startIdx = find(d == 1);
+                        endIdx   = find(d == -1) - 1;
+                        
+                        for i = 1:length(startIdx)
+                            if (endIdx(i) - startIdx(i) + 1) >= minSamples
+                                maskOut(startIdx(i):endIdx(i)) = true;
+                            end
+                        end
+                        
+                        
+                        nArtifacts = sum(maskOut);
+                        artifactTimes = [startIdx endIdx] / fs_ds;
+                        
+                        if nArtifacts == 0
+                            isArtifact(o) = 0;
+                        else
+                            isArtifact(o) = 1;
+
+                            %%
+                           
+                        t = (1:length(v))/fs_ds;
+                        
+                        figure(300); clf
+                        subplot(2,1,1)
+                        plot(t, v)
+                        hold on
+                        ylim([-800 800])
+                        yL = ylim;
+                        for i = 1:size(artifactTimes,1)
+                            patch([artifactTimes(i,1) artifactTimes(i,2) ...
+                                artifactTimes(i,2) artifactTimes(i,1)], ...
+                                [yL(1) yL(1) yL(2) yL(2)], ...
+                                'b', 'FaceAlpha',0.5, 'EdgeColor','none')
+                        end
+                        title('Raw Signal with Artifacts')
+                        
+                        subplot(2,1,2)
+                        
+                        hold on
+                        plot(t, zGamma)
+                        ylim([-15 15])
+                         yL = ylim;
+                        for i = 1:size(artifactTimes,1)
+                            patch([artifactTimes(i,1) artifactTimes(i,2) ...
+                                artifactTimes(i,2) artifactTimes(i,1)], ...
+                                [yL(1) yL(1) yL(2) yL(2)], ...
+                                'r', 'FaceAlpha',0.5, 'EdgeColor','none')
+                        end
+                        title('Detected Artifact Mask')
+                        disp('')
+                            %}
+                        end
+                        
+                        %%
+                        
+                        %}
+                        %% ASR Artifact removal - do not use
+                        % Dthresh = 50; %std?
+                        % SDthresh = 3;
+                        
+                        %[clean_data, artifact_times_rel_samp] = asr_artifact_removal(AllDataBin_clean_ds, Dthresh, SDthresh);
+                        
+                        %% Plotting
+                        %{
+                        chanToPlot = 7;
+                        
+                        figure (103); clf
+%                         subplot(2, 1, 1)
+%                         plot(clean_data(chanToPlot,:))
+%                         hold on
+%                         if ~isempty(artifact_times_rel_samp)
+%                             plot(artifact_times_rel_samp, 200, 'k*');
+%                         end
+%                         ylim([-8e5 8e5])
+%                         title('Cleaned Data')
+%                         %ylim([-300 600])
+%                         subplot(2, 1, 2)
+                         plot(AllDataBin_clean_ds(chanToPlot,:))
+                        hold on
+                        if ~isempty(artifact_times_rel_samp)
+                            plot(artifact_times_rel_samp, 200, 'k*');
+                        end
+                        title('Original Data')
+                        ylim([-600 600])
+                        disp('')
+                        
+                        %}
+                        %% Calculate dy
+                        
+                        data = AllDataBin_clean_ds; % 30 s
+                        
+                        %%
+                        
+                        reductionFactor = 1; % No reduction
+                        
+                        movWin_Var = 10*reductionFactor; % 10 s
+                        movOLWin_Var = 9*reductionFactor; % 9 s
+                        
+                        segmentWelch = 1*reductionFactor;
+                        OLWelch = 0.5*reductionFactor;
+                        
+                        dftPointsWelch =  2^10;
+                        
+                        segmentWelchSamples = round(segmentWelch*fs_ds);
+                        samplesOLWelch = round(segmentWelchSamples*OLWelch);
+                        
+                        movWinSamples=round(movWin_Var*fs_ds);%obj.filt.FFs in Hz, movWin in samples
+                        movOLWinSamples=round(movOLWin_Var*fs_ds);
+                        
+                        % run welch once to get frequencies for every bin (f) determine frequency bands
+                        [~,f] = pwelch(randn(1,movWinSamples),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fs_ds);
+                        
+                        deltaBandLowCutoff = 1;
+                        deltaBandHighCutoff = 4;
+                        
+                        gammaBandLowCutoff = 30;
+                        gammaBandHighCutoff = 90;
+                        
+                        pfDeltaBand=find(f>=deltaBandLowCutoff & f<deltaBandHighCutoff);
+                        pfGammaBand=find(f>=gammaBandLowCutoff & f<gammaBandHighCutoff);
+                        
+                        
+                        %%
+                        
+                        disp('Calculating d/y...')
+                        
+                        bufferedDeltaGammaRatio = []; deltaMeanAll = []; gammaMeanAll = [];
+                        for q = 1:size(data, 1)
+                            
+                            %%
+                            thisData = data(q,:);
+                            [V_uV_data_full,nshifts] = shiftdim(thisData',-1);
+                            thisSegData = V_uV_data_full(:,:,:);
+                            
+                            %  [DataSeg_Notch, ~] = fobj.filt.FN.getFilteredData(thisSegData); % t_DS is in ms
+                            % [DataSeg_BP, ~] = fobj.filt.BP.getFilteredData(thisSegData); % t_DS is in ms
+                            % [DataSeg_F, t_DS] = fobj.filt.F.getFilteredData(DataSeg_BP); % t_DS is in ms
+                            
+                            %  t_DS_s = t_DS/1000;
+                            
+                            
+                            
+                            %%
+                            %%
+                            tmp_V_DS = buffer(V_uV_data_full,movWinSamples,movOLWinSamples,'nodelay');
+                            pValid=all(~isnan(tmp_V_DS));
+                            
+                            [pxx,f] = pwelch(tmp_V_DS(:,pValid),segmentWelchSamples,samplesOLWelch,dftPointsWelch,fs_ds);
+                            
+                            %% Ratios
+                            
+                            deltaGammaRatioAll = zeros(1,numel(pValid));
+                            deltaGammaRatioAll(pValid)=(mean(pxx(pfDeltaBand,:))./mean(pxx(pfGammaBand,:)))';
+                            
+                            
+                            deltaMean = zeros(1,numel(pValid));
+                            deltaMean(pValid) = mean(pxx(pfDeltaBand,:))';
+                            
+                            gammaMean = zeros(1,numel(pValid));
+                            gammaMean(pValid) = mean(pxx(pfGammaBand,:))';
+                            
+                            
+                            %%
+                            
+                            bufferedDeltaGammaRatio(q,:) = deltaGammaRatioAll;
+                            deltaMeanAll(q,:) = deltaMean;
+                            gammaMeanAll(q,:) = gammaMean;
+                            
+                        end
+                        
+                        bufferedDeltaGammaRatioCell{o}=bufferedDeltaGammaRatio; %%% save this
+                        bufferedDeltaCell{o} = deltaMeanAll;
+                        bufferedGammaCell{o} = gammaMeanAll;
+                        %alldsData{o} = data;
+                        
+                        bufferedDeltaGammaRatio_mean(:,o) = nanmean(bufferedDeltaGammaRatio, 2);
+                        bufferedDeltaGammaRatio_median(:,o) = nanmedian(bufferedDeltaGammaRatio, 2);
+                        
+                        bufferedDelta_mean(:,o) = nanmean(deltaMeanAll, 2);
+                        bufferedDelta_median(:,o) = nanmedian(deltaMeanAll, 2);
+                        
+                        bufferedGamma_mean(:,o) = nanmean(gammaMeanAll, 2);
+                        bufferedGamma_median(:,o) = nanmedian(gammaMeanAll, 2);
+
+                    end
+                    D = [];
+                    D.bufferedDeltaGammaRatioCell = bufferedDeltaGammaRatioCell;
+                    D.bufferedDeltaCell = bufferedDeltaCell;
+                    D.bufferedGammaCell = bufferedGammaCell;
+                    
+                    %D.alldsData = alldsData;
+                    
+                    D.bufferedDeltaGammaRatio_mean = bufferedDeltaGammaRatio_mean;
+                    D.bufferedDeltaGammaRatio_median = bufferedDeltaGammaRatio_median;
+                    
+                    D.bufferedDelta_mean = bufferedDelta_mean;
+                    D.bufferedDelta_median = bufferedDelta_median;
+                    
+                    D.bufferedGamma_median = bufferedGamma_median;
+                    D.bufferedGamma_mean = bufferedGamma_mean;
+                    
+                    
+                    D.isArtifact = isArtifact;
+                    D.tOn_s = tOn;
+                    D.timeWin_s = timeWin_s;
+                    D.fs_ds = fs_ds;
+                    D.chanNamesSet = chanNamesSet;
+                    
+                    
+                    INFO.Birdname = obj.INFO.birdName{:};
+                    INFO.EphysRecName = obj.EPHYS.EphysRecName{j};
+                    INFO.date = obj.INFO.date_txt_year(j,:);
+                    INFO.EphysStartTime = obj.EPHYS.EphysStartTime{j};
+                    INFO.LightsOff = obj.VIDEO.LightsOff{j};
+                    %INFO.LightsOn = obj.VIDEO.LightsOn{j+1};
+                    
+                    
+                    [totalDur_min_start_lightsOff] = calc_offset_alignment_time_min(obj, INFO.date, INFO.EphysStartTime, INFO.LightsOff);
+                    %[totalDur_min_start_lightsOn] = calc_offset_alignment_time_min(obj, INFO.date, INFO.EphysStartTime, INFO.LightsOn);
+                    
+                    INFO.totalDur_min_start_lightsOff = totalDur_min_start_lightsOff;
+                    %INFO.totalDur_min_start_lightsOn = totalDur_min_start_lightsOn;
+                    
+                    saveName = [saveDir obj.EPHYS.EphysRecName{j} '_allLFP_dyData-' num2str(nChans)];
+                    
+                    if exist(saveDir, 'dir') == 0
+                        mkdir(saveDir);
+                        disp(['Created: '  saveDir])
+                    end
+                    
+                    save([saveName '.mat'], 'D', 'INFO', '-v7.3')
+                    
+                    disp(['Saved:' saveName])
+                end
+                
+            end
+            
+            
+        end
+        
+        
         
         function [obj, dataInfo] = load_ephys_data(obj, fileName)
             
@@ -460,6 +1599,12 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             dataInfo.data_full = data;
             %obj.DATA.timstamps_seg_s = thisSegData_s;
             dataInfo.filename = fileName;
+            
+            
+            
+            
+            
+            
             
         end
         
@@ -3013,6 +4158,274 @@ h = lillietest(group1)
         end
         
         
+        
+        
+        
+        function obj = analyze_sleep_ephys_LFP_version(obj, birdSwitch)
+            
+            L_F = 1; %LastToFirst = 1
+            
+       
+            switch birdSwitch
+                case 1 % w025 % Artifacts = R_ant EEG
+                    %% w025 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    birdName = 'w025';
+                    
+                    %% neg dEV -L-F
+                    negdEV_dateText = {'2021-07-30', ...
+                        '2021-07-31', ...
+                        '2021-08-05', '2021-08-12'};
+                    
+                    %% Neutral dEV -L-F
+                    otherEV_dateText = {'2021-07-27', ...
+                        '2021-07-28', ...
+                        '2021-08-09', ...
+                        '2021-08-11'};
+                    
+%                     otherEV_dateText = {'2021-07-28', ...
+%                         '2021-08-04', ...
+%                         '2021-08-09', ...
+%                         '2021-08-11'};
+%                     
+                    
+                    
+                    
+                case 2 %w027 % Artifacts = R_ant EEG
+                    %% w027 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    
+                    birdName = 'w027';
+                    
+                    %% neg dEV -L-F
+                    negdEV_dateText = {'2021-07-27',...
+                        '2021-07-28',...
+                        '2021-07-30',...
+                        '2021-08-09'};
+                    
+                    %% pos dEV -L-F
+                    posdEV_dateText = {'2021-07-24',...
+                        '2021-07-31',...
+                        '2021-08-02',...
+                        '2021-08-10',...
+                        '2021-08-16'};
+                    
+                    %% neutral dEV -L-F
+                    neutEV_dateText = {'2021-07-25',...
+                        '2021-07-26',...
+                        '2021-08-01',...
+                        '2021-08-04',...
+                        '2021-08-11',...
+                        '2021-08-12',...
+                        '2021-08-15',...
+                        '2021-08-17',...
+                        '2021-08-18'};
+                case 3 % w038 % Artifacts = L_post EEG / Analyze L LFP
+                    %% W038 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    birdName = 'w038';
+                    
+                    %% neg dEV -L-F
+                    negdEV_dateText = {'2021-09-08',...
+                        '2021-09-12',...
+                        '2021-09-19'};
+                    
+                    %% pos dEV -L-F
+                    posdEV_dateText = {'2021-09-07',...
+                        '2021-09-11',...
+                        '2021-09-13'};
+                    
+                    %% Neutral dEV -L-F
+                    neutEV_dateText = {'2021-09-09',...
+                        '2021-09-10',...
+                        '2021-09-15',...
+                        '2021-09-16',...
+                        '2021-09-18'};
+                    
+                    
+                    
+                case 4 % w038 % Artifacts = L_post EEG / Analyze L LFP
+                    %% W038 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    birdName = 'w037';
+                    
+                    %% neg dEV -L-F
+                    negdEV_dateText = {'2021-09-27'};
+                    
+                    %% pos dEV -L-F
+                    posdEV_dateText = {'2021-09-18',...
+                        '2021-09-22'};
+                    
+                    %% Neutral dEV -L-F
+                    neutEV_dateText = {'2021-09-19',...
+                        '2021-09-20',...
+                        '2021-09-21',...
+                        '2021-09-23',...
+                        '2021-09-26'};
+                    
+            end
+            %X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy
+            dEV_dir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\All_LFP_dy\'];
+            %X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis-LFP
+            for k = 1:2
+                
+                switch k
+                    case 1
+                        allDates = negdEV_dateText;
+                        if L_F
+                            savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis-LFP\Neg-dEV_L-F_MeansMedians\'];
+                        else
+                            savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis-LFP\Neg-dEV_F-L_MeansMedians\'];
+                        end
+                    case 2
+                        allDates = otherEV_dateText;
+                        if L_F
+                            savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis-LFP\Other-dEV_L-F_MeansMedians\'];
+                        else
+                            savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis-LFP\Other-dEV_F-L_MeansMedians\'];
+                        end
+                        
+                end
+                
+                %%
+                
+                ephysFilenames = dir(fullfile(dEV_dir, '*.mat'));
+                
+                ephysFilenames = {ephysFilenames.name}';
+                nFiles = numel(ephysFilenames);
+                AllDates = [];
+                
+                for i = 1:numel(allDates)
+                    dateText = allDates{i};
+                    
+                    fileInds = [];
+                    for j = 1:nFiles
+                        thisName = ephysFilenames{j,:};
+                        fileInds{j} = strfind(thisName, dateText);
+                        
+                    end
+                    
+                    fileInds = ~cellfun(@isempty,fileInds);
+                    SelectedFile = ephysFilenames{fileInds};
+                    
+                    d_data = load([dEV_dir obj.PATH.dirD SelectedFile]);
+                    
+                    %% Analysis is done in 20 s (1 min batches)
+                    artifacts = d_data.D.isArtifact;
+                    LightsOff_min = d_data.INFO.totalDur_min_start_lightsOff;
+                    
+                    nHoursToAnalyze = 9;
+                    binInHour = 180;
+                    analysisBins = nHoursToAnalyze*binInHour;
+                    
+                    LightsOff_s_bins = LightsOff_min*3; %3 bins per min for 20 s bins
+                    
+                    % 2 hours after lights off = 360, 20 s bins
+                    %1 min = 3 bins, 3*60 = 1 hr, 180*2  = 360
+                    onsetBins = LightsOff_s_bins+360; % 2 hours after lights off
+                    
+                    %offsetBins = onsetBins+1800;
+                    offsetBins = onsetBins+analysisBins;
+                    
+                    
+                    allIndsNotArtifacts = ~artifacts(LightsOff_s_bins:offsetBins);
+                    
+                    deltagamma_median = d_data.D.bufferedDeltaGammaRatio_median(:,LightsOff_s_bins:offsetBins);
+                    deltagamma_median_noArtifacts = deltagamma_median(:,allIndsNotArtifacts);
+                    deltagamma_median_noArtifacts_chanMedians = median(deltagamma_median_noArtifacts, 2);
+                    
+                    delta_median = d_data.D.bufferedDelta_median(:,LightsOff_s_bins:offsetBins);
+                    delta_median_noArtifacts = delta_median(:,allIndsNotArtifacts);
+                    delta_median_noArtifacts_chanMedians = median(delta_median_noArtifacts, 2);
+                    
+                    gamma_median = d_data.D.bufferedGamma_median(:,LightsOff_s_bins:offsetBins);
+                    gamma_median_noArtifacts = gamma_median(:,allIndsNotArtifacts);
+                    gamma_median_noArtifacts_chanMedians = median(gamma_median_noArtifacts, 2);
+                    
+                    
+                    AllDates(i).deltagamma_median = deltagamma_median_noArtifacts_chanMedians;
+                    AllDates(i).delta_median = delta_median_noArtifacts_chanMedians;
+                    AllDates(i).gamma_median = gamma_median_noArtifacts_chanMedians;
+                    
+                end
+                
+                NegOrPos(k).AllDates = AllDates;
+            end
+            
+            negVals = NegOrPos(1).AllDates;
+            otherVals = NegOrPos(2).AllDates;
+            
+            negVals_ToPlot = [];
+            for w = 1:numel(negVals)
+                negVals_ToPlot{w} = negVals(w).deltagamma_median(:);
+                %negVals_ToPlot{w} = negVals(w).delta_median(:);
+            end
+            
+            otherVals_ToPlot = [];
+            for w = 1:numel(otherVals)
+                otherVals_ToPlot{w} = otherVals(w).deltagamma_median(:);
+                %otherVals_ToPlot{w} = otherVals(w).delta_median(:);
+            end
+            
+            
+            %%
+            figure(103);clf;
+            
+            subplot(1,2, 1)
+            hold on
+            
+            all_neg_Vals = [];
+            for j = 1:size(negVals_ToPlot, 2)
+            plot(ones(1, numel(negVals_ToPlot{j}))*j, negVals_ToPlot{j}, 'k*')
+            all_neg_Vals = [all_neg_Vals negVals_ToPlot{j}'];
+            all_neg_medians(j) = nanmedian(negVals_ToPlot{j});
+            end
+           %xlim([0 5]) 
+           %ylim([0 1000])
+           hold on
+           
+           bar(all_neg_medians)
+           set(gca,'children',flipud(get(gca,'children')))
+           xticks = 1:1:4;
+               set(gca, 'xtick', xticks)
+               set(gca, 'xticklabel', negdEV_dateText')
+               title('Negative \DeltaEV: 9 hours starting 2 hours after lights off')
+               
+            subplot(1,2, 2)
+            hold on 
+            all_other_Vals = [];
+            for j = 1:size(otherVals_ToPlot, 2)
+            plot(ones(1, numel(otherVals_ToPlot{j}))*j, otherVals_ToPlot{j}, 'k*')
+            all_other_Vals = [all_other_Vals otherVals_ToPlot{j}'];
+            all_other_medians(j) = nanmedian(otherVals_ToPlot{j});
+            end
+            %xlim([0 5]) 
+           %ylim([0 1000])
+           hold on
+             bar(all_other_medians)
+                
+               set(gca,'children',flipud(get(gca,'children')))
+               xticks = 1:1:4;
+               set(gca, 'xtick', xticks)
+               set(gca, 'xticklabel', otherEV_dateText')
+               title('Other \DeltaEV: 9 hours starting 2 hours after lights off')
+               
+               
+           %%
+           [p, h] = ranksum(all_neg_Vals, all_other_Vals);
+           negMedian = nanmedian(all_neg_Vals);
+           otherMedian = nanmedian(all_other_Vals);
+           %%
+           
+           
+              plotpos = [0 0 25 15];
+            plotName = [dEV_dir 'DValues_dEV'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            %print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+           
+           
+           
+        end
+        %
+        
+        
         function obj = analyze_sleep_ephys(obj, birdSwitch)
             
             L_F = 1; %LastToFirst = 1
@@ -3349,6 +4762,8 @@ h = lillietest(group1)
                     
                     figure(103); clf
                     plot(rawData_DS_10Hr{oo});
+                    axis tight
+                    ylim([-500 500])
                     pause
                 end
                 
@@ -6059,6 +7474,352 @@ h = lillietest(group1)
             disp(['Saved: ' AllEntropyDataDir dateName '_wEntropy.mat'])
             
         end
+        
+        function [obj] = plot_syllabledEVs(obj, SylEntropyDir, SylNight, SylMorning, NightSylWav, MorningSylWav, saveName, F_or_L_switch )
+            
+            L = load([SylEntropyDir SylNight]);
+            F = load([SylEntropyDir SylMorning]);
+            
+            nSyls = size(L.E, 2);
+            
+            figure(103); clf
+            cnt = 1;
+            
+            for j = 1:nSyls
+                
+                allVars_L  = L.E(j).all_vars_wEntropy;
+                allVars_F  = F.E(j).all_vars_wEntropy;
+                
+                mean_allVars_L = mean(allVars_L);
+                std_allVars_L = std(allVars_L);
+                sem_allVars_L = std_allVars_L/(sqrt(numel(allVars_L)));
+                
+                mean_allVars_F = mean(allVars_F);
+                std_allVars_F = std(allVars_F);
+                sem_allVars_F = std_allVars_F/(sqrt(numel(allVars_F)));
+                
+        
+                
+  diffs_LastToFirst_Syl(j) =  mean_allVars_F - mean_allVars_L;
+  diffs_FirstToLast_Syl(j) =  mean_allVars_L - mean_allVars_F;
+                
+  if F_or_L_switch  == 1
+      dataToUse = diffs_LastToFirst_Syl;
+  elseif F_or_L_switch ==2
+      dataToUse = diffs_FirstToLast_Syl;
+      
+  end
+                %%
+                figure(103)
+                subplot(1, nSyls, j); 
+                
+                scatter(allVars_L, allVars_F)
+                hold on
+                plot(mean_allVars_L, mean_allVars_F, 'k.', 'linewidth', 2)
+                line([mean_allVars_L-sem_allVars_L, mean_allVars_L+sem_allVars_L], [mean_allVars_F, mean_allVars_F], 'color', 'k', 'linewidth', 2) 
+                line([mean_allVars_L mean_allVars_L], [mean_allVars_F - sem_allVars_F, mean_allVars_F+sem_allVars_F], 'color', 'k', 'linewidth', 2) 
+                
+                xlim([0 1])
+                ylim([0 1])
+                hold on
+                line([0 1], [0 1], 'color', 'r')
+                ylabel('Morning EV')
+                xlabel('Night EV')
+                title(['Syllable: ' num2str(j) '- \DeltaEV = ' num2str(dataToUse(j))])
+                
+                
+                %% 
+                 figure(104)
+                 sylVersion = 10;
+                 
+                 S_night = [NightSylWav L.E(j).allFilenames{sylVersion}] ;
+                 S_morning = [MorningSylWav F.E(j).allFilenames{sylVersion}] ;
+                  
+                 [wav_file,fs] = audioread(S_night);
+                 subplot(1, 6, cnt )    
+                 specgram1((wav_file/.08),512,fs,400,360);
+                    ylim ([300 8000]);
+                    title(['S-' num2str(j) '-Night']) 
+                    
+                    cnt  = cnt +1;
+                     subplot(1, 6, cnt)
+                      [wav_file,fs] = audioread(S_morning); 
+                 specgram1((wav_file/.08),512,fs,400,360);
+                    ylim ([300 8000]);
+                    title(['S-' num2str(j) '-Morning']) 
+                cnt  = cnt +1;
+                
+            end
+              figure(104)
+            plotpos = [0 0 15 3];
+                    RecName_save = [SylEntropyDir  saveName '-Spectrograms'];
+                    print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
+                    
+                    figure(103)
+            plotpos = [0 0 15 5];
+                    RecName_save = [SylEntropyDir  saveName '-scatter'];
+                    print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
+            
+          disp('')  
+        end
+        
+        function obj = calc_wienerEntropy_on_syllables(obj, syllableDir, AllEntropyDataDir, nSyllables)
+            
+            
+            % From fb_plugin_WienerEntropy
+            
+            % obj.Name = 'Wiener entropy (500Hz-7kHz)';
+            % obj.Description = 'Wiener entropy in frequency range 500Hz - 7 kHz';
+            % obj.Author = 'Alexei Vyssotski';
+            % obj.plot_color = 'r';
+            % obj.buffersize = 512;
+            % obj.nonoverlap = 32;
+            % obj.samplestart = obj.buffersize;
+            % obj.b = fir1(320, [500 7000]/(obj.Scanrate/2));
+            
+            % From f_hmm_zebrafinch
+            %data = calc_wEntropy(Data_t, samplestart, nonoverlap, buffersize, Scanrate)
+            
+            
+            %%
+            
+            
+            fileNames = dir(fullfile(syllableDir, '*.wav'));
+            f = filesep;
+            [filepath,name,ext] = fileparts(syllableDir);
+            
+            dateName_inds = find(filepath == f);
+            dateName = filepath(dateName_inds(end)+1:end);
+            
+            fileNames = {fileNames.name}';
+            nFiles = numel(fileNames);
+            
+            
+            
+            for o = 1:nSyllables
+                
+                switch o
+                    case 1
+                        
+                        stringsearch = 'S1';
+                    case 2
+                        stringsearch = 'S2';
+                    case 3
+                        stringsearch = 'S3';
+                end
+                
+                
+                cnt = 1; SylMatchFilenames = [];
+                for j = 1:nFiles
+                    SText = fileNames{j,:}(1:2);
+                    
+                    ismatch = strcmp(SText, stringsearch);
+                    if ismatch == 1
+                        
+                        SylMatchFilenames{cnt} = fileNames{j,:};
+                        cnt =cnt+1;
+                    end
+                    
+                end
+                
+                SylFilenamesAll{o} = SylMatchFilenames;
+            end
+            
+          
+            
+            for oo = 1:nSyllables
+                
+               
+                thisSylFiles = SylFilenamesAll{oo};
+                
+                  cnt = 1;
+                mean_wEntropy = [];
+                variance_wEntropy = [];
+                wEntropy = [];
+                filenames_Syls = [];
+                
+                for  j = 1: numel(thisSylFiles)
+                    
+                    thisFile = thisSylFiles{j};
+                    thisFilePath = [syllableDir thisFile];
+                    [y,Fs] = audioread(thisFilePath);
+                    
+                    %syllables_num(cnt) = NText(j);
+                    
+                    
+                    
+                    %                 X = y;
+                    %                 N = size(y, 1);
+                    %
+                    %                 Y = fft(X, N);
+                    %                 Y = abs(Y(1:N/2+1));
+                    %                 fftResult_dB = (10 * log10(Y)); % covert into dB
+                    
+                    %%
+                    Data_t = y';
+                    nonoverlap = 32;
+                    samplestart = 1;
+                    buffersize = 512;
+                    
+                    
+                    
+                    %   specgram1((Data_t/.08),512,Fs,400,360);
+                    
+                    %{
+                %% ID onsets
+                YY = abs(y).^2;
+                YY_smooth = smooth(YY, 64);
+               % figure; plot(YY_smooth)
+                
+                iqrSmoothThresh = (iqr(YY_smooth))*2;
+                line([0 size(YY, 1)], [iqrSmoothThresh  iqrSmoothThresh], 'color', 'r')
+               
+                bla = find(YY_smooth > iqrSmoothThresh);
+                
+                sylStart = bla(1)-0.01*Fs; % 10 ms
+                if sylStart <0
+                    sylStart = bla(2)-0.01*Fs; % 10 ms
+                end
+                
+                sylStop = bla(end) +0.02*Fs; % 20 ms
+                
+              %   line([sylStart sylStart], [0 1e-3], 'color', 'r')
+              %   line([sylStop sylStop], [0 1e-3], 'color', 'r')
+                 
+                    %}
+                    sylStart = 1;
+                    sylStop = numel(Data_t);
+                    
+                    Data_t = Data_t(sylStart:sylStop);
+                    
+                    
+                    size_Data = size(Data_t, 2);
+                    %data = zeros(1, ceil((size_Data-samplestart)/nonoverlap));
+                    %  data = zeros(1, 1+floor((size_Data-samplestart)/nonoverlap));
+                    
+                    data = zeros(1, floor((size_Data-buffersize)/nonoverlap));
+                    
+                    nbr_buffers = size(data, 2);
+                    Scanrate = Fs;
+                    starts = []; stops = [];
+                    
+                    for i = 1: nbr_buffers
+                        
+                        start = 1 + (i-1)*nonoverlap;
+                        stop = start+buffersize;
+                        
+                        starts(i) = start;
+                        stops(i) = stop;
+                        
+                        % TEMPORARY FIX: make sure we don't try access samples
+                        % beyond Data's size
+                        if i == nbr_buffers
+                            stop = size_Data;
+                        end
+                        
+                        F = fft(Data_t(start:stop-1));    %the lowerst code is written in assumption of one channel
+                        F1 = F(1+(round(300/(Scanrate/buffersize)):round(8000/(Scanrate/buffersize))));
+                        %bottom frequency - about 500Hz, top frequency - 7kHz
+                        %1 is added because the first fft coefficient
+                        %corresponds to zero frequency
+                        P = abs(F1.*conj(F1));
+                        m_SumLog = sum(log(P+1e-8));    %epsilon - 1e-8
+                        m_LogSum = sum(P);
+                        if (m_LogSum==0)
+                            m_LogSum = size(P,2);
+                        end
+                        
+                        m_LogSum = log(m_LogSum/size(P,2));
+                        m_Entropy = m_SumLog/size(P,2)-m_LogSum;
+                        
+                        if (m_LogSum==0)
+                            m_Entropy = 0;
+                        end
+                        
+                        data(i) = m_Entropy;
+                        
+                    end
+                    
+                    mean_wEntropy(cnt) = mean(data);
+                    median_wEntropy(cnt) = median(data);
+                    variance_wEntropy(cnt) = var(data);
+                    wEntropy{cnt} = data;
+                    filenames_Syls{cnt} =  thisFile;
+                    
+                    cnt = cnt +1;
+                    
+                    %{
+                    figure(103); clf
+                    subplot(3, 1, 1)
+                    specgram1((Data_t/.08),512,Fs,400,360);
+                    ylim ([0 8000]);
+                    title('Spectrogram')
+                    
+                    subplot(3, 1, 2)
+                    plot(Data_t)
+                    axis tight
+                    title('Raw Motif Data')
+                    xlabel('Time (s)')
+                    ylim ([-0.1 0.1]);
+                    subplot(3, 1, 3)
+                    plot(data)
+                    axis tight
+                    ylim ([-4.5 0]);
+                    meanWE = mean(data);
+                    varWE = var(data);
+                    title(['Wiener Entropy; mean=' num2str(round(meanWE, 2)) 'var=' num2str(round(varWE, 3))] )
+                    
+                    saveDir = 'X:\EEG-LFP-songLearning\ForPoster\';
+                    
+                    plotpos = [0 0 12 15];
+                    RecName_save = [saveDir  'WEntropy-First'];
+                    print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
+                    print_in_A4(0, RecName_save, '-depsc', 0, plotpos);
+                
+                
+                disp('')
+                    %}
+                end
+                
+                %xes = 1:1:numel(mean_wEntropy);
+                %figure(105); clf
+                %scatter(xes,mean_wEntropy)
+                
+                mean_mean_wEntropy = mean(mean_wEntropy);
+                median_median_wEntropy  = median(median_wEntropy);
+                mean_var_wEntropy = mean(variance_wEntropy);
+                median_var_wEntropy = median(variance_wEntropy);
+                
+                E(oo).all_means_wEntropy = mean_wEntropy;
+                E(oo).all_medians_wEntropy = median_wEntropy;
+                E(oo).all_vars_wEntropy = variance_wEntropy;
+                
+                E(oo).all_mean_mean_wEntropy = mean_mean_wEntropy;
+                E(oo).all_median_median_wEntropy = median_median_wEntropy;
+                
+                E(oo).all_mean_var_wEntropy = mean_var_wEntropy;
+                E(oo).all_median_var_wEntropy = median_var_wEntropy;
+                
+                E(oo).allFilenames = thisSylFiles;
+                E(oo).allFilenamesNums = oo;
+                
+            
+                
+            end
+                disp('')
+                
+                 
+            %AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\ANALYSIS\SongAnalysis\allWienerEntropyFiles\';
+            save([AllEntropyDataDir dateName '_wEntropy_Syllables.mat'], 'E', '-v7.3')
+            disp([AllEntropyDataDir dateName '_wEntropy_Syllables.mat'])
+               
+            
+        end
+        
+        
+        
+        
+        
         function  obj = combined_metaAnalysis_analyze_dy_values_across_nights(obj, meta_dyDataFile, meta_songDataFile)
             
             disp('')

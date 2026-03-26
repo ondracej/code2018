@@ -34,8 +34,8 @@ P.VideoPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\DATA_VIDEO\';
 P.EphysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\DATA_EPHYS\';
 P.AnalysisPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\ANALYSIS\';
 P.PlotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w037\PLOTS\';
-%P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w037_50Songs\Data\';
-P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w037_100Songs\Data\';
+P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w037_50Songs\Data\';
+%P.SongPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w037_100Songs\Data\';
 P.OriginalSongPath = 'X:\EEG-LFP-songLearning\songs\w037\Data\';
 
 %% w025
@@ -209,6 +209,38 @@ for k = 1:numel(dirsToLoad_inds)
     
 end
  
+
+%% Entropy calculation on syllables
+
+thisDirToLoad = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025_50Songs\Data\2021-07-30-First100Songs-Motifs-Syllables\';
+SyllableEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\Entropy-50Songs_syllables\';
+nSyllables = 3;
+
+calc_wienerEntropy_on_syllables(data_OBJ, thisDirToLoad, SyllableEntropyDataDir, nSyllables);
+
+
+%% compare syllables across fixed nights
+
+saveName = '7-30_to_7-30_F-L';
+SylEntropyDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\Entropy-50Songs_syllables\';
+
+SylMorning = '2021-07-30-First100Songs-Motifs-Syllables_wEntropy_Syllables.mat';
+SylNight = '2021-07-30-Last100Songs-Motifs-Syllables_wEntropy_Syllables.mat';
+
+NightSylWav = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025_50Songs\Data\2021-07-30-Last100Songs-Motifs-Syllables\';
+MorningSylWav = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w025_50Songs\Data\2021-07-30-First100Songs-Motifs-Syllables\';
+
+F_or_L_switch = 2; %1= L-F, 2= F-L
+
+[data_OBJ] = plot_syllabledEVs(data_OBJ, SylEntropyDir, SylNight, SylMorning, NightSylWav, MorningSylWav, saveName, F_or_L_switch )
+
+
+
+
+
+
+
+
 %% make a summary plot of motifs, playbacks and lights on-off for each file
 % requires that calcTimeOfRecFiles and calcTimeOfPlaybackFiles has been run
 
@@ -296,10 +328,11 @@ data_OBJ = checkEphysChans(data_OBJ);
 %savedir  = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Neutral-dEV_L-F_MeansMedians\';
 
 
-birdSwitch = 4; % 1 (w025); 2 (w027); 3 (w038); 4 (w037)
+birdSwitch = 1; % 1 (w025); 2 (w027); 3 (w038); 4 (w037)
 
+data_OBJ = analyze_sleep_ephys_LFP_version(data_OBJ, birdSwitch)
 
-data_OBJ = analyze_sleep_ephys(data_OBJ, birdSwitch);
+%data_OBJ = analyze_sleep_ephys(data_OBJ, birdSwitch);
 
 %% summarize dEV means and medians across days                
              
@@ -321,6 +354,27 @@ wav_browser % to make the motifs
 
 
 remove_first_syl_from_motifs_w025
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Load LFP Data
+
+%saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\'
+data_OBJ = process_LFP_Data(data_OBJ, nEntries, saveDir );
+
+dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\'];
+data_OBJ = plot_LFP_Data(data_OBJ, dataDir );
+
+data_OBJ = plotArtifactsOverDays(data_OBJ, dataDir );
+
+
+%%
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\'
+  ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
+data_OBJ = process_LFP_Data_burstAnalysis(data_OBJ, nEntries, saveDir,ephysPath );
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 
 
 %% Ephys data
@@ -368,7 +422,6 @@ remove_first_syl_from_motifs_w025
            else
                
                
-               
                pathToData = [data_OBJ.PATH.EphysPath data_OBJ.EPHYS.EphysRecName{j} data_OBJ.PATH.dirD];
                
                chanNames = dir(fullfile(pathToData, '*.continuous'));
@@ -390,12 +443,14 @@ remove_first_syl_from_motifs_w025
        
    
 
-
 %% To check data with Time Series Viewer, requires that NeuralElectrophysilogyTools is on path
 %% w025 w027
 dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025\chronic_2021-07-14_20-24-58';
 dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025-w0027-justephys\chronic_2021-07-24_22-37-34';
 dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025-w0027-justephys\chronic_2021-08-05_22-06-10';
+
+dataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w025\DATA_EPHYS\chronic_2021-07-30_20-54-58'
+
 
 %% 
 dataDir = 'X:\EEG-LFP-songLearning\w038andw037\chronic_2021-09-01_21-54-15';
