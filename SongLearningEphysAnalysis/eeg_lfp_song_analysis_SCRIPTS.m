@@ -112,7 +112,9 @@ nEntries = data_OBJ.INFO.nEntries;
  for j = 1:nEntries    
      vid_path = data_OBJ.VIDEO.VidDir{j};
      if ~isempty(vid_path)
-         analyze_mvmt_in_video_frames(data_OBJ, j)
+         %analyze_mvmt_in_video_frames(data_OBJ, j)
+        
+         load_images_make_movie_OF_analysis(imageDir)
      end
  end
  
