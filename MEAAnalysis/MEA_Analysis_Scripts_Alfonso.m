@@ -42,15 +42,17 @@ mea_OBJ = addAnalysisInfoToObj(mea_OBJ);
 %mea_OBJ = load_MCS_data_detectSWRs_zscore_detection(mea_OBJ);
 mea_OBJ  = load_MCS_data_detectSWRs_rippleDetection(mea_OBJ);
 
+%mea_OBJ = load_MCS_data_detectSWRs_rippleEnv(mea_OBJ); % creates 2 files: SWR and Detections
+
 mea_OBJ = collectAllSWRDetections(mea_OBJ);
 % printing figures
-%mea_OBJ = plotSWRDetection(mea_OBJ);
+mea_OBJ = plotSWRDetection(mea_OBJ);
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  Analysis on SWRs 
 
-SWRAnalysisDir = 'Z:\hameddata2\Janie-MEA-Data\JohannasData2022\20220503\SWR_Analysis\20220503_1538_SWR_Detections\'; %% CHANGE THIS 
+SWRAnalysisDir = 'F:\MEAData\Alfonso\16.03.2026-E17\SWR_Analysis\2026-03-16_1339_SWR_Detections\'; %% CHANGE THIS 
 cd(SWRAnalysisDir);
 
 %% Validate detected SWRs
