@@ -2,10 +2,10 @@
 %% [1] Initialize the program
 % *** To run a cell, type STRG + Enter
 
-addpath(genpath('C:\Users\Neuropix\Documents\GitHub\code2018'));
-cd 'C:\Users\Neuropix\Documents\GitHub\code2018\MEAAnalysis\'
+addpath(genpath('C:\Users\DeepLabCut\Documents\code\Github\code2018'));
+cd 'C:\Users\DeepLabCut\Documents\code\Github\code2018\MEAAnalysis\'
 
-analysisDir = 'F:\MEAData\Alfonso\16.03.2026-E17\'; % path to the analysis directory %% CHANGE THIS 
+analysisDir = 'D:\Alfonso\16.03.2026-E17\'; % path to the analysis directory %% CHANGE THIS 
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
