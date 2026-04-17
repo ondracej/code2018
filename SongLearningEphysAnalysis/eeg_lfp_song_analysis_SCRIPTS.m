@@ -5,6 +5,7 @@
  clear all
  close all
  
+
 nSongs = 2;% 1=100; 2 = 50;
  
 %% w038
@@ -360,20 +361,32 @@ remove_first_syl_from_motifs_w025
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load LFP Data
 
-%saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
-saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\'
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
+%saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\'
 data_OBJ = process_LFP_Data(data_OBJ, nEntries, saveDir );
 
 dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\'];
+%dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\'];
 data_OBJ = plot_LFP_Data(data_OBJ, dataDir );
 
 data_OBJ = plotArtifactsOverDays(data_OBJ, dataDir );
 
 
 %%
-saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\'
-  ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
-data_OBJ = process_LFP_Data_burstAnalysis(data_OBJ, nEntries, saveDir,ephysPath );
+%w025
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
+ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
+plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\';
+channelOrder = [6 4 7 5 3 2 1 ]; %w025
+channelOrder = [6 4 5 3 2 1 ]; %w025 (08-09) ch 11 and 14 are noisy
+  %w027
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\';
+ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\';
+plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\BurstDetection\';
+channelOrder = [2 3 5 7 4  6 1 ]; %w027
+channelOrder = [2 3 5 7 4  6 8 1 ]; %w027
+
+data_OBJ = process_LFP_Data_burstAnalysis(data_OBJ, nEntries, saveDir,ephysPath,plotPath );
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
