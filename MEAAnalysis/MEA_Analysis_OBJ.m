@@ -39,7 +39,10 @@ classdef MEA_Analysis_OBJ < handle
                     code2018Path = 'D:\Github\code2018\';
                     NETCode = 'D:\Github\code2018\NSKToolBox\';
                     
-                    
+                      case 'TUWZU5Y-2021-3'
+                    McsCodePath = 'C:\Users\DeepLabCut\Documents\code\MCSTools\';
+                    code2018Path = 'C:\Users\DeepLabCut\Documents\code\Github\code2018\';
+                    NETCode = 'C:\Users\DeepLabCut\Documents\code\Github\code2018\NSKToolBox\';
                     
                 case 'DESKTOP-PBLRH65' %Zalamander
                     McsCodePath = 'G:\code\Github\McsMatlabDataTools\';
@@ -281,7 +284,7 @@ classdef MEA_Analysis_OBJ < handle
             disp('Loading data and detecting SWRs....')
             
             dbstop if error
-            doPlot = 1; % will pause the analysis
+            doPlot = 0; % will pause the analysis
             
             fileToLoad = obj.ANALYSIS.h5_fileToLoad;
             
@@ -475,6 +478,15 @@ classdef MEA_Analysis_OBJ < handle
                     %minPeakProm = 5;
                     
                     [peakH,peakTime_Fs, peakW, peakP]=findpeaks(data_rect_rippleBP,'MinPeakHeight',minPeakHeight, 'MinPeakWidth', minPeakWidth,'MinPeakDistance', interPeakDistance, 'WidthReference','halfprom', 'MinPeakProminence',minPeakProm); %For HF
+                    
+                    peakTimes_s = peakTime_Fs/Fs;
+                    
+                    % Sort peaks based on prominence: should occur alone and not in a cluster, which tend to be more noise
+                    % use 50 as a cutoff
+                    promThresh = 50;
+                    promPeakInds = find(peakP >promThresh);
+                    
+                    peakTime_Fs = peakTime_Fs(promPeakInds);
                     
                     %{
         figure;
@@ -1148,10 +1160,10 @@ end
                 
                 ROI_fs = [];
                 for o = 1:nUniqueDetections
-                    %thisDet = AllUniqueDetections(o);
-                    thisDet_dss = AllUniqueDetections(o) * 20;
-                    %ROI_fs{o} = thisDet-WinSizeL:thisDet+WinSizeR;
-                    ROI_fss{o} = thisDet_dss-WinSizeL:thisDet_dss+WinSizeR;
+                    thisDet = AllUniqueDetections(o);
+                    %thisDet_dss = AllUniqueDetections(o) * 20;
+                    ROI_fs{o} = thisDet-WinSizeL:thisDet+WinSizeR;
+                    %ROI_fss{o} = thisDet_dss-WinSizeL:thisDet_dss+WinSizeR;
                 end
                 
                 plottingOrder = SWR_INFO.plottingOrder;
@@ -1170,8 +1182,8 @@ end
                     chanDataParital= data.Recording{1}.AnalogStream{1}.readPartialChannelData(cfg);
                     ChanData = chanDataParital.ChannelData/1e6; %loads all data info
                     
-                    for j = 1:numel(ROI_fss)
-                        thisROI = ROI_fss{j};
+                    for j = 1:numel(ROI_fs)
+                        thisROI = ROI_fs{j};
                         AllSWRDataOnChans{k,j} = ChanData(thisROI);
                         SWR_Detection_fs(k,j) = AllUniqueDetections(j);
                         SWR_Detection_s(k,j) = AllUniqueDetections(j)/Fs;
@@ -1499,7 +1511,7 @@ end
                 title(thisChan)
                 grid('on')
                 axis tight
-                ylim([-40 20])
+                ylim([-200 200])
                 
             end
             allSavedDetectionInds = getappdata(spc, 'allSavedDetectionInds');

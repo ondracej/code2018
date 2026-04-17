@@ -723,16 +723,38 @@ classdef dlcAnalysis_OBJ_tadpole < handle
                   timeRes_s = 1/VidFrameRate;
                   velocity_px_per_s = euclidianDistance/timeRes_s;
                   hold on
-                  
+                 
                   %hold on
                   %  plot(euclidianDistance, 'color', cols{j}, 'marker', '.', 'markersize', 20, 'linestyle', '-')
                   % clear('coords_X', 'coords_Y');
                   
+                  %Gauss kernal
+                  sigma = 3;
+%                   
+%                   windowSize = 2*ceil(3*sigma)+1;
+%                   g = fspecial('gaussian', [1 windowSize], sigma);
+%                   %Replace Nans with 0 for convolution
+%                    
+                  %create mask of valid values
+                  mask = double(~isnan(velocity_px_per_s));
+                  
+                  x_filled = velocity_px_per_s;
+                  x_filled(~mask) = 0;
+                  
+                  %Convolve data and mask
+                  %smoothed = conv(x_filled, g, 'same') ./ conv(mask, g, 'same');
+                  smoothed_raw = imgaussfilt(x_filled, sigma) ./ imgaussfilt(mask, sigma);
+                  
+                  smoothWin_s = 60;
+                  smoothWin_frames =  smoothWin_s/timeRes_s;
+                  
+                  smoothed_min = smoothdata(smoothed_raw, 'gaussian', smoothWin_frames);
+                  
                   figure(105);
-                  plot(smooth(velocity_px_per_s, 10)+j*100, 'color', cols{j})
+                  plot(smoothed_min+j*50, 'color', cols{j})
                   hold on
                   if ~isempty(HL_inds)
-                      plot(HL_inds, j*100, 'k^')
+                      plot(HL_inds, j*50, 'k^')
                   end
                   
               end
@@ -741,31 +763,37 @@ classdef dlcAnalysis_OBJ_tadpole < handle
               
               
               axis tight
-              yss = [0 700];
+              yss = [0 300];
               ylim(yss )
               
-              keyboard
-              DarkOn = 12314;
+              %keyboard
+              DarkOn = 12313;
+              LightOn = 97772;
+              
               line([DarkOn  DarkOn ], [yss(1) yss(2)], 'color', 'k')
+              line([LightOn  LightOn ], [yss(1) yss(2)], 'color', 'k')
+              
               
               lastVal = numel(velocity_px_per_s);
               
-              x_rect = [DarkOn DarkOn lastVal lastVal];
+              x_rect = [DarkOn DarkOn LightOn LightOn];
               y_rect = [yss(2) yss(1) yss(1) yss(2)];
               
               % Fill with color
-              h = fill(x_rect, y_rect, [0.8 0.8 0.8], 'EdgeColor', 'none');
+              h = fill(x_rect, y_rect, [0.6 0.6 0.6], 'EdgeColor', 'none');
               
               
+              totalTime_s = lastVal/VidFrameRate;
+              totalTime_hr = totalTime_s/ 3600;
               
-              framesIn1Min = 2*60;
+              framesIn1Min = VidFrameRate*60;
               framesInhour = framesIn1Min *60;
               
-              xticks = 1:framesIn1Min*10:lastVal; % 10 min
+              xticks = 1:framesInhour:lastVal; % 10 min
               
               set(gca, 'xtick', xticks)
               
-              xticklabs = 0:10:110;
+              xticklabs = 0:1:ceil(totalTime_hr);
               
               xlabs = [];
               for j = 1:numel(xticklabs)
@@ -774,7 +802,7 @@ classdef dlcAnalysis_OBJ_tadpole < handle
               
               set(gca, 'xticklabel', xlabs)
               uistack(h, 'bottom');
-              xlabel('Minutes')
+              xlabel('Hours')
             ylabel('Velocity (px/s)')
             
             %%
@@ -784,9 +812,10 @@ classdef dlcAnalysis_OBJ_tadpole < handle
             
             % Print figure
             plotPath = obj.PATH.plotPath;
-            saveName = [plotPath obj.DATA.C.filename '_Velocity' text_save];
+            saveName = [plotPath obj.DATA.C.filename(1:end-4) '_Velocity' text_save];
             plotpos = [0 0 25 15];
             print_in_A4(0, saveName, '-djpeg', 0, plotpos);
+            print_in_A4(0, saveName, '-depsc', 0, plotpos);
         end
         
         function [obj] = plotTimeSpentInQuadrants(obj, likelihood_cutoff)

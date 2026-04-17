@@ -190,7 +190,7 @@ for k = 1:   size(AllSWRDataOnChans, 1)
     title(thisChan)
     grid('on')
     axis tight
-    ylim([-40 20])
+    ylim([-200 200])
     %text(0, toPlot(1)+offset, thisChan)
     
 end
