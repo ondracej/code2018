@@ -135,11 +135,11 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             end
             
             LFP_chans = [];
-              for j =1:nEntries
+            for j =1:nEntries
                 thisText = T.LFP_chans{j};
                 
                 LFP_chans{j} = str2num(thisText);
-               
+                
             end
             
             
@@ -443,12 +443,12 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
         end
         
-        function obj =  plotArtifactsOverDays(data_OBJ, dataDir)
+        function [obj] =  plotArtifactsOverDays(obj, dataDir)
             
             nHoursToAnalyze = 9;
             binInHour = 180;
-              analysisBins = nHoursToAnalyze*binInHour;
-              
+            analysisBins = nHoursToAnalyze*binInHour;
+            
             LFPdataNames = dir(fullfile(dataDir, '*mat*'));
             LFP_FileNames = {LFPdataNames.name}';
             nFiles_LFP = numel(LFP_FileNames);
@@ -471,7 +471,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 offsetBins = onsetBins+analysisBins;
                 
                 totalArtifacts_inAnalysisWin = sum(artifacts(onsetBins:offsetBins));
-                totalBins = offsetBins - onsetBins; 
+                totalBins = offsetBins - onsetBins;
                 totalArtifacts_overFiles(s) =  totalArtifacts_inAnalysisWin;
                 
                 hold on
@@ -484,14 +484,14 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 allNames{s} = d.INFO.EphysRecName;
             end
             
-           ylim([0 2000]) 
-           title('Artifacts over days')
-           
-           
-             plotpos = [0 0 18 10];
-                plot_filename = [dataDir 'Artifacts'];
-                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-                
+            ylim([0 2000])
+            title('Artifacts over days')
+            
+            
+            plotpos = [0 0 18 10];
+            plot_filename = [dataDir 'Artifacts'];
+            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+            
             % 10 hours after onset =  180*10; = 1800;
             
             
@@ -594,225 +594,581 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
         end
         
-        
-        
-        function obj = process_LFP_Data_burstAnalysis(obj, nEntries, saveDir, ephysPath)
-            dbstop if error
-            for j = 1:nEntries
+        function [obj ] = compareBurstSatisticsAcrossDays(obj, burstDir, plotPath)
+            
+            
+            %files = dir(fullfile(analysisDir, '*.mp4'));
+            files = dir(fullfile(burstDir, '*.mat'));
+            nFiles = numel(files);
+            for j = 1:nFiles
+                BurstFileNames{j} = files(j).name;
+            end
+            
+            
+            prompt = 'Please choose the large EV data...';
+            [indx,tf] = listdlg('PromptString',prompt, 'ListString',BurstFileNames, 'SelectionMode','multiple', 'ListSize', [700 200]);
+            
+            SelectedFile_negEV = BurstFileNames(indx);
+            
+            
+            prompt = 'Please choose the small EV data...';
+            [indx,tf] = listdlg('PromptString',prompt, 'ListString',BurstFileNames, 'SelectionMode','multiple', 'ListSize', [700 200]);
+            SelectedFile_posEV = BurstFileNames(indx);
+            
+            
+            
+            
+            
+            
+            
+            
+            %% NegEV Stats
+            
+            nFilesToLoad = numel(SelectedFile_negEV);
+            for j = 1:nFilesToLoad
+                load([burstDir SelectedFile_negEV{j}])
                 
-                if ~isempty(obj.EPHYS.EphysRecName{j})
+                %% Corr analysis
+                
+                
+                
+                
+                delta_peakPower = BURSTS.Delta_peakTimes_peakPower;
+                delta_peaktime_s = BURSTS.Delta_peakTimes_abs_s;
+                
+                nondelta_peakPower = BURSTS.nonDelta_peakTimes_peakPower;
+                nondelta_peaktime_s = BURSTS.nonDelta_peakTimes_abs_s;
+                
+                deltaMask = BURSTS.deltaMask;
+                
+                deltaTime = sum(sum(deltaMask));
+                totalTime = 600000*size(deltaMask, 2);
+                
+                delta_SWRs  = sum(cellfun(@numel, delta_peaktime_s));
+                nondelta_SWRs  = sum(cellfun(@numel, nondelta_peaktime_s));
+                total_SWRs = delta_SWRs+nondelta_SWRs;
+                nonNanPowerVals = [];
+                for k = 1:2
+                    switch k
+                        case 1
+                            peakPower = delta_peakPower;
+                        case 2
+                            peakPower=   nondelta_peakPower;
+                    end
+                    % Example: C = {[1;2], [3;4;5], [6]}
+                    % 1. Find the maximum length
+                    maxLen = max(cellfun(@length, peakPower));
+                    % 2. Pad shorter cells with NaN
+                    C_padded = cellfun(@(x) [x; NaN(maxLen - length(x), 1)], peakPower, 'UniformOutput', false);
+                    % 3. Convert to matrix
+                    mat = cell2mat(C_padded);
+                    bla = isnan(mat);
+                    nonNanPowerVals{k} = mat(~bla);
+                end
+                
+                
+                B.delta_peaktime_s{j} = delta_peaktime_s;
+                B.delta_power{j} = nonNanPowerVals{1};
+                B.delta_SWRs(j) = delta_SWRs;
+                
+                B.nonelta_peaktime_s{j} = nondelta_peaktime_s;
+                B.nondelta_power{j} = nonNanPowerVals{2};
+                B.nondelta_SWRs(j) = delta_SWRs;
+                
+                B.total_SWRs(j) = total_SWRs;
+                
+                B.deltaTime(j) = deltaTime;
+                B.nondeltaTime(j) = totalTime - deltaTime;
+                B.totalTime(j) = totalTime;
+                
+            end
+            
+            
+            %% posEV Stats
+            
+            nFilesToLoad = numel(SelectedFile_posEV);
+            for j = 1:nFilesToLoad
+                load([burstDir SelectedFile_posEV{j}])
+                
+                delta_peakPower = BURSTS.Delta_peakTimes_peakPower;
+                delta_peaktime_s = BURSTS.Delta_peakTimes_abs_s;
+                
+                nondelta_peakPower = BURSTS.nonDelta_peakTimes_peakPower;
+                nondelta_peaktime_s = BURSTS.nonDelta_peakTimes_abs_s;
+                
+                deltaMask = BURSTS.deltaMask;
+                
+                deltaTime = sum(sum(deltaMask));
+                totalTime = 600000*size(deltaMask, 2);
+                
+                delta_SWRs  = sum(cellfun(@numel, delta_peaktime_s));
+                nondelta_SWRs  = sum(cellfun(@numel, nondelta_peaktime_s));
+                total_SWRs = delta_SWRs+nondelta_SWRs;
+                
+                for k = 1:2
+                    switch k
+                        case 1
+                            peakPower = delta_peakPower;
+                        case 2
+                            peakPower=   nondelta_peakPower;
+                    end
+                    % Example: C = {[1;2], [3;4;5], [6]}
+                    % 1. Find the maximum length
+                    maxLen = max(cellfun(@length, peakPower));
+                    % 2. Pad shorter cells with NaN
+                    C_padded = cellfun(@(x) [x; NaN(maxLen - length(x), 1)], peakPower, 'UniformOutput', false);
+                    % 3. Convert to matrix
+                    mat = cell2mat(C_padded);
+                    bla = isnan(mat);
+                    nonNanPowerVals{k} = mat(~bla);
+                end
+                
+                
+                BB.delta_peaktime_s{j} = delta_peaktime_s;
+                BB.delta_power{j} = nonNanPowerVals{1};
+                BB.delta_SWRs(j) = delta_SWRs;
+                
+                BB.nonelta_peaktime_s{j} = nondelta_peaktime_s;
+                BB.nondelta_power{j} = nonNanPowerVals{2};
+                BB.nondelta_SWRs(j) = delta_SWRs;
+                
+                BB.total_SWRs(j) = total_SWRs;
+                
+                BB.deltaTime(j) = deltaTime;
+                BB.nondeltaTime(j) = totalTime - deltaTime;
+                BB.totalTime(j) = totalTime;
+                
+            end
+            
+            alldeltapower_nEV = [];
+            alldeltapower_pEV = [];
+            for j = 1:3
+                alldeltapower_nEV  = [alldeltapower_nEV ; B.delta_power{j};];
+                alldeltapower_pEV  = [alldeltapower_pEV ; BB.delta_power{j};];
+            end
+            
+            
+           [p, h] =  ranksum(alldeltapower_nEV, alldeltapower_pEV)
+            
+           meandPower_nEV = nanmedian(alldeltapower_nEV);
+           meandPower_pEV = nanmedian(alldeltapower_pEV);
+           
+           
+            
+            binedges = 1:0.5:15;
+            figure(103); clf
+            subplot(3, 2, 1)
+            histogram(BB.nondelta_power{1}, binedges, 'Normalization', 'probability')
+            
+            subplot(3, 2, 3)
+            histogram(BB.nondelta_power{2}, binedges, 'Normalization', 'probability')
+            
+            subplot(3, 2, 5)
+            histogram(BB.nondelta_power{3}, binedges, 'Normalization', 'probability')
+            
+            
+            subplot(3, 2, 2)
+            histogram(B.nondelta_power{1}, binedges, 'Normalization', 'probability')
+            
+            subplot(3, 2, 4)
+            histogram(B.nondelta_power{2}, binedges, 'Normalization', 'probability')
+            
+            subplot(3, 2, 6)
+            histogram(B.nondelta_power{3}, binedges, 'Normalization', 'probability')
+            
+            
+            
+            
+            
+            n = histcounts(BB.nondelta_power{1}, binedges);
+            m = histcounts(BB.nondelta_power{2}, binedges);
+            
+            count = sum([n,m]);                            %number of data points (used in normalization)
+            figure(104)
+            b2 = bar(binedges(1:end-1), n/count, 'histc');
+            disp('');
+            hold on
+            b3 = bar(binedges(1:end-1), m/count, 'histc');
+            
+            
+        end
+        
+        
+        
+        function obj = process_LFP_corr_coh_Analysis(obj, nEntries, saveDir, ephysPath, plotPath)
+            dbstop if error
+            colOrder = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560],...
+                [0.4660, 0.6740, 0.1880], [0.3010, 0.7450, 0.9330], [0.6350, 0.0780, 0.1840]};
+            
+            for jq = 1:nEntries
+                if ~isempty(obj.EPHYS.EphysRecName{jq}) % no ephys recording
                     
-                    pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{j} obj.PATH.dirD];
-                    
-                    
-                    
+                    pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{jq} obj.PATH.dirD];
                     EphysLFPFiles = dir(fullfile(ephysPath, '*.mat'));
                     
-                    LFPIndex = strfind({EphysLFPFiles.name}, obj.EPHYS.EphysRecName{j});
+                    LFPIndex = strfind({EphysLFPFiles.name}, obj.EPHYS.EphysRecName{jq});
                     idx_LFP = find(~cellfun(@isempty,LFPIndex));
                     LFPNames =  EphysLFPFiles(idx_LFP).name;
                     
-                    a = load([ephysPath LFPNames]);
-                    artifactInds = a.D.isArtifact;
+                    a = load([ephysPath LFPNames]); % loads the LFP data file which has info on it
+                    artifactInds = a.D.isArtifact; % identify where all the artifact files are
+                    
+                    chanSet = a.D.chanNamesSet;
+                    nChans = numel(chanSet);
+                    
+                    % channelOrder = [6 4 5 3 2 1 ]; %w025
+                    %channelOrder = [6 4 7 5 3 2 1 ]; %w025
+                    % channelOrder = [2 3 5 7 4  6 8 1 ]; %w027
+                    %channelOrder = [2 3 5 7 4  6 1 ]; %w027 7 chans
+                    channelOrder = 1:1:nChans;
+                    chanSetRemap = [];
+                    
+                    dot = '.';
+                    underscore = '_';
+                    for c = 1:nChans
+                        chanSetRemap{c} =  chanSet{channelOrder(c)};
+                        longName = chanSetRemap{c};
+                        bla = find(longName == dot);
+                        bla2 = find(longName == underscore);
+                        shortName{c} = longName(bla2+3:bla-1);
+                    end
+                    
+                    chanSet = chanSetRemap;
+                    
+                    
                     
                     timeWin_s = a.D.timeWin_s; %seconds
                     tOn = a.D.tOn_s;
-                    nBins = numel(tOn);
                     
-                    chanNames = dir(fullfile(pathToData, '*.continuous'));
+                    %% only detect swr in the analysis windows
                     
-                    index = strfind({chanNames.name}, ['CH']);
-                    idx = find(~cellfun(@isempty,index));
-                    chanNames =  chanNames(idx);
-                    nChans = numel(chanNames);
+                    nHoursToAnalyze = 9;
+                    hoursAfterLightsOff = 2;
                     
+                    bins_per_min = 60/timeWin_s;
+                    binsInHour = bins_per_min*60;
+                    analysisBins_cnt = nHoursToAnalyze*binsInHour;
                     
-                    chanSet = obj.EPHYS.LFP_chans{j};
+                    LightsOff_min = a.INFO.totalDur_min_start_lightsOff;
+                    LightsOff_s_bins = LightsOff_min*bins_per_min; %3 bins per min for 20 s bins
                     
-                    dot = '.';
-                    match = [];
-                    for h = 1:nChans
-                        thisName = chanNames(h).name;
-                        bla = find(thisName == dot);
-                        chN = str2num(thisName(bla-2:bla-1));
-                        match(h) = sum(ismember(chanSet, chN));
-                    end
+                    % 2 hours after lights off = 360, 20 s bins
+                    %1 min = 3 bins, 3*60 = 1 hr, 180*2  = 360
+                    onsetBins = LightsOff_s_bins+hoursAfterLightsOff*binsInHour; % 2 hours after lights off
+                    offsetBins = onsetBins+analysisBins_cnt;
+                    tOn_toAnalyze = tOn(onsetBins:offsetBins);
+                    artifactInds_toAnalyze = artifactInds(onsetBins:offsetBins);
                     
+                    %   minChannels = floor(nChans*.5);       % ripple must appear on >= channels
+                    nBinsToAnalyze = numel(tOn_toAnalyze);
                     
-                    chanNamesSet = [];
-                    cnt = 1;
-                    for jj = 1:nChans
-                        if match(jj) ==1
-                            chanNamesSet{cnt} = chanNames(jj).name;
-                            cnt = cnt+1;
-                        else
+                    plotSubset = randperm(nBinsToAnalyze);
+                    plotSubsetInds = plotSubset(1:20);
+                    
+                    for o = 1: nBinsToAnalyze
+                        
+                        isArtifact = artifactInds_toAnalyze(o); % we do not analyze artifact inds
+                        
+                        if ~isArtifact
+                            AllDataBin_clean_ds = [];
+                            for oo = 1:nChans
+                                thisChan = chanSet{oo};
+                                filename = [pathToData thisChan];
+                                [dataBin, timestamps, info] = load_open_ephys_data_chunked(filename,tOn_toAnalyze(o), tOn_toAnalyze(o)+timeWin_s);
+                                %dataBin_clean = dataBin - mean(dataBin);
+                                %dataBin_clean_ds = resample(dataBin_clean, 1, FS/fs_ds); %
+                                AllDataBin_clean_ds(oo,:) = dataBin;
+                                
+                            end
+                            
+                            %% chronux params
+                            fs = info.header.sampleRate;
+                            params.Fs = fs;
+                            params.tapers = [3 5];   % time-bandwidth product, tapers
+                            params.fpass = [0 150];
+                            params.err = [1 0.05];   % confidence intervals
+                            params.trialave = 0;
+                            
+                            deltaBandLowCutoff = 1;
+                            deltaBandHighCutoff = 4;
+                            
+                            gammaBandLowCutoff = 30;
+                            gammaBandHighCutoff = 90;
+                            
+                            
+                            
+                            RChans = []; chanNames = [];
+                            for cc = 1:nChans
+                                for   dd = 1:nChans
+                                    
+                                    if dd <= cc
+                                        continue
+                                    end
+                                    [R,~] = corrcoef(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :));
+                                    
+                                    RChans(cc, dd) = R(1, 2);
+                                    chanNames{cc, dd} = [shortName{cc} '-' shortName{dd}];
+                                    
+                                    %  tic
+                                    
+                                    %[C, phi, S12, S1, S2, f] = coherencyc(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :), params);
+                                    %[C, ~, ~, ~, ~, f] = coherencyc(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :), params);
+                                    
+                                    [Cxy, f] = mscohere(AllDataBin_clean_ds(cc, :), AllDataBin_clean_ds(dd, :), [], [], [], fs);
+                                    
+                                    
+                                    delta_coh(cc, dd) = mean(Cxy(f >= deltaBandLowCutoff & f <= deltaBandHighCutoff));
+                                    gamma_coh(cc, dd) = mean(Cxy(f >= gammaBandLowCutoff & f <= gammaBandHighCutoff));
+                                    %   toc
+                                end
+                            end
+                            
+                            
+                            
+                            %                               figure(101)
+                            %                               clim = [0 1];
+                            %                               imagesc(RChans, clim)
+                            %
+                            %                               colorbar
+                            
+                            
+                            disp([num2str(o) '/' num2str(nBinsToAnalyze)])
+                            % LFP: [samples x channels]
+                            % fs: sampling rate
+                            
+                            
+                            
+                            
+                            
+                            corrR{o} = RChans;
+                            deltaCOH{o} =  delta_coh;
+                            gammaCOH{o} = gamma_coh;
+                            
+                            
+                            
+                            
                         end
                     end
                     
-                    nChans = numel(chanNamesSet);
+                    INFO = a.INFO;
+                    INFO.channelOrder_remap = channelOrder;
+                    INFO.chanSet = chanSet;
+                    INFO.nHoursToAnalyze = nHoursToAnalyze;
+                    INFO.hoursAfterLightsOff = hoursAfterLightsOff;
+                    INFO.tOn_toAnalyze = tOn_toAnalyze;
+                    INFO.onsetBins = onsetBins;
+                    INFO.offsetBins = offsetBins;
                     
-                    thisChan = chanNamesSet{1};
-                    filename = [pathToData thisChan];
-                    [data, timestamps, info] = load_open_ephys_data(filename);
+                    CORCOH.corrR = corrR;
+                    CORCOH.corrR_chanNames= chanNames;
                     
-                    FS = info.header.sampleRate;
-                    dataSamps = numel(timestamps);
-                    dataDur_s = dataSamps/FS;
+                    CORCOH.deltaCOH = deltaCOH;
+                    CORCOH.gammaCOH = gammaCOH;
+                    
+                    saveName = [plotPath obj.EPHYS.EphysRecName{jq} '_CorCoh-' num2str(nChans)];
+                    
+                    if exist(saveDir, 'dir') == 0
+                        mkdir(saveDir);
+                        disp(['Created: '  saveDir])
+                    end
+                    
+                    save([saveName '.mat'], 'CORCOH', 'INFO', 'params', '-v7.3')
+                    
+                    disp(['Saved:' saveName])
+                end
+                
+                
+            end
+            
+        end
+        
+        
+        
+        
+        
+        
+        
+        
+        function obj = process_LFP_Data_burstAnalysis(obj, nEntries, saveDir, ephysPath, plotPath)
+            dbstop if error
+            colOrder = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560],...
+                [0.4660, 0.6740, 0.1880], [0.3010, 0.7450, 0.9330], [0.6350, 0.0780, 0.1840]};
+            
+            for jq = 1:nEntries
+                if ~isempty(obj.EPHYS.EphysRecName{jq}) % no ephys recording
+                    
+                    pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{jq} obj.PATH.dirD];
+                    EphysLFPFiles = dir(fullfile(ephysPath, '*.mat'));
+                    
+                    LFPIndex = strfind({EphysLFPFiles.name}, obj.EPHYS.EphysRecName{jq});
+                    idx_LFP = find(~cellfun(@isempty,LFPIndex));
+                    LFPNames =  EphysLFPFiles(idx_LFP).name;
+                    
+                    a = load([ephysPath LFPNames]); % loads the LFP data file which has info on it
+                    artifactInds = a.D.isArtifact; % identify where all the artifact files are
+                    
+                    chanSet = a.D.chanNamesSet;
+                    nChans = numel(chanSet);
+                    
+                   % channelOrder = [6 4 5 3 2 1 ]; %w025
+                   %channelOrder = [6 4 7 5 3 2 1 ]; %w025
+                  % channelOrder = [2 3 5 7 4  6 8 1 ]; %w027
+                   %channelOrder = [2 3 5 7 4  6 1 ]; %w027 7 chans
+                   channelOrder = 1:1:nChans;
+                   chanSetRemap = [];
+                    
+                    dot = '.';
+                    underscore = '_';
+                    for c = 1:nChans
+                        chanSetRemap{c} =  chanSet{channelOrder(c)};
+                        longName = chanSetRemap{c};
+                        bla = find(longName == dot);
+                        bla2 = find(longName == underscore);
+                        shortName{c} = longName(bla2+3:bla-1);
+                    end
+                    
+                    chanSet = chanSetRemap;
                     
                     
                     
-                    %rippleBand = [120 200];
-                    %rippleBand = [100 250];
-                    %rippleBand = [100 200];
-                    %rippleBand = [120 250];
-                    %rippleBand = [80 300];
-                    rippleBand = [80 250];
-                    %RippleDetectThresh = 2.0;      % detection threshold (z-score)   
-                    %RipplePeakThresh = 2.0;        % peak threshold
+                    timeWin_s = a.D.timeWin_s; %seconds
+                    tOn = a.D.tOn_s;
                     
+                    %% only detect swr in the analysis windows
                     
-                    %detectThresh = 0.8;      % detection threshold (z-score)
-                    %peakThresh = 2.0;        % peak threshold
+                    nHoursToAnalyze = 9;
+                    hoursAfterLightsOff = 2;
                     
+                    bins_per_min = 60/timeWin_s;
+                    binsInHour = bins_per_min*60;
+                    analysisBins_cnt = nHoursToAnalyze*binsInHour;
                     
-                    detectThresh = 2.0;      % detection threshold (z-score)
-                    %peakThresh = 1.8;        % peak threshold
-                    peakThresh = 2.0;        % peak threshold
+                    LightsOff_min = a.INFO.totalDur_min_start_lightsOff;
+                    LightsOff_s_bins = LightsOff_min*bins_per_min; %3 bins per min for 20 s bins
                     
-                    %minDur = 0.02;         % 20 ms
-                    %maxDur = 0.12;         % 120 ms
+                    % 2 hours after lights off = 360, 20 s bins
+                    %1 min = 3 bins, 3*60 = 1 hr, 180*2  = 360
+                    onsetBins = LightsOff_s_bins+hoursAfterLightsOff*binsInHour; % 2 hours after lights off
+                    offsetBins = onsetBins+analysisBins_cnt;
+                    tOn_toAnalyze = tOn(onsetBins:offsetBins);
+                    artifactInds_toAnalyze = artifactInds(onsetBins:offsetBins);
                     
-                    %minDur = 0.010;
-                    minDur = 0.008;         % 10 ms% 10 ms
-                    maxDur = 0.15;         % 50 ms
+                    %   minChannels = floor(nChans*.5);       % ripple must appear on >= channels
+                    nBinsToAnalyze = numel(tOn_toAnalyze);
                     
-                    minChannels = floor(nChans*.5);       % ripple must appear on >= channels
+                    plotSubset = randperm(nBinsToAnalyze);
+                    plotSubsetInds = plotSubset(1:20);
                     
-                    for o = 1: nBins-1
+                    for o = 1: nBinsToAnalyze
                         
-                        isArtifact = artifactInds(o);
+                        isArtifact = artifactInds_toAnalyze(o); % we do not analyze artifact inds
                         
                         if ~isArtifact
-                            
                             AllDataBin_clean_ds = [];
                             for oo = 1:nChans
-                                
-                                thisChan = chanNamesSet{oo};
+                                thisChan = chanSet{oo};
                                 filename = [pathToData thisChan];
-                                [dataBin, ~, ~] = load_open_ephys_data_chunked(filename,tOn(o), tOn(o)+timeWin_s);
-                                
+                                [dataBin, timestamps, info] = load_open_ephys_data_chunked(filename,tOn_toAnalyze(o), tOn_toAnalyze(o)+timeWin_s);
                                 %dataBin_clean = dataBin - mean(dataBin);
-                                
                                 %dataBin_clean_ds = resample(dataBin_clean, 1, FS/fs_ds); %
                                 AllDataBin_clean_ds(oo,:) = dataBin;
-                                %%
                                 
                             end
+                            
+                            %% chronux params
+                            fs = info.header.sampleRate;
+                            params.Fs = fs;
+                            params.tapers = [3 5];   % time-bandwidth product, tapers
+                            params.fpass = [0 150];
+                            params.err = [1 0.05];   % confidence intervals
+                            params.trialave = 0;
+
+                        
+                                   
+                        deltaBandLowCutoff = 1;
+                        deltaBandHighCutoff = 4;
+                        
+                        gammaBandLowCutoff = 30;
+                        gammaBandHighCutoff = 90;
+                        
+                        
+                            %{
+                        RChans = []; chanNames = [];
+                        for cc = 1:nChans
+                            for   dd = 1:nChans
+                                
+                                if dd <= cc
+                                    continue
+                                end
+                                [R,~] = corrcoef(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :));
+                                
+                                RChans(cc, dd) = R(1, 2);
+                                chanNames{cc, dd} = [shortName{cc} '-' shortName{dd}];
+                                
+                              %  tic
+                                
+                                %[C, phi, S12, S1, S2, f] = coherencyc(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :), params);
+                                [C, ~, ~, ~, ~, f] = coherencyc(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :), params);
+                                
+                                delta_coh(cc, dd) = mean(C(f >= deltaBandLowCutoff & f <= deltaBandHighCutoff));
+                                gamma_coh(cc, dd) = mean(C(f >= gammaBandLowCutoff & f <= gammaBandHighCutoff));
+                             %   toc
+                            end
+                        end
+                              
+                            
+                              
+%                               figure(101)
+%                               clim = [0 1];
+%                               imagesc(RChans, clim)
+%                               
+%                               colorbar
+                           %}   
+                            
+                        disp([num2str(o) '/' num2str(nBinsToAnalyze)])
                             % LFP: [samples x channels]
                             % fs: sampling rate
                             
                             %% PARAMETERS
                             LFP = AllDataBin_clean_ds';
                             nCh = size(LFP,2);
-nSamp = size(LFP,1);
+                            nSamp = size(LFP,1);
                             %fs = fs_ds;
-                            fs = FS;
+                   
                             
-                        %% Sharp Band
-                        sharpBand = [8 40];
-
-sharpThresh = 3;      % z threshold
-minSharpDur = 0.05;
-maxSharpDur = 0.20;
-
-                    %%    
-[b,a] = butter(3, sharpBand/(fs/2),'bandpass');
-sharpLFP = filtfilt(b,a,LFP);
-sharpEnv = abs(hilbert(sharpLFP));
-sharpZ = (sharpEnv - median(sharpEnv))./mad(sharpEnv,1);
-                        
-    %%                    
-                        
-     
-figure(104); clf
-subplot(5, 1, 1)
-hold on
-t = (1:length(LFP))/fs;
-offset = 0;
-for j = 1:nCh
-    plot(t, LFP(:,j)+offset);
-    text(0, offset, chanNamesSet{j}(5:8), 'interpreter', 'none')
-    offset = offset +500;
-end
-ylim([-100 3500])
-title('Raw LFP')
-
-subplot(5, 1, 2)
-hold on
-offset = 0;
-for j = 1:nCh
-    plot(t, sharpLFP(:,j)+offset);
-    offset = offset +80;
-end
-ylim([-100 600])
-title('LFP - Sharp wave filter (8-40 Hz)')
-
-subplot(5, 1, 3)
-hold on
-offset = 0;
-for j = 1:nCh
-    %plot(t, DataSeg_LF(j,:) +offset);
-    plot(t, sharpZ(:,j) +offset);
-    %plot(env(:,j)+offset);
-    offset = offset +10;
-end
-
-ylim([-5 80])
-title('Z-Scored Sharp wave envelope')                   
-        disp('')                
-         
-        
-        %% 
-        sharpSum = median(sharpZ, 2);
-        smoothed = smooth(sharpSum, .1*fs);
-        smoothed_sq = smoothed.^2;
-     %   figure; plot(smoothed_sq);
-     %   figure; plot(diff(smoothed_sq));
-        %% Sharp wave mask
-      
-sharpMask = sharpZ > sharpThresh;
-
-%% SHARP WAVE EVENTS
-
-minFrames = round(minSharpDur*fs);
-maxFrames = round(maxSharpDur*fs);
-
-sharpEvents = false(nSamp,1);
-
-for ch = 1:nCh
-
-    d = diff([0; sharpMask(:,ch); 0]);
-    starts = find(d==1);
-    ends = find(d==-1)-1;
-
-    for i = 1:length(starts)
-
-        dur = ends(i)-starts(i)+1;
-
-        if dur>=minFrames && dur<=maxFrames
-            sharpEvents(starts(i):ends(i)) = true;
-        end
-
-    end
-end
-                  
-     %% Ripple filter                  
-     rippleBand = [80 250];
-                    rippleThresh = 2.0;      % detection threshold (z-score)   
-                    ripplePeak = 2.0;        % peak threshold
-                                   minRippleDur = 0.008;         % 10 ms% 10 ms
-                    maxRippleDur = 0.15;         % 50 ms       
-                        
+                            %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            %% Sharp Band
+                            %{
+                            sharpBand = [8 40];
+                            
+                            sharpThresh = 3;      % z threshold
+                            minSharpDur = 0.05;
+                            maxSharpDur = 0.20;
+                            
+                            %%
+                            [bb,aa] = butter(3, sharpBand/(fs/2),'bandpass');
+                            sharpLFP = filtfilt(bb,aa,LFP);
+                            sharpEnv = abs(hilbert(sharpLFP));
+                            sharpZ = (sharpEnv - median(sharpEnv))./mad(sharpEnv,1);
+                            %}
+                            %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            %%     Delta Band
+                                   deltaBand = [1 8];
+                            
+                            %% DESIGN FILTER (use SOS for stability)
+                            [z,p,k] = butter(4, deltaBand/(fs/2), 'bandpass');
+                            [sos,g] = zp2sos(z,p,k);
+                            
+                            %% APPLY ZERO-PHASE FILTER
+                            LFP_delta = filtfilt(sos, g, LFP);
+                            
+                            deltaEnv = abs(hilbert(LFP_delta));
+                            deltaZ = (deltaEnv - median(deltaEnv))./mad(deltaEnv,1);
+                            
+                            %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            %% Ripple filter
+                            rippleBand = [80 250];
+                            
                             %% BANDPASS FILTER (stable SOS)
                             [z,p,k] = butter(4,rippleBand/(fs/2),'bandpass');
                             [sos,g] = zp2sos(z,p,k);
@@ -824,166 +1180,184 @@ end
                             %                        figure; plot(env)
                             %% Smooth envelope
                             %env = movmean(env, round(0.005*fs));
-                            rippleEnv = movmean(rippleEnv, round(0.010*fs));
+                            rippleEnv = movmean(rippleEnv, round(0.020*fs));
                             
                             %% Z-score per channel
                             rippleZ = (rippleEnv - mean(rippleEnv))./std(rippleEnv);
-                            rippleMask = rippleZ > rippleThresh;
-                            %%
-figure(104);                            
-                            subplot(5, 1, 4)
-
-offset = 0;
-for j = 1:nCh
-    hold on
-    %plot(t, DataSeg_LF(j,:) +offset);
-    plot(t, rippleLFP(:,j) +offset);
-    %plot(env(:,j)+offset);
-    offset = offset +100;
-end
-
-ylim([-100 700])
-title('Ripple Filter')                   
-        disp('')     
+                            %{
+                            %% Raw data
+                            figure(104); clf
+                            subplot(5, 2, 1)
+                            hold on
+                            t = (1:length(LFP))/fs;
+                            offset = 0;
+                            for j = 1:nCh
+                                plot(t, LFP(:,j)+offset);
+                                text(0, offset, chanSet{j}(5:8), 'interpreter', 'none')
+                                offset = offset +500;
+                            end
+                            axis tight
+                            title('Raw LFP')
                             
-%%                  
-         subplot(5, 1, 5)
-hold on
-offset = 0;
-for j = 1:nCh
-    %plot(t, DataSeg_LF(j,:) +offset);
-    plot(t, rippleZ(:,j) +offset);
-    %plot(env(:,j)+offset);
-    offset = offset +5;
-end
-ylim([-5 35])
-title('Z-Scored Ripple envelope')                   
-        disp('')    
-        %%
-        
-        
-          plotpos = [0 0 25 15];
-            
-            plotDir =   'G:\Dropbox\Writing\00_Articles\JIN\';
-            
-            
-            plot_filename = [plotDir 'RawData'];
-            %print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-            print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
-            
-            
-minFrames = round(minRippleDur*fs);
-maxFrames = round(maxRippleDur*fs);
-
-rippleClean = false(size(rippleMask));
-
-for ch = 1:nCh
-
-    d = diff([0; rippleMask(:,ch); 0]);
-    starts = find(d==1);
-    ends = find(d==-1)-1;
-
-    for i = 1:length(starts)
-
-        dur = ends(i)-starts(i)+1;
-
-        if dur>=minFrames && dur<=maxFrames
-
-            if max(rippleZ(starts(i):ends(i),ch)) > ripplePeak
-                rippleClean(starts(i):ends(i),ch) = true;
-            end
-
-        end
-
-    end
-end
-        
-        
-  %%      
-        
-    
-activeRippleCh = sum(rippleClean,2);
-rippleEvents = activeRippleCh >= minChannels;
-
-%% REQUIRE RIPPLE INSIDE SHARP WAVE
-
-SWRmask = rippleEvents & sharpEvents;
-
-%% EXTRACT EVENTS
-
-d = diff([0; SWRmask; 0]);
-starts = find(d==1);
-ends = find(d==-1)-1;
-
-SWR.samples = [starts ends];
-SWR.time = SWR.samples / fs;
-
-%% FIND RIPPLE PEAKS
-
-nEvents = length(starts);
-
-SWR.peakTime = zeros(nEvents,1);
-SWR.peakPower = zeros(nEvents,1);
-
-for i = 1:nEvents
-
-    seg = rippleZ(starts(i):ends(i),:);
-
-    [p,idx] = max(seg(:));
-
-    [row,~] = ind2sub(size(seg),idx);
-
-    peakSample = starts(i) + row - 1;
-
-    SWR.peakTime(i) = peakSample/fs;
-    SWR.peakPower(i) = p;
-
-end
-    
-    subplot(4, 1, 4)
-hold on
-for i = 1:size(SWR.peakTime,1)
-    xline(SWR.peakTime(i,1),'k', 'linestyle', ':');
-end
-
-        
-        
-        
-        
-        
-        %%
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+                            subplot(5, 2, 2)
+                            hold on
+                            t = (1:length(LFP))/fs;
+                            offset = 0;
+                            for j = 1:nCh
+                                plot(t, LFP(:,j)+offset);
+                                text(0, offset, chanSet{j}(5:8), 'interpreter', 'none')
+                                offset = offset +500;
+                            end
+                            ylim([-100 3500])
+                            title('Raw LFP')
+                            
+                            %% sharp wave filter
+                            subplot(5, 2, 3)
+                            hold on
+                            offset = 0;
+                            for j = 1:nCh
+                                plot(t, sharpLFP(:,j)+offset);
+                                offset = offset +80;
+                            end
+                            ylim([-100 600])
+                            title('LFP - Sharp wave filter (8-40 Hz)')
+                            
+                            
+                            %% sharp z
+                            subplot(5, 2, 5)
+                            hold on
+                            offset = 0;
+                            for j = 1:nCh
+                                %plot(t, DataSeg_LF(j,:) +offset);
+                                plot(t, sharpZ(:,j) +offset);
+                                %plot(env(:,j)+offset);
+                                offset = offset +10;
+                            end
+                            
+                            axis tight
+                            title('Z-Scored Sharp wave envelope')
+                            disp('')
+                            
+                            
+                            
+                            %% delta
+                            
+                            subplot(5, 2, 7)
+                            hold on
+                            offset = 0;
+                            for j = 1:nCh
+                                plot(t, LFP_delta(:,j)+offset);
+                                offset = offset +80;
+                            end
+                            ylim([-100 700])
+                            title('LFP - delta filter (1-4 Hz)')
+                            
+                            
+                            %% sharp z
+                            subplot(5, 2, 9)
+                            hold on
+                            offset = 0;
+                            for j = 1:nCh
+                                %plot(t, DataSeg_LF(j,:) +offset);
+                                plot(t, deltaZ(:,j) +offset);
+                                %plot(env(:,j)+offset);
+                                offset = offset +5;
+                            end
+                            
+                            axis tight
+                            title('Z-Scored delta envelope')
+                            disp('')
+                            
+                            %%    Delta
+                            
+                            subplot(5, 2, 4)
+                            hold on
+                            offset = 0;
+                            for j = 1:nCh
+                                plot(t, LFP_delta(:,j)+offset);
+                                offset = offset +80;
+                            end
+                            ylim([-100 700])
+                            title('LFP - delta filter (1-4 Hz)')
+                            
+                            
+                            %% Delta z
+                            subplot(5, 2, 6)
+                            hold on
+                            offset = 0;
+                            for j = 1:nCh
+                                %plot(t, DataSeg_LF(j,:) +offset);
+                                plot(t, deltaZ(:,j) +offset);
+                                %plot(env(:,j)+offset);
+                                offset = offset +5;
+                            end
+                            
+                            ylim([-5 40])
+                            title('Z-Scored delta envelope')
+                            disp('')
+                            
+                            
+                            %% ripple LFP
+                            figure(104);
+                            subplot(5, 2, 8)
+                            
+                            offset = 0;
+                            for j = 1:nCh
+                                hold on
+                                %plot(t, DataSeg_LF(j,:) +offset);
+                                plot(t, rippleLFP(:,j) +offset);
+                                %plot(env(:,j)+offset);
+                                offset = offset +100;
+                            end
+                            
+                            ylim([-100 700])
+                            title('Ripple Filter')
+                            disp('')
+                            
+                            %% Ripple Z
+                            subplot(5, 2, 10)
+                            hold on
+                            offset = 0;
+                            for j = 1:nCh
+                                %plot(t, DataSeg_LF(j,:) +offset);
+                                plot(t, rippleZ(:,j) +offset);
+                                %plot(env(:,j)+offset);
+                                offset = offset +5;
+                            end
+                            ylim([-5 35])
+                            title('Z-Scored Ripple envelope')
+                            disp('')
+                            %}
+                            %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            %% Ripple Detection
+                            
+                            RippleDetectThresh = 0.9;
+                            RipplePeak = 0.9;        % peak threshold
+                            minRippleDur = 0.01;         % 10 ms% 10 ms
+                            maxRippleDur = 0.150;         % 120 ms
+                            
                             %% Detect candidate ripple periods
-                            candidate = rippleEnvZ > RippleDetectThresh;
-                            
+                            %candidate = rippleZ > RippleDetectThresh;
+                            meanRippleZ = mean(rippleZ, 2);
+                            candidate = meanRippleZ > RippleDetectThresh;
+                            %{
+                                                        figure(105); clf
+                                                        subplot(2, 1, 1)
+                                                        plot(sumRippleZ)
+                                                        subplot(2, 1, 2)
+                                                        plot(mean(rippleZ, 2))
+                            %}
                             %% Duration constraints
-                            minFrames = round(minDur*fs);
-                            maxFrames = round(maxDur*fs);
+                            minFrames = round(minRippleDur*fs);
+                            maxFrames = round(maxRippleDur*fs);
                             
                             cleanMask = false(size(candidate));
                             
-                            for ch = 1:nCh
+                            %for ch = 1:nCh
+                            for ch = 1
                                 
-                                d = diff([0; candidate(:,ch); 0]);
+                                %d = diff([0; candidate(:,ch); 0]);
+                                d = diff([0; candidate; 0]);
                                 starts = find(d==1);
                                 ends = find(d==-1)-1;
                                 
@@ -993,22 +1367,21 @@ end
                                     
                                     if dur >= minFrames && dur <= maxFrames
                                         
-                                        if max(rippleEnvZ(starts(i):ends(i),ch)) > peakThresh
+                                        if max(meanRippleZ(starts(i):ends(i),ch)) > RipplePeak
                                             
                                             cleanMask(starts(i):ends(i),ch) = true;
                                             
                                         end
                                         
                                     end
-                                   
+                                    
                                 end
                                 
                             end
                             
-                            
-                            
                             %% Multi-channel coincidence
                             activeChannels = sum(cleanMask,2);
+                            minChannels = 1; % we are not using this at the moment
                             rippleMask = activeChannels >= minChannels;
                             
                             %% Extract ripple events
@@ -1018,7 +1391,7 @@ end
                             
                             ripples.samples = [starts ends];
                             ripples.time = [starts ends] ./ fs;
-                            
+                            ripples.dur = [ends - starts] ./ fs;
                             %% Compute ripple peaks
                             nEvents = size(starts,1);
                             ripples.peakTime = zeros(nEvents,1);
@@ -1026,7 +1399,7 @@ end
                             
                             for i = 1:nEvents
                                 
-                                seg = envZ(starts(i):ends(i),:);
+                                seg = rippleZ(starts(i):ends(i),:);
                                 [peakPower, idx] = max(seg(:));
                                 
                                 rippleSample = starts(i) + mod(idx,size(seg,1)) - 1;
@@ -1035,145 +1408,379 @@ end
                                 ripples.peakPower(i) = peakPower;
                                 
                             end
-                            
                             %%
-                            figure(106);clf
+                            %{
+                            figure(107);clf
+                            
                             subplot(3, 1, 1)
                             hold on
-                              t = (1:length(LFP))/fs;
+                            t = (1:length(LFP))/fs;
                             offset = 0;
                             for j = 1:nCh
                                 plot(t, LFP(:,j)+offset);
-                                text(0, offset, chanNamesSet{j}(5:8), 'interpreter', 'none')
+                                text(0, offset, chanSet{j}(5:8), 'interpreter', 'none')
                                 offset = offset +500;
                             end
-                             hold on
-                            for i = 1:size(ripples.time,1)
-                                xline(ripples.time(i,1),'r', 'linestyle', ':');
+                            
+                            
+                            hold on
+                            for i = 1:size(ripples.peakTime,1)
+                                xline(ripples.peakTime(i,1),'k', 'linestyle', ':');
                             end
-                            axis tight
-                            grid on
-                            title('LFP')
-                           
+                            
+                            
                             subplot(3, 1, 2)
                             hold on
                             offset = 0;
                             for j = 1:nCh
-                                plot(rippleLFP(:,j)+offset);
-                                offset = offset +100;
+                                %plot(t, DataSeg_LF(j,:) +offset);
+                                plot(t, deltaZ(:,j) +offset, 'color', colOrder{j});
+                                plot(t, rippleZ(:,j) +offset, 'color', colOrder{j});
+                                %plot(env(:,j)+offset);
+                                offset = offset +5;
+                            end
+                            
+                            
+                            hold on
+                            for i = 1:size(ripples.peakTime,1)
+                                xline(ripples.peakTime(i,1),'k', 'linestyle', ':');
                             end
                             axis tight
-                            grid on
-                            title('Ripple Filter')
                             
                             subplot(3, 1, 3)
-                            offset = 0;
                             hold on
-                          
                             
-                            for j = 1:nCh
-                                plot(t, envZ(:,j) +offset);
-                                %plot(env(:,j)+offset);
-                                
-                                offset = offset +10;
+                            
+                            meandelta = mean(deltaZ, 2);
+                            meanripple = mean(rippleZ, 2);
+                            sumripple = sum(rippleZ, 2);
+                            plot(t, meandelta)
+                            plot(t, meanripple);
+                            hold on
+                            %plot(t, sumripple);
+                            for i = 1:size(ripples.peakTime,1)
+                                xline(ripples.peakTime(i,1),'k', 'linestyle', ':');
                             end
                             axis tight
-                            grid on
+                            
+                            %}
+                            %% Do some filtering out of double detections
+                            
+                            peakTimeDiff = diff(ripples.peakTime);
+                            smallDiffInds = find(peakTimeDiff < 0.1);
+                            smallDiffInds_corrected = smallDiffInds+1; % make sure to take the correct onset
+                            peakTimeAdj = ripples.peakTime;
+                            peakTimeAdj(smallDiffInds_corrected) = [];
+                            
+                            %%
+                            %{
+                            figure(107)
+                            subplot(3, 1, 3)
+                            %                             plot(t, deltaZ(:,1))
+                            %                             hold on
+                            %                             plot(t, meanRippleZ)
+                            %
                             hold on
-                            for i = 1:size(ripples.time,1)
-                                xline(ripples.time(i,1),'r', 'linestyle', ':');
-                                xline(ripples.peakTime(i),'b', 'linestyle', ':');
+                            for i = 1:size(peakTimeAdj,1)
+                                xline(peakTimeAdj(i,1),'k', 'linestyle', '-');
                             end
-                            disp('')
-                            title('Z-scored envelop')
-                            ylim([-10 70])
                             
+                            subplot(3, 1, 1)
+                            %                             plot(t, deltaZ(:,1))
+                            %                             hold on
+                            %                             plot(t, meanRippleZ)
+                            %
+                            hold on
+                            for i = 1:size(peakTimeAdj,1)
+                                xline(peakTimeAdj(i,1),'k', 'linestyle', '-');
+                            end
+                         
+                            %}
+                            %% If this looks ok, then change them all
+                            ripples.peakTime(smallDiffInds_corrected) = [];
+                            ripples.peakPower(smallDiffInds_corrected) = [];
+                            ripples.time(smallDiffInds_corrected,:) = [];
+                            ripples.dur(smallDiffInds_corrected,:) = [];
                             
+                            %% STEP 4: HIGH DELTA MASK (sample-wise)
+                            deltaThreshZ = 0.5;
+                            meanDeltaZ = mean(deltaZ, 2);
+                            highDeltaMask = meanDeltaZ > deltaThreshZ;
                             
-                            %%
-                            LFPwin_s = 0.01; % 50 ms
+                            % smooth out the delta mask
+                            minOnDur = 0.05;
+                            minOffDur = 0.2;
+                            highDeltaMaskOut = smoothBinaryMask(obj, highDeltaMask, fs, minOnDur, minOffDur );
                             
-                            for i = 1:size(ripples.time,1)
+                            %{
+                             figure(100); subplot(2, 1, 1)
+                             plot(highDeltaMask)
+                             ylim([-1 2])
+                             subplot(2, 1, 2)
+                             plot(highDeltaMaskOut)
+                             ylim([-1 2])
+                            %}
+                            
+                            %% STEP 5: SELECT RIPPLES IN HIGH-DELTA PERIODS
+                            
+                            rippleSamples = round(ripples.peakTime * fs);
+                            keep = false(length(rippleSamples),1);
+                            for i = 1:length(rippleSamples)
                                 
-                                thisripplePeak = ripples.peakTime(i);
-                                
-                                LFP_roi_s = [thisripplePeak-LFPwin_s thisripplePeak+LFPwin_s];
-                                
-                                if LFP_roi_s(1) <= 0
-                                    continue
+                                if rippleSamples(i) <= nSamp && rippleSamples(i) > 0
+                                    keep(i) = highDeltaMaskOut(rippleSamples(i));
                                 end
-                                LFP_roi_samp = round(LFP_roi_s*fs);
-                                
-                                LFP_ripple = LFP(LFP_roi_samp(1):LFP_roi_samp(2), :);
-                                LFP_mean = nanmean(LFP_ripple, 2);
-                                
-                                figure; plot(LFP_mean); axis tight
                                 
                             end
                             
+                            %% remember to keep the non delta SWRs
                             
-                            %% plot average LFP:
+                            %% OUTPUT
+                            rippleDelta.times = ripples.time(keep,:);
+                            rippleDelta.peakTime = ripples.peakTime(keep);
+                            rippleDelta.peakPower = ripples.peakPower(keep);
+                            rippleDelta.dur = ripples.dur(keep);
+                            
+                            nonDeltaPeakTimes = ripples.peakTime(~keep);
+                            nonDeltaPeakPower = ripples.peakPower(~keep);
+                            nonDelta_dur = ripples.dur(~keep);
+                            %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            %% Final Plot
+                            
+                            if ismember(o, plotSubsetInds)
+                                
+                                figure(222); clf
+                                %% Raw LFP all chans
+                                subplot(4, 1, 1)
+                                t = (1:length(LFP))/fs;
+                                offset = 0;
+                                hold on
+                                for j = 1:nCh
+                                    plot(t, LFP(:,j)+offset);
+                                    text(0, offset, chanSet{j}(5:8), 'interpreter', 'none')
+                                    offset = offset +500;
+                                end
+                                axis tight
+                                title(['Raw LFP, t = ' num2str(tOn_toAnalyze(o)) ' s'])
+                                
+                                %% Z scored delta envelope and mean
+                                subplot(4, 1, 2)
+                                hold on
+                                offset = 0;
+                                for j = 1:nCh
+                                    %plot(t, DataSeg_LF(j,:) +offset);
+                                    plot(t, deltaZ(:,j) +offset);
+                                    %plot(env(:,j)+offset);
+                                    offset = offset +5;
+                                end
+                                hold on
+                                plot(t, meanDeltaZ+ offset, 'k', 'linewidth', 1)
+                                
+                                axis tight
+                                title('Z-Scored delta envelope and mean')
+                                
+                                %% z scored ripple envelop and mean
+                                
+                                subplot(4, 1, 3)
+                                offset = 0;
+                                hold on
+                                for j = 1:nCh
+                                    %plot(t, DataSeg_LF(j,:) +offset);
+                                    plot(t, rippleZ(:,j) +offset);
+                                    %plot(env(:,j)+offset);
+                                    offset = offset +5;
+                                end
+                                plot(t, meanRippleZ +offset, 'k', 'linewidth', 1);
+                                axis tight
+                                title('Z-Scored Ripple envelope and mean')
+                                % corrected delta mask
+                                
+                                subplot(4, 1, 4)
+                                plot(t, highDeltaMaskOut, 'k', 'linewidth', 2)
+                                hold on
+                                plot(t, meanRippleZ, 'r');
+                                plot(t, meanDeltaZ, 'b')
+                                
+                                hold on
+                                for i = 1:size(rippleDelta.peakTime,1)
+                                    xline(rippleDelta.peakTime(i,1),'k', 'linestyle', '-');
+                                end
+                                hold on
+                                for i = 1:size(rippleDelta.peakTime,1)
+                                    xline(ripples.peakTime(i,1),'k', 'linestyle', ':');
+                                end
+                                ylim([-2 10])
+                                title(['Delta mask, means, and deltaripple detections, n = ' num2str(numel(rippleDelta.peakTime))])
+                                xlabel ('Time (s)')
+                                
+                                subplot(4, 1, 1)
+                                hold on
+                                for i = 1:size(rippleDelta.peakTime,1)
+                                    xline(rippleDelta.peakTime(i,1),'k', 'linestyle', '-');
+                                end
+                                
+                                %%
+                                
+                                if exist(plotPath, 'dir') == 0
+                                    mkdir(plotPath);
+                                    disp(['Created: '  plotPath])
+                                end
+                                plotpos = [0 0 25 15];
+                                plot_filename = [plotPath a.INFO.EphysRecName '__BurstDetection_t-' num2str(tOn_toAnalyze(o)) '-o-' num2str(o)];
+                                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                                %print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+                                
+                            end
+                            
+                            allRipples__Delta_peakTimes_abs_s{o} = rippleDelta.peakTime + tOn_toAnalyze(o);
+                            allRipples__Delta_peakTimes_peakPower{o} = rippleDelta.peakPower;
+                            %allRipples__Delta_peakTimes_rel_s{o} = rippleDelta.peakTime;
+                            allRipples__Delta_peakDur_s{o} = rippleDelta.dur;
+                            
+                            allRipples_NonDelta_peakTimes_abs_s{o} = nonDeltaPeakTimes + tOn_toAnalyze(o);
+                            allRipples_NonDelta_peakTimes_peakPower{o} = nonDeltaPeakPower;
+                            allRipples_NonDelta_peakDur_s{o} = nonDelta_dur;
+                            %allRipples_NonDelta_peakTimes_rel_s{o} = nonDeltaPeakTimes;
+                            
+                            deltaMask(:, o) = highDeltaMaskOut;
+                            
+%                             corrR{o} = RChans;
+%                             deltaCOH{o} =  delta_coh;
+%                             gammaCOH{o} = gamma_coh;
                             
                             
-                            
-                            
-                            
-                            
-                                     allRipples(o) = ripples;
                         end
-                       
+                        
+                        %%
+                        
+                        %%
+                        %{
+                            figure
+                            plot(meandelta)
+                            hold on
+                              for i = 1:size(rippleDelta.peakTime,1)
+                                xline(rippleSamples(i,1),'k', 'linestyle', '-');
+                            end
+                            
+                            
+                            figure(102);clf
+                            
+                            subplot(3, 1, 1)
+                            hold on
+                            t = (1:length(LFP))/fs;
+                            offset = 0;
+                            for j = 1:nCh
+                                plot(t, LFP(:,j)+offset);
+                                text(0, offset, chanSet{j}(5:8), 'interpreter', 'none')
+                                offset = offset +500;
+                            end
+                            
+                            
+                            hold on
+                            for i = 1:size(rippleDelta.peakTime,1)
+                                xline(rippleDelta.peakTime(i,1),'k', 'linestyle', '-');
+                            end
+                            
+                             hold on
+                            for i = 1:size(rippleDelta.peakTime,1)
+                                xline(ripples.peakTime(i,1),'k', 'linestyle', ':');
+                            end
+                            
+                            subplot(3, 1, 2)
+                            hold on
+                            offset = 0;
+                            for j = 1:nCh
+                                %plot(t, DataSeg_LF(j,:) +offset);
+                                plot(t, deltaZ(:,j) +offset, 'color', colOrder{j});
+                                plot(t, rippleZ(:,j) +offset, 'color', colOrder{j});
+                                %plot(env(:,j)+offset);
+                                offset = offset +5;
+                            end
+                            
+                            
+                            hold on
+                            for i = 1:size(rippleDelta.peakTime,1)
+                                xline(rippleDelta.peakTime(i,1),'k', 'linestyle', '-');
+                            end
+                            hold on
+                            for i = 1:size(rippleDelta.peakTime,1)
+                                xline(ripples.peakTime(i,1),'k', 'linestyle', ':');
+                            end
+                            axis tight
+                            
+                            subplot(3, 1, 3)
+                            hold on
+                            
+                            
+                            meandelta = mean(deltaZ, 2);
+                            meanripple = mean(rippleZ, 2);
+                            plot(t, meandelta)
+                            plot(t, meanripple);
+                            hold on
+                            %plot(t, sumripple);
+                            for i = 1:size(rippleDelta.peakTime,1)
+                                xline(rippleDelta.peakTime(i,1),'k', 'linestyle', '-');
+                            end
+                            
+                            hold on
+                            for i = 1:size(rippleDelta.peakTime,1)
+                                xline(ripples.peakTime(i,1),'k', 'linestyle', ':');
+                            end
+                            axis tight
+                            
+                            hold on
+                            plot(highDeltaMaskOut)
+                        %}
+                        
                     end
-                  
+                
+                    
+                    INFO = a.INFO;
+                    INFO.channelOrder_remap = channelOrder;
+                    INFO.chanSet = chanSet;
+                    INFO.nHoursToAnalyze = nHoursToAnalyze;
+                    INFO.hoursAfterLightsOff = hoursAfterLightsOff;
+                    INFO.tOn_toAnalyze = tOn_toAnalyze;
+                    INFO.onsetBins = onsetBins;
+                    INFO.offsetBins = offsetBins;
+                    
+                    params.rippleBand = rippleBand;
+                    params.RippleDetectThresh = RippleDetectThresh;
+                    params.RipplePeak = RipplePeak;
+                    params.minRippleDur = minRippleDur;
+                    params.maxRippleDur = maxRippleDur;
+                    params.deltaBand = deltaBand;
+                    params.deltaThreshZ = deltaThreshZ;
+                    
+                    BURSTS.Delta_peakTimes_abs_s = allRipples__Delta_peakTimes_abs_s;
+                    BURSTS.Delta_peakTimes_peakPower = allRipples__Delta_peakTimes_peakPower;
+                    %BURSTS.Delta_peakTimes_rel_s = allRipples__Delta_peakTimes_rel_s;
+                    BURSTS.allRipples__Delta_peakDur_s = allRipples__Delta_peakDur_s;
+                    
+                    BURSTS.nonDelta_peakTimes_abs_s = allRipples_NonDelta_peakTimes_abs_s;
+                    BURSTS.nonDelta_peakTimes_peakPower = allRipples_NonDelta_peakTimes_peakPower;
+                    BURSTS.allRipples_NonDelta_peakDur_s = allRipples_NonDelta_peakDur_s;
+                    %BURSTS.nonDelta_peakTimes_rel_s = allRipples_NonDelta_peakTimes_rel_s;
+                    
+                    BURSTS.deltaMask = deltaMask;
+                    
+%                     BURSTS.corrR = corrR;
+%                     BURSTS.corrR_chanNames= chanNames;
+%                     
+%                     BURSTS.deltaCOH = deltaCOH; 
+%                     BURSTS.gammaCOH = gammaCOH;
                             
-               
-
-
-
-%%
-       
-       
-       
-       
-       %%
-                            
-                            
-                            
-                            %%
-                            
-                            %
-                            %                         plot(t, LFP(:,1))
-                            %                         hold on
-                            %
-                            %                         for i = 1:size(ripples.time,1)
-                            %                             xline(ripples.time(i,1),'r')
-                            %                         end
-                            %
-                      
                     
-                    INFO.Birdname = obj.INFO.birdName{:};
-                    INFO.EphysRecName = obj.EPHYS.EphysRecName{j};
-                    INFO.date = obj.INFO.date_txt_year(j,:);
-                    INFO.EphysStartTime = obj.EPHYS.EphysStartTime{j};
-                    INFO.LightsOff = obj.VIDEO.LightsOff{j};
-                    %INFO.LightsOn = obj.VIDEO.LightsOn{j+1};
-                    
-                    
-                    [totalDur_min_start_lightsOff] = calc_offset_alignment_time_min(obj, INFO.date, INFO.EphysStartTime, INFO.LightsOff);
-                    %[totalDur_min_start_lightsOn] = calc_offset_alignment_time_min(obj, INFO.date, INFO.EphysStartTime, INFO.LightsOn);
-                    
-                    INFO.totalDur_min_start_lightsOff = totalDur_min_start_lightsOff;
-                    %INFO.totalDur_min_start_lightsOn = totalDur_min_start_lightsOn;
-                    
-                    saveName = [saveDir obj.EPHYS.EphysRecName{j} '_allLFP_dyData-' num2str(nChans)];
-                    
-                    if exist(saveDir, 'dir') == 0
-                        mkdir(saveDir);
-                        disp(['Created: '  saveDir])
-                    end
-                    
-                    save([saveName '.mat'], 'D', 'INFO', '-v7.3')
-                    
-                    disp(['Saved:' saveName])
+                saveName = [plotPath obj.EPHYS.EphysRecName{jq} '_BurstDetection-' num2str(nChans)];
+                
+                if exist(saveDir, 'dir') == 0
+                    mkdir(saveDir);
+                    disp(['Created: '  saveDir])
+                end
+                
+                save([saveName '.mat'], 'BURSTS', 'INFO', 'params', '-v7.3')
+                
+                disp(['Saved:' saveName])
                 end
                 
             end
@@ -1181,16 +1788,61 @@ end
             
         end
         
+            
+            
+           
         
         
         
+        function maskOut = smoothBinaryMask(obj, maskIn, fs, minOnDur, minOffDur)
+            
+            % PARAMETERS
+            %minOnDur  = 0.05;  % 50 ms minimum high-delta duration
+            %minOffDur = 0.05;  % 50 ms gap to fill
+            %minOnDur  = 0.05;  % 50 ms minimum high-delta duration
+            %minOffDur = 0.5;  % 50 ms gap to fill
+            
+            minOnFrames  = round(minOnDur * fs);
+            minOffFrames = round(minOffDur * fs);
+            
+            maskOut = maskIn;
+            
+            %% 1. Remove short ON periods
+            d = diff([0; maskOut; 0]);
+            starts = find(d==1);
+            ends   = find(d==-1)-1;
+            
+            for i = 1:length(starts)
+                if (ends(i)-starts(i)+1) < minOnFrames
+                    maskOut(starts(i):ends(i)) = false;
+                end
+            end
+            
+            %% 2. Fill short OFF gaps
+            d = diff([0; maskOut; 0]);
+            starts = find(d==1);
+            ends   = find(d==-1)-1;
+            
+            for i = 1:length(ends)-1
+                gap = starts(i+1) - ends(i);
+                if gap < minOffFrames
+                    maskOut(ends(i):starts(i+1)) = true;
+                end
+            end
+            
+        end
         
         
         
         function obj = process_LFP_Data(obj, nEntries, saveDir)
             
+              if exist(saveDir, 'dir') == 0
+                        mkdir(saveDir);
+                        disp(['Created: '  saveDir])
+              end
+                    
             artifactChan = 1;
-            for j = 3:nEntries
+            for j = 1:nEntries
                 
                 if ~isempty(obj.EPHYS.EphysRecName{j})
                     
@@ -1207,11 +1859,13 @@ end
                     chanSet = obj.EPHYS.LFP_chans{j};
                     
                     dot = '.';
+                    H = 'H';
                     match = [];
                     for h = 1:nChans
                         thisName = chanNames(h).name;
                         bla = find(thisName == dot);
-                        chN = str2num(thisName(bla-2:bla-1));
+                        bla2 = find(thisName == H);
+                        chN = str2num(thisName(bla2+1:bla-1));
                         match(h) = sum(ismember(chanSet, chN));
                     end
                     
@@ -1254,19 +1908,21 @@ end
                     
                     fs_ds = 2500;
                     bufferedDeltaGammaRatioCell = cell(1, nBins-1);
-                       bufferedDeltaCell = cell(1, nBins-1);
-                        bufferedGammaCell = cell(1, nBins-1);
-                        
-                          bufferedDeltaGammaRatio_mean = nan(nChans, nBins-1);
-                        bufferedDeltaGammaRatio_median = nan(nChans, nBins-1);
-                        
-                        bufferedDelta_mean = nan(nChans, nBins-1);
-                        bufferedDelta_median = nan(nChans, nBins-1);
-                        
-                        bufferedGamma_mean = nan(nChans, nBins-1);
-                        bufferedGamma_median = nan(nChans, nBins-1);
-                        
-                        
+                    bufferedDeltaCell = cell(1, nBins-1);
+                    bufferedGammaCell = cell(1, nBins-1);
+                    
+                    bufferedDeltaGammaRatio_mean = nan(nChans, nBins-1);
+                    bufferedDeltaGammaRatio_median = nan(nChans, nBins-1);
+                    
+                    bufferedDelta_mean = nan(nChans, nBins-1);
+                    bufferedDelta_median = nan(nChans, nBins-1);
+                    
+                    bufferedGamma_mean = nan(nChans, nBins-1);
+                    bufferedGamma_median = nan(nChans, nBins-1);
+                    
+                    randSet = randperm(nBins);
+                    randSetToPlot = randSet(1:5);
+                    
                     for o = 1: nBins-1
                         
                         
@@ -1284,6 +1940,27 @@ end
                             
                             dataBin_clean_ds = resample(v_filtered, 1, fs/fs_ds); %
                             AllDataBin_clean_ds(oo,:) = dataBin_clean_ds;
+                            
+                        end
+                        
+                        if ismember(o, randSetToPlot)
+                            
+                            figure(104); clf
+                            hold on
+                            t = (1:length(AllDataBin_clean_ds))/fs;
+                            offset = 0;
+                            for jo = 1:nChans
+                                plot(t, AllDataBin_clean_ds(jo,:)+offset);
+                                text(0, offset, ['Ch- ' num2str(chanSet(jo))], 'interpreter', 'none')
+                                offset = offset +500;
+                            end
+                            axis tight
+                            title('Raw LFP')
+                            plotPath = saveDir;
+                            plotpos = [0 0 25 15];
+                            plot_filename = [plotPath obj.EPHYS.EphysRecName{j} '__RawDataPlot-o-' num2str(o)];
+                            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                            
                             
                         end
                         
@@ -1350,39 +2027,39 @@ end
                             isArtifact(o) = 0;
                         else
                             isArtifact(o) = 1;
-
+                            
                             %%
-                           
-                        t = (1:length(v))/fs_ds;
-                        
-                        figure(300); clf
-                        subplot(2,1,1)
-                        plot(t, v)
-                        hold on
-                        ylim([-800 800])
-                        yL = ylim;
-                        for i = 1:size(artifactTimes,1)
-                            patch([artifactTimes(i,1) artifactTimes(i,2) ...
-                                artifactTimes(i,2) artifactTimes(i,1)], ...
-                                [yL(1) yL(1) yL(2) yL(2)], ...
-                                'b', 'FaceAlpha',0.5, 'EdgeColor','none')
-                        end
-                        title('Raw Signal with Artifacts')
-                        
-                        subplot(2,1,2)
-                        
-                        hold on
-                        plot(t, zGamma)
-                        ylim([-15 15])
-                         yL = ylim;
-                        for i = 1:size(artifactTimes,1)
-                            patch([artifactTimes(i,1) artifactTimes(i,2) ...
-                                artifactTimes(i,2) artifactTimes(i,1)], ...
-                                [yL(1) yL(1) yL(2) yL(2)], ...
-                                'r', 'FaceAlpha',0.5, 'EdgeColor','none')
-                        end
-                        title('Detected Artifact Mask')
-                        disp('')
+                            
+                            t = (1:length(v))/fs_ds;
+                            
+                            figure(300); clf
+                            subplot(2,1,1)
+                            plot(t, v)
+                            hold on
+                            ylim([-800 800])
+                            yL = ylim;
+                            for i = 1:size(artifactTimes,1)
+                                patch([artifactTimes(i,1) artifactTimes(i,2) ...
+                                    artifactTimes(i,2) artifactTimes(i,1)], ...
+                                    [yL(1) yL(1) yL(2) yL(2)], ...
+                                    'b', 'FaceAlpha',0.5, 'EdgeColor','none')
+                            end
+                            title('Raw Signal with Artifacts')
+                            
+                            subplot(2,1,2)
+                            
+                            hold on
+                            plot(t, zGamma)
+                            ylim([-15 15])
+                            yL = ylim;
+                            for i = 1:size(artifactTimes,1)
+                                patch([artifactTimes(i,1) artifactTimes(i,2) ...
+                                    artifactTimes(i,2) artifactTimes(i,1)], ...
+                                    [yL(1) yL(1) yL(2) yL(2)], ...
+                                    'r', 'FaceAlpha',0.5, 'EdgeColor','none')
+                            end
+                            title('Detected Artifact Mask')
+                            disp('')
                             %}
                         end
                         
@@ -1457,7 +2134,7 @@ end
                         
                         %%
                         
-                        disp('Calculating d/y...')
+                        disp([num2str(o) '/' num2str(nBins)])
                         
                         bufferedDeltaGammaRatio = []; deltaMeanAll = []; gammaMeanAll = [];
                         for q = 1:size(data, 1)
@@ -1516,7 +2193,7 @@ end
                         
                         bufferedGamma_mean(:,o) = nanmean(gammaMeanAll, 2);
                         bufferedGamma_median(:,o) = nanmedian(gammaMeanAll, 2);
-
+                        
                     end
                     D = [];
                     D.bufferedDeltaGammaRatioCell = bufferedDeltaGammaRatioCell;
@@ -1558,10 +2235,7 @@ end
                     
                     saveName = [saveDir obj.EPHYS.EphysRecName{j} '_allLFP_dyData-' num2str(nChans)];
                     
-                    if exist(saveDir, 'dir') == 0
-                        mkdir(saveDir);
-                        disp(['Created: '  saveDir])
-                    end
+                  
                     
                     save([saveName '.mat'], 'D', 'INFO', '-v7.3')
                     
@@ -3234,6 +3908,10 @@ end
             xlabel('Clock time')
             ylabel('Probability')
             
+            dl = datetime('8:30:00');
+            dr = datetime('23:30:00');
+            xlim([dl dr])
+            
             plotpos = [0 0 18 12];
             plotName = [obj.PATH.TimeInfoSaveDir_motifs '_AllSongTimeHistogram'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
@@ -3623,6 +4301,7 @@ end
             
             plot(xes, dEV_LastToFirst, 'ko', 'linestyle', 'none')
             mean_dEV = nanmean(dEV_LastToFirst);
+            median_dEV = nanmedian(dEV_LastToFirst);
             std_dEV = nanstd(dEV_LastToFirst);
             iqr_deV = iqr(dEV_LastToFirst);
             
@@ -3646,7 +4325,24 @@ end
             xlim([0 xes(end)+1])
             grid on
             mean_dEV_LF = mean_dEV;
+            %% histogram of values
+            figure  (119);
+            halfStd = 0.02;
+            edges = mean_dEV-(2*std_dEV):halfStd :mean_dEV+(2*std_dEV);
             
+            hold on
+            plot(mean_dEV_LF, 4, 'kv')
+            plot(median_dEV, 4, 'kd')
+            
+            histogram(dEV_LastToFirst, edges);
+            xlabel('Overnight \Delta EV')
+            ylabel('Count')
+            
+             figure (119);
+            plotpos = [0 0 25 20];
+            plotName = [dEV_dir obj.INFO.birdName{:} '_EV_diff_largeValsHistogram'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
             
             
             %% Find specific large dEV
@@ -3719,7 +4415,7 @@ end
             
             %%
             
-             bla2 = find(dEV_FirstToLast >= thresh_hi);
+            bla2 = find(dEV_FirstToLast >= thresh_hi);
             disp('******************')
             disp('All Large negative dEVs:')
             all_pos_dEV_dates = d.allDates(bla2)
@@ -3939,48 +4635,48 @@ end
             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\_dEV-L-F_Analysis\';
             %% w038
             %L-F
-%             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
-%             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
-%             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\';
-%             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\';
+            %             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
+            %             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
+            %             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\';
+            %             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-L-F_Analysis\';
             
-      % F-L
-%             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\Neg-dEV_F-L_MeansMedians\';
-%             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\Pos-dEV_F-L_MeansMedians\';
-%             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\Neutral-dEV_F-L_MeansMedians\';
-%             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\';
-%       
+            % F-L
+            %             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\Neg-dEV_F-L_MeansMedians\';
+            %             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\Pos-dEV_F-L_MeansMedians\';
+            %             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\Neutral-dEV_F-L_MeansMedians\';
+            %             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\_dEV-F-L_Analysis\';
+            %
             
             %% w027
-%             % L-F
-%             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
-%             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
-%             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\';
-%             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\';
-%             
+            %             % L-F
+            %             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
+            %             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
+            %             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\';
+            %             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\_dEV-L-F_Analysis\';
+            %
             %% w025
             % L-F
-%             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
-%             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
-%             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\';
-%             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\';
-%             
+            %             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\';
+            %             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\';
+            %             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\';
+            %             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-L-F_Analysis\';
+            %
             %F-L
-%             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\Neg-dEV_F-L_MeansMedians\';
-%             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\Pos-dEV_F-L_MeansMedians\';
-%             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\Neutral-dEV_F-L_MeansMedians\';
-%             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\';
-% %             
-
-if isLFP
-    yss1 = [0 1e4];
-    yss2 = [0 2500];
-else
-     yss1 = [0 1000];
-    yss2 = [0 300];
-    
-end
-    
+            %             dEV_dir_neg = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\Neg-dEV_F-L_MeansMedians\';
+            %             dEV_dir_pos = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\Pos-dEV_F-L_MeansMedians\';
+            %             dEV_dir_neutral = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\Neutral-dEV_F-L_MeansMedians\';
+            %             saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\_dEV-F-L_Analysis\';
+            % %
+            
+            if isLFP
+                yss1 = [0 1e4];
+                yss2 = [0 2500];
+            else
+                yss1 = [0 1000];
+                yss2 = [0 300];
+                
+            end
+            
             for o = 1:3
                 
                 switch o
@@ -4113,32 +4809,32 @@ end
             
             %% Anova
             group1 = med_neg;
-group2 = med_pos;
-group3 = med_neutral;
-
-% Combine data
-data   = [group1(:); group2(:); group3(:)];
-groups = [ ...
-    repmat({'G1'}, numel(group1), 1);
-    repmat({'G2'}, numel(group2), 1);
-    repmat({'G3'}, numel(group3), 1)];
-
-% One-way ANOVA
-[p, tbl, stats] = anova1(data, groups);
-
-fprintf('ANOVA p-value = %.4f\n', p);
-   
-
-figure
-multcompare(stats, 'CType', 'tukey-kramer');
-
-[H, pValue, W] = swtest(group1);
-[H, pValue, W] = swtest(group2)
-[H, pValue, W] = swtest(group3)
-
-h = lillietest(group1)
-
-          %%  
+            group2 = med_pos;
+            group3 = med_neutral;
+            
+            % Combine data
+            data   = [group1(:); group2(:); group3(:)];
+            groups = [ ...
+                repmat({'G1'}, numel(group1), 1);
+                repmat({'G2'}, numel(group2), 1);
+                repmat({'G3'}, numel(group3), 1)];
+            
+            % One-way ANOVA
+            [p, tbl, stats] = anova1(data, groups);
+            
+            fprintf('ANOVA p-value = %.4f\n', p);
+            
+            
+            figure
+            multcompare(stats, 'CType', 'tukey-kramer');
+            
+            [H, pValue, W] = swtest(group1);
+            [H, pValue, W] = swtest(group2)
+            [H, pValue, W] = swtest(group3)
+            
+            h = lillietest(group1)
+            
+            %%
             
             plotpos = [0 0 25 15];
             plotName = [saveDir 'NegPosNeutral_DValues_dEV'];
@@ -4165,7 +4861,7 @@ h = lillietest(group1)
             
             L_F = 1; %LastToFirst = 1
             
-       
+            
             switch birdSwitch
                 case 1 % w025 % Artifacts = R_ant EEG
                     %% w025 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4182,11 +4878,11 @@ h = lillietest(group1)
                         '2021-08-09', ...
                         '2021-08-11'};
                     
-%                     otherEV_dateText = {'2021-07-28', ...
-%                         '2021-08-04', ...
-%                         '2021-08-09', ...
-%                         '2021-08-11'};
-%                     
+                    %                     otherEV_dateText = {'2021-07-28', ...
+                    %                         '2021-08-04', ...
+                    %                         '2021-08-09', ...
+                    %                         '2021-08-11'};
+                    %
                     
                     
                     
@@ -4372,56 +5068,56 @@ h = lillietest(group1)
             
             all_neg_Vals = [];
             for j = 1:size(negVals_ToPlot, 2)
-            plot(ones(1, numel(negVals_ToPlot{j}))*j, negVals_ToPlot{j}, 'k*')
-            all_neg_Vals = [all_neg_Vals negVals_ToPlot{j}'];
-            all_neg_medians(j) = nanmedian(negVals_ToPlot{j});
+                plot(ones(1, numel(negVals_ToPlot{j}))*j, negVals_ToPlot{j}, 'k*')
+                all_neg_Vals = [all_neg_Vals negVals_ToPlot{j}'];
+                all_neg_medians(j) = nanmedian(negVals_ToPlot{j});
             end
-           %xlim([0 5]) 
-           %ylim([0 1000])
-           hold on
-           
-           bar(all_neg_medians)
-           set(gca,'children',flipud(get(gca,'children')))
-           xticks = 1:1:4;
-               set(gca, 'xtick', xticks)
-               set(gca, 'xticklabel', negdEV_dateText')
-               title('Negative \DeltaEV: 9 hours starting 2 hours after lights off')
-               
+            %xlim([0 5])
+            %ylim([0 1000])
+            hold on
+            
+            bar(all_neg_medians)
+            set(gca,'children',flipud(get(gca,'children')))
+            xticks = 1:1:4;
+            set(gca, 'xtick', xticks)
+            set(gca, 'xticklabel', negdEV_dateText')
+            title('Negative \DeltaEV: 9 hours starting 2 hours after lights off')
+            
             subplot(1,2, 2)
-            hold on 
+            hold on
             all_other_Vals = [];
             for j = 1:size(otherVals_ToPlot, 2)
-            plot(ones(1, numel(otherVals_ToPlot{j}))*j, otherVals_ToPlot{j}, 'k*')
-            all_other_Vals = [all_other_Vals otherVals_ToPlot{j}'];
-            all_other_medians(j) = nanmedian(otherVals_ToPlot{j});
+                plot(ones(1, numel(otherVals_ToPlot{j}))*j, otherVals_ToPlot{j}, 'k*')
+                all_other_Vals = [all_other_Vals otherVals_ToPlot{j}'];
+                all_other_medians(j) = nanmedian(otherVals_ToPlot{j});
             end
-            %xlim([0 5]) 
-           %ylim([0 1000])
-           hold on
-             bar(all_other_medians)
-                
-               set(gca,'children',flipud(get(gca,'children')))
-               xticks = 1:1:4;
-               set(gca, 'xtick', xticks)
-               set(gca, 'xticklabel', otherEV_dateText')
-               title('Other \DeltaEV: 9 hours starting 2 hours after lights off')
-               
-               
-           %%
-           [p, h] = ranksum(all_neg_Vals, all_other_Vals);
-           negMedian = nanmedian(all_neg_Vals);
-           otherMedian = nanmedian(all_other_Vals);
-           %%
-           
-           
-              plotpos = [0 0 25 15];
+            %xlim([0 5])
+            %ylim([0 1000])
+            hold on
+            bar(all_other_medians)
+            
+            set(gca,'children',flipud(get(gca,'children')))
+            xticks = 1:1:4;
+            set(gca, 'xtick', xticks)
+            set(gca, 'xticklabel', otherEV_dateText')
+            title('Other \DeltaEV: 9 hours starting 2 hours after lights off')
+            
+            
+            %%
+            [p, h] = ranksum(all_neg_Vals, all_other_Vals);
+            negMedian = nanmedian(all_neg_Vals);
+            otherMedian = nanmedian(all_other_Vals);
+            %%
+            
+            
+            plotpos = [0 0 25 15];
             plotName = [dEV_dir 'DValues_dEV'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             %print_in_A4(0, plotName, '-depsc', 0, plotpos);
             
-           
-           
-           
+            
+            
+            
         end
         %
         
@@ -4501,44 +5197,44 @@ h = lillietest(group1)
                         '2021-08-18'};
                 case 3 % w038 % Artifacts = L_post EEG / Analyze L LFP
                     %% W038 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                      birdName = 'w038';
-                      
+                    birdName = 'w038';
+                    
                     %% neg dEV -L-F
-                       negdEV_dateText = {'2021-09-08',...
-                    '2021-09-12',...
-                    '2021-09-19'};
+                    negdEV_dateText = {'2021-09-08',...
+                        '2021-09-12',...
+                        '2021-09-19'};
                     
                     %% pos dEV -L-F
                     posdEV_dateText = {'2021-09-07',...
-                    '2021-09-11',...
-                    '2021-09-13'};
+                        '2021-09-11',...
+                        '2021-09-13'};
                     
                     %% Neutral dEV -L-F
-                   neutEV_dateText = {'2021-09-09',...
-                    '2021-09-10',...
-                    '2021-09-15',...
-                    '2021-09-16',...
-                    '2021-09-18'};
-                
-                
-                
-                 case 4 % w038 % Artifacts = L_post EEG / Analyze L LFP
+                    neutEV_dateText = {'2021-09-09',...
+                        '2021-09-10',...
+                        '2021-09-15',...
+                        '2021-09-16',...
+                        '2021-09-18'};
+                    
+                    
+                    
+                case 4 % w038 % Artifacts = L_post EEG / Analyze L LFP
                     %% W038 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                      birdName = 'w037';
-                      
+                    birdName = 'w037';
+                    
                     %% neg dEV -L-F
-                       negdEV_dateText = {'2021-09-27'};
-                       
+                    negdEV_dateText = {'2021-09-27'};
+                    
                     %% pos dEV -L-F
                     posdEV_dateText = {'2021-09-18',...
-                    '2021-09-22'};
+                        '2021-09-22'};
                     
                     %% Neutral dEV -L-F
-                   neutEV_dateText = {'2021-09-19',...
-                    '2021-09-20',...
-                    '2021-09-21',...
-                    '2021-09-23',...
-                    '2021-09-26'};
+                    neutEV_dateText = {'2021-09-19',...
+                        '2021-09-20',...
+                        '2021-09-21',...
+                        '2021-09-23',...
+                        '2021-09-26'};
                     
             end
             
@@ -4549,22 +5245,22 @@ h = lillietest(group1)
                 switch k
                     case 1
                         allDates = negdEV_dateText;
-                        if L_F 
-                        savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\'];
+                        if L_F
+                            savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis\Neg-dEV_L-F_MeansMedians\'];
                         else
                             savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-F-L_Analysis\Neg-dEV_F-L_MeansMedians\'];
                         end
                     case 2
                         allDates = posdEV_dateText;
-                        if L_F 
-                        savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\'];
+                        if L_F
+                            savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis\Pos-dEV_L-F_MeansMedians\'];
                         else
                             savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-F-L_Analysis\Pos-dEV_F-L_MeansMedians\'];
                         end
                     case 3
                         allDates = neutEV_dateText;
-                        if L_F 
-                        savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\'];
+                        if L_F
+                            savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-L-F_Analysis\Neut-dEV_L-F_MeansMedians\'];
                         else
                             savedir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\' birdName '\_dEV-F-L_Analysis\Neut-dEV_F-L_MeansMedians\'];
                         end
@@ -4633,7 +5329,7 @@ h = lillietest(group1)
                     %tOn = lightsOff_ind +60; % + 60 minutes
                     
                     %tOff = tOn+659; %t onset + 11 hours
-                    tOff = tOn+600; %t onset + 10 hours 
+                    tOff = tOn+600; %t onset + 10 hours
                     % fixing it like this make sure we compare the same numbers
                     % across exps.
                     deltaRaw = d_data.dyData.bufferedDeltaCell;
@@ -4808,7 +5504,7 @@ h = lillietest(group1)
                 plotpos = [0 0 25 15];
                 
                 print_in_A4(0, saveName, '-djpeg', 0, plotpos);
-               % print_in_A4(0, saveName, '-depsc', 0, plotpos);
+                % print_in_A4(0, saveName, '-depsc', 0, plotpos);
                 
                 
             end
@@ -4835,19 +5531,24 @@ h = lillietest(group1)
                     case 1
                         d = load([dirToLoad w025_file]);
                         dph = 52:86;
+                        surgery = 47;
                     case 2
                         d = load([dirToLoad w027_file]);
                         dph = [60:86];
+                        surgery = 58;
                     case 3
                         d = load([dirToLoad w038_file]);
-                        dph = [44:69];
+                        %dph = [44:69];
+                        dph = [53:69];
+                        surgery = 47;
                     case 4
                         d = load([dirToLoad w037_file]);
-                        dph = 66:77; % bird with other male
+                        dph = 48:77; % bird with other male
+                        surgery = 47;
                     case 5
                         d = load([dirToLoad w044_file]);
-                        dph = [78:85 88:96]; % bird with other male
-                        
+                        dph = [78:85 88:96]; 
+                        surgery = 77;
                         
                 end
                 
@@ -4869,7 +5570,7 @@ h = lillietest(group1)
                 min_dph(j) = min(dph);
                 max_dph(j) = max(dph);
                 
-                
+                allSurgerydays(j) = surgery;
             end
             min_all_dph = min(min_dph);
             max_all_dph = max(max_dph);
@@ -4895,16 +5596,24 @@ h = lillietest(group1)
                 
             end
             
+            colss = get(gca,'colororder');
             
             figure (104); clf
             for j =1:5
                 hold on
-                errorbar(dph_allBirds, allMeans_dph(j,:), allsems_dph(j,:), 'linewidth', 2 )
-                
+                errorbar(dph_allBirds, allMeans_dph(j,:), allsems_dph(j,:), 'linewidth', 2, 'color', colss(j,:))
             end
             
             leg_text = {'w025', 'w027', 'w038', 'w037', 'w044'};
-            legend(leg_text)
+            L = legend(leg_text);
+            L.AutoUpdate = 'off';
+
+            for j =1:5
+                hold on
+                FirstNonnanvalus = find(~isnan(allMeans_dph(j,:)));
+                plot(allSurgerydays(j), allMeans_dph(j,FirstNonnanvalus(1)), 'color', colss(j,:), 'marker', '*')
+            end
+            
             ylabel('Entropy Variance')
             xlabel('dph')
             ylim([0 1])
@@ -6807,8 +7516,8 @@ h = lillietest(group1)
                 
                 %%
                 spec_scale = 0.08; %%%%%%%%%%%%%%%%%%
-                motiv_count =  35;
-                %motiv_count =  17; %%%%%%%%%%%%%%%%%
+               % motiv_count =  35;
+                motiv_count =  17; %%%%%%%%%%%%%%%%%
                 height = 1/motiv_count;
                 
                 %width = 0.9 /3;
@@ -7498,26 +8207,26 @@ h = lillietest(group1)
                 std_allVars_F = std(allVars_F);
                 sem_allVars_F = std_allVars_F/(sqrt(numel(allVars_F)));
                 
-        
                 
-  diffs_LastToFirst_Syl(j) =  mean_allVars_F - mean_allVars_L;
-  diffs_FirstToLast_Syl(j) =  mean_allVars_L - mean_allVars_F;
                 
-  if F_or_L_switch  == 1
-      dataToUse = diffs_LastToFirst_Syl;
-  elseif F_or_L_switch ==2
-      dataToUse = diffs_FirstToLast_Syl;
-      
-  end
+                diffs_LastToFirst_Syl(j) =  mean_allVars_F - mean_allVars_L;
+                diffs_FirstToLast_Syl(j) =  mean_allVars_L - mean_allVars_F;
+                
+                if F_or_L_switch  == 1
+                    dataToUse = diffs_LastToFirst_Syl;
+                elseif F_or_L_switch ==2
+                    dataToUse = diffs_FirstToLast_Syl;
+                    
+                end
                 %%
                 figure(103)
-                subplot(1, nSyls, j); 
+                subplot(1, nSyls, j);
                 
                 scatter(allVars_L, allVars_F)
                 hold on
                 plot(mean_allVars_L, mean_allVars_F, 'k.', 'linewidth', 2)
-                line([mean_allVars_L-sem_allVars_L, mean_allVars_L+sem_allVars_L], [mean_allVars_F, mean_allVars_F], 'color', 'k', 'linewidth', 2) 
-                line([mean_allVars_L mean_allVars_L], [mean_allVars_F - sem_allVars_F, mean_allVars_F+sem_allVars_F], 'color', 'k', 'linewidth', 2) 
+                line([mean_allVars_L-sem_allVars_L, mean_allVars_L+sem_allVars_L], [mean_allVars_F, mean_allVars_F], 'color', 'k', 'linewidth', 2)
+                line([mean_allVars_L mean_allVars_L], [mean_allVars_F - sem_allVars_F, mean_allVars_F+sem_allVars_F], 'color', 'k', 'linewidth', 2)
                 
                 xlim([0 1])
                 ylim([0 1])
@@ -7528,39 +8237,39 @@ h = lillietest(group1)
                 title(['Syllable: ' num2str(j) '- \DeltaEV = ' num2str(dataToUse(j))])
                 
                 
-                %% 
-                 figure(104)
-                 sylVersion = 10;
-                 
-                 S_night = [NightSylWav L.E(j).allFilenames{sylVersion}] ;
-                 S_morning = [MorningSylWav F.E(j).allFilenames{sylVersion}] ;
-                  
-                 [wav_file,fs] = audioread(S_night);
-                 subplot(1, 6, cnt )    
-                 specgram1((wav_file/.08),512,fs,400,360);
-                    ylim ([300 8000]);
-                    title(['S-' num2str(j) '-Night']) 
-                    
-                    cnt  = cnt +1;
-                     subplot(1, 6, cnt)
-                      [wav_file,fs] = audioread(S_morning); 
-                 specgram1((wav_file/.08),512,fs,400,360);
-                    ylim ([300 8000]);
-                    title(['S-' num2str(j) '-Morning']) 
+                %%
+                figure(104)
+                sylVersion = 10;
+                
+                S_night = [NightSylWav L.E(j).allFilenames{sylVersion}] ;
+                S_morning = [MorningSylWav F.E(j).allFilenames{sylVersion}] ;
+                
+                [wav_file,fs] = audioread(S_night);
+                subplot(1, 6, cnt )
+                specgram1((wav_file/.08),512,fs,400,360);
+                ylim ([300 8000]);
+                title(['S-' num2str(j) '-Night'])
+                
+                cnt  = cnt +1;
+                subplot(1, 6, cnt)
+                [wav_file,fs] = audioread(S_morning);
+                specgram1((wav_file/.08),512,fs,400,360);
+                ylim ([300 8000]);
+                title(['S-' num2str(j) '-Morning'])
                 cnt  = cnt +1;
                 
             end
-              figure(104)
+            figure(104)
             plotpos = [0 0 15 3];
-                    RecName_save = [SylEntropyDir  saveName '-Spectrograms'];
-                    print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
-                    
-                    figure(103)
-            plotpos = [0 0 15 5];
-                    RecName_save = [SylEntropyDir  saveName '-scatter'];
-                    print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
+            RecName_save = [SylEntropyDir  saveName '-Spectrograms'];
+            print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
             
-          disp('')  
+            figure(103)
+            plotpos = [0 0 15 5];
+            RecName_save = [SylEntropyDir  saveName '-scatter'];
+            print_in_A4(0, RecName_save, '-djpeg', 0, plotpos);
+            
+            disp('')
         end
         
         function obj = calc_wienerEntropy_on_syllables(obj, syllableDir, AllEntropyDataDir, nSyllables)
@@ -7625,14 +8334,14 @@ h = lillietest(group1)
                 SylFilenamesAll{o} = SylMatchFilenames;
             end
             
-          
+            
             
             for oo = 1:nSyllables
                 
-               
+                
                 thisSylFiles = SylFilenamesAll{oo};
                 
-                  cnt = 1;
+                cnt = 1;
                 mean_wEntropy = [];
                 variance_wEntropy = [];
                 wEntropy = [];
@@ -7803,16 +8512,16 @@ h = lillietest(group1)
                 E(oo).allFilenames = thisSylFiles;
                 E(oo).allFilenamesNums = oo;
                 
-            
+                
                 
             end
-                disp('')
-                
-                 
+            disp('')
+            
+            
             %AllEntropyDataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysisBackup\w038\ANALYSIS\SongAnalysis\allWienerEntropyFiles\';
             save([AllEntropyDataDir dateName '_wEntropy_Syllables.mat'], 'E', '-v7.3')
             disp([AllEntropyDataDir dateName '_wEntropy_Syllables.mat'])
-               
+            
             
         end
         
