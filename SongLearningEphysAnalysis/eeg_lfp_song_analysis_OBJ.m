@@ -443,7 +443,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
         end
         
-        function obj =  plotArtifactsOverDays(data_OBJ, dataDir)
+        function [obj] =  plotArtifactsOverDays(obj, dataDir)
             
             nHoursToAnalyze = 9;
             binInHour = 180;
@@ -594,14 +594,213 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
         end
         
+        function [obj ] = compareBurstSatisticsAcrossDays(obj, burstDir, plotPath)
+            
+            
+            %files = dir(fullfile(analysisDir, '*.mp4'));
+            files = dir(fullfile(burstDir, '*.mat'));
+            nFiles = numel(files);
+            for j = 1:nFiles
+                BurstFileNames{j} = files(j).name;
+            end
+            
+            
+            prompt = 'Please choose the large EV data...';
+            [indx,tf] = listdlg('PromptString',prompt, 'ListString',BurstFileNames, 'SelectionMode','multiple', 'ListSize', [700 200]);
+            
+            SelectedFile_negEV = BurstFileNames(indx);
+            
+            
+            prompt = 'Please choose the small EV data...';
+            [indx,tf] = listdlg('PromptString',prompt, 'ListString',BurstFileNames, 'SelectionMode','multiple', 'ListSize', [700 200]);
+            SelectedFile_posEV = BurstFileNames(indx);
+            
+            
+            
+            
+            
+            
+            
+            
+            %% NegEV Stats
+            
+            nFilesToLoad = numel(SelectedFile_negEV);
+            for j = 1:nFilesToLoad
+                load([burstDir SelectedFile_negEV{j}])
+                
+                %% Corr analysis
+                
+                
+                
+                
+                delta_peakPower = BURSTS.Delta_peakTimes_peakPower;
+                delta_peaktime_s = BURSTS.Delta_peakTimes_abs_s;
+                
+                nondelta_peakPower = BURSTS.nonDelta_peakTimes_peakPower;
+                nondelta_peaktime_s = BURSTS.nonDelta_peakTimes_abs_s;
+                
+                deltaMask = BURSTS.deltaMask;
+                
+                deltaTime = sum(sum(deltaMask));
+                totalTime = 600000*size(deltaMask, 2);
+                
+                delta_SWRs  = sum(cellfun(@numel, delta_peaktime_s));
+                nondelta_SWRs  = sum(cellfun(@numel, nondelta_peaktime_s));
+                total_SWRs = delta_SWRs+nondelta_SWRs;
+                nonNanPowerVals = [];
+                for k = 1:2
+                    switch k
+                        case 1
+                            peakPower = delta_peakPower;
+                        case 2
+                            peakPower=   nondelta_peakPower;
+                    end
+                    % Example: C = {[1;2], [3;4;5], [6]}
+                    % 1. Find the maximum length
+                    maxLen = max(cellfun(@length, peakPower));
+                    % 2. Pad shorter cells with NaN
+                    C_padded = cellfun(@(x) [x; NaN(maxLen - length(x), 1)], peakPower, 'UniformOutput', false);
+                    % 3. Convert to matrix
+                    mat = cell2mat(C_padded);
+                    bla = isnan(mat);
+                    nonNanPowerVals{k} = mat(~bla);
+                end
+                
+                
+                B.delta_peaktime_s{j} = delta_peaktime_s;
+                B.delta_power{j} = nonNanPowerVals{1};
+                B.delta_SWRs(j) = delta_SWRs;
+                
+                B.nonelta_peaktime_s{j} = nondelta_peaktime_s;
+                B.nondelta_power{j} = nonNanPowerVals{2};
+                B.nondelta_SWRs(j) = delta_SWRs;
+                
+                B.total_SWRs(j) = total_SWRs;
+                
+                B.deltaTime(j) = deltaTime;
+                B.nondeltaTime(j) = totalTime - deltaTime;
+                B.totalTime(j) = totalTime;
+                
+            end
+            
+            
+            %% posEV Stats
+            
+            nFilesToLoad = numel(SelectedFile_posEV);
+            for j = 1:nFilesToLoad
+                load([burstDir SelectedFile_posEV{j}])
+                
+                delta_peakPower = BURSTS.Delta_peakTimes_peakPower;
+                delta_peaktime_s = BURSTS.Delta_peakTimes_abs_s;
+                
+                nondelta_peakPower = BURSTS.nonDelta_peakTimes_peakPower;
+                nondelta_peaktime_s = BURSTS.nonDelta_peakTimes_abs_s;
+                
+                deltaMask = BURSTS.deltaMask;
+                
+                deltaTime = sum(sum(deltaMask));
+                totalTime = 600000*size(deltaMask, 2);
+                
+                delta_SWRs  = sum(cellfun(@numel, delta_peaktime_s));
+                nondelta_SWRs  = sum(cellfun(@numel, nondelta_peaktime_s));
+                total_SWRs = delta_SWRs+nondelta_SWRs;
+                
+                for k = 1:2
+                    switch k
+                        case 1
+                            peakPower = delta_peakPower;
+                        case 2
+                            peakPower=   nondelta_peakPower;
+                    end
+                    % Example: C = {[1;2], [3;4;5], [6]}
+                    % 1. Find the maximum length
+                    maxLen = max(cellfun(@length, peakPower));
+                    % 2. Pad shorter cells with NaN
+                    C_padded = cellfun(@(x) [x; NaN(maxLen - length(x), 1)], peakPower, 'UniformOutput', false);
+                    % 3. Convert to matrix
+                    mat = cell2mat(C_padded);
+                    bla = isnan(mat);
+                    nonNanPowerVals{k} = mat(~bla);
+                end
+                
+                
+                BB.delta_peaktime_s{j} = delta_peaktime_s;
+                BB.delta_power{j} = nonNanPowerVals{1};
+                BB.delta_SWRs(j) = delta_SWRs;
+                
+                BB.nonelta_peaktime_s{j} = nondelta_peaktime_s;
+                BB.nondelta_power{j} = nonNanPowerVals{2};
+                BB.nondelta_SWRs(j) = delta_SWRs;
+                
+                BB.total_SWRs(j) = total_SWRs;
+                
+                BB.deltaTime(j) = deltaTime;
+                BB.nondeltaTime(j) = totalTime - deltaTime;
+                BB.totalTime(j) = totalTime;
+                
+            end
+            
+            alldeltapower_nEV = [];
+            alldeltapower_pEV = [];
+            for j = 1:3
+                alldeltapower_nEV  = [alldeltapower_nEV ; B.delta_power{j};];
+                alldeltapower_pEV  = [alldeltapower_pEV ; BB.delta_power{j};];
+            end
+            
+            
+           [p, h] =  ranksum(alldeltapower_nEV, alldeltapower_pEV)
+            
+           meandPower_nEV = nanmedian(alldeltapower_nEV);
+           meandPower_pEV = nanmedian(alldeltapower_pEV);
+           
+           
+            
+            binedges = 1:0.5:15;
+            figure(103); clf
+            subplot(3, 2, 1)
+            histogram(BB.nondelta_power{1}, binedges, 'Normalization', 'probability')
+            
+            subplot(3, 2, 3)
+            histogram(BB.nondelta_power{2}, binedges, 'Normalization', 'probability')
+            
+            subplot(3, 2, 5)
+            histogram(BB.nondelta_power{3}, binedges, 'Normalization', 'probability')
+            
+            
+            subplot(3, 2, 2)
+            histogram(B.nondelta_power{1}, binedges, 'Normalization', 'probability')
+            
+            subplot(3, 2, 4)
+            histogram(B.nondelta_power{2}, binedges, 'Normalization', 'probability')
+            
+            subplot(3, 2, 6)
+            histogram(B.nondelta_power{3}, binedges, 'Normalization', 'probability')
+            
+            
+            
+            
+            
+            n = histcounts(BB.nondelta_power{1}, binedges);
+            m = histcounts(BB.nondelta_power{2}, binedges);
+            
+            count = sum([n,m]);                            %number of data points (used in normalization)
+            figure(104)
+            b2 = bar(binedges(1:end-1), n/count, 'histc');
+            disp('');
+            hold on
+            b3 = bar(binedges(1:end-1), m/count, 'histc');
+            
+            
+        end
         
         
-        function obj = process_LFP_Data_burstAnalysis(obj, nEntries, saveDir, ephysPath, plotPath)
+        
+        function obj = process_LFP_corr_coh_Analysis(obj, nEntries, saveDir, ephysPath, plotPath)
             dbstop if error
             colOrder = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560],...
                 [0.4660, 0.6740, 0.1880], [0.3010, 0.7450, 0.9330], [0.6350, 0.0780, 0.1840]};
             
-            for jq = 34:nEntries
+            for jq = 1:nEntries
                 if ~isempty(obj.EPHYS.EphysRecName{jq}) % no ephys recording
                     
                     pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{jq} obj.PATH.dirD];
@@ -617,15 +816,27 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     chanSet = a.D.chanNamesSet;
                     nChans = numel(chanSet);
                     
-                    channelOrder = [6 4 5 3 2 1 ]; %w025
-                   %channelOrder = [6 4 7 5 3 2 1 ]; %w025
-                   %channelOrder = [2 3 5 7 4  6 8 1 ]; %w027
+                    % channelOrder = [6 4 5 3 2 1 ]; %w025
+                    %channelOrder = [6 4 7 5 3 2 1 ]; %w025
+                    % channelOrder = [2 3 5 7 4  6 8 1 ]; %w027
+                    %channelOrder = [2 3 5 7 4  6 1 ]; %w027 7 chans
+                    channelOrder = 1:1:nChans;
                     chanSetRemap = [];
+                    
+                    dot = '.';
+                    underscore = '_';
                     for c = 1:nChans
                         chanSetRemap{c} =  chanSet{channelOrder(c)};
+                        longName = chanSetRemap{c};
+                        bla = find(longName == dot);
+                        bla2 = find(longName == underscore);
+                        shortName{c} = longName(bla2+3:bla-1);
                     end
                     
                     chanSet = chanSetRemap;
+                    
+                    
+                    
                     timeWin_s = a.D.timeWin_s; %seconds
                     tOn = a.D.tOn_s;
                     
@@ -669,6 +880,251 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                                 AllDataBin_clean_ds(oo,:) = dataBin;
                                 
                             end
+                            
+                            %% chronux params
+                            fs = info.header.sampleRate;
+                            params.Fs = fs;
+                            params.tapers = [3 5];   % time-bandwidth product, tapers
+                            params.fpass = [0 150];
+                            params.err = [1 0.05];   % confidence intervals
+                            params.trialave = 0;
+                            
+                            deltaBandLowCutoff = 1;
+                            deltaBandHighCutoff = 4;
+                            
+                            gammaBandLowCutoff = 30;
+                            gammaBandHighCutoff = 90;
+                            
+                            
+                            
+                            RChans = []; chanNames = [];
+                            for cc = 1:nChans
+                                for   dd = 1:nChans
+                                    
+                                    if dd <= cc
+                                        continue
+                                    end
+                                    [R,~] = corrcoef(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :));
+                                    
+                                    RChans(cc, dd) = R(1, 2);
+                                    chanNames{cc, dd} = [shortName{cc} '-' shortName{dd}];
+                                    
+                                    %  tic
+                                    
+                                    %[C, phi, S12, S1, S2, f] = coherencyc(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :), params);
+                                    %[C, ~, ~, ~, ~, f] = coherencyc(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :), params);
+                                    
+                                    [Cxy, f] = mscohere(AllDataBin_clean_ds(cc, :), AllDataBin_clean_ds(dd, :), [], [], [], fs);
+                                    
+                                    
+                                    delta_coh(cc, dd) = mean(Cxy(f >= deltaBandLowCutoff & f <= deltaBandHighCutoff));
+                                    gamma_coh(cc, dd) = mean(Cxy(f >= gammaBandLowCutoff & f <= gammaBandHighCutoff));
+                                    %   toc
+                                end
+                            end
+                            
+                            
+                            
+                            %                               figure(101)
+                            %                               clim = [0 1];
+                            %                               imagesc(RChans, clim)
+                            %
+                            %                               colorbar
+                            
+                            
+                            disp([num2str(o) '/' num2str(nBinsToAnalyze)])
+                            % LFP: [samples x channels]
+                            % fs: sampling rate
+                            
+                            
+                            
+                            
+                            
+                            corrR{o} = RChans;
+                            deltaCOH{o} =  delta_coh;
+                            gammaCOH{o} = gamma_coh;
+                            
+                            
+                            
+                            
+                        end
+                    end
+                    
+                    INFO = a.INFO;
+                    INFO.channelOrder_remap = channelOrder;
+                    INFO.chanSet = chanSet;
+                    INFO.nHoursToAnalyze = nHoursToAnalyze;
+                    INFO.hoursAfterLightsOff = hoursAfterLightsOff;
+                    INFO.tOn_toAnalyze = tOn_toAnalyze;
+                    INFO.onsetBins = onsetBins;
+                    INFO.offsetBins = offsetBins;
+                    
+                    CORCOH.corrR = corrR;
+                    CORCOH.corrR_chanNames= chanNames;
+                    
+                    CORCOH.deltaCOH = deltaCOH;
+                    CORCOH.gammaCOH = gammaCOH;
+                    
+                    saveName = [plotPath obj.EPHYS.EphysRecName{jq} '_CorCoh-' num2str(nChans)];
+                    
+                    if exist(saveDir, 'dir') == 0
+                        mkdir(saveDir);
+                        disp(['Created: '  saveDir])
+                    end
+                    
+                    save([saveName '.mat'], 'CORCOH', 'INFO', 'params', '-v7.3')
+                    
+                    disp(['Saved:' saveName])
+                end
+                
+                
+            end
+            
+        end
+        
+        
+        
+        
+        
+        
+        
+        
+        function obj = process_LFP_Data_burstAnalysis(obj, nEntries, saveDir, ephysPath, plotPath)
+            dbstop if error
+            colOrder = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560],...
+                [0.4660, 0.6740, 0.1880], [0.3010, 0.7450, 0.9330], [0.6350, 0.0780, 0.1840]};
+            
+            for jq = 1:nEntries
+                if ~isempty(obj.EPHYS.EphysRecName{jq}) % no ephys recording
+                    
+                    pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{jq} obj.PATH.dirD];
+                    EphysLFPFiles = dir(fullfile(ephysPath, '*.mat'));
+                    
+                    LFPIndex = strfind({EphysLFPFiles.name}, obj.EPHYS.EphysRecName{jq});
+                    idx_LFP = find(~cellfun(@isempty,LFPIndex));
+                    LFPNames =  EphysLFPFiles(idx_LFP).name;
+                    
+                    a = load([ephysPath LFPNames]); % loads the LFP data file which has info on it
+                    artifactInds = a.D.isArtifact; % identify where all the artifact files are
+                    
+                    chanSet = a.D.chanNamesSet;
+                    nChans = numel(chanSet);
+                    
+                   % channelOrder = [6 4 5 3 2 1 ]; %w025
+                   %channelOrder = [6 4 7 5 3 2 1 ]; %w025
+                  % channelOrder = [2 3 5 7 4  6 8 1 ]; %w027
+                   %channelOrder = [2 3 5 7 4  6 1 ]; %w027 7 chans
+                   channelOrder = 1:1:nChans;
+                   chanSetRemap = [];
+                    
+                    dot = '.';
+                    underscore = '_';
+                    for c = 1:nChans
+                        chanSetRemap{c} =  chanSet{channelOrder(c)};
+                        longName = chanSetRemap{c};
+                        bla = find(longName == dot);
+                        bla2 = find(longName == underscore);
+                        shortName{c} = longName(bla2+3:bla-1);
+                    end
+                    
+                    chanSet = chanSetRemap;
+                    
+                    
+                    
+                    timeWin_s = a.D.timeWin_s; %seconds
+                    tOn = a.D.tOn_s;
+                    
+                    %% only detect swr in the analysis windows
+                    
+                    nHoursToAnalyze = 9;
+                    hoursAfterLightsOff = 2;
+                    
+                    bins_per_min = 60/timeWin_s;
+                    binsInHour = bins_per_min*60;
+                    analysisBins_cnt = nHoursToAnalyze*binsInHour;
+                    
+                    LightsOff_min = a.INFO.totalDur_min_start_lightsOff;
+                    LightsOff_s_bins = LightsOff_min*bins_per_min; %3 bins per min for 20 s bins
+                    
+                    % 2 hours after lights off = 360, 20 s bins
+                    %1 min = 3 bins, 3*60 = 1 hr, 180*2  = 360
+                    onsetBins = LightsOff_s_bins+hoursAfterLightsOff*binsInHour; % 2 hours after lights off
+                    offsetBins = onsetBins+analysisBins_cnt;
+                    tOn_toAnalyze = tOn(onsetBins:offsetBins);
+                    artifactInds_toAnalyze = artifactInds(onsetBins:offsetBins);
+                    
+                    %   minChannels = floor(nChans*.5);       % ripple must appear on >= channels
+                    nBinsToAnalyze = numel(tOn_toAnalyze);
+                    
+                    plotSubset = randperm(nBinsToAnalyze);
+                    plotSubsetInds = plotSubset(1:20);
+                    
+                    for o = 1: nBinsToAnalyze
+                        
+                        isArtifact = artifactInds_toAnalyze(o); % we do not analyze artifact inds
+                        
+                        if ~isArtifact
+                            AllDataBin_clean_ds = [];
+                            for oo = 1:nChans
+                                thisChan = chanSet{oo};
+                                filename = [pathToData thisChan];
+                                [dataBin, timestamps, info] = load_open_ephys_data_chunked(filename,tOn_toAnalyze(o), tOn_toAnalyze(o)+timeWin_s);
+                                %dataBin_clean = dataBin - mean(dataBin);
+                                %dataBin_clean_ds = resample(dataBin_clean, 1, FS/fs_ds); %
+                                AllDataBin_clean_ds(oo,:) = dataBin;
+                                
+                            end
+                            
+                            %% chronux params
+                            fs = info.header.sampleRate;
+                            params.Fs = fs;
+                            params.tapers = [3 5];   % time-bandwidth product, tapers
+                            params.fpass = [0 150];
+                            params.err = [1 0.05];   % confidence intervals
+                            params.trialave = 0;
+
+                        
+                                   
+                        deltaBandLowCutoff = 1;
+                        deltaBandHighCutoff = 4;
+                        
+                        gammaBandLowCutoff = 30;
+                        gammaBandHighCutoff = 90;
+                        
+                        
+                            %{
+                        RChans = []; chanNames = [];
+                        for cc = 1:nChans
+                            for   dd = 1:nChans
+                                
+                                if dd <= cc
+                                    continue
+                                end
+                                [R,~] = corrcoef(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :));
+                                
+                                RChans(cc, dd) = R(1, 2);
+                                chanNames{cc, dd} = [shortName{cc} '-' shortName{dd}];
+                                
+                              %  tic
+                                
+                                %[C, phi, S12, S1, S2, f] = coherencyc(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :), params);
+                                [C, ~, ~, ~, ~, f] = coherencyc(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :), params);
+                                
+                                delta_coh(cc, dd) = mean(C(f >= deltaBandLowCutoff & f <= deltaBandHighCutoff));
+                                gamma_coh(cc, dd) = mean(C(f >= gammaBandLowCutoff & f <= gammaBandHighCutoff));
+                             %   toc
+                            end
+                        end
+                              
+                            
+                              
+%                               figure(101)
+%                               clim = [0 1];
+%                               imagesc(RChans, clim)
+%                               
+%                               colorbar
+                           %}   
+                            
                         disp([num2str(o) '/' num2str(nBinsToAnalyze)])
                             % LFP: [samples x channels]
                             % fs: sampling rate
@@ -678,7 +1134,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                             nCh = size(LFP,2);
                             nSamp = size(LFP,1);
                             %fs = fs_ds;
-                            fs = info.header.sampleRate;
+                   
                             
                             %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             %% Sharp Band
@@ -697,7 +1153,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                             %}
                             %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             %%     Delta Band
-                            deltaBand = [1 8];
+                                   deltaBand = [1 8];
                             
                             %% DESIGN FILTER (use SOS for stability)
                             [z,p,k] = butter(4, deltaBand/(fs/2), 'bandpass');
@@ -935,7 +1391,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                             
                             ripples.samples = [starts ends];
                             ripples.time = [starts ends] ./ fs;
-                            
+                            ripples.dur = [ends - starts] ./ fs;
                             %% Compute ripple peaks
                             nEvents = size(starts,1);
                             ripples.peakTime = zeros(nEvents,1);
@@ -1044,6 +1500,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                             ripples.peakTime(smallDiffInds_corrected) = [];
                             ripples.peakPower(smallDiffInds_corrected) = [];
                             ripples.time(smallDiffInds_corrected,:) = [];
+                            ripples.dur(smallDiffInds_corrected,:) = [];
                             
                             %% STEP 4: HIGH DELTA MASK (sample-wise)
                             deltaThreshZ = 0.5;
@@ -1082,10 +1539,11 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                             rippleDelta.times = ripples.time(keep,:);
                             rippleDelta.peakTime = ripples.peakTime(keep);
                             rippleDelta.peakPower = ripples.peakPower(keep);
+                            rippleDelta.dur = ripples.dur(keep);
                             
                             nonDeltaPeakTimes = ripples.peakTime(~keep);
                             nonDeltaPeakPower = ripples.peakPower(~keep);
-                            
+                            nonDelta_dur = ripples.dur(~keep);
                             %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                             %% Final Plot
                             
@@ -1176,13 +1634,20 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                             
                             allRipples__Delta_peakTimes_abs_s{o} = rippleDelta.peakTime + tOn_toAnalyze(o);
                             allRipples__Delta_peakTimes_peakPower{o} = rippleDelta.peakPower;
-                            allRipples__Delta_peakTimes_rel_s{o} = rippleDelta.peakTime;
+                            %allRipples__Delta_peakTimes_rel_s{o} = rippleDelta.peakTime;
+                            allRipples__Delta_peakDur_s{o} = rippleDelta.dur;
                             
                             allRipples_NonDelta_peakTimes_abs_s{o} = nonDeltaPeakTimes + tOn_toAnalyze(o);
                             allRipples_NonDelta_peakTimes_peakPower{o} = nonDeltaPeakPower;
-                            allRipples_NonDelta_peakTimes_rel_s{o} = nonDeltaPeakTimes;
+                            allRipples_NonDelta_peakDur_s{o} = nonDelta_dur;
+                            %allRipples_NonDelta_peakTimes_rel_s{o} = nonDeltaPeakTimes;
                             
                             deltaMask(:, o) = highDeltaMaskOut;
+                            
+%                             corrR{o} = RChans;
+%                             deltaCOH{o} =  delta_coh;
+%                             gammaCOH{o} = gamma_coh;
+                            
                             
                         end
                         
@@ -1289,13 +1754,22 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     
                     BURSTS.Delta_peakTimes_abs_s = allRipples__Delta_peakTimes_abs_s;
                     BURSTS.Delta_peakTimes_peakPower = allRipples__Delta_peakTimes_peakPower;
-                    BURSTS.Delta_peakTimes_rel_s = allRipples__Delta_peakTimes_rel_s;
+                    %BURSTS.Delta_peakTimes_rel_s = allRipples__Delta_peakTimes_rel_s;
+                    BURSTS.allRipples__Delta_peakDur_s = allRipples__Delta_peakDur_s;
                     
                     BURSTS.nonDelta_peakTimes_abs_s = allRipples_NonDelta_peakTimes_abs_s;
                     BURSTS.nonDelta_peakTimes_peakPower = allRipples_NonDelta_peakTimes_peakPower;
-                    BURSTS.nonDelta_peakTimes_rel_s = allRipples_NonDelta_peakTimes_rel_s;
+                    BURSTS.allRipples_NonDelta_peakDur_s = allRipples_NonDelta_peakDur_s;
+                    %BURSTS.nonDelta_peakTimes_rel_s = allRipples_NonDelta_peakTimes_rel_s;
                     
                     BURSTS.deltaMask = deltaMask;
+                    
+%                     BURSTS.corrR = corrR;
+%                     BURSTS.corrR_chanNames= chanNames;
+%                     
+%                     BURSTS.deltaCOH = deltaCOH; 
+%                     BURSTS.gammaCOH = gammaCOH;
+                            
                     
                 saveName = [plotPath obj.EPHYS.EphysRecName{jq} '_BurstDetection-' num2str(nChans)];
                 
@@ -1362,8 +1836,13 @@ classdef eeg_lfp_song_analysis_OBJ < handle
         
         function obj = process_LFP_Data(obj, nEntries, saveDir)
             
+              if exist(saveDir, 'dir') == 0
+                        mkdir(saveDir);
+                        disp(['Created: '  saveDir])
+              end
+                    
             artifactChan = 1;
-            for j = 28:nEntries
+            for j = 1:nEntries
                 
                 if ~isempty(obj.EPHYS.EphysRecName{j})
                     
@@ -1470,9 +1949,9 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                             hold on
                             t = (1:length(AllDataBin_clean_ds))/fs;
                             offset = 0;
-                            for j = 1:nChans
-                                plot(t, AllDataBin_clean_ds(j,:)+offset);
-                                text(0, offset, ['Ch- ' num2str(chanSet(j))], 'interpreter', 'none')
+                            for jo = 1:nChans
+                                plot(t, AllDataBin_clean_ds(jo,:)+offset);
+                                text(0, offset, ['Ch- ' num2str(chanSet(jo))], 'interpreter', 'none')
                                 offset = offset +500;
                             end
                             axis tight
@@ -1756,10 +2235,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     
                     saveName = [saveDir obj.EPHYS.EphysRecName{j} '_allLFP_dyData-' num2str(nChans)];
                     
-                    if exist(saveDir, 'dir') == 0
-                        mkdir(saveDir);
-                        disp(['Created: '  saveDir])
-                    end
+                  
                     
                     save([saveName '.mat'], 'D', 'INFO', '-v7.3')
                     
@@ -3432,6 +3908,10 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             xlabel('Clock time')
             ylabel('Probability')
             
+            dl = datetime('8:30:00');
+            dr = datetime('23:30:00');
+            xlim([dl dr])
+            
             plotpos = [0 0 18 12];
             plotName = [obj.PATH.TimeInfoSaveDir_motifs '_AllSongTimeHistogram'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
@@ -3821,6 +4301,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             plot(xes, dEV_LastToFirst, 'ko', 'linestyle', 'none')
             mean_dEV = nanmean(dEV_LastToFirst);
+            median_dEV = nanmedian(dEV_LastToFirst);
             std_dEV = nanstd(dEV_LastToFirst);
             iqr_deV = iqr(dEV_LastToFirst);
             
@@ -3844,7 +4325,24 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             xlim([0 xes(end)+1])
             grid on
             mean_dEV_LF = mean_dEV;
+            %% histogram of values
+            figure  (119);
+            halfStd = 0.02;
+            edges = mean_dEV-(2*std_dEV):halfStd :mean_dEV+(2*std_dEV);
             
+            hold on
+            plot(mean_dEV_LF, 4, 'kv')
+            plot(median_dEV, 4, 'kd')
+            
+            histogram(dEV_LastToFirst, edges);
+            xlabel('Overnight \Delta EV')
+            ylabel('Count')
+            
+             figure (119);
+            plotpos = [0 0 25 20];
+            plotName = [dEV_dir obj.INFO.birdName{:} '_EV_diff_largeValsHistogram'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
             
             
             %% Find specific large dEV
@@ -5033,19 +5531,24 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     case 1
                         d = load([dirToLoad w025_file]);
                         dph = 52:86;
+                        surgery = 47;
                     case 2
                         d = load([dirToLoad w027_file]);
                         dph = [60:86];
+                        surgery = 58;
                     case 3
                         d = load([dirToLoad w038_file]);
-                        dph = [44:69];
+                        %dph = [44:69];
+                        dph = [53:69];
+                        surgery = 47;
                     case 4
                         d = load([dirToLoad w037_file]);
-                        dph = 66:77; % bird with other male
+                        dph = 48:77; % bird with other male
+                        surgery = 47;
                     case 5
                         d = load([dirToLoad w044_file]);
-                        dph = [78:85 88:96]; % bird with other male
-                        
+                        dph = [78:85 88:96]; 
+                        surgery = 77;
                         
                 end
                 
@@ -5067,7 +5570,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 min_dph(j) = min(dph);
                 max_dph(j) = max(dph);
                 
-                
+                allSurgerydays(j) = surgery;
             end
             min_all_dph = min(min_dph);
             max_all_dph = max(max_dph);
@@ -5093,16 +5596,24 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
             end
             
+            colss = get(gca,'colororder');
             
             figure (104); clf
             for j =1:5
                 hold on
-                errorbar(dph_allBirds, allMeans_dph(j,:), allsems_dph(j,:), 'linewidth', 2 )
-                
+                errorbar(dph_allBirds, allMeans_dph(j,:), allsems_dph(j,:), 'linewidth', 2, 'color', colss(j,:))
             end
             
             leg_text = {'w025', 'w027', 'w038', 'w037', 'w044'};
-            legend(leg_text)
+            L = legend(leg_text);
+            L.AutoUpdate = 'off';
+
+            for j =1:5
+                hold on
+                FirstNonnanvalus = find(~isnan(allMeans_dph(j,:)));
+                plot(allSurgerydays(j), allMeans_dph(j,FirstNonnanvalus(1)), 'color', colss(j,:), 'marker', '*')
+            end
+            
             ylabel('Entropy Variance')
             xlabel('dph')
             ylim([0 1])
@@ -7005,8 +7516,8 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
                 %%
                 spec_scale = 0.08; %%%%%%%%%%%%%%%%%%
-                motiv_count =  35;
-                %motiv_count =  17; %%%%%%%%%%%%%%%%%
+               % motiv_count =  35;
+                motiv_count =  17; %%%%%%%%%%%%%%%%%
                 height = 1/motiv_count;
                 
                 %width = 0.9 /3;

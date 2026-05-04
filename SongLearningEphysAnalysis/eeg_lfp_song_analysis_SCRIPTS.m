@@ -107,6 +107,7 @@ data_OBJ = eeg_lfp_song_analysis_OBJ(xlsFile, startRow, endRow, P);
 
 nEntries = data_OBJ.INFO.nEntries;
 
+% If there are errors here, the LFP channels need to be added
 
 %% Video analysis
  % Saves plots and mvmt variable to ALL_PLOTS\bird\VideoMvmt\
@@ -254,7 +255,7 @@ F_or_L_switch = 2; %1= L-F, 2= F-L
 %% make a plot of entropy versus time
 
 % Make sure to move the entropy files into a First and Last folder!
-firstOrLastSwitch = 1; % 1 = First, 2 = Last, 0 = both
+firstOrLastSwitch = 2; % 1 = First, 2 = Last, 0 = both
 data_OBJ = meta_make_plot_of_entropy_with_times_first_last(data_OBJ, firstOrLastSwitch);
 
 data_OBJ = meta_make_histogram_plot_first_last_times(data_OBJ);
@@ -361,10 +362,15 @@ remove_first_syl_from_motifs_w025
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load LFP Data
 
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\';
 saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\';
+
 %saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\'
 data_OBJ = process_LFP_Data(data_OBJ, nEntries, saveDir );
 
+dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\'];
+dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\'];
 dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\'];
 %dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\'];
 data_OBJ = plot_LFP_Data(data_OBJ, dataDir );
@@ -383,10 +389,26 @@ channelOrder = [6 4 5 3 2 1 ]; %w025 (08-09) ch 11 and 14 are noisy
 saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\';
 ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\';
 plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\BurstDetection\';
-channelOrder = [2 3 5 7 4  6 1 ]; %w027
-channelOrder = [2 3 5 7 4  6 8 1 ]; %w027
+channelOrder = [2 3 5 7 4  6 1 ]; %w027 7 chans
+channelOrder = [2 3 5 7 4  6 8 1 ]; %w027 8 chan
+
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\';
+ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\';
+plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\BurstDetection\';
+
+
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\';
+ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\';
+plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\BurstDetection\';
 
 data_OBJ = process_LFP_Data_burstAnalysis(data_OBJ, nEntries, saveDir,ephysPath,plotPath );
+data_OBJ = process_LFP_corr_coh_Analysis(data_OBJ, nEntries, saveDir,ephysPath,plotPath );
+
+plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\BurstDetection\';
+burstDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\BurstDetection\';
+data_OBJ = compareBurstSatisticsAcrossDays(data_OBJ, burstDir, plotPath);
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
