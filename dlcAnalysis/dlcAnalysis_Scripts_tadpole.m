@@ -14,7 +14,7 @@ clear all
 
 %% Change this informaiton here
 
-analysisDir = 'X:\tadpoledata-khaled\ToTest\'; %make sure that it ands with a \
+analysisDir = 'X:\tadpoledata-khaled\ToTest\videos_BA-Arbeit\'; %make sure that it ands with a \
 nAnimals = 5;
 filtered = 1; % 1 use filtered data, 0, use unfiltered data
 %%

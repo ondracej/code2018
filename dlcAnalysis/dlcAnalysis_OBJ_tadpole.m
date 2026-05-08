@@ -98,9 +98,17 @@ classdef dlcAnalysis_OBJ_tadpole < handle
             
             nFilesToLoad = numel(CsvFileNames);
             
-            
+            if nFilesToLoad >1
+                
+            prompt = 'Please choose the csv file...';
+            [indx,tf] = listdlg('PromptString',prompt, 'ListString',CsvFileNames, 'SelectionMode','single', 'ListSize', [700 200]);
+            SelectedFile = CsvFileNames{indx};
+            else 
+                SelectedFile = CsvFileNames;
+            end
+                
             %% First importa variable names
-            filename = CsvFileNames{:};
+            filename = SelectedFile;
             delimiter = ',';
             endRow = 4;
             formatSpec = '%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%[^\n\r]';
@@ -690,7 +698,8 @@ classdef dlcAnalysis_OBJ_tadpole < handle
             text_supp = ['LH = ' num2str(likelihood_cutoff)];
             
             
-            VidFrameRate = 2; % 2 frames per second
+            %VidFrameRate = 2; % 2 frames per second
+            VidFrameRate = 10; % 2 frames per second
             C = obj.DATA.C;
             
             % Hardcode this for now - iterate over animals using the tectum
@@ -750,11 +759,12 @@ classdef dlcAnalysis_OBJ_tadpole < handle
                   
                   smoothed_min = smoothdata(smoothed_raw, 'gaussian', smoothWin_frames);
                   
+                  offset = 200;
                   figure(105);
-                  plot(smoothed_min+j*50, 'color', cols{j})
+                  plot(smoothed_min+j*offset , 'color', cols{j})
                   hold on
                   if ~isempty(HL_inds)
-                      plot(HL_inds, j*50, 'k^')
+                      plot(HL_inds, j*offset , 'k^')
                   end
                   
               end
@@ -763,6 +773,7 @@ classdef dlcAnalysis_OBJ_tadpole < handle
               
               
               axis tight
+              yss = [0 300];
               yss = [0 300];
               ylim(yss )
               
