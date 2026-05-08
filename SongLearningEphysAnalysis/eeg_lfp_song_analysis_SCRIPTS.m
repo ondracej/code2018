@@ -377,6 +377,8 @@ data_OBJ = plot_LFP_Data(data_OBJ, dataDir );
 
 data_OBJ = plot_LFP_Delta_Gamma_over_days(data_OBJ, dataDir)
 
+dataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\';
+data_OBJ = plot_LFP_BursAnalysis_over_days(data_OBJ, dataDir)
 
 dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\'];
 data_OBJ = addInfoToMatFile(data_OBJ, dataDir)
