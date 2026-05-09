@@ -497,7 +497,579 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
         end
         
+        function  obj = addInfoToMatFile(obj, dataDir)
+            
+            matNames = dir(fullfile(dataDir, '*mat*'));
+            mat_FileNames = {matNames.name}';
+            nFiles = numel(mat_FileNames);
+            
+            disp('')
+            for s = 1:nFiles
+                
+                load([dataDir mat_FileNames{s}]);
+                
+%                 prompt = ['Date: ' INFO.EphysRecName ':: enter dph:  '];
+%                 dph = input(prompt)  ;   
+%                 INFO.dph = dph;
+                
+                    prompt = ['Date: ' INFO.EphysRecName ':: exclude ephys (1 or 0):  '];
+                    excludeEphys = input(prompt)  ;
+                    INFO.excludeEphys  = excludeEphys ;
+                
+                save([dataDir mat_FileNames{s}], 'D', 'INFO', '-v7.3')
+                
+              %  disp(['Saved:' mat_FileNames{s}])
+                
+                
+            end
+            
+            
+        end
         
+        function obj = plot_LFP_Delta_Gamma_over_days(obj, dataDir)
+            
+            LFPdataNames = dir(fullfile(dataDir, '*mat*'));
+            LFP_FileNames = {LFPdataNames.name}';
+            nFiles_LFP = numel(LFP_FileNames);
+            
+            nHoursToAnalyze = 9;
+            hoursAfterLightsOff = 2;
+            
+           % artifactDays = [ 14 17 18 21 22 24 27]; %w025
+            
+            for s = 1:nFiles_LFP
+             
+                d = load([dataDir LFP_FileNames{s}]);
+            
+                    
+                nChans = numel(d.D.chanNamesSet);
+                
+                timeWin_s = 20; %seconds
+                tOn = d.D.tOn_s;
+                
+                bins_per_min = 60/timeWin_s;
+                binsInHour = bins_per_min*60;
+                analysisBins_cnt = nHoursToAnalyze*binsInHour;
+                
+                %% d/y
+                
+                %subplot(3, 1, 1)
+                
+                isArtifact = d.D.isArtifact;
+                artifactInds = d.D.isArtifact; % identify where all the artifact files are
+                
+                LightsOff_min = d.INFO.totalDur_min_start_lightsOff;
+                LightsOff_s_bins = LightsOff_min*bins_per_min; %3 bins per min for 20 s bins
+                
+                % 2 hours after lights off = 360, 20 s bins
+                %1 min = 3 bins, 3*60 = 1 hr, 180*2  = 360
+                onsetBins = LightsOff_s_bins+hoursAfterLightsOff*binsInHour; % 2 hours after lights off
+                offsetBins = onsetBins+analysisBins_cnt;
+                tOn_toAnalyze = tOn(onsetBins:offsetBins);
+                artifactInds_toAnalyze = logical(artifactInds(onsetBins:offsetBins));
+                
+                %   minChannels = floor(nChans*.5);       % ripple must appear on >= channels
+                nBinsToAnalyze = numel(tOn_toAnalyze);
+                %
+                %% delta
+                
+                chanNamesSet = d.D.chanNamesSet;
+                   dph(s) = d.INFO.dph;
+                   excludeEphys(s) = d.INFO.excludeEphys ;
+                for ss = 1:nChans
+                    if d.INFO.excludeEphys == 1
+                        
+                        deltaNan_median(ss) = NaN;
+                        deltaNan_sem(ss) = NaN;
+                        gammaNan_median(ss) = NaN;
+                        gammaNan_sem(ss) =  NaN;
+                        
+                    else
+                        
+                        deltaNan = d.D.bufferedDelta_median(ss,onsetBins:offsetBins);
+                        deltaNan(artifactInds_toAnalyze) = NaN;
+                        
+                        deltaNan_median(ss) = nanmedian(deltaNan);
+                        deltaNan_std = nanstd(deltaNan);
+                        nNonNan = sum(~isnan(deltaNan));
+                        deltaNan_sem(ss) =  deltaNan_std/(sqrt(nNonNan));
+                        
+                        
+                        gammaNan = d.D.bufferedDeltaGammaRatio_median(ss,onsetBins:offsetBins);
+                        gammaNan(artifactInds_toAnalyze) = NaN;
+                        
+                        gammaNan_median(ss) = nanmedian(gammaNan);
+                        gammaNan_std = nanstd(gammaNan);
+                        nNonNan = sum(~isnan(gammaNan));
+                        gammaNan_sem(ss) =  gammaNan_std/(sqrt(nNonNan));
+                    end
+                    Chans{ss} = chanNamesSet{ss};
+                    
+                 
+                end
+                
+                
+                MedianDeltaMedian(s) = nanmedian(deltaNan_median);
+                MedianDeltaStd(s) = nanstd(deltaNan_median);
+                
+                MedianGammaMedian(s) = nanmedian(gammaNan_median);
+                MedianGammStd(s) = nanstd(gammaNan_median);
+                
+                allDeltaMedians(:,s) = deltaNan_median;
+                allDeltaNan_sem(:,s) = deltaNan_sem;
+                
+                
+                allGammaMedians(:,s) = gammaNan_median;
+                allGammaNan_sem(:,s) = gammaNan_sem;
+                
+                
+                allChans{s} = Chans;
+                
+                
+            end
+            figure(100);clf
+            hold on
+            nEntries= size(allDeltaMedians, 2);
+             for i = 1:nEntries
+                    %y = allMeans_large{i};
+                    y = allDeltaMedians(:,i);
+                    y = y(~isnan(y));
+                    
+                    if ~isempty(y)
+                        
+                    [f, yi] = ksdensity(y);
+                    f = f / max(f) * 0.3;   % control width
+                  
+                    %fill([i+f, i-fliplr(f)], ...
+                      fill([dph(i)+f, dph(i)-fliplr(f)], ...
+                        [yi, fliplr(yi)], ...
+                        [0.3 0.7 0.9], ...
+                        'EdgeColor','k','FaceAlpha',0.8)
+                    
+                    end
+                   % plot(i, median(y), 'k.', 'MarkerSize',18)
+             end
+                
+              for i = 1:nEntries
+                    %y = allMeans_large{i};
+                    y = allGammaMedians(:,i);
+                    y = y(~isnan(y));
+                    
+                    if ~isempty(y)
+                        
+                    [f, yi] = ksdensity(y);
+                    f = f / max(f) * 0.3;   % control width
+                  
+                    %fill([i+f, i-fliplr(f)], ...
+                      fill([dph(i)+f, dph(i)-fliplr(f)], ...
+                        [yi, fliplr(yi)], ...
+                        [0.7 0.2 0.3], ...
+                        'EdgeColor','k','FaceAlpha',0.4)
+                    
+                    end
+                   % plot(i, median(y), 'k.', 'MarkerSize',18)
+              end
+             
+             
+             xlabel('Age (dph)')
+             ylabel('normalized power')
+             
+               plotpos = [0 0 18 10];
+            plot_filename = [dataDir '__summary_dy_medians'];
+            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+            print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+             
+             
+             
+            
+            %%
+            
+            negDays = [66 79  67 72 71];
+           
+            [val dphInds] = ismember(negDays, dph);
+              dphInds = sort(dphInds);
+              
+            figure(345); clf
+            subplot(1, 2, 1)
+            hold on
+             for i = 1:numel(dphInds)
+                    %y = allMeans_large{i};
+                    y = allDeltaMedians(:,dphInds(i));
+                    y = y(~isnan(y));
+                    
+                    if ~isempty(y)
+                        
+                    [f, yi] = ksdensity(y);
+                    f = f / max(f) * 0.3;   % control width
+                  
+                    %fill([i+f, i-fliplr(f)], ...
+                      fill([(i)+f, (i)-fliplr(f)], ...
+                        [yi, fliplr(yi)], ...
+                        [0.3 0.7 0.9], ...
+                        'EdgeColor','k','FaceAlpha',0.4)
+                    
+                    end
+                    
+                    % plot(i, median(y), 'k.', 'MarkerSize',18)
+             end
+             
+            for i = 1:numel(dphInds)
+                    %y = allMeans_large{i};
+                    y = allGammaMedians(:,dphInds(i));
+                    y = y(~isnan(y));
+                    
+                    if ~isempty(y)
+                        
+                    [f, yi] = ksdensity(y);
+                    f = f / max(f) * 0.3;   % control width
+                  
+                    %fill([i+f, i-fliplr(f)], ...
+                      fill([(i)+f, (i)-fliplr(f)], ...
+                        [yi, fliplr(yi)], ...
+                     [0.7 0.2 0.3], ...
+                        'EdgeColor','k','FaceAlpha',0.4)
+                    
+                    end
+                    
+                    % plot(i, median(y), 'k.', 'MarkerSize',18)
+            end
+            
+            ylim([-1000 3000])
+            title('Large dEV')
+               posDays = [52 62 78 53 54];
+            
+            [val dphInds] = ismember(posDays, dph);
+            dphInds = sort(dphInds);
+              
+              subplot(1, 2, 2)
+            hold on
+             for i = 1:numel(dphInds)
+                    %y = allMeans_large{i};
+                    y = allDeltaMedians(:,dphInds(i));
+                    y = y(~isnan(y));
+                    
+                    if ~isempty(y)
+                        
+                    [f, yi] = ksdensity(y);
+                    f = f / max(f) * 0.3;   % control width
+                  
+                    %fill([i+f, i-fliplr(f)], ...
+                      fill([(i)+f, (i)-fliplr(f)], ...
+                        [yi, fliplr(yi)], ...
+                     [0.3 0.7 0.9], ...
+                        'EdgeColor','k','FaceAlpha',0.4)
+                    
+                    end
+                    
+                    % plot(i, median(y), 'k.', 'MarkerSize',18)
+             end
+             
+            for i = 1:numel(dphInds)
+                    %y = allMeans_large{i};
+                    y = allGammaMedians(:,dphInds(i));
+                    y = y(~isnan(y));
+                    
+                    if ~isempty(y)
+                        
+                    [f, yi] = ksdensity(y);
+                    f = f / max(f) * 0.3;   % control width
+                  
+                    %fill([i+f, i-fliplr(f)], ...
+                      fill([(i)+f, (i)-fliplr(f)], ...
+                        [yi, fliplr(yi)], ...
+                     [0.7 0.2 0.3], ...
+                        'EdgeColor','k','FaceAlpha',0.4)
+                    
+                    end
+                    
+                    % plot(i, median(y), 'k.', 'MarkerSize',18)
+             end
+            ylim([-1000 3000])
+              title('Small dEV')
+               plotpos = [0 0 18 10];
+            plot_filename = [dataDir '__largesmall_dy_medians'];
+            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+            print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+             
+             
+             
+            
+            %%
+            %plot(allDeltaMedians', 'marker', '*', 'linestyle', 'none')
+            hold on
+            plot(dph, MedianDeltaMedian', 'k*', 'linestyle', 'none')
+            figure(200);clf
+            plot(allGammaMedians', 'marker', '*', 'linestyle', 'none')
+            
+            
+            
+            set(gca, 'xtick', xticks_s);
+            set(gca, 'xticklabel', xlabs)
+            xlabel('Time (Hr)')
+            
+            plotpos = [0 0 18 10];
+            plot_filename = [dataDir LFP_FileNames{s}(1:end-4) '__dy'];
+            print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+            %print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+            
+            
+        end
+        
+        
+        function obj = plot_LFP_BursAnalysis_over_days(obj, dataDir)
+            
+            LFPdataNames = dir(fullfile(dataDir, '*Burst*'));
+            LFP_FileNames = {LFPdataNames.name}';
+            nFiles_LFP = numel(LFP_FileNames);
+            
+            nHoursToAnalyze = 9;
+            hoursAfterLightsOff = 2;
+            
+            
+            
+           a =  load('X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\dph_excludeLFPVars.mat');
+            
+           % artifactDays = [ 14 17 18 21 22 24 27]; %w025
+            
+            for s = 1:nFiles_LFP
+             
+                d = load([dataDir LFP_FileNames{s}]);
+            
+                
+                delta_peakPower = d.BURSTS.Delta_peakTimes_peakPower;
+                delta_peaktime_s = d.BURSTS.Delta_peakTimes_abs_s;
+                
+                nondelta_peakPower = d.BURSTS.nonDelta_peakTimes_peakPower;
+                nondelta_peaktime_s = d.BURSTS.nonDelta_peakTimes_abs_s;
+                
+                deltaMask = d.BURSTS.deltaMask;
+                
+                deltaTime = sum(sum(deltaMask));
+                totalTime = 600000*size(deltaMask, 2);
+                
+                delta_SWRs  = sum(cellfun(@numel, delta_peaktime_s));
+                nondelta_SWRs  = sum(cellfun(@numel, nondelta_peaktime_s));
+                total_SWRs = delta_SWRs+nondelta_SWRs;
+                
+                delta_SWRs_overdays(s) = delta_SWRs;
+                nondelta_SWRs_overdays(s) = nondelta_SWRs;
+                total_SWRs_overdays(s) = total_SWRs;
+            end
+               
+            
+            percentages_delta = delta_SWRs_overdays./total_SWRs_overdays *100;
+            percentages_nondelta = nondelta_SWRs_overdays./total_SWRs_overdays *100;
+            
+            percentages_delta_nonartifact = percentages_delta(~a.excludeEphys);
+            percentages_nondelta_nonartifact = percentages_nondelta(~a.excludeEphys);
+            ages = a.dph(~a.excludeEphys);
+            
+            
+            figure (134); clf
+            plot(ages, percentages_delta_nonartifact, 'bo')
+            hold on
+            plot(ages, percentages_nondelta_nonartifact, 'ro')
+            ylim([40 60])
+            
+            ylabel('Percentage of total SWRs')
+            xlabel('Age (dph)')
+            
+            
+            
+                plotpos = [0 0 18 10];
+                plot_filename = [dataDir '__SWRCount'];
+                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+                
+            
+            %%
+            figure(294); clf
+            negDays = [66 79  67 72 71];
+           
+            [val dphInds] = ismember(negDays, ages);
+              dphInds = sort(dphInds);
+              
+              subplot(1, 2, 1)
+            percentages_delta_nonartifact_neg = percentages_delta_nonartifact(dphInds);
+            percentages_nondelta_nonartifact_neg = percentages_nondelta_nonartifact(dphInds);
+            plot(percentages_delta_nonartifact_neg, 'bo')
+            hold on
+             plot(percentages_nondelta_nonartifact_neg, 'ro')
+            
+             title('large dEV')
+             xlim([0 6])
+             ylim([40 60])
+                 posDays = [52 62 78 53 54];
+            
+           
+            [val dphInds] = ismember(posDays, ages);
+              dphInds = sort(dphInds);
+              
+              subplot(1, 2, 2)
+            percentages_delta_nonartifact_pos = percentages_delta_nonartifact(dphInds);
+            percentages_nondelta_nonartifact_pos = percentages_nondelta_nonartifact(dphInds);
+            plot(percentages_delta_nonartifact_pos, 'bo')
+            hold on
+             plot(percentages_nondelta_nonartifact_pos, 'ro')
+            
+            title('small dEV')
+             xlim([0 6])
+             ylim([40 60])
+             
+               
+                plotpos = [0 0 18 10];
+                plot_filename = [dataDir '__SWRCountdEV'];
+                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+                
+             
+             %%
+            
+                for k = 1:2
+                    switch k
+                        case 1
+                            peakPower = delta_peakPower;
+                        case 2
+                            peakPower=   nondelta_peakPower;
+                    end
+                    % Example: C = {[1;2], [3;4;5], [6]}
+                    % 1. Find the maximum length
+                    maxLen = max(cellfun(@length, peakPower));
+                    % 2. Pad shorter cells with NaN
+                    C_padded = cellfun(@(x) [x; NaN(maxLen - length(x), 1)], peakPower, 'UniformOutput', false);
+                    % 3. Convert to matrix
+                    mat = cell2mat(C_padded);
+                    bla = isnan(mat);
+                    nonNanPowerVals{k} = mat(~bla);
+                end
+                
+                
+                
+                    
+                nChans = numel(d.D.chanNamesSet);
+                
+                timeWin_s = 20; %seconds
+                tOn = d.D.tOn_s;
+                
+                bins_per_min = 60/timeWin_s;
+                binsInHour = bins_per_min*60;
+                analysisBins_cnt = nHoursToAnalyze*binsInHour;
+                
+                %% d/y
+                
+                %subplot(3, 1, 1)
+                
+                isArtifact = d.D.isArtifact;
+                artifactInds = d.D.isArtifact; % identify where all the artifact files are
+                
+                LightsOff_min = d.INFO.totalDur_min_start_lightsOff;
+                LightsOff_s_bins = LightsOff_min*bins_per_min; %3 bins per min for 20 s bins
+                
+                % 2 hours after lights off = 360, 20 s bins
+                %1 min = 3 bins, 3*60 = 1 hr, 180*2  = 360
+                onsetBins = LightsOff_s_bins+hoursAfterLightsOff*binsInHour; % 2 hours after lights off
+                offsetBins = onsetBins+analysisBins_cnt;
+                tOn_toAnalyze = tOn(onsetBins:offsetBins);
+                artifactInds_toAnalyze = logical(artifactInds(onsetBins:offsetBins));
+                
+                %   minChannels = floor(nChans*.5);       % ripple must appear on >= channels
+                nBinsToAnalyze = numel(tOn_toAnalyze);
+                %
+                %% delta
+                
+                
+                
+                
+                delta_peakPower = BURSTS.Delta_peakTimes_peakPower;
+                delta_peaktime_s = BURSTS.Delta_peakTimes_abs_s;
+                
+                nondelta_peakPower = BURSTS.nonDelta_peakTimes_peakPower;
+                nondelta_peaktime_s = BURSTS.nonDelta_peakTimes_abs_s;
+                
+                deltaMask = BURSTS.deltaMask;
+                
+                deltaTime = sum(sum(deltaMask));
+                totalTime = 600000*size(deltaMask, 2);
+                
+                delta_SWRs  = sum(cellfun(@numel, delta_peaktime_s));
+                nondelta_SWRs  = sum(cellfun(@numel, nondelta_peaktime_s));
+                total_SWRs = delta_SWRs+nondelta_SWRs;
+                nonNanPowerVals = [];
+                for k = 1:2
+                    switch k
+                        case 1
+                            peakPower = delta_peakPower;
+                        case 2
+                            peakPower=   nondelta_peakPower;
+                    end
+                    % Example: C = {[1;2], [3;4;5], [6]}
+                    % 1. Find the maximum length
+                    maxLen = max(cellfun(@length, peakPower));
+                    % 2. Pad shorter cells with NaN
+                    C_padded = cellfun(@(x) [x; NaN(maxLen - length(x), 1)], peakPower, 'UniformOutput', false);
+                    % 3. Convert to matrix
+                    mat = cell2mat(C_padded);
+                    bla = isnan(mat);
+                    nonNanPowerVals{k} = mat(~bla);
+                end
+                
+                
+                
+                chanNamesSet = d.D.chanNamesSet;
+                   dph(s) = d.INFO.dph;
+                for ss = 1:nChans
+                    if d.INFO.excludeEphys == 1
+                        
+                        deltaNan_median(ss) = NaN;
+                        deltaNan_sem(ss) = NaN;
+                        gammaNan_median(ss) = NaN;
+                        gammaNan_sem(ss) =  NaN;
+                        
+                    else
+                        
+                        deltaNan = d.D.bufferedDelta_median(ss,onsetBins:offsetBins);
+                        deltaNan(artifactInds_toAnalyze) = NaN;
+                        
+                        deltaNan_median(ss) = nanmedian(deltaNan);
+                        deltaNan_std = nanstd(deltaNan);
+                        nNonNan = sum(~isnan(deltaNan));
+                        deltaNan_sem(ss) =  deltaNan_std/(sqrt(nNonNan));
+                        
+                        
+                        gammaNan = d.D.bufferedDeltaGammaRatio_median(ss,onsetBins:offsetBins);
+                        gammaNan(artifactInds_toAnalyze) = NaN;
+                        
+                        gammaNan_median(ss) = nanmedian(gammaNan);
+                        gammaNan_std = nanstd(gammaNan);
+                        nNonNan = sum(~isnan(gammaNan));
+                        gammaNan_sem(ss) =  gammaNan_std/(sqrt(nNonNan));
+                    end
+                    Chans{ss} = chanNamesSet{ss};
+                    
+                 
+                end
+                
+                
+                MedianDeltaMedian(s) = nanmedian(deltaNan_median);
+                MedianDeltaStd(s) = nanstd(deltaNan_median);
+                
+                MedianGammaMedian(s) = nanmedian(gammaNan_median);
+                MedianGammStd(s) = nanstd(gammaNan_median);
+                
+                allDeltaMedians(:,s) = deltaNan_median;
+                allDeltaNan_sem(:,s) = deltaNan_sem;
+                
+                
+                allGammaMedians(:,s) = gammaNan_median;
+                allGammaNan_sem(:,s) = gammaNan_sem;
+                
+                
+                allChans{s} = Chans;
+                
+                
+        end
+            
+         
         function obj = plot_LFP_Data(obj, dataDir)
             
             LFPdataNames = dir(fullfile(dataDir, '*mat*'));
@@ -800,7 +1372,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             colOrder = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560],...
                 [0.4660, 0.6740, 0.1880], [0.3010, 0.7450, 0.9330], [0.6350, 0.0780, 0.1840]};
             
-            for jq = 1:nEntries
+            for jq = [23] %7:nEntries
                 if ~isempty(obj.EPHYS.EphysRecName{jq}) % no ephys recording
                     
                     pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{jq} obj.PATH.dirD];
@@ -1842,7 +2414,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
               end
                     
             artifactChan = 1;
-            for j = 1:nEntries
+            for j = 7%:nEntries %%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
                 if ~isempty(obj.EPHYS.EphysRecName{j})
                     
@@ -3990,7 +4562,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     case 1 % First
                         xlims = [datetime([dates{j} ' 9:00:00']) datetime([dates{j} ' 18:00:00'])];
                         lineData1_time = obj.VIDEO.LastFrame(ind-1); % this is the last day from the previous day!!!
-                        lineData2_time = obj.VIDEO.LightsOn(ind);
+                        lineData2_time = obj.VIDEO.LightsOn(ind-1);% this is the light on from the previous day!!!
                         
                     case 2 %last
                         xlims = [datetime([dates{j} ' 14:00:00']) datetime([dates{j} ' 23:00:00'])];
@@ -4275,13 +4847,16 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             [h,p] = kstest(dEV_LastToFirst);
             [h,p] = lillietest(dEV_LastToFirst);
             
+            allDates = d.allDates;
             
-            
-            
+            dph = 52:1:86; % w025
             
             %%
             
-            sorted_dEV=sort(dEV_LastToFirst); %most negative first
+            [sorted_dEV, inds] =sort(dEV_LastToFirst); %most negative first
+            
+            sortedDates = allDates(inds);
+            sorted_dph = dph(inds);
             
             percentile4ScaleEstimation_low = 20;
             percentile4ScaleEstimation_hi = 80;
@@ -4327,7 +4902,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             mean_dEV_LF = mean_dEV;
             %% histogram of values
             figure  (119);
-            halfStd = 0.02;
+            halfStd = 0.015;
             edges = mean_dEV-(2*std_dEV):halfStd :mean_dEV+(2*std_dEV);
             
             hold on
@@ -4335,11 +4910,15 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             plot(median_dEV, 4, 'kd')
             
             histogram(dEV_LastToFirst, edges);
+            
+            hold on 
+            xline(thresh_low, ':');
+            xline(thresh_hi, ':');
             xlabel('Overnight \Delta EV')
             ylabel('Count')
             
              figure (119);
-            plotpos = [0 0 25 20];
+            plotpos = [0 0 15 10];
             plotName = [dEV_dir obj.INFO.birdName{:} '_EV_diff_largeValsHistogram'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             print_in_A4(0, plotName, '-depsc', 0, plotpos);
@@ -5552,7 +6131,18 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         
                 end
                 
-                %allPooledVars = d.allPooledVars;
+                FirstPooledMeans(j) = nanmean(d.allPooledMeans{1});
+                 FirstStd = std(d.allPooledMeans{1});
+                    FirstSem(j) = FirstStd / (sqrt(numel(d.allPooledMeans{1})));
+                
+                    LastPooledMeans(j)  = nanmean(d.allPooledMeans{end});
+                 LastStd = std(d.allPooledMeans{end});
+                    LastSem(j) = LastStd / (sqrt(numel(d.allPooledMeans{end})));
+                
+                    
+                    ToPlot(j,:) = [FirstPooledMeans(j) LastPooledMeans(j)];
+                    Errs(j,:) = [FirstSem(j) LastSem(j)];
+                    %allPooledVars = d.allPooledVars;
                 allPooledVars = d.allPooledMeans;
                 
                 thisMean = []; thissem = [];
@@ -5614,12 +6204,27 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 plot(allSurgerydays(j), allMeans_dph(j,FirstNonnanvalus(1)), 'color', colss(j,:), 'marker', '*')
             end
             
+            
             ylabel('Entropy Variance')
             xlabel('dph')
             ylim([0 1])
             
             plotpos = [0 0 20 15];
             plotName = [dirToLoad 'AllBirds_EV_over_DPH'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+            
+            
+            
+            
+            figure (105); clf
+            errorbar(ToPlot', Errs', 'marker', '*')
+            xlim([0 3])
+            ylim([0 0.7])
+              L = legend(leg_text);
+               plotpos = [0 0 10 15];
+            plotName = [dirToLoad 'AllBirds_EV_over_DPH_firstLast'];
             print_in_A4(0, plotName, '-djpeg', 0, plotpos);
             print_in_A4(0, plotName, '-depsc', 0, plotpos);
             

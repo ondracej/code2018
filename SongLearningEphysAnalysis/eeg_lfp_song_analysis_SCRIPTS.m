@@ -255,7 +255,7 @@ F_or_L_switch = 2; %1= L-F, 2= F-L
 %% make a plot of entropy versus time
 
 % Make sure to move the entropy files into a First and Last folder!
-firstOrLastSwitch = 2; % 1 = First, 2 = Last, 0 = both
+firstOrLastSwitch = 1; % 1 = First, 2 = Last, 0 = both
 data_OBJ = meta_make_plot_of_entropy_with_times_first_last(data_OBJ, firstOrLastSwitch);
 
 data_OBJ = meta_make_histogram_plot_first_last_times(data_OBJ);
@@ -374,6 +374,15 @@ dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\'];
 dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\'];
 %dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\'];
 data_OBJ = plot_LFP_Data(data_OBJ, dataDir );
+
+data_OBJ = plot_LFP_Delta_Gamma_over_days(data_OBJ, dataDir)
+
+dataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\';
+data_OBJ = plot_LFP_BursAnalysis_over_days(data_OBJ, dataDir)
+
+dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\'];
+data_OBJ = addInfoToMatFile(data_OBJ, dataDir)
+
 
 data_OBJ = plotArtifactsOverDays(data_OBJ, dataDir );
 
