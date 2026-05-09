@@ -40,7 +40,7 @@ classdef chronoAnalysis_Obj < handle
         %%
         function [] = makeMultipleMoviesFromImages(obj, imageDir, movieName, saveDir, VideoFrameRate, doRotate, rotationAngle)
             
-            fileFormat = 4; % (1)- tif, (2) -.jpg
+            fileFormat = 3; % (1)- tif, (2) -.jpg
             %doRotate = 1;
             
             %%
@@ -51,7 +51,7 @@ classdef chronoAnalysis_Obj < handle
                     imgFormat = '*.jpg';
                 case 3
                     imgFormat = '*.jpg';
-                     case 4
+                case 4
                     imgFormat = '*.png';
             end
             
@@ -59,100 +59,102 @@ classdef chronoAnalysis_Obj < handle
             imageNames = {imageNames.name}';
             
             nImags = numel(imageNames);
-            underscore = '_';
-            period = '.';
+            %             underscore = '_';
+            %             period = '.';
+            %
+            %             endingTxt_dbl = [];
+            %
+            %             for o = 1:nImags
+            %                 underscoreInd = find(imageNames{o} == underscore);
+            %                 periodInd = find(imageNames{o} == period);
+            %                 %endingTxt_dbl(o) = str2double(imageNames{o}(underscoreInd(end)+1:periodInd(1)-1));
+            %                 endingTxt_dbl(o) = str2double(imageNames{o}(4:periodInd(1)-1));
+            %             end
+            %
+            %             [bla, inds] = sort(endingTxt_dbl, 'ascend');
+            %
+            %             resortedNames = imageNames(inds);
+            %             FrameCut = 2*VideoFrameRate*60*60; % 2 hour
+            %
+            %             if nImags > FrameCut
+            %                 tOn = 1:FrameCut:nImags;
+            %                 nParts = numel(tOn);
+            %             else
+          %  tOn = 1;
+          %  nParts = 1;
+            %end
             
-            endingTxt_dbl = [];
+            %             for q = 1:nParts
+            %
+            %                 FrameOn = tOn(q);
+            %                 FrameOff = tOn(q)+FrameCut;
+            %
+            %                 if q== nParts
+            %                     FrameOff =nImags;
+            %                 end
             
-            for o = 1:nImags
-                underscoreInd = find(imageNames{o} == underscore);
-                periodInd = find(imageNames{o} == period);
-                %endingTxt_dbl(o) = str2double(imageNames{o}(underscoreInd(end)+1:periodInd(1)-1));
-                endingTxt_dbl(o) = str2double(imageNames{o}(4:periodInd(1)-1));
-            end
-            
-            [bla, inds] = sort(endingTxt_dbl, 'ascend');
-            
-            resortedNames = imageNames(inds);
-            FrameCut = 2*VideoFrameRate*60*60; % 2 hour
-            
-            if nImags > FrameCut
-                tOn = 1:FrameCut:nImags;
-                nParts = numel(tOn);
-            else
-                tOn = 1;
-                nParts = 1;
-            end
-            
-            for q = 1:nParts
+            %%
+            movName = [saveDir{:} movieName '_rotated'];
+            %% Create Output Video
+            outputVideo = VideoWriter(fullfile(movName));
+            outputVideo.FrameRate = VideoFrameRate;
+            open(outputVideo)
+            %                 FrameOn = 1;
+            %                 FrameOff = nImags;
+            %% Read in Frames
+            tic
+            for f = 1:nImags-1
+                img = imread([imageDir{:} imageNames{f}]);
                 
-                FrameOn = tOn(q);
-                FrameOff = tOn(q)+FrameCut;
+                %J = adapthisteq(img,'clipLimit',0.02,'Distribution','rayleigh');
+                %imshowpair(I,J,'montage');
+               % rotationAngle = -35;
                 
-                if q== nParts
-                    FrameOff =nImags;
+                if doRotate
+                    
+                    img2 = imrotate(img,rotationAngle, 'bilinear');
+                    %imshow(img2)
+                    %  imshow(img)
                 end
                 
-                %%
-                movName = [saveDir{:} movieName '_' sprintf('%03d',q)];
-                %% Create Output Video
-                outputVideo = VideoWriter(fullfile(movName));
-                outputVideo.FrameRate = 10;
-                open(outputVideo)
-                
-                %% Read in Frames
-                tic
-                for f = FrameOn:FrameOff-1
-                    img = imread([imageDir{:} resortedNames{f}]);
-                  
-                    %J = adapthisteq(img,'clipLimit',0.02,'Distribution','rayleigh');
-                    %imshowpair(I,J,'montage');
+                if fileFormat == 1
+                    img2 = im2uint8(img); % need to convert for .tif files
+                elseif fileFormat ==2
+                    img2 = img;
+                elseif fileFormat ==3
                     
-                    if doRotate
-                        
-                        img = imrotate(img,rotationAngle, 'bilinear');
-                        %img2 = imrotate(img,rotationAngle, 'bilinear');
-                        %imshow(img2)
-                    end
+                    grayImage = rgb2gray(img2);
                     
-                    if fileFormat == 1
-                        img2 = im2uint8(img); % need to convert for .tif files
-                    elseif fileFormat ==2
-                        img2 = img;
-                    elseif fileFormat ==3
-                        
-                        grayImage = rgb2gray(img);
-                        
-                        %imshow(grayImage, []);
-                        %pout_imadjust = imadjust(grayImage );
-                        %pout_histeq = histeq(grayImage);
-                        pout_histeq = adapthisteq (grayImage);
-                        %figure; imshow(grayImage); title('original')
-                        %figure; imshow(pout_imadjust); title('contrast')
-                        %figure; imshow(pout_histeq); title('histeq')
-                        
-                        %J = filter2(fspecial('sobel'),grayImage);
-                        imshow(pout_histeq)
-                        ax = gca;
-                        ax.Units = 'pixels';
-                        img2 = getframe(ax);
-                        img2 = img2.cdata;
-                        
-                        %figure; imshow(img2)
-                         elseif fileFormat ==4
-                        img2 = img;
-                    end
-                    writeVideo(outputVideo,img2)
-                    disp(['Frame: ' num2str(f) '/' num2str(nImags)]);
+                    %imshow(grayImage, []);
+                    %pout_imadjust = imadjust(grayImage );
+                    %pout_histeq = histeq(grayImage);
+                    pout_histeq = adapthisteq (grayImage);
+                    %figure; imshow(grayImage); title('original')
+                    %figure; imshow(pout_imadjust); title('contrast')
+                    %figure; imshow(pout_histeq); title('histeq')
                     
+                    %J = filter2(fspecial('sobel'),grayImage);
+                    imshow(pout_histeq)
+                    ax = gca;
+                    ax.Units = 'pixels';
+                    img2 = getframe(ax);
+                    img2 = img2.cdata;
+                    
+                    %figure; imshow(img2)
+                elseif fileFormat ==4
+                    img2 = img;
                 end
-                toc
+                writeVideo(outputVideo,img2)
+                disp(['Frame: ' num2str(f) '/' num2str(nImags)]);
                 
-                %%
-                close(outputVideo);
-                disp(['Created Video: ' movName]);
             end
+            toc
+            
+            %%
+            close(outputVideo);
+            disp(['Created Video: ' movName]);
         end
+        %end
         
         %%
         

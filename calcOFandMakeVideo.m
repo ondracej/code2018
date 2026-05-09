@@ -1,4 +1,4 @@
-function [] = calcOFandMakeVideo()
+function [] = calcOFandMakeVideo(VidDir,videoToAnalyze )
 
 dbstop if error
 
@@ -9,8 +9,8 @@ elseif ispc
 end
 
 %% Input video data
-VidDir = 'E:\ChronoAnalysis\002_Vids_Nov19\';
-videoToAnalyze = 'faa1-002-Nov19_contrastadj_001.avi';
+%VidDir = 'E:\ChronoAnalysis\002_Vids_Nov19\';
+%videoToAnalyze = 'faa1-002-Nov19_contrastadj_001.avi';
 
 AnalysisNumber = 1; % in case you want to analyze several versions
 
