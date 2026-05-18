@@ -6111,23 +6111,28 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         d = load([dirToLoad w025_file]);
                         dph = 52:86;
                         surgery = 47;
+                        bird = 'w025';
                     case 2
                         d = load([dirToLoad w027_file]);
                         dph = [60:86];
                         surgery = 58;
+                        bird = 'w027';
                     case 3
                         d = load([dirToLoad w038_file]);
                         %dph = [44:69];
                         dph = [53:69];
                         surgery = 47;
+                        bird = 'w038';
                     case 4
                         d = load([dirToLoad w037_file]);
                         dph = 48:77; % bird with other male
                         surgery = 47;
+                        bird = 'w037';
                     case 5
                         d = load([dirToLoad w044_file]);
                         dph = [78:85 88:96]; 
                         surgery = 77;
+                        bird = 'w044';
                         
                 end
                 
@@ -6159,9 +6164,58 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 all_dph{j} = dph;
                 min_dph(j) = min(dph);
                 max_dph(j) = max(dph);
-                
+                birdName{j} = bird;
                 allSurgerydays(j) = surgery;
             end
+            
+            %% Unpack variables
+            cnt = 1;
+            allbirds = [];
+            alldph = [];
+            allEVmeans = [];
+            birdID = [];
+            for q = 1:5
+                thismeans = allMeans{q};
+                thisdph = all_dph{q};
+                nitems = numel(thismeans);
+                
+                
+                for qq = 1:nitems
+                allbirds{cnt} =  birdName{q};
+                birdID(cnt) =  q;
+                alldph(cnt) =  thisdph(qq);
+                allEVmeans(cnt) =  thismeans(qq);
+                cnt = cnt+1;
+                end
+            end
+            
+            %%
+            SubjectID = allbirds;
+            Age = alldph;
+            EntropyVariance = allEVmeans;
+            %% Example data structure
+% Columns:
+% SubjectID        -> subject identifier
+% Age              -> age at measurement
+% EntropyVariance  -> entropy variance value
+
+% Example:
+% T = table(SubjectID, Age, EntropyVariance);
+
+%% Convert subject IDs to categorical
+
+T = table(SubjectID, Age, EntropyVariance);
+
+T.SubjectID = categorical(T.SubjectID);
+         
+lme = fitlme(T, 'EntropyVariance ~ Age + (1|SubjectID)');
+            
+            summary(T)
+            
+            T.Properties.VariableNames
+            
+            
+            
             min_all_dph = min(min_dph);
             max_all_dph = max(max_dph);
             disp('')
