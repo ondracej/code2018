@@ -2,7 +2,7 @@ close all
 clear all
 
 pathToCodeRepository = 'C:\Users\Neuropix\Documents\GitHub\code2018\';
-vidsToAnalyze = {'X:\ChickenData\FromNadia_April2026\week1\Day2-26.03.26\8-8.30-morning\ARC-TCH01-00-085635-090000.mp4'};
+vidsToAnalyze = {'X:\ChickenData\FromNadia_April2026\week1\Day4-28.03.26\8-8.30-morning\ARC-T-0-Raum4-0-20260328085024-20260328090000.mp4'};
 
 %%
 addpath(genpath(pathToCodeRepository)) 
@@ -17,9 +17,9 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
 
 %% Make movies from images
 
- imageDir = {'X:\ChickenData\FromNadia_April2026\week1\Day2-26.03.26\8-8.30-morning\ARC-THC01-00-085635-900000\'};
- movieName = 'ARC-TCH01-00-085635-090000';
- saveDir = {'X:\ChickenData\FromNadia_April2026\week1\Day2-26.03.26\8-8.30-morning\OF_Analysis\'};
+ imageDir = {'X:\ChickenData\FromNadia_April2026\week1\Day4-28.03.26\8-8.30-morning\ARC-T-0-Raum4-Tiff\'};
+ movieName = 'ARC-T-0-Raum4-tiff';
+ saveDir = {'X:\ChickenData\FromNadia_April2026\week1\Day4-28.03.26\8-8.30-morning\OF_Analysis\'};
 
  
  VideoFrameRate = 20; % 20 fps
@@ -41,8 +41,8 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
  
 %%
 
-VidDir = 'X:\ChickenData\FromNadia_April2026\week1\Day2-26.03.26\8-8.30-morning\OF_Analysis\';
-videoToAnalyze = 'ARC-TCH01-00-085635-090000_rotated.avi';
+VidDir = 'X:\ChickenData\FromNadia_April2026\week1\Day4-28.03.26\8-8.30-morning\OF_Analysis\';
+videoToAnalyze = 'ARC-T-0-Raum4_rotated.avi';
  calcOFandMakeVideo(VidDir,videoToAnalyze )
 
 

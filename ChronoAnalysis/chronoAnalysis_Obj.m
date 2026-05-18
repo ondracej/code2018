@@ -40,7 +40,7 @@ classdef chronoAnalysis_Obj < handle
         %%
         function [] = makeMultipleMoviesFromImages(obj, imageDir, movieName, saveDir, VideoFrameRate, doRotate, rotationAngle)
             
-            fileFormat = 3; % (1)- tif, (2) -.jpg
+            fileFormat = 1; % (1)- tif, (2) -.jpg
             %doRotate = 1;
             
             %%
@@ -118,32 +118,39 @@ classdef chronoAnalysis_Obj < handle
                 end
                 
                 if fileFormat == 1
-                    img2 = im2uint8(img); % need to convert for .tif files
+                    img2 = im2uint8(img2); % need to convert for .tif files
+                     grayImage = rgb2gray(img2);
                 elseif fileFormat ==2
                     img2 = img;
                 elseif fileFormat ==3
                     
                     grayImage = rgb2gray(img2);
-                    
+                    img2 = grayImage;
+                elseif fileFormat ==4
+                    img2 = img;
+                end
+                    if f ==1
+                    [~,rectout] = imcrop(grayImage)
+                    end
+                    J = imcrop(grayImage, rectout);
+                    imshow(J);
                     %imshow(grayImage, []);
                     %pout_imadjust = imadjust(grayImage );
                     %pout_histeq = histeq(grayImage);
-                    pout_histeq = adapthisteq (grayImage);
+                    %pout_histeq = adapthisteq (grayImage);
                     %figure; imshow(grayImage); title('original')
                     %figure; imshow(pout_imadjust); title('contrast')
                     %figure; imshow(pout_histeq); title('histeq')
                     
                     %J = filter2(fspecial('sobel'),grayImage);
-                    imshow(pout_histeq)
+                    %imshow(pout_histeq)
                     ax = gca;
                     ax.Units = 'pixels';
                     img2 = getframe(ax);
                     img2 = img2.cdata;
                     
                     %figure; imshow(img2)
-                elseif fileFormat ==4
-                    img2 = img;
-                end
+              
                 writeVideo(outputVideo,img2)
                 disp(['Frame: ' num2str(f) '/' num2str(nImags)]);
                 

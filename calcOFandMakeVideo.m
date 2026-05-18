@@ -87,7 +87,30 @@ fV1(1)=0;% suppress the artifact at the first frame
 fV2(1)=0; 
 
 %% Plot the optic flow with a moving line
-fV1=fV1./(max(max(fV1)));
+fV1a=fV1./(max(max(fV1)));
+
+fV2a=fV2./(max(max(fV2)));
+
+lightFlicker = 0.7;
+bla = find(fV1 >= lightFlicker)
+
+
+xes = 1:1:numel(fV1a);
+xes_s = xes/20;
+
+figure; plot(xes_s, fV1a)
+xlim([0 100])
+xlabel('Time (s)')
+fV1(bla) = NaN;
+keyboard
+
+figure; 
+subplot(2, 1, 1)
+plot(smooth(fV1, 20))
+subplot(2, 1, 2)
+plot(smooth(fV2, 20))
+
+
 
 redcolor = [150 50 0];
 bluecolor = [0 50 150];
