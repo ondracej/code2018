@@ -6191,6 +6191,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             %%
             SubjectID = allbirds;
+            SubjectID = birdID;
             Age = alldph;
             EntropyVariance = allEVmeans;
             %% Example data structure

@@ -42,7 +42,7 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
 %%
 
 VidDir = 'X:\ChickenData\FromNadia_April2026\week1\Day4-28.03.26\8-8.30-morning\OF_Analysis\';
-videoToAnalyze = 'ARC-T-0-Raum4_rotated.avi';
+videoToAnalyze = 'ARC-T-0-Raum4-tiff_rotated.avi';
  calcOFandMakeVideo(VidDir,videoToAnalyze )
 
 
