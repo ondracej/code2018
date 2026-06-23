@@ -1,86 +1,93 @@
 function [] = eeg_lfp_song_analysis_makeComparisonsAcrossFiles_CorCoh()
 
+% 
+% NegDir = 'G:\Dropbox\02_talks\2026\EBM\Datasets\NegEV\';
+% PosDir = 'G:\Dropbox\02_talks\2026\EBM\Datasets\posEV\';
+% 
+% %% delta/gamma files
+% %NegLFPfiles = {'chronic_2021-07-30_20-54-58_allLFP_dyData-7' , 'chronic_2021-07-31_21-50-14_allLFP_dyData-7', 'chronic_2021-08-04_22-02-26_CorCoh-7', 'chronic_2021-08-05_22-06-10_allLFP_dyData-7', 'chronic_2021-08-12_21-55-12_allLFP_dyData-6'};
+% NegFiles = {'chronic_2021-07-30_20-54-58_CorCoh-7' , 'chronic_2021-07-31_21-50-14_CorCoh-7', 'chronic_2021-08-04_22-02-26_CorCoh-7', 'chronic_2021-08-05_22-06-10_CorCoh-7', 'chronic_2021-08-12_21-55-12_CorCoh-6'};
+% %NegFiles = {'chronic_2021-07-30_20-54-58_allLFP_dyData-7' , 'chronic_2021-08-12_21-55-12_allLFP_dyData-6', 'chronic_2021-07-31_21-50-14_allLFP_dyData-7'};
+% PosFiles = {'chronic_2021-07-16_19-14-55_CorCoh-7', 'chronic_2021-07-17_21-27-58_CorCoh-7', 'chronic_2021-07-18_21-43-38_CorCoh-7', 'chronic_2021-07-26_21-35-23_CorCoh-7', 'chronic_2021-08-11_20-48-49_CorCoh-6', };
+% %PosLFPfiles = {'chronic_2021-07-16_19-14-55_allLFP_dyData-7', 'chronic_2021-07-26_21-35-23_allLFP_dyData-7', 'chronic_2021-08-11_20-48-49_allLFP_dyData-6', 'chronic_2021-07-17_21-27-58_allLFP_dyData-7', 'chronic_2021-07-18_21-43-38_allLFP_dyData-7'};
+% nRounds = 2;
+% 
+% 
+% %%
+% negages = [66 67 71 72 79];
+% posages = [52 53 54 62 78];
+% 
+% [h, p] = ranksum(negages, posages)
+% 
+% figure(134); clf
+% xes = ones(1,numel(negages));
+% 
+% plot(xes, negages, 'ko')
+% hold on
+% 
+% plot(xes*2, posages, 'kd')
+% hold on
+% xlim([0 3])
+% 
+% ylabel ('Age (dph)')
+% 
+% 
+%                
+%                 plotpos = [0 0 18 10];
+%                 plot_filename = [NegDir '__agestats'];
+%                 print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+%                 print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+%                 
+% 
+% 
+% 
+% for j = 1:nRounds
+%     
+%     switch j
+%         case 1
+%             lab = 'Large \Delta EV';
+%             nFiles= numel(NegFiles);
+%             dataDir = NegDir;
+%             files = NegFiles;
+%           %  lfpFiles = NegLFPfiles;
+%         case 2
+%             lab = 'Small \Delta EV';
+%             nFiles= numel(PosFiles);
+%             dataDir = PosDir;
+%             files = PosFiles;
+%            % lfpFiles = PosLFPfiles;
+%     end
+%     
+%     nHoursToAnalyze = 9;
+%             hoursAfterLightsOff = 2;
+%             
+%             
+%             MedianDeltaMedian = [];
+%             MedianDeltaStd = [];
+%             MedianDeltaSEM = [];
+%             
+%             MedianGammaMedian = [];
+%             MedianGammStd = [];
+%             MedianGammaSEM = [];
+%             
+%             allDeltaMedians = [];
+%             allDeltaNan_sem = [];
+%             
+%             allGammaMedians = [];
+%             allGammaNan_sem = [];
+%             
+%         
+%         allChans = [];
+%           nanmedianCorrs = [];
 
-NegDir = 'G:\Dropbox\02_talks\2026\EBM\Datasets\NegEV\';
-PosDir = 'G:\Dropbox\02_talks\2026\EBM\Datasets\posEV\';
 
-%% delta/gamma files
-%NegLFPfiles = {'chronic_2021-07-30_20-54-58_allLFP_dyData-7' , 'chronic_2021-07-31_21-50-14_allLFP_dyData-7', 'chronic_2021-08-04_22-02-26_CorCoh-7', 'chronic_2021-08-05_22-06-10_allLFP_dyData-7', 'chronic_2021-08-12_21-55-12_allLFP_dyData-6'};
-NegFiles = {'chronic_2021-07-30_20-54-58_CorCoh-7' , 'chronic_2021-07-31_21-50-14_CorCoh-7', 'chronic_2021-08-04_22-02-26_CorCoh-7', 'chronic_2021-08-05_22-06-10_CorCoh-7', 'chronic_2021-08-12_21-55-12_CorCoh-6'};
-%NegFiles = {'chronic_2021-07-30_20-54-58_allLFP_dyData-7' , 'chronic_2021-08-12_21-55-12_allLFP_dyData-6', 'chronic_2021-07-31_21-50-14_allLFP_dyData-7'};
-PosFiles = {'chronic_2021-07-16_19-14-55_CorCoh-7', 'chronic_2021-07-17_21-27-58_CorCoh-7', 'chronic_2021-07-18_21-43-38_CorCoh-7', 'chronic_2021-07-26_21-35-23_CorCoh-7', 'chronic_2021-08-11_20-48-49_CorCoh-6', };
-%PosLFPfiles = {'chronic_2021-07-16_19-14-55_allLFP_dyData-7', 'chronic_2021-07-26_21-35-23_allLFP_dyData-7', 'chronic_2021-08-11_20-48-49_allLFP_dyData-6', 'chronic_2021-07-17_21-27-58_allLFP_dyData-7', 'chronic_2021-07-18_21-43-38_allLFP_dyData-7'};
-nRounds = 2;
+CohDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\'
 
-
-%%
-negages = [66 67 71 72 79];
-posages = [52 53 54 62 78];
-
-[h, p] = ranksum(negages, posages)
-
-figure(134); clf
-xes = ones(1,numel(negages));
-
-plot(xes, negages, 'ko')
-hold on
-
-plot(xes*2, posages, 'kd')
-hold on
-xlim([0 3])
-
-ylabel ('Age (dph)')
-
-
-               
-                plotpos = [0 0 18 10];
-                plot_filename = [NegDir '__agestats'];
-                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-                print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
-                
-
-
-
-for j = 1:nRounds
-    
-    switch j
-        case 1
-            lab = 'Large \Delta EV';
-            nFiles= numel(NegFiles);
-            dataDir = NegDir;
-            files = NegFiles;
-          %  lfpFiles = NegLFPfiles;
-        case 2
-            lab = 'Small \Delta EV';
-            nFiles= numel(PosFiles);
-            dataDir = PosDir;
-            files = PosFiles;
-           % lfpFiles = PosLFPfiles;
-    end
-    
-    nHoursToAnalyze = 9;
-            hoursAfterLightsOff = 2;
-            
-            
-            MedianDeltaMedian = [];
-            MedianDeltaStd = [];
-            MedianDeltaSEM = [];
-            
-            MedianGammaMedian = [];
-            MedianGammStd = [];
-            MedianGammaSEM = [];
-            
-            allDeltaMedians = [];
-            allDeltaNan_sem = [];
-            
-            allGammaMedians = [];
-            allGammaNan_sem = [];
-            
-        
-        allChans = [];
-          nanmedianCorrs = [];
+   fileNames = dir(fullfile(CohDir, '*COH*'));
+   
+nFiles = numel(fileNames);
     for k = 1:nFiles
-        c =  load([dataDir files{k}]);
+        c =  load([CohDir fileNames(k).name]);
        % d = load([dataDir lfpFiles{k}]);
         corrs = c.CORCOH.corrR;
         cohDelta = c.CORCOH.deltaCOH;

@@ -16,18 +16,19 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             
             [filepath,name,ext] = fileparts(xlsFile);
             
+            
             %% Loading the file
-            opts = spreadsheetImportOptions("NumVariables", 19);
+            opts = spreadsheetImportOptions("NumVariables", 21);
             
             % Specify sheet and range
             opts.Sheet = "Sheet1";
-            opts.DataRange = "A" + startRow(1) + ":S" + endRow(1);
+            opts.DataRange = "A" + startRow(1) + ":U" + endRow(1);
             
             % Specify column names and types
-            opts.VariableNames = ["dph", "date", "SongsAM", "SongsPM", "Video", "VidDir", "Ephys", "EphysRecName", "EEG_L_Ant", "EEG_R_Ant", "EEG_L_Post", "EEG_R_Post", "LFP_m", "LFP_l", "FirstFrame", "LastFrame", "LightsOff", "LightsOn", "FramesOffOn", "LFP_chans"];
-            opts.VariableTypes = ["double", "datetime", "double", "double", "double", "string", "double", "string", "double", "double", "double", "double", "double", "double", "string", "string", "string", "string", "string", "string"];
+            opts.VariableNames = ["dph", "date", "SongsAM", "SongsPM", "Video", "VidDir", "Ephys", "EphysRecName", "EEG_L_Ant", "EEG_R_Ant", "EEG_L_Post", "EEG_R_Post", "LFP_m", "LFP_l", "FirstFrame", "LastFrame", "LightsOff", "LightsOn", "FramesOffOn", "LFP_chans", "EEG_chans"];
+            opts.VariableTypes = ["double", "datetime", "double", "double", "double", "string", "double", "string", "double", "double", "double", "double", "double", "double", "string", "string", "string", "string", "string", "string", "string"];
             opts = setvaropts(opts, [6, 8, 15, 16, 17, 18, 19], "WhitespaceRule", "preserve");
-            opts = setvaropts(opts, [6, 8, 15, 16, 17, 18, 19], "EmptyFieldRule", "auto");
+            opts = setvaropts(opts, [6, 8, 15, 16, 17, 18, 19, 20, 21], "EmptyFieldRule", "auto");
             
             % Import the data
             T = readtable(xlsFile, opts, "UseExcel", false);
@@ -142,6 +143,14 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 
             end
             
+            EEG_chans = [];
+            for j =1:nEntries
+                thisText = T.EEG_chans{j};
+                
+                EEG_chans{j} = str2num(thisText);
+                
+            end
+            
             
             obj.EPHYS.Ephys = T.Ephys;
             obj.EPHYS.EphysRecName = T.EphysRecName;
@@ -153,6 +162,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             obj.EPHYS.LFP_l = T.LFP_l;
             obj.EPHYS.LFP_m = T.LFP_m;
             obj.EPHYS.LFP_chans = LFP_chans;
+            obj.EPHYS.EEG_chans = EEG_chans;
             
             
             %% PATH stuff
@@ -1372,7 +1382,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             colOrder = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560],...
                 [0.4660, 0.6740, 0.1880], [0.3010, 0.7450, 0.9330], [0.6350, 0.0780, 0.1840]};
             
-            for jq = [23] %7:nEntries
+            for jq = 1:nEntries
                 if ~isempty(obj.EPHYS.EphysRecName{jq}) % no ephys recording
                     
                     pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{jq} obj.PATH.dirD];
@@ -1385,27 +1395,66 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     a = load([ephysPath LFPNames]); % loads the LFP data file which has info on it
                     artifactInds = a.D.isArtifact; % identify where all the artifact files are
                     
-                    chanSet = a.D.chanNamesSet;
-                    nChans = numel(chanSet);
                     
-                    % channelOrder = [6 4 5 3 2 1 ]; %w025
-                    %channelOrder = [6 4 7 5 3 2 1 ]; %w025
-                    % channelOrder = [2 3 5 7 4  6 8 1 ]; %w027
-                    %channelOrder = [2 3 5 7 4  6 1 ]; %w027 7 chans
-                    channelOrder = 1:1:nChans;
-                    chanSetRemap = [];
+                    EEG_chans = obj.EPHYS.EEG_chans{jq};
+                    LFP_chans = obj.EPHYS.LFP_chans{jq};
+                    
+                    chanSet = [EEG_chans LFP_chans];
+                   
+                    %% Find the real names
+                     chanNames = dir(fullfile(pathToData, '*.continuous'));
+                    
+                    index = strfind({chanNames.name}, ['CH']);
+                    idx = find(~cellfun(@isempty,index));
+                    chanNames =  chanNames(idx);
+                    nChans = numel(chanNames);
+                    
                     
                     dot = '.';
-                    underscore = '_';
-                    for c = 1:nChans
-                        chanSetRemap{c} =  chanSet{channelOrder(c)};
-                        longName = chanSetRemap{c};
-                        bla = find(longName == dot);
-                        bla2 = find(longName == underscore);
-                        shortName{c} = longName(bla2+3:bla-1);
+                    H = 'H';
+                    match = [];
+                    for h = 1:nChans
+                        thisName = chanNames(h).name;
+                        bla = find(thisName == dot);
+                        bla2 = find(thisName == H);
+                        shortName{h} = str2num(thisName(bla2+1:bla-1));
+                        match(h) = sum(ismember(chanSet, shortName{h}));
                     end
                     
-                    chanSet = chanSetRemap;
+                       chanNamesSet = [];
+                    cnt = 1;
+                    for jj = 1:nChans
+                        if match(jj) ==1
+                            chanNamesSet{cnt} = chanNames(jj).name;
+                            cnt = cnt+1;
+                        else
+                        end
+                    end
+                    
+                    nChans = numel(chanNamesSet);
+                    
+%                     
+%                     chanSet = a.D.chanNamesSet;
+%                     nChans = numel(chanSet);
+%                     
+%                     % channelOrder = [6 4 5 3 2 1 ]; %w025
+%                     %channelOrder = [6 4 7 5 3 2 1 ]; %w025
+%                     % channelOrder = [2 3 5 7 4  6 8 1 ]; %w027
+%                     %channelOrder = [2 3 5 7 4  6 1 ]; %w027 7 chans
+%                     channelOrder = 1:1:nChans;
+%                     chanSetRemap = [];
+%                     
+%                     dot = '.';
+%                     underscore = '_';
+%                     for c = 1:nChans
+%                         chanSetRemap{c} =  chanSet{channelOrder(c)};
+%                         longName = chanSetRemap{c};
+%                         bla = find(longName == dot);
+%                         bla2 = find(longName == underscore);
+%                         shortName{c} = longName(bla2+3:bla-1);
+%                     end
+%                     
+                  %  chanSet = chanSetRemap;
                     
                     
                     
@@ -1444,7 +1493,8 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         if ~isArtifact
                             AllDataBin_clean_ds = [];
                             for oo = 1:nChans
-                                thisChan = chanSet{oo};
+                                thisChan = chanNamesSet{oo};
+                                
                                 filename = [pathToData thisChan];
                                 [dataBin, timestamps, info] = load_open_ephys_data_chunked(filename,tOn_toAnalyze(o), tOn_toAnalyze(o)+timeWin_s);
                                 %dataBin_clean = dataBin - mean(dataBin);
@@ -6174,11 +6224,17 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             alldph = [];
             allEVmeans = [];
             birdID = [];
+               markers = {'v', 'o', '^', 'sq', 'd'};
+               %cols = {[0, 0.4470, 0.7410]; [0.8500, 0.3250, 0.0980]; [0.8500, 0.3250, 0.0980]; [0.4660, 0.6740, 0.1880]; [0.4940, 0.1840, 0.5560]};
+               cols = {[0, 0.4470, 0.7410]; [0.9290, 0.6940, 0.1250]; [0.8500, 0.3250, 0.0980]; [0.4660, 0.6740, 0.1880]; [0.4940, 0.1840, 0.5560]};
             for q = 1:5
                 thismeans = allMeans{q};
                 thisdph = all_dph{q};
                 nitems = numel(thismeans);
                 
+                figure(105)
+                 plot(thisdph, thismeans, 'marker', markers{q}, 'linestyle', 'none', 'markersize', 10, 'color', cols{q}, 'MarkerFaceColor', cols{q})
+                hold on
                 
                 for qq = 1:nitems
                 allbirds{cnt} =  birdName{q};
@@ -6188,11 +6244,31 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                 cnt = cnt+1;
                 end
             end
-            
+            [R, p] = corrcoef(allEVmeans, alldph);
             %%
             SubjectID = allbirds;
             Age = alldph;
             EntropyVariance = allEVmeans;
+            
+            ylim([0 0.7])
+                ylabel('Entropy Variance')
+            xlabel('dph')
+              leg_text = {'w025', 'w027', 'w038', 'w037', 'w044'};
+            L = legend(leg_text);
+            L.AutoUpdate = 'off';
+
+              plotpos = [0 0 15 15];
+            plotName = [dirToLoad 'AllBirds_EV_over_DPH_firstLast_corr'];
+            print_in_A4(0, plotName, '-djpeg', 0, plotpos);
+            print_in_A4(0, plotName, '-depsc', 0, plotpos);
+            
+            
+            
+            
+            
+            
+            
+            
             %% Example data structure
 % Columns:
 % SubjectID        -> subject identifier
@@ -6203,17 +6279,17 @@ classdef eeg_lfp_song_analysis_OBJ < handle
 % T = table(SubjectID, Age, EntropyVariance);
 
 %% Convert subject IDs to categorical
-
-T = table(SubjectID, Age, EntropyVariance);
-
-T.SubjectID = categorical(T.SubjectID);
-         
-lme = fitlme(T, 'EntropyVariance ~ Age + (1|SubjectID)');
-            
-            summary(T)
-            
-            T.Properties.VariableNames
-            
+% 
+% T = table(SubjectID, Age, EntropyVariance);
+% 
+% T.SubjectID = categorical(T.SubjectID);
+%          
+% lme = fitlme(T, 'EntropyVariance ~ Age + (1|SubjectID)');
+%             
+%             summary(T)
+%             
+%             T.Properties.VariableNames
+%             
             
             
             min_all_dph = min(min_dph);
@@ -6240,12 +6316,12 @@ lme = fitlme(T, 'EntropyVariance ~ Age + (1|SubjectID)');
                 
             end
             
-            colss = get(gca,'colororder');
-            
+           % colss = get(gca,'colororder');
+             cols = {[0, 0.4470, 0.7410]; [0.8500, 0.3250, 0.0980]; [0.8500, 0.3250, 0.0980]; [0.4660, 0.6740, 0.1880]; [0.4940, 0.1840, 0.5560]};
             figure (104); clf
             for j =1:5
                 hold on
-                errorbar(dph_allBirds, allMeans_dph(j,:), allsems_dph(j,:), 'linewidth', 2, 'color', colss(j,:))
+                errorbar(dph_allBirds, allMeans_dph(j,:), allsems_dph(j,:), 'linewidth', 2, 'color', cols{j,:})
             end
             
             leg_text = {'w025', 'w027', 'w038', 'w037', 'w044'};
@@ -6255,13 +6331,13 @@ lme = fitlme(T, 'EntropyVariance ~ Age + (1|SubjectID)');
             for j =1:5
                 hold on
                 FirstNonnanvalus = find(~isnan(allMeans_dph(j,:)));
-                plot(allSurgerydays(j), allMeans_dph(j,FirstNonnanvalus(1)), 'color', colss(j,:), 'marker', '*')
+                plot(allSurgerydays(j), allMeans_dph(j,FirstNonnanvalus(1)), 'color', cols{j,:}, 'marker', '*')
             end
             
             
             ylabel('Entropy Variance')
             xlabel('dph')
-            ylim([0 1])
+              ylim([0 0.7])
             
             plotpos = [0 0 20 15];
             plotName = [dirToLoad 'AllBirds_EV_over_DPH'];
@@ -8340,7 +8416,8 @@ lme = fitlme(T, 'EntropyVariance ~ Age + (1|SubjectID)');
                 check = fileNames(j).name;
                 bla = find(check == dash);
                 
-                thisMotifName{j} = fileNames(j).name(1:bla(2)-1); % need to make sure we are including all the numbers
+                %thisMotifName{j} = fileNames(j).name(1:bla(2)-1); % need to make sure we are including all the numbers
+                 thisMotifName{j} = fileNames(j).name; % need to make sure we are including all the numbers
                 
             end
             

@@ -193,7 +193,7 @@ data_OBJ.PATH.TimeInfoSaveDir_playbacks = TimeInfoSaveDir_playbacks;
 %data_OBJ = checkFileDiffs(data_OBJ, dir1 , dir2 );
 
 %% Override
-%thisDirToLoad = 'X:\EEG-LFP-songLearning\JaniesAnalysis\SONGS\w038\Data\2021-08-27-First100Songs-Motifs\';
+thisDirToLoad = 'G:\Dropbox\Collaborations\ForSepp\2021-07-31-Last100Songs\';
 %MotifPlotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\Motifs\';
 doSortedMotifs = 0;
 for k = 1:numel(dirsToLoad_inds)

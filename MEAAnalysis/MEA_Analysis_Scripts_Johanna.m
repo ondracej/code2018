@@ -5,7 +5,7 @@
 addpath(genpath('C:\Users\SWR-Analysis\Documents\GitHub\code2018'));
 cd 'C:\Users\SWR-Analysis\Documents\GitHub\code2018\MEAAnalysis\'
 
-analysisDir = 'F:\Johanna_MEA_Data\20220603\'; % path to the analysis directory %% CHANGE THIS 
+analysisDir = 'Y:\hameddata2\Janie-MEA-Data\MEA_Data\allSWRData\20210811\'; % path to the analysis directory %% CHANGE THIS 
 mea_OBJ = MEA_Analysis_OBJ(analysisDir);
 
                 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% To load / save analysis data
