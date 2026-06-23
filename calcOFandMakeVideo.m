@@ -1,4 +1,4 @@
-function [] = calcOFandMakeVideo()
+function [] = calcOFandMakeVideo(VidDir,videoToAnalyze )
 
 dbstop if error
 
@@ -9,8 +9,8 @@ elseif ispc
 end
 
 %% Input video data
-VidDir = 'E:\ChronoAnalysis\002_Vids_Nov19\';
-videoToAnalyze = 'faa1-002-Nov19_contrastadj_001.avi';
+%VidDir = 'E:\ChronoAnalysis\002_Vids_Nov19\';
+%videoToAnalyze = 'faa1-002-Nov19_contrastadj_001.avi';
 
 AnalysisNumber = 1; % in case you want to analyze several versions
 
@@ -56,6 +56,8 @@ FrameOff = nFrames;
 for frame_ind = FrameOn+1 : FrameOff
     mov(mCnt).cdata = read(VideoObj,frame_ind);
     frame = mov(mCnt).cdata;
+    %frame = frame / median(frame(:)); % normalize?
+    
     im = step(converter, frame);
     if mCnt == 1
         figure(1)
@@ -87,7 +89,210 @@ fV1(1)=0;% suppress the artifact at the first frame
 fV2(1)=0; 
 
 %% Plot the optic flow with a moving line
-fV1=fV1./(max(max(fV1)));
+fV1a=fV1./(max(max(fV1)));
+
+%fV_small = fV1;
+fV_small = fV1a;
+
+fV2a=fV2./(max(max(fV2)));
+
+fV_large = fV2a;
+%fV_large = fV2;
+
+
+figure(106); clf
+subplot(6, 1, 1)
+plot(fV_small)
+grid on
+axis tight
+%xlabel('Frames')
+title('Raw OF-Small ROI')
+
+
+hold on
+%plot(fV_small+1)
+subplot(6, 1, 2)
+plot(fV_large)
+grid on
+axis tight
+title('Raw OF-Large ROI')
+%legend('Large ROI', 'Small ROI')
+xlabel('Frames')
+
+
+
+%% detrending
+
+L = detrend(fV_large);
+F = detrend(fV_small);
+
+subplot(6, 1, 2)
+plot(L)
+hold on
+plot(F+1)
+%plot(F+0.12)
+grid on
+axis tight
+legend('Large ROI', 'Small ROI')
+xlabel('Frames')
+title('Detrended')
+
+%% coherence
+
+Fs = 20; % frame rate
+
+% Coherence
+[Cxy,f] = mscohere(F,L,[],[],[],Fs);
+
+subplot(5, 1, 3)
+plot(f,Cxy);
+xlabel('Frequency');
+ylabel('Coherence');
+title('Flicker Coupling');
+
+%% Notch filter - doesnt seem to work
+
+%{
+f0 = 0.5;         % Flicker frequency to remove (Hz)
+
+Q = 50;           % Quality factor
+                 % Higher Q = narrower notch
+                 
+bw = f0/Q;
+
+% Design notch filter
+d = designfilt('bandstopiir', ...
+    'FilterOrder', 2, ...
+    'HalfPowerFrequency1', f0-bw/2, ...
+    'HalfPowerFrequency2', f0+bw/2, ...
+    'DesignMethod', 'butter', ...
+    'SampleRate', Fs);
+
+L_double = double(L);
+% Apply zero-phase filtering
+signalFiltered = filtfilt(d, L_double);
+
+subplot(5, 1, 4); cla
+plot(signalFiltered)
+
+
+freqs = [0.5 1.0 1.5 2.0, 2.5, 3.0, 3.5, 4.0];
+
+L_double = double(L);
+filtered = L_double;
+
+for k = 1:length(freqs)
+
+    f0 = freqs(k);
+
+    d = designfilt('bandstopiir', ...
+        'FilterOrder',2, ...
+        'HalfPowerFrequency1',f0-0.03, ...
+        'HalfPowerFrequency2',f0+0.03, ...
+        'SampleRate',Fs);
+
+    filtered = filtfilt(d, filtered);
+end
+figure; 
+plot(filtered)
+%}
+
+%% regression
+
+
+
+% Column vectors
+L = L';
+F = F';
+
+% Linear regression
+X = [ones(size(F)) F];
+
+
+b = X \ L;
+
+%b = robustfit(F, L);
+%L_flicker = b(1) + b(2)*F;
+
+L_clean = L - L_flicker + b(1);
+L_clean = L/F;
+
+% Predicted flicker component
+L_flicker = X*b;
+subplot(5, 1, 4);
+plot(L_flicker);
+axis tight
+title('Flicker')
+
+
+% Remove flicker contribution
+L_clean = L - L_flicker + b(1);
+
+% Plot
+
+%plot(L,'b');
+subplot(5, 1, 5);
+hold on
+figure
+plot(L_clean,'b','LineWidth',1);
+
+%legend('Raw','Cleaned');
+xlabel('Frame');
+ylabel('Optic Flow');
+title('Regression-Based Flicker Removal');
+
+
+%%
+figure(103); clf
+subplot(2, 1, 1)
+%plot(xes_s, fV1a)
+plot(fV1a)
+axis tight
+lightFlicker = 0.7;
+bla = find(fV1a >= lightFlicker);
+fV1aa = fV1a;
+fV1aa(bla) = NaN;
+
+subplot(2, 1, 2)
+plot(fV1aa)
+%plot(xes_s, fV1aa)
+axis tight
+%%
+
+figure(104); clf
+subplot(2, 1, 1)
+%plot(xes_s, fV1a)
+plot(fV2a)
+bla = find(fV2a >= lightFlicker);
+fV2aa = fV2a;
+fV2aa(bla) = NaN;
+
+subplot(2, 1, 2)
+%plot(xes_s, fV1aa)
+plot(fV1aa)
+
+%%
+figure(105); clf
+subplot(2, 1, 1)
+plot(fV1aa)
+
+subplot(2, 1, 2)
+plot(fV2aa)
+
+
+figure; 
+xlim([0 100])
+xlabel('Time (s)')
+
+keyboard
+
+figure; 
+subplot(2, 1, 1)
+plot(smooth(fV1, 20))
+subplot(2, 1, 2)
+plot(smooth(fV2, 20))
+
+
 
 redcolor = [150 50 0];
 bluecolor = [0 50 150];

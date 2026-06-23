@@ -1,8 +1,8 @@
 close all
 clear all
 
-pathToCodeRepository = 'C:\Users\Janie\Documents\GitHub\code2018\';
-vidsToAnalyze = {'F:\SilkesData\VideosSPF\2021-Jul-19RFtwodays\faa2-001-cam1-2021-Jul-19.avi'};
+pathToCodeRepository = 'C:\Users\Neuropix\Documents\GitHub\code2018\';
+vidsToAnalyze = {'X:\ChickenData\FromNadia_April2026\week1\Day4-28.03.26\8-8.30-morning\ARC-T-0-Raum4-0-20260328085024-20260328090000.mp4'};
 
 %%
 addpath(genpath(pathToCodeRepository)) 
@@ -11,19 +11,21 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
 
 %% FFMPEG
 
-%ffmpeg -i E:\DataForSilke\faa1-001-cam1-2019-Nov-14.AVI E:\DataForSilke\faa1-001-Imgs\thumb%06d.jpg -hide_banner
+%ffmpeg -i X:\ChickenData\FromNadia_April2026\week1\Day2-26.03.26\8-8.30-morning\ARC-TCH01-00-085635-090000.mp4 -qscale:v 2 X:\ChickenData\FromNadia_April2026\week1\Day2-26.03.26\8-8.30-morning\ARC-THC01-00-085635-900000\img%06d.jpg -hide_banner
 %https://stackoverflow.com/questions/10225403/how-can-i-extract-a-good-quality-jpeg-image-from-an-h264-video-file-with-ffmpeg
-% ffmpeg -i E:\DataForSilke\OrigVideos\faa1-001-cam1-2019-Nov-14.AVI -qscale:v 2 E:\DataForSilke\faa_001_ffmpeg\thumb%06d.jpg -hide_banner
 
 
 %% Make movies from images
 
- imageDir = {'D:\SilkesData\VideosSPF\2021-Jul-06adlib\FFMPEG_faa3-001-cam1-2021-Jul-08adlibgood\'};
- movieName = 'faa3-001-cam1-2021-Jul-08adlibgood';
- saveDir = {'D:\SilkesData\VideosSPF\2021-Jul-06adlib\editedVids\'};
+ imageDir = {'X:\ChickenData\FromNadia_April2026\week1\Day4-28.03.26\8-8.30-morning\ARC-T-0-Raum4-Tiff\'};
+ movieName = 'ARC-T-0-Raum4-tiff';
+ saveDir = {'X:\ChickenData\FromNadia_April2026\week1\Day4-28.03.26\8-8.30-morning\OF_Analysis\'};
 
- VideoFrameRate = 1;
- makeMultipleMoviesFromImages(C_OBJ, imageDir, movieName, saveDir, VideoFrameRate)
+ 
+ VideoFrameRate = 20; % 20 fps
+ doRotate = 1;
+  rotationAngle = -35;
+ makeMultipleMoviesFromImages(C_OBJ, imageDir, movieName, saveDir, VideoFrameRate, doRotate, rotationAngle)
  
  disp('Finished making movies...')
 
@@ -36,7 +38,31 @@ C_OBJ = chronoAnalysis_Obj(vidsToAnalyze);
 %                 case 3
 %                     imgFormat = '*';
 %             end
- %% calc OF on multiple vidoes
+ 
+%%
+
+VidDir = 'X:\ChickenData\FromNadia_April2026\week1\Day4-28.03.26\8-8.30-morning\OF_Analysis\';
+videoToAnalyze = 'ARC-T-0-Raum4-tiff_rotated.avi';
+ calcOFandMakeVideo(VidDir,videoToAnalyze )
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% calc OF on multiple vidoes
+ 
+ 
+ 
+ 
+ 
  
  vidDir = 'F:\SilkesData\VideosSPF\2021-Jul-19RFtwodays\editedVids\cam2\';
  dsFrameRate = 1;

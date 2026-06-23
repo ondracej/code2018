@@ -6247,6 +6247,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             [R, p] = corrcoef(allEVmeans, alldph);
             %%
             SubjectID = allbirds;
+            SubjectID = birdID;
             Age = alldph;
             EntropyVariance = allEVmeans;
             
