@@ -1382,7 +1382,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             colOrder = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560],...
                 [0.4660, 0.6740, 0.1880], [0.3010, 0.7450, 0.9330], [0.6350, 0.0780, 0.1840]};
             
-            for jq = 1:nEntries
+            for jq = 2:nEntries
                 if ~isempty(obj.EPHYS.EphysRecName{jq}) % no ephys recording
                     
                     pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{jq} obj.PATH.dirD];
@@ -1529,7 +1529,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                                     [R,~] = corrcoef(AllDataBin_clean_ds(cc, :),AllDataBin_clean_ds(dd, :));
                                     
                                     RChans(cc, dd) = R(1, 2);
-                                    chanNames{cc, dd} = [shortName{cc} '-' shortName{dd}];
+                                    chanNames{cc, dd} = [num2str(shortName{cc}) '-' num2str(shortName{dd})];
                                     
                                     %  tic
                                     
@@ -1573,13 +1573,16 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     end
                     
                     INFO = a.INFO;
-                    INFO.channelOrder_remap = channelOrder;
+                   % INFO.channelOrder_remap = channelOrder;
                     INFO.chanSet = chanSet;
                     INFO.nHoursToAnalyze = nHoursToAnalyze;
                     INFO.hoursAfterLightsOff = hoursAfterLightsOff;
                     INFO.tOn_toAnalyze = tOn_toAnalyze;
                     INFO.onsetBins = onsetBins;
                     INFO.offsetBins = offsetBins;
+                    INFO.EEG_chans = EEG_chans;
+                    INFO.LFP_chans  = LFP_chans;
+                    
                     
                     CORCOH.corrR = corrR;
                     CORCOH.corrR_chanNames= chanNames;
