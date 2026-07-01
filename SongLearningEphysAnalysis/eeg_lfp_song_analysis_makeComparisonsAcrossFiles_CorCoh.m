@@ -81,9 +81,9 @@ function [] = eeg_lfp_song_analysis_makeComparisonsAcrossFiles_CorCoh()
 %           nanmedianCorrs = [];
 
 
-CohDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\'
+CohDir = '/home/janie/Dropbox/02_talks/2026/BCCN/Data/CohData/'
 
-   fileNames = dir(fullfile(CohDir, '*COH*'));
+   fileNames = dir(fullfile(CohDir, '*Coh*'));
    
 nFiles = numel(fileNames);
     for k = 1:nFiles
@@ -96,15 +96,87 @@ nFiles = numel(fileNames);
         
         corrsInds = find(corrs{1,1} ~=0);
       
+        %inds_c = [2 1 2 1 2 8]
+        %inds_r = [7 7 9 9 3 9]
+        
+        
+        inds_c1 = [2:11]; %m LFP
+        inds_r1 = [1 1 1 1 1 1 1 1 1 1];
+        
+        inds_c2 = [7 7 7 7 7 7 8 9 10 11]; %l LFP
+        inds_r2 = [1 2 3 4 5 6 7 7 7 7];
+        
+        inds_c3 = [3 4 5 6 7 8 9 10 11]; %R ant EEG
+        inds_r3 = [2 2 2 2 2 2 2 2 2];
+        
+        inds_c4 = [4 5 6 7 8 9 10 11]; %R post eeg
+        inds_r4 = [3 3 3 3 3 3 3 3];
+        
+        
+        
+        
+        inds_c = [ inds_c1 inds_c2 inds_c3 inds_c4];
+        inds_r = [inds_r1 inds_r2 inds_r3 inds_r4];
+        
+        
+        numcomparisons = numel(inds_r);
         corrVals = [];
-        for o = 1:numel(corrs)
-            if ~isempty(corrs{1,o})
-                corrVals(:,o) = corrs{1,o}(corrsInds); % reads across the rows
-            else
-                corrVals(:,o) = NaN; % reads across the rows
+        cohDeltaVal = [];
+        cohGammaVal  = [];
+        chans = [];
+        for c = 1:numcomparisons
+            corrVals = [];
+            for o = 1:numel(corrs)
+                if ~isempty(corrs{1,o})
+                    corrVals(c,o) = corrs{1,o}(inds_r(c), inds_c(c)); % reads across the rows
+                    cohDeltaVal(c,o) = cohDelta{1,o}(inds_r(c), inds_c(c)); % reads across the rows
+            cohGammaVal(c,o) = cohGamma{1,o}(inds_r(c), inds_c(c)); % reads across the rows
+                chans{c} = chanComparisons{inds_r(c), inds_c(c)};
+                
+                else
+                    corrVals(c,o) = NaN; % reads across the rows
+                    cohDeltaVal(c,o) = NaN; % reads across the rows
+                    cohGammaVal(c,o) = NaN; % reads across the rows
+                end
             end
         end
         
+        
+        if k ==1
+        [b, i] = sort(cohDeltaVal(:,10), 'descend')
+        % make sure we only sort this once
+        end
+        
+
+        
+        clim = [0 1];
+        figure; imagesc(cohDeltaVal(i,:), clim )
+                colormap('jet')
+        colorbar
+        figure; imagesc(cohGammaVal(i,:),clim )
+        colormap('jet')
+        colorbar
+        
+        
+        meansCohdelta = nanmean(cohDeltaVal, 2);
+        meansCohgamma = nanmean(cohGammaVal, 2);
+        
+        allMeansDays_cohDelta(:,k) = meansCohdelta;
+        allMeansDays_cohGamma(:,k) = meansCohgamma;
+    end
+    
+    disp('')
+            figure; imagesc(allMeansDays_cohDelta(i,:), clim)
+              colormap('jet')
+            colorbar
+        figure; imagesc(allMeansDays_cohGamma(i,:),clim)
+          colormap('jet')
+colorbar
+    
+    
+    sortedChans = chans(i);
+    
+    end
 %         timeWin_s = 20; %seconds
 %         tOn = d.D.tOn_s;
 %         
@@ -133,100 +205,100 @@ nFiles = numel(fileNames);
 %         nBinsToAnalyze = numel(tOn_toAnalyze);
 %         %
         %% delta
-        
-        corrVals_Nan = corrVals;
-        
-        
-      %  corrVals_Nan(:, artifactInds_toAnalyze) = NaN;
-        
-      %  medianCorrs = nanmedian(corrVals, 2);
-        
-        
-        nanmedianCorrs{k} = nanmedian(corrVals_Nan, 2);
-        %varCorr(k) = var(nanmedianCorrs);
+%         
+%         corrVals_Nan = corrVals;
+%         
+%         
+%       %  corrVals_Nan(:, artifactInds_toAnalyze) = NaN;
+%         
+%       %  medianCorrs = nanmedian(corrVals, 2);
+%         
+%         
+%         nanmedianCorrs{k} = nanmedian(corrVals_Nan, 2);
+%         %varCorr(k) = var(nanmedianCorrs);
         
         %allMedianCorrs(k) = median(nanmedianCorrs, 2);
         
         
-    end
-    allnanMedianCorrs{j} = nanmedianCorrs;
     
-end
-
-%%
-figure (342); clf
-subplot(1, 2, 1)
-hold on
-for i = 1:numel(nanmedianCorrs)
-    %y = allMeans_large{i};
-    y = allnanMedianCorrs{1, 1}{1, i};
-    y = y(~isnan(y));
+%     allnanMedianCorrs{j} = nanmedianCorrs;
+%     
+% %end
+% 
+% %%
+% figure (342); clf
+% subplot(1, 2, 1)
+% hold on
+% for i = 1:numel(nanmedianCorrs)
+%     %y = allMeans_large{i};
+%     y = allnanMedianCorrs{1, 1}{1, i};
+%     y = y(~isnan(y));
+%     
+%     if ~isempty(y)
+%         
+%         [f, yi] = ksdensity(y);
+%         f = f / max(f) * 0.3;   % control width
+%         
+%         %fill([i+f, i-fliplr(f)], ...
+%         fill([(i)+f, (i)-fliplr(f)], ...
+%             [yi, fliplr(yi)], ...
+%             [0.3 0.7 0.9], ...
+%             'EdgeColor','k','FaceAlpha',0.8)
+%         
+%     end
+%     % plot(i, median(y), 'k.', 'MarkerSize',18)
+% end
+% 
+% ylim([ -1 1.2])
+% subplot(1, 2, 2)
+% hold on
+% for i = 1:numel(nanmedianCorrs)
+%     %y = allMeans_large{i};
+%     y = allnanMedianCorrs{1, 2}{1, i};
+%     y = y(~isnan(y));
+%     
+%     if ~isempty(y)
+%         
+%         [f, yi] = ksdensity(y);
+%         f = f / max(f) * 0.3;   % control width
+%         
+%         %fill([i+f, i-fliplr(f)], ...
+%         fill([(i)+f, (i)-fliplr(f)], ...
+%             [yi, fliplr(yi)], ...
+%             [0.3 0.7 0.9], ...
+%             'EdgeColor','k','FaceAlpha',0.8)
+%         
+%     end
+%     
+%     ylim([ -1 1.2])
+%     % plot(i, median(y), 'k.', 'MarkerSize',18)
+% end
+% 
+% 
+% %%
+%                
+%                 plotpos = [0 0 18 10];
+%                 plot_filename = [NegDir '__corrs'];
+%                 print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+%                 print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+%                
+% 
+%   %%  
+%     
+%     
+%     NegAndPos_MedianDeltaMedian(:,j) = MedianDeltaMedian;
+%     NegAndPos_MedianGammaMedian(:,j) = MedianGammaMedian;
+%     
+%     NegAndPos_MedianDeltaMedian_sem(:,j) = MedianDeltaSEM;
+%     NegAndPos_MedianGammaMedian_sem(:,j) = MedianGammaSEM;
+% [h,p] = ranksum(NegAndPos_MedianDeltaMedian(:,1), NegAndPos_MedianDeltaMedian(:,2))
+% 
+% 
+% 
+% 
+% disp('')
     
-    if ~isempty(y)
-        
-        [f, yi] = ksdensity(y);
-        f = f / max(f) * 0.3;   % control width
-        
-        %fill([i+f, i-fliplr(f)], ...
-        fill([(i)+f, (i)-fliplr(f)], ...
-            [yi, fliplr(yi)], ...
-            [0.3 0.7 0.9], ...
-            'EdgeColor','k','FaceAlpha',0.8)
-        
-    end
-    % plot(i, median(y), 'k.', 'MarkerSize',18)
-end
-
-ylim([ -1 1.2])
-subplot(1, 2, 2)
-hold on
-for i = 1:numel(nanmedianCorrs)
-    %y = allMeans_large{i};
-    y = allnanMedianCorrs{1, 2}{1, i};
-    y = y(~isnan(y));
-    
-    if ~isempty(y)
-        
-        [f, yi] = ksdensity(y);
-        f = f / max(f) * 0.3;   % control width
-        
-        %fill([i+f, i-fliplr(f)], ...
-        fill([(i)+f, (i)-fliplr(f)], ...
-            [yi, fliplr(yi)], ...
-            [0.3 0.7 0.9], ...
-            'EdgeColor','k','FaceAlpha',0.8)
-        
-    end
-    
-    ylim([ -1 1.2])
-    % plot(i, median(y), 'k.', 'MarkerSize',18)
-end
-
-
-%%
-               
-                plotpos = [0 0 18 10];
-                plot_filename = [NegDir '__corrs'];
-                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-                print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
-               
-
-  %%  
-    
-    
-    NegAndPos_MedianDeltaMedian(:,j) = MedianDeltaMedian;
-    NegAndPos_MedianGammaMedian(:,j) = MedianGammaMedian;
-    
-    NegAndPos_MedianDeltaMedian_sem(:,j) = MedianDeltaSEM;
-    NegAndPos_MedianGammaMedian_sem(:,j) = MedianGammaSEM;
-[h,p] = ranksum(NegAndPos_MedianDeltaMedian(:,1), NegAndPos_MedianDeltaMedian(:,2))
-
-
-
-
-disp('')
-    
-end
+%end
 
 
 

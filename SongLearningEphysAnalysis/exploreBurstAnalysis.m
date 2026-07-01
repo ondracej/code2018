@@ -1,8 +1,8 @@
 function [] = exploreBurstAnalysis()
 dbstop if error
 
-dirBurstFiles = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\'];
-plotDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\Plots\'];
+dirBurstFiles = ['/home/janie/Dropbox/02_talks/2026/BCCN/Data/BurstData/'];
+%plotDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\Plots\'];
 
 
 
