@@ -394,24 +394,32 @@ ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
 plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\';
 channelOrder = [6 4 7 5 3 2 1 ]; %w025
 channelOrder = [6 4 5 3 2 1 ]; %w025 (08-09) ch 11 and 14 are noisy
-  %w027
+  
+%w027
 saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\';
 ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\';
 plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\BurstDetection\';
 channelOrder = [2 3 5 7 4  6 1 ]; %w027 7 chans
 channelOrder = [2 3 5 7 4  6 8 1 ]; %w027 8 chan
 
+%w038
 saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\';
 ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\';
 plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\BurstDetection\';
 
-
+%w037
 saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\';
 ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\';
 plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\BurstDetection\';
 
+
+
+
 data_OBJ = process_LFP_Data_burstAnalysis(data_OBJ, nEntries, saveDir,ephysPath,plotPath );
 data_OBJ = process_LFP_corr_coh_Analysis(data_OBJ, nEntries, saveDir,ephysPath,plotPath );
+
+
+
 
 plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\BurstDetection\';
 burstDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\BurstDetection\';
