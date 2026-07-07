@@ -1684,7 +1684,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     plotSubset = randperm(nBinsToAnalyze);
                     plotSubsetInds = plotSubset(1:20);
                     
-                    for o = 1: nBinsToAnalyze
+                    for o = 212: nBinsToAnalyze
                         
                         isArtifact = artifactInds_toAnalyze(o); % we do not analyze artifact inds
                         
@@ -2253,7 +2253,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                                 plotpos = [0 0 25 15];
                                 plot_filename = [plotPath a.INFO.EphysRecName '__BurstDetection_t-' num2str(tOn_toAnalyze(o)) '-o-' num2str(o)];
                                 print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-                                %print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+                                print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
                                 
                             end
                             
