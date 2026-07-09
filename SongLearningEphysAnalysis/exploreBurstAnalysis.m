@@ -1,8 +1,8 @@
 function [] = exploreBurstAnalysis()
 dbstop if error
 
-dirBurstFiles = ['/home/janie/Dropbox/02_talks/2026/BCCN/Data/BurstData/'];
-%plotDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\Plots\'];
+dirBurstFiles = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\BurstNew\'];
+plotDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\BurstNew\plots\'];
 
 
 
@@ -42,7 +42,8 @@ for k = 1:nFiles
         % plot(deltaMask(:,j) )
         % ylim([-0.5 1.5])
         % title ('Delta mask')
-        allDeltaMask  = [allDeltaMask ; deltaMask(:,j)];
+
+        %allDeltaMask  = [allDeltaMask ; deltaMask(:,j)];
 
 
 
@@ -59,17 +60,17 @@ for k = 1:nFiles
         % ylim([0 5])
 
 
-        allNonDeltaDur_ms = [allNonDeltaDur_ms ; nondeltaDur_ms];
+        %allNonDeltaDur_ms = [allNonDeltaDur_ms ; nondeltaDur_ms];
 
         delta_pP = Delta_peakTimes_peakPower{:, j};
-        nondelta_pP = nonDelta_peakTimes_peakPower{:, j};
+        %nondelta_pP = nonDelta_peakTimes_peakPower{:, j};
 
 
 
         allDelta_pP = [allDelta_pP ;delta_pP];
 
 
-        allNonDelta_pP = [allNonDelta_pP;  nondelta_pP];
+       % allNonDelta_pP = [allNonDelta_pP;  nondelta_pP];
 
     end
 
@@ -78,44 +79,45 @@ for k = 1:nFiles
     figure(104); clf
 
     edges = 0:1:60;
-    subplot(5, 1, 2)
+    subplot(2, 1, 1)
     histogram(allDeltaDur_ms, edges, 'normalization', 'probability')
-    title ('Delta dur ms')
-    ylim([0 0.1])
+    
+    title([ fileNames(k).name(1:end-21) ' Delta dur ms'], 'interpreter', 'none')
+    ylim([0 0.10])
 
-    subplot(5, 1, 3)
-    histogram(allNonDeltaDur_ms, edges, 'normalization', 'probability')
-    title ('NonDelta dur ms')
-    ylim([0 0.1])
+%     subplot(5, 1, 3)
+%     histogram(allNonDeltaDur_ms, edges, 'normalization', 'probability')
+%     title ('NonDelta dur ms')
+%     ylim([0 0.1])
 
     edges = 0:0.5:10;
 
-    subplot(5, 1, 4)
+    subplot(2, 1, 2)
     histogram(allDelta_pP, edges, 'normalization', 'probability')
     title ('Delta pP')
-    ylim([0 0.3])
+    ylim([0 0.35])
+% 
+%     subplot(5, 1, 5)
+%     histogram(allNonDelta_pP, edges, 'normalization', 'probability')
+%     title ('NonDelta pP')
+%     ylim([0 0.3])
 
-    subplot(5, 1, 5)
-    histogram(allNonDelta_pP, edges, 'normalization', 'probability')
-    title ('NonDelta pP')
-    ylim([0 0.3])
 
+%     subplot(5, 1, 1)
+% 
+%     deltabins = sum(allDeltaMask);
+%     allBins = numel(allDeltaMask);
+%     deltafraction = deltabins/allBins;
 
-    subplot(5, 1, 1)
-
-    deltabins = sum(allDeltaMask);
-    allBins = numel(allDeltaMask);
-    deltafraction = deltabins/allBins;
-
-    title([INFO.EphysRecName ' | delta fraction: ' num2str(deltafraction)], 'interpreter', 'none')
-    axis off
+%     title([INFO.EphysRecName ' | delta fraction: ' num2str(deltafraction)], 'interpreter', 'none')
+%     axis off
 
 
     plotpos = [0 0 15 10];
     save_txt = [INFO.EphysRecName '_burstsummary'];
     plot_filename = [plotDir save_txt];
     print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
-    %print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+    print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
 
 end
 

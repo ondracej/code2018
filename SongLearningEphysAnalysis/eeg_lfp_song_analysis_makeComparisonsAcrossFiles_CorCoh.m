@@ -1,5 +1,8 @@
 function [] = eeg_lfp_song_analysis_makeComparisonsAcrossFiles_CorCoh()
 
+
+plotDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\CohNew\Plots\'
+
 % 
 % NegDir = 'G:\Dropbox\02_talks\2026\EBM\Datasets\NegEV\';
 % PosDir = 'G:\Dropbox\02_talks\2026\EBM\Datasets\posEV\';
@@ -81,18 +84,51 @@ function [] = eeg_lfp_song_analysis_makeComparisonsAcrossFiles_CorCoh()
 %           nanmedianCorrs = [];
 
 
-CohDir = '/home/janie/Dropbox/02_talks/2026/BCCN/Data/CohData/'
+%CohDir = '/home/janie/Dropbox/02_talks/2026/BCCN/Data/CohData/'
+
+CohDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\BurstDetection\CohNew\'
 
    fileNames = dir(fullfile(CohDir, '*Coh*'));
    
 nFiles = numel(fileNames);
-    for k = 1:nFiles
+    for k = 1:18%nFiles
         c =  load([CohDir fileNames(k).name]);
        % d = load([dataDir lfpFiles{k}]);
         corrs = c.CORCOH.corrR;
         cohDelta = c.CORCOH.deltaCOH;
         cohGamma = c.CORCOH.gammaCOH;
         chanComparisons = c.CORCOH.corrR_chanNames;
+        
+        
+        idx = find(~cellfun(@isempty,chanComparisons));
+         cohDeltaVal = [];
+        cohGammaVal  = [];
+        chans = [];
+        corrVals = [];
+       % for c = 1:numel(idx)
+       for o = 1:numel(corrs)
+           if ~isempty(corrs{1,o})
+               corrVals(:,o) = corrs{1,o}(idx); % reads across the rows
+               cohDeltaVal(:,o) = cohDelta{1,o}(idx); % reads across the rows
+               cohGammaVal(:,o) = cohGamma{1,o}(idx); % reads across the rows
+               chans = chanComparisons(idx);
+               
+           else
+               corrVals(:,o) = NaN; % reads across the rows
+               cohDeltaVal(:,o) = NaN; % reads across the rows
+               cohGammaVal(:,o) = NaN; % reads across the rows
+           end
+           
+           %    end
+       end
+       
+        
+        
+        %{
+        bla = corrs{1,o}(idx);
+        
+        
+        
         
         corrsInds = find(corrs{1,1} ~=0);
       
@@ -120,12 +156,13 @@ nFiles = numel(fileNames);
         
         
         numcomparisons = numel(inds_r);
-        corrVals = [];
+       
         cohDeltaVal = [];
         cohGammaVal  = [];
         chans = [];
+        corrVals = [];
         for c = 1:numcomparisons
-            corrVals = [];
+            
             for o = 1:numel(corrs)
                 if ~isempty(corrs{1,o})
                     corrVals(c,o) = corrs{1,o}(inds_r(c), inds_c(c)); % reads across the rows
@@ -141,22 +178,35 @@ nFiles = numel(fileNames);
             end
         end
         
-        
+        %}
         if k ==1
-        [b, i] = sort(cohDeltaVal(:,10), 'descend')
+        [b, i] = sort(corrVals(:,10), 'descend');
         % make sure we only sort this once
         end
         
-
+      
         
         clim = [0 1];
-        figure; imagesc(cohDeltaVal(i,:), clim )
+        figure(100); clf
+subplot(3, 1, 1); imagesc(corrVals(i,:), clim )
+colorbar
+title([ fileNames(k).name(1:end-14) ' Corr'], 'interpreter', 'none')
+        subplot(3, 1, 2); imagesc(cohDeltaVal(i,:), clim )
                 colormap('jet')
         colorbar
-        figure; imagesc(cohGammaVal(i,:),clim )
+        title('Delta Coherence')
+        subplot(3, 1, 3); imagesc(cohGammaVal(i,:),clim )
         colormap('jet')
         colorbar
+        title('Gamma Coherence')
         
+        %%
+%           plotpos = [0 0 18 10];
+%                 plot_filename = [plotDir  fileNames(k).name(1:end-4) '__corrplots' ];
+%                 print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+%                 print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+% %                
+
         
         meansCohdelta = nanmean(cohDeltaVal, 2);
         meansCohgamma = nanmean(cohGammaVal, 2);
@@ -167,8 +217,21 @@ nFiles = numel(fileNames);
     
     disp('')
             figure; imagesc(allMeansDays_cohDelta(i,:), clim)
+            
+            sortedCohdDelta = allMeansDays_cohDelta(i,:);
+            
               colormap('jet')
             colorbar
+            title('Mean Coherence')
+            
+             plotpos = [0 0 18 10];
+                plot_filename = [plotDir  '__summaryMeans_deltaCohc' ];
+                print_in_A4(0, plot_filename, '-djpeg', 0, plotpos);
+                print_in_A4(0, plot_filename, '-depsc', 0, plotpos);
+%                
+
+            
+            
         figure; imagesc(allMeansDays_cohGamma(i,:),clim)
           colormap('jet')
 colorbar
