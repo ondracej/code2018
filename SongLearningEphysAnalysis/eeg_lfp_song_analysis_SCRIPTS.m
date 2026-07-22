@@ -362,9 +362,11 @@ remove_first_syl_from_motifs_w025
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load LFP Data
 
-saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\';
-saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
-saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\';
+%saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\';
+%saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\';
+%saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\';
+%saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w044\All_LFP_dy\';
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w042\All_LFP_dy\';
 
 %saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\'
 data_OBJ = process_LFP_Data(data_OBJ, nEntries, saveDir );
@@ -373,6 +375,7 @@ dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w038\All_LFP_dy\'];
 dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\'];
 dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\'];
 %dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w027\All_LFP_dy\'];
+dataDir  = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w042\All_LFP_dy\';
 data_OBJ = plot_LFP_Data(data_OBJ, dataDir );
 
 data_OBJ = plot_LFP_Delta_Gamma_over_days(data_OBJ, dataDir)
@@ -383,7 +386,8 @@ data_OBJ = plot_LFP_BursAnalysis_over_days(data_OBJ, dataDir)
 dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w025\All_LFP_dy\'];
 data_OBJ = addInfoToMatFile(data_OBJ, dataDir)
 
-
+dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w044\All_LFP_dy\'];
+dataDir = ['X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w042\All_LFP_dy\'];
 data_OBJ = plotArtifactsOverDays(data_OBJ, dataDir );
 
 
@@ -412,7 +416,15 @@ saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\';
 ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\';
 plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w037\All_LFP_dy\BurstDetection\';
 
+%w044
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w044\All_LFP_dy\';
+ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w044\All_LFP_dy\';
+plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w044\All_LFP_dy\BurstDetection\';
 
+%w042
+saveDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w042\All_LFP_dy\';
+ephysPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w042\All_LFP_dy\';
+plotPath = 'X:\EEG-LFP-songLearning\JaniesAnalysis\ALL_PLOTS\w042\All_LFP_dy\BurstDetection\';
 
 
 data_OBJ = process_LFP_Data_burstAnalysis(data_OBJ, nEntries, saveDir,ephysPath,plotPath );
@@ -518,6 +530,9 @@ dataDir = 'X:\EEG-LFP-songLearning\w042andw044\w044 and w042\chronic_2022-01-01_
 dataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w042\DATA_EPHYS\chronic_2021-12-29_20-44-37'
 dataDir = 'X:\EEG-LFP-songLearning\w042andw044\w044 and w042\chronic_2022-01-04_20-47-15'
 dataDir = 'X:\EEG-LFP-songLearning\w042andw044\w044 and w042\chronic_2022-01-10_21-39-26'
+
+dataDir = 'X:\EEG-LFP-songLearning\JaniesAnalysis\w042\DATA_EPHYS\chronic_2021-12-29_20-44-37'
+
 
 
 dataRecordingObj = OERecordingMF(dataDir);

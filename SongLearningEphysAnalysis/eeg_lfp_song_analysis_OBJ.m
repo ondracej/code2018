@@ -1597,6 +1597,12 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                         disp(['Created: '  saveDir])
                     end
                     
+                    
+                      if exist(plotPath, 'dir') == 0
+                        mkdir(plotPath);
+                        disp(['Created: '  plotPath])
+                    end
+                    
                     save([saveName '.mat'], 'CORCOH', 'INFO', 'params', '-v7.3')
                     
                     disp(['Saved:' saveName])
@@ -1619,7 +1625,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
             colOrder = {[0, 0.4470, 0.7410], [0.8500, 0.3250, 0.0980], [0.9290, 0.6940, 0.1250], [0.4940, 0.1840, 0.5560],...
                 [0.4660, 0.6740, 0.1880], [0.3010, 0.7450, 0.9330], [0.6350, 0.0780, 0.1840]};
             
-            for jq = 1:nEntries
+            for jq = 1%:nEntries
                 if ~isempty(obj.EPHYS.EphysRecName{jq}) % no ephys recording
                     
                     pathToData = [obj.PATH.EphysPath obj.EPHYS.EphysRecName{jq} obj.PATH.dirD];
@@ -1633,7 +1639,8 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     artifactInds = a.D.isArtifact; % identify where all the artifact files are
                     
                     chanSet = a.D.chanNamesSet;
-                    nChans = numel(chanSet);
+                    %nChans = numel(chanSet);
+                    nChans = 1;
                     
                    % channelOrder = [6 4 5 3 2 1 ]; %w025
                    %channelOrder = [6 4 7 5 3 2 1 ]; %w025
@@ -1654,7 +1661,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     
                     chanSet = chanSetRemap;
                     
-                    
+                    chanSet = chanSetRemap(1); %%%%%%%%%%%%%% Forcing only 1 channel
                     
                     timeWin_s = a.D.timeWin_s; %seconds
                     tOn = a.D.tOn_s;
@@ -1684,7 +1691,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
                     plotSubset = randperm(nBinsToAnalyze);
                     plotSubsetInds = plotSubset(1:20);
                     
-                    for o = 212: nBinsToAnalyze
+                    for o = 1: nBinsToAnalyze
                         
                         isArtifact = artifactInds_toAnalyze(o); % we do not analyze artifact inds
                         
@@ -2467,7 +2474,7 @@ classdef eeg_lfp_song_analysis_OBJ < handle
               end
                     
             artifactChan = 1;
-            for j = 7%:nEntries %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            for j = 1:nEntries %%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
                 if ~isempty(obj.EPHYS.EphysRecName{j})
                     
