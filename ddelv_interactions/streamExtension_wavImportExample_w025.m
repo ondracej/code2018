@@ -25,7 +25,7 @@ dbstop if error
 d = dir(rootFolder);
 % remove all files (isdir property is 0)
 dfolders = d([d(:).isdir]) ;
-% remove '.' and '..' 
+% remove '.' and '..'
 dfolders = dfolders(~ismember({dfolders(:).name},{'.','..'}));
 
 nDirs = numel(dfolders);
@@ -34,14 +34,16 @@ subFolders = cell(1, nDirs);
 cnt = 1;
 names = [];
 dates = [];
-for k = 1:nDirs
+for k = 1:15%nDirs
 
     subFolders{k} = dfolders(k).name;
     fileNames = dir(fullfile([rootFolder subFolders{k}],  '*.wav'));
-    
+
     for i = 1:numel(fileNames)
         names{cnt} = fileNames(i).name;
-        dates{cnt} = fileNames(i).datenum;
+        names_append{cnt} = [fileNames(i).name(1:end-4) '_' num2str(cnt) '.wav' ];
+        dates{cnt} = fileNames(i).date;
+        datenums{cnt} = fileNames(i).datenum;
         cnt = cnt+1;
     end
 
@@ -49,7 +51,7 @@ end
 
 collectionName = 'w025';
 
-% Bandpass filter (empty = no filtering). 
+% Bandpass filter (empty = no filtering).
 bandpass_Hz = [450, 12000];
 
 % Reference dates (dd.mm.yy)
@@ -62,7 +64,7 @@ tutoringOffset = '19.08.21';  % last tutoring day
 %% Enumerate .wav files across all subfolders
 files = [];
 fileSubfolders = {};
-for s = 1:numel(subFolders)
+for s = 1:15%numel(subFolders)
     subFolder = subFolders{s};
     theseFiles = dir(fullfile(rootFolder, subFolder, '*.wav'));
     [~, order] = sort({theseFiles.name});
@@ -74,13 +76,21 @@ for s = 1:numel(subFolders)
     fileSubfolders = [fileSubfolders; repmat({subFolder}, numel(theseFiles), 1)]; %#ok<AGROW>
 
 end
-    
-        timestampByName = containers.Map('KeyType', 'char', 'ValueType', 'double');
-    
-    for i = 1:numel(names)
-        %timestampByName(fileNames(i).name) = fileNames(i).dates;
-        timestampByName(names{i}) = dates{i};
-    end
+
+timestampByName = containers.Map('KeyType', 'char', 'ValueType', 'double');
+format long
+for i = 1:numel(names)
+    %timestampByName(names{i}) = datenums{i};
+    timestampByName(names_append{i}) = datenum(dates{i});
+end
+
+
+% dates{18}
+% bla = datenum(dates{18});
+% bla = unique(src.L.t_datenum)
+% bla2 = datetime(bla, 'ConvertFrom', 'datenum', 'Format', 'dd-MM-yy')
+%bla3 = unique(bla2)
+
 
 disp('')
 
@@ -107,8 +117,12 @@ f_offsetInFile_samples = NaN(Nfiles, 1);
 
 samplingRate = NaN;
 for k = 1:Nfiles
-    name = files(k).name;
-    info = audioinfo(fullfile(files(k).folder, name));
+    %name = files(k).name; %%%%%%%%%%%%%%%%%%%%% 
+    name = names_append{k};
+    this_name = names{k};
+
+    %name = names{k};
+    info = audioinfo(fullfile(files(k).folder, this_name));
 
     if isnan(samplingRate)
         samplingRate = info.SampleRate;
@@ -118,10 +132,12 @@ for k = 1:Nfiles
     end
 
     allSubfolders{k} = fileSubfolders{k};
-    allFilenames{k} = name;
+    %allFilenames{k} = name;
+    allFilenames{k} = this_name;
     f_offsetInFile_samples(k) = info.TotalSamples;
 
     if isKey(timestampByName, name)
+        %t_datenum(k) = timestampByName(name);
         t_datenum(k) = timestampByName(name);
     else
         warning('No timestamp found in INFO.mat for %s; leaving NaN.', name);
