@@ -284,6 +284,22 @@ else
     peak2VallyDiff=xcf(pPeriod)-xcf(pAntiPeriod);
 end
 
+figure
+  lineHandles = stem(xcf_lags/1000,real(xcf),'filled','r-o');
+            set(lineHandles(1),'MarkerSize',4);
+            grid('on');
+            xlabel('Period [s]');
+            ylabel('Auto corr.');
+            hold('on');
+            
+            plot(period/1000,real(xcf(pPeriod)),'o','MarkerSize',5,'color','k');
+            
+            a = axis;
+            plot([a(1) a(1); a(2) a(2)],[xcf_bounds([1 1]) xcf_bounds([2 2])],'-b');
+            plot([a(1) a(2)],[0 0],'-k');
+            hold('off');
+           
+
 
 %sliding autocorr analysis
 %movingAutoCorrWinSamples=movingAutoCorrWin/timeBin;
@@ -327,8 +343,24 @@ for i=1:size(BetaRatioForSlidingAutocorr,2)
                 end
     %}
 end
+
 autocorrTimes=autoCorrSamples*timeBin;
 acfPeriodAll=autocorrTimes((acfPeriodAll+acfSamples+pPeak(1)-maxPeriodBand-1));
+
+
+ figure (103); clf
+     imagesc(tSlidingAC/1000/60/60,autocorrTimes/1000,real(acf),[-0.5 0.5]);
+            ylabel('Autocorr lag [s]');
+            ylim(xcf_lags([1 end])/1000);%important for panel plots
+            yl=ylim;
+            xlim(tSlidingAC([1 end])/1000/60/60); %important for panel plots
+            xl=xlim;
+            set(h(1),'YDir','normal');
+            set(h(1),'XTickLabel',[]);
+            hold on;
+                    
+            
+
 
 oscilDurationMovingSamples=oscilDurationMovingWin/autoCorrTimeBin;
 tmpOscDuration=peak2VallyDiff>oscilDurationThresh;
@@ -370,8 +402,7 @@ end
 
             
             
-            
-            
+    
             
             
             
