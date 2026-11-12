@@ -33,6 +33,12 @@ dataDir = D_OBJ.Session.SessionDir;
 %dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025\chronic_2021-07-14_20-24-58'
 %dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025-w0027-justephys\chronic_2021-07-24_22-37-34'
 dataDir = 'X:\EEG-LFP-songLearning\w025andw027\w0025-w0027-justephys\chronic_2021-08-05_22-06-10'
+
+
+
+dataDir = 'Z:\hameddata2\AvianSWRProjectData\ChickenData\chick10\Chick10_2019-04-27_19-33-33';
+
+
 dataRecordingObj = OERecordingMF(dataDir);
 
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject

@@ -34,7 +34,7 @@ subFolders = cell(1, nDirs);
 cnt = 1;
 names = [];
 dates = [];
-for k = 1:15%nDirs
+for k = 1:nDirs
 
     subFolders{k} = dfolders(k).name;
     fileNames = dir(fullfile([rootFolder subFolders{k}],  '*.wav'));
@@ -49,7 +49,7 @@ for k = 1:15%nDirs
 
 end
 
-collectionName = 'w025';
+collectionName = 'w027';
 
 % Bandpass filter (empty = no filtering).
 bandpass_Hz = [450, 12000];
@@ -58,13 +58,13 @@ bandpass_Hz = [450, 12000];
 dateFormat = 'dd.mm.yy';
 %2021-05-26
 hatchday = '26.05.21';        % day of hatch
-tutoringOnset = '12.07.21';   % first tutoring day
-tutoringOffset = '19.08.21';  % last tutoring day
+tutoringOnset = '12.07.23';   % first tutoring day
+tutoringOffset = '19.08.19';  % last tutoring day
 
 %% Enumerate .wav files across all subfolders
 files = [];
 fileSubfolders = {};
-for s = 1:15%numel(subFolders)
+for s = 1:numel(subFolders)
     subFolder = subFolders{s};
     theseFiles = dir(fullfile(rootFolder, subFolder, '*.wav'));
     [~, order] = sort({theseFiles.name});
